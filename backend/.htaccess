@@ -1,0 +1,27 @@
+# Proteksi folder backend dari akses publik
+# File ini mencegah akses langsung ke file-file sensitif Laravel
+# TAPI mengizinkan akses ke folder public untuk API
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Izinkan akses ke folder public (untuk API)
+    RewriteRule ^public/ - [L]
+
+    # Blokir akses langsung ke file-file sensitif
+    RewriteRule \.env$ - [F,L]
+    RewriteRule composer\.(json|lock)$ - [F,L]
+    RewriteRule package\.json$ - [F,L]
+    RewriteRule package-lock\.json$ - [F,L]
+    RewriteRule artisan$ - [F,L]
+    RewriteRule phpunit\.xml$ - [F,L]
+
+    # Blokir akses ke file hidden (dimulai dengan titik)
+    RewriteRule ^\. - [F,L]
+
+    # Blokir akses ke folder sensitif
+    RewriteRule ^(app|bootstrap|config|database|routes|storage|vendor|tests)/ - [F,L]
+</IfModule>
+
+# Mencegah listing directory (Di-comment agar tidak 500 di Plesk/cPanel tertentu)
+# Options -Indexes

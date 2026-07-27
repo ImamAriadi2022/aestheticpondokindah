@@ -1,0 +1,6 @@
+{
+    "require": {
+        "laravel/sanctum": "^4.3",
+        "midtrans/midtrans-php": "^2.6"
+    }
+}

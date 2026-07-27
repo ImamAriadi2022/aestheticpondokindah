@@ -1,0 +1,341 @@
+<?php
+
+namespace App\Http\Controllers\Api\User;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Membership\UpdateProfileRequest;
+use App\Http\Requests\Membership\UpgradeMembershipRequest;
+use App\Models\MembershipPoint;
+use App\Models\MembershipProfile;
+use App\Models\MembershipTransaction;
+use App\Services\MembershipService;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+
+class MembershipController extends Controller
+{
+    protected MembershipService $membershipService;
+
+    public function __construct(MembershipService $membershipService)
+    {
+        $this->membershipService = $membershipService;
+    }
+
+    /**
+     * Get user membership details
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $user->load(['membershipProfile', 'membershipPoints' => function ($query) {
+            $query->latest()->limit(20);
+        }]);
+
+        $progress = $user->getProgressToNextLevel();
+        $benefits = $this->membershipService->getMembershipBenefits($user->membership_level);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'whatsapp' => $user->whatsapp,
+                ],
+                'membership' => [
+                    'level' => $user->membership_level,
+                    'status' => $user->membership_status,
+                    'started_at' => $user->membership_started_at,
+                    'expires_at' => $user->membership_expires_at,
+                    'points' => $user->membership_points,
+                    'total_transactions' => $user->total_transactions,
+                    'completed_treatments' => $user->completed_treatments,
+                    'profile_completed' => $user->membership_profile_completed,
+                ],
+                'progress' => $progress,
+                'benefits' => $benefits,
+                'profile' => $user->membershipProfile,
+            ],
+        ]);
+    }
+
+    /**
+     * Get membership profile
+     */
+    public function getProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $profile = $user->membershipProfile;
+
+        if (!$profile) {
+            return response()->json([
+                'success' => true,
+                'data' => null,
+                'message' => 'Profile not found',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $profile,
+        ]);
+    }
+
+    /**
+     * Update membership profile
+     */
+    public function updateProfile(UpdateProfileRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $profile = $user->membershipProfile ?? new MembershipProfile();
+        $profile->user_id = $user->id;
+        $profile->fill($request->validated());
+        $profile->save();
+
+        // Check if profile is complete
+        $isComplete = $profile->isComplete();
+        $user->update(['membership_profile_completed' => $isComplete]);
+
+        // If profile is complete, activate Bronze membership
+        if ($isComplete && $user->membership_level === 'bronze') {
+            $user->update([
+                'membership_status' => 'active',
+                'membership_profile_completed' => true,
+            ]);
+            // Tidak langsung upgrade ke gold - Gold hanya melalui transaksi atau langganan
+        }
+
+        // Check for auto-upgrade untuk semua level
+        $this->membershipService->checkAndUpdateMembershipLevel($user);
+
+        return response()->json([
+            'success' => true,
+            'data' => $profile,
+            'message' => 'Profile updated successfully',
+        ]);
+    }
+
+    /**
+     * Get membership points
+     */
+    public function getPoints(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $points = $user->membershipPoints()
+            ->latest()
+            ->paginate(20);
+
+        $earned = $user->membershipPoints()->earned()->sum('points');
+        $redeemed = $user->membershipPoints()->redeemed()->sum('points');
+        $expired = $user->membershipPoints()->expired()->sum('points');
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'current_balance' => $user->membership_points,
+                'total_earned' => $earned,
+                'total_redeemed' => $redeemed,
+                'total_expired' => $expired,
+                'history' => $points,
+            ],
+        ]);
+    }
+
+    /**
+     * Get membership history
+     */
+    public function getHistory(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $history = $user->membershipHistories()
+            ->with('changedBy:id,name')
+            ->latest()
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $history,
+        ]);
+    }
+
+    /**
+     * Get membership transactions
+     */
+    public function getTransactions(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        $transactions = $user->membershipTransactions()
+            ->latest()
+            ->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $transactions,
+        ]);
+    }
+
+    /**
+     * Get membership tiers info (public endpoint)
+     */
+    public function tiers(Request $request): JsonResponse
+    {
+        $tiers = [
+            'bronze' => [
+                'label' => 'Basic Member',
+                'price' => 0,
+                'threshold_transaction' => 0,
+                'benefits' => $this->membershipService->getMembershipBenefits('bronze'),
+            ],
+            'gold' => [
+                'label' => 'Premium Member',
+                'price' => 499000,
+                'threshold_transaction' => 5000000,
+                'benefits' => $this->membershipService->getMembershipBenefits('gold'),
+            ],
+            'platinum' => [
+                'label' => 'Priority Member',
+                'price' => 1500000,
+                'threshold_transaction' => 15000000,
+                'benefits' => $this->membershipService->getMembershipBenefits('platinum'),
+            ],
+            'diamond' => [
+                'label' => 'VIP Member',
+                'price' => 5000000,
+                'threshold_transaction' => 30000000,
+                'benefits' => $this->membershipService->getMembershipBenefits('diamond'),
+            ],
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $tiers,
+        ]);
+    }
+
+    /**
+     * Upgrade membership
+     */
+    public function upgrade(UpgradeMembershipRequest $request): JsonResponse
+    {
+        $user = $request->user();
+        $targetLevel = $request->input('target_level');
+
+        // Validate upgrade
+        $currentLevel = $user->membership_level;
+        $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2, 'diamond' => 3];
+
+        if ($levelOrder[$targetLevel] <= $levelOrder[$currentLevel]) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot downgrade membership through this endpoint',
+            ], 400);
+        }
+
+        // Calculate upgrade fee
+        $upgradeFees = [
+            'gold' => 499000,        // BARU: dari bronze ke gold
+            'platinum' => 1500000,   // Tetap
+            'diamond' => 5000000,    // Tetap
+        ];
+
+        $fee = $upgradeFees[$targetLevel] ?? 0;
+
+        // Create upgrade transaction
+        $this->membershipService->addTransaction(
+            $user,
+            $fee,
+            'upgrade',
+            "Membership upgrade to {$targetLevel}",
+            ['target_level' => $targetLevel]
+        );
+
+        // Update membership level
+        $this->membershipService->updateMembershipLevel(
+            $user,
+            $targetLevel,
+            $currentLevel,
+            'Paid upgrade',
+            $user->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully upgraded to {$targetLevel} membership",
+            'data' => [
+                'new_level' => $targetLevel,
+                'fee_paid' => $fee,
+            ],
+        ]);
+    }
+
+    /**
+     * Renew membership to last paid level
+     */
+    public function renew(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Check if user can renew
+        if (!$user->last_paid_level) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No previous paid level to renew to',
+            ], 400);
+        }
+
+        $success = $this->membershipService->renewMembership($user);
+
+        if (!$success) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to renew membership',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully renewed to {$user->membership_level} membership",
+            'data' => [
+                'new_level' => $user->membership_level,
+            ],
+        ]);
+    }
+
+    /**
+     * Redeem points
+     */
+    public function redeemPoints(Request $request): JsonResponse
+    {
+        $request->validate([
+            'points' => 'required|integer|min:1',
+            'description' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $points = $request->input('points');
+        $description = $request->input('description');
+
+        try {
+            $this->membershipService->redeemPoints($user, $points, $description);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully redeemed {$points} points",
+                'data' => [
+                    'points_redeemed' => $points,
+                    'new_balance' => $user->fresh()->membership_points,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+}

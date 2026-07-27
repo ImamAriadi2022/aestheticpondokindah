@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 29% 97%;
+    --foreground: 44 57% 22%;
+    --card: 40 29% 97%;
+    --card-foreground: 44 57% 22%;
+    --popover: 40 29% 97%;
+    --popover-foreground: 44 57% 22%;
+    --primary: 44 57% 55%;
+    --primary-foreground: 40 29% 97%;
+    --secondary: 43 65% 86%;
+    --secondary-foreground: 44 57% 22%;
+    --muted: 43 65% 92%;
+    --muted-foreground: 44 20% 35%;
+    --accent: 43 65% 86%;
+    --accent-foreground: 44 57% 22%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 43 30% 80%;
+    --input: 43 30% 80%;
+    --ring: 44 57% 55%;
+    --radius: 0.5rem;
+    
+    /* Brand Colors - Gold Palette */
+    --gold: 44 57% 55%;
+    --gold-dark: 44 57% 45%;
+    --gold-light: 43 65% 86%;
+    --gold-muted: 44 30% 75%;
+    --bronze: 44 57% 55%;
+    --cream: 40 29% 97%;
+    --charcoal: 44 57% 22%;
+    --warm-gray: 44 20% 35%;
+    
+    --chart-1: 44 57% 55%;
+    --chart-2: 44 57% 45%;
+    --chart-3: 43 65% 86%;
+    --chart-4: 44 30% 75%;
+    --chart-5: 40 29% 97%;
+  }
+
+  .dark {
+    --background: 40 29% 97%;
+    --foreground: 44 57% 22%;
+    --card: 40 29% 97%;
+    --card-foreground: 44 57% 22%;
+    --popover: 40 29% 97%;
+    --popover-foreground: 44 57% 22%;
+    --primary: 44 57% 55%;
+    --primary-foreground: 40 29% 97%;
+    --secondary: 43 65% 86%;
+    --secondary-foreground: 44 57% 22%;
+    --muted: 43 65% 92%;
+    --muted-foreground: 44 20% 35%;
+    --accent: 43 65% 86%;
+    --accent-foreground: 44 57% 22%;
+    --destructive: 0 72.2% 50.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 43 30% 80%;
+    --input: 43 30% 80%;
+    --ring: 44 57% 55%;
+    
+    --gold: 44 57% 55%;
+    --gold-dark: 44 57% 45%;
+    --gold-light: 43 65% 86%;
+    --gold-muted: 44 30% 75%;
+    --bronze: 44 57% 55%;
+    --cream: 40 29% 97%;
+    --charcoal: 44 57% 22%;
+    --warm-gray: 44 20% 35%;
+    
+    --chart-1: 44 57% 55%;
+    --chart-2: 44 57% 45%;
+    --chart-3: 43 65% 86%;
+    --chart-4: 44 30% 75%;
+    --chart-5: 40 29% 97%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  button:not([disabled]),
+  [role="button"]:not([disabled]) {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: "Playfair Display", Georgia, serif;
+  }
+  
+  .font-body {
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-dark)) 100%);
+  }
+  
+  .bg-gradient-gold {
+    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-dark)) 100%);
+  }
+  
+  .bg-gradient-warm {
+    background: linear-gradient(180deg, hsl(var(--gold-light)) 0%, hsl(var(--background)) 100%);
+  }
+
+  .marquee {
+    position: relative;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+  }
+
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    gap: 1.5rem;
+    will-change: transform;
+    animation-duration: 35s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .marquee__track--left {
+    animation-name: marquee-left;
+  }
+
+  .marquee__track--right {
+    animation-name: marquee-right;
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-20px);
+    }
+
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes progress-draw {
+    from {
+      stroke-dasharray: 0 1000;
+      stroke-dashoffset: 1000;
+    }
+
+    to {
+      stroke-dasharray: 1000 0;
+      stroke-dashoffset: 0;
+    }
+  }
+}
+
+@keyframes marquee-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* TipTap / WpEditor content styles (Tailwind preflight removes list styles) */
+.wp-editor-content .ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.wp-editor-content .ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.wp-editor-content .ProseMirror li {
+  margin: 0.25rem 0;
+}
+
+.wp-editor-content .ProseMirror li p {
+  margin: 0;
+}
+
+.wp-editor-content .ProseMirror blockquote {
+  border-left: 4px solid hsl(var(--border));
+  padding-left: 1rem;
+  margin: 0.75rem 0;
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.wp-editor-content .ProseMirror h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 1rem 0 0.5rem;
+}
+
+.wp-editor-content .ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0.875rem 0 0.5rem;
+}
+
+.wp-editor-content .ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.wp-editor-content .ProseMirror h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0.5rem 0 0.25rem;
+}
