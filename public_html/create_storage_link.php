@@ -2,24 +2,32 @@
 /**
  * Script to create storage link for shared hosting deployment
  * Run this script on the server after deployment
- *
- * PENTING: Script ini akan:
- * 1. Hapus storage link yang SALAH di backend/public/storage
- * 2. Membuat storage link yang BENAR di public_html/storage
  */
 
+$backendDir = null;
+$rootDir = __DIR__;
+
+if (is_dir(__DIR__ . '/backend/storage/app/public')) {
+    $backendDir = __DIR__ . '/backend';
+} elseif (is_dir(dirname(__DIR__) . '/backend/storage/app/public')) {
+    $backendDir = dirname(__DIR__) . '/backend';
+    $rootDir = dirname(__DIR__);
+}
+
+if (!$backendDir) {
+    die("ERROR: Target backend directory does not exist.\n");
+}
+
 // Hapus storage link yang SALAH di backend/public/storage
-$wrongLink = __DIR__ . '/backend/public/storage';
+$wrongLink = $backendDir . '/public/storage';
 if (is_link($wrongLink)) {
     echo "MENGHAPUS storage link yang SALAH: $wrongLink\n";
     unlink($wrongLink);
     echo "Storage link salah berhasil dihapus.\n\n";
-} elseif (file_exists($wrongLink)) {
-    echo "WARNING: $wrongLink ada tapi bukan symbolic link. Hapus manual!\n\n";
 }
 
-// Buat storage link yang BENAR di public_html/storage
-$target = __DIR__ . '/backend/storage/app/public';
+// Buat storage link yang BENAR di public_html/storage atau httpdocs/storage
+$target = $backendDir . '/storage/app/public';
 $link = __DIR__ . '/storage';
 
 // Check if target exists
@@ -32,21 +40,15 @@ if (is_link($link)) {
     echo "Menghapus link yang sudah ada: $link\n";
     unlink($link);
 } elseif (file_exists($link)) {
-    die("ERROR: $link exists but is not a symbolic link. Please remove it manually.\n");
+    @unlink($link);
 }
 
 // Create symbolic link
-if (symlink($target, $link)) {
+if (@symlink($target, $link)) {
     echo "SUCCESS: Storage link created successfully!\n";
     echo "Target: $target\n";
     echo "Link: $link\n";
-    echo "\nYou can now access files at: /storage/{path}\n";
-    echo "\nStruktur yang BENAR:\n";
-    echo "- public_html/storage -> backend/storage/app/public\n";
-    echo "- backend/public/storage TIDAK ADA (dihapus)\n";
 } else {
-    echo "ERROR: Failed to create storage link\n";
-    echo "This might be due to server restrictions. Try creating it manually via SSH:\n";
-    echo "cd public_html && ln -s backend/storage/app/public storage\n";
+    echo "ERROR: Failed to create storage link via symlink.\n";
 }
 ?>
