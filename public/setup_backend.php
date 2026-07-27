@@ -4,9 +4,21 @@
  * Akses file ini via browser: https://domain-anda.com/setup_backend.php
  */
 
+// Deteksi lokasi folder backend secara fleksibel (di ./backend atau ../backend)
+$backendDir = null;
+if (file_exists(__DIR__ . '/backend/vendor/autoload.php')) {
+    $backendDir = __DIR__ . '/backend';
+} elseif (file_exists(__DIR__ . '/../backend/vendor/autoload.php')) {
+    $backendDir = dirname(__DIR__) . '/backend';
+}
+
+if (!$backendDir) {
+    die("<h3 style='color:red;'>ERROR: Folder backend atau vendor belum ditemukan. Pastikan folder 'backend' sudah ter-upload atau composer install telah dijalankan.</h3>");
+}
+
 // Load Laravel Bootstrap
-require __DIR__ . '/backend/vendor/autoload.php';
-$app = require_once __DIR__ . '/backend/bootstrap/app.php';
+require $backendDir . '/vendor/autoload.php';
+$app = require_once $backendDir . '/bootstrap/app.php';
 
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
@@ -15,7 +27,6 @@ echo "<style>body{font-family:sans-serif;background:#f4f6f9;padding:40px;line-he
 echo "<div class='card'>";
 echo "<h2>🚀 Automated Laravel Setup (Tanpa SSH)</h2>";
 
-// Action handlers
 $action = $_GET['action'] ?? 'all';
 
 function runArtisan($kernel, $command, $params = []) {
