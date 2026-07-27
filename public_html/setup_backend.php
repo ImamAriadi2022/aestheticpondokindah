@@ -1,5 +1,4 @@
 <?php
-// Active Error Reporting agar tidak menjadi layar hitam/500 tanpa pesan
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -19,18 +18,20 @@ foreach ($possibleBackendPaths as $path) {
     }
 }
 
-// Cek komponen-komponen penting
+// System Health Checks
 $phpVersion = PHP_VERSION;
 $isPhpValid = version_compare($phpVersion, '8.2.0', '>=');
 
 $hasBackendFolder = $backendDir !== null;
+$shortBackendPath = $backendDir ? '.../' . basename(dirname($backendDir)) . '/' . basename($backendDir) : 'Tidak ditemukan';
+
 $envPath = $backendDir ? $backendDir . '/.env' : null;
 $hasEnvFile = $envPath && file_exists($envPath);
 $vendorPath = $backendDir ? $backendDir . '/vendor/autoload.php' : null;
 $hasVendor = $vendorPath && file_exists($vendorPath);
 
-// Cek Kredensial Database dari .env jika ada
-$dbStatus = "Belum Dites";
+// Cek Kredensial Database
+$dbStatus = "UNCONFIGURED";
 $dbError = null;
 $dbConfig = [];
 
@@ -57,13 +58,11 @@ if ($hasEnvFile) {
             $dbStatus = "FAILED";
             $dbError = $e->getMessage();
         }
-    } else {
-        $dbStatus = "UNCONFIGURED";
     }
 }
 
-// Penanganan Aksi (Action Handler)
-$actionMessage = null;
+// Action Handlers
+$actionLog = null;
 $actionSuccess = false;
 
 if (isset($_GET['action'])) {
@@ -80,10 +79,10 @@ if (isset($_GET['action'])) {
             $kernel->call('migrate', ['--force' => true], $output);
             $kernel->call('config:clear', [], $output);
 
-            $actionMessage = $output->fetch();
+            $actionLog = $output->fetch();
             $actionSuccess = true;
         } catch (Throwable $e) {
-            $actionMessage = "Error Eksekusi: " . $e->getMessage();
+            $actionLog = "Gagal Eksekusi: " . $e->getMessage();
         }
     } elseif ($action === 'link_storage') {
         $target = $backendDir . '/storage/app/public';
@@ -98,10 +97,10 @@ if (isset($_GET['action'])) {
         }
 
         if (@symlink($target, $link)) {
-            $actionMessage = "SUCCESS: Storage link berhasil dibuat ke $link";
+            $actionLog = "SUCCESS: Symbolic link storage berhasil dibuat di " . basename($link);
             $actionSuccess = true;
         } else {
-            $actionMessage = "Gagal membuat symlink otomatis. Anda dapat membuat folder 'storage' di public_html atau menghubungi provider hosting.";
+            $actionLog = "Gagal me-link otomatis. Buat symlink dari SSH atau cPanel File Manager.";
         }
     }
 }
@@ -111,118 +110,146 @@ if (isset($_GET['action'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pusat Kontrol Setup Backend - Aesthetic Pondok Indah</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Pusat Kontrol Deployment - Aesthetic Pondok Indah</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #0b1329;
+            --card-bg: #151f38;
+            --card-border: #233154;
+            --primary: #0ea5e9;
+            --primary-hover: #0284c7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: #0f172a; color: #f8fafc; padding: 40px 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { max-width: 750px; width: 100%; background: #1e293b; border-radius: 16px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3); border: 1px solid #334155; }
-        .header { text-align: center; margin-bottom: 32px; }
-        .header h1 { font-size: 24px; font-weight: 700; color: #38bdf8; margin-bottom: 8px; }
-        .header p { color: #94a3b8; font-size: 14px; }
+        body { background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
         
-        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 32px; }
-        .status-card { background: #0f172a; padding: 16px; border-radius: 12px; border: 1px solid #334155; display: flex; align-items: center; justify-content: space-between; }
-        .status-info h4 { font-size: 14px; font-weight: 600; color: #e2e8f0; }
-        .status-info p { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .installer-card { width: 100%; max-width: 680px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         
-        .badge { font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
-        .badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-        .badge-warning { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .brand { text-align: center; margin-bottom: 28px; }
+        .brand-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.2); border-radius: 99px; font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 12px; }
+        .brand h1 { font-size: 22px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
+        .brand p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
-        .actions { display: flex; flex-direction: column; gap: 12px; }
-        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 14px 20px; font-weight: 600; font-size: 14px; border-radius: 10px; text-decoration: none; transition: all 0.2s; border: none; cursor: pointer; }
-        .btn-primary { background: #0284c7; color: white; }
-        .btn-primary:hover { background: #0369a1; }
-        .btn-secondary { background: #334155; color: white; }
-        .btn-secondary:hover { background: #475569; }
+        .diagnostics-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+        .diag-item { background: rgba(11, 19, 41, 0.6); border: 1px solid var(--card-border); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
         
-        .console { background: #020617; padding: 16px; border-radius: 10px; font-family: monospace; font-size: 13px; color: #38bdf8; margin-top: 24px; white-space: pre-wrap; word-break: break-all; border: 1px solid #1e293b; max-height: 250px; overflow-y: auto; }
-        .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-top: 12px; }
+        .diag-meta { min-width: 0; flex: 1; }
+        .diag-title { font-size: 14px; font-weight: 600; color: var(--text-main); }
+        .diag-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 380px; }
+
+        .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+        .pill-success { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .pill-danger { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+        .pill-warning { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+
+        .actions-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .btn-action { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.2s ease; }
+        .btn-primary { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3); }
+        .btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
+        .btn-secondary { background: #1e2d4a; color: #e2e8f0; border: 1px solid var(--card-border); }
+        .btn-secondary:hover { background: #26385c; }
+        .btn-disabled { background: #1e293b; color: #475569; border: 1px solid #334155; cursor: not-allowed; opacity: 0.6; }
+
+        .console-box { background: #070d19; border: 1px solid var(--card-border); border-radius: 12px; padding: 16px; margin-top: 24px; font-family: monospace; font-size: 12px; color: #38bdf8; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
+        .db-error-box { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; font-size: 12px; color: #f87171; line-height: 1.5; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚡ Dashboard Diagnostics & Setup Backend</h1>
-            <p>Aesthetic Pondok Indah Dental Clinic</p>
+    <div class="installer-card">
+        <div class="brand">
+            <div class="brand-badge">✨ Automated Installer</div>
+            <h1>Aesthetic Pondok Indah</h1>
+            <p>Pusat Kontrol Deployment & Diagnostic Backend</p>
         </div>
 
-        <div class="status-grid">
-            <div class="status-card">
-                <div class="status-info">
-                    <h4>Versi PHP Hosting</h4>
-                    <p>Syarat minimal PHP 8.2.0</p>
+        <div class="diagnostics-list">
+            <!-- Item 1: PHP -->
+            <div class="diag-item">
+                <div class="diag-meta">
+                    <div class="diag-title">Versi PHP Hosting</div>
+                    <div class="diag-sub">Syarat minimal PHP 8.2.0</div>
                 </div>
-                <span class="badge <?= $isPhpValid ? 'badge-success' : 'badge-danger' ?>">
+                <div class="status-pill <?= $isPhpValid ? 'pill-success' : 'pill-danger' ?>">
                     PHP <?= $phpVersion ?>
-                </span>
+                </div>
             </div>
 
-            <div class="status-card">
-                <div class="status-info">
-                    <h4>Folder Backend</h4>
-                    <p><?= $backendDir ? htmlspecialchars($backendDir) : 'Folder tidak ditemukan' ?></p>
+            <!-- Item 2: Backend Folder -->
+            <div class="diag-item">
+                <div class="diag-meta">
+                    <div class="diag-title">Folder Backend Laravel</div>
+                    <div class="diag-sub" title="<?= htmlspecialchars($backendDir ?? '') ?>"><?= htmlspecialchars($shortBackendPath) ?></div>
                 </div>
-                <span class="badge <?= $hasBackendFolder ? 'badge-success' : 'badge-danger' ?>">
-                    <?= $hasBackendFolder ? 'TERSEDIA' : 'HILANG' ?>
-                </span>
+                <div class="status-pill <?= $hasBackendFolder ? 'pill-success' : 'pill-danger' ?>">
+                    <?= $hasBackendFolder ? '✓ Ada' : '✗ Hilang' ?>
+                </div>
             </div>
 
-            <div class="status-card">
-                <div class="status-info">
-                    <h4>File Konfigurasi (.env)</h4>
-                    <p>File environment Laravel</p>
+            <!-- Item 3: File .env -->
+            <div class="diag-item">
+                <div class="diag-meta">
+                    <div class="diag-title">File Konfigurasi (.env)</div>
+                    <div class="diag-sub">Kredensial database & kunci aplikasi</div>
                 </div>
-                <span class="badge <?= $hasEnvFile ? 'badge-success' : 'badge-danger' ?>">
-                    <?= $hasEnvFile ? 'TERSEDIA' : 'BELUM DIBUAT' ?>
-                </span>
+                <div class="status-pill <?= $hasEnvFile ? 'pill-success' : 'pill-warning' ?>">
+                    <?= $hasEnvFile ? '✓ Ada' : '⚠️ Belum Dibuat' ?>
+                </div>
             </div>
 
-            <div class="status-card">
-                <div class="status-info">
-                    <h4>Dependensi Vendor (Autoload)</h4>
-                    <p>Framework Laravel Library</p>
+            <!-- Item 4: Vendor -->
+            <div class="diag-item">
+                <div class="diag-meta">
+                    <div class="diag-title">Dependensi Vendor (Composer)</div>
+                    <div class="diag-sub">Framework Laravel Library</div>
                 </div>
-                <span class="badge <?= $hasVendor ? 'badge-success' : 'badge-danger' ?>">
-                    <?= $hasVendor ? 'TERSEDIA' : 'HILANG' ?>
-                </span>
+                <div class="status-pill <?= $hasVendor ? 'pill-success' : 'pill-danger' ?>">
+                    <?= $hasVendor ? '✓ Siap' : '✗ Belum Ada (Upload vendor.zip)' ?>
+                </div>
             </div>
 
-            <div class="status-card" style="grid-column: 1 / -1;">
-                <div class="status-info">
-                    <h4>Koneksi Database MySQL</h4>
-                    <p><?= !empty($dbConfig['database']) ? 'Database: ' . htmlspecialchars($dbConfig['database']) : 'Kredensial belum diset di .env' ?></p>
+            <!-- Item 5: Database -->
+            <div class="diag-item">
+                <div class="diag-meta">
+                    <div class="diag-title">Koneksi Database MySQL</div>
+                    <div class="diag-sub"><?= !empty($dbConfig['database']) ? 'Database: ' . htmlspecialchars($dbConfig['database']) : 'Kredensial belum diset di .env' ?></div>
                 </div>
-                <span class="badge <?= $dbStatus === 'CONNECTED' ? 'badge-success' : ($dbStatus === 'FAILED' ? 'badge-danger' : 'badge-warning') ?>">
-                    <?= $dbStatus ?>
-                </span>
+                <div class="status-pill <?= $dbStatus === 'CONNECTED' ? 'pill-success' : ($dbStatus === 'FAILED' ? 'pill-danger' : 'pill-warning') ?>">
+                    <?= $dbStatus === 'CONNECTED' ? '✓ Terhubung' : ($dbStatus === 'FAILED' ? '✗ Gagal' : '⚠️ Belum Diset') ?>
+                </div>
             </div>
         </div>
 
         <?php if ($dbError): ?>
-            <div class="alert-error">
-                <strong>Error Database:</strong> <?= htmlspecialchars($dbError) ?><br>
-                <small>Pastikan nama database, username, dan password di file <code>httpdocs/backend/.env</code> sudah sesuai dengan di Plesk.</small>
+            <div class="db-error-box">
+                <strong>⚠️ Kendala Koneksi Database:</strong><br>
+                <?= htmlspecialchars($dbError) ?>
             </div>
         <?php endif; ?>
 
-        <div class="actions">
+        <div class="actions-group">
             <?php if ($hasBackendFolder && $hasEnvFile && $hasVendor && $dbStatus === 'CONNECTED'): ?>
-                <a href="?action=setup_db" class="btn btn-primary">🚀 Jalankan Generate Key & Database Migration</a>
-                <a href="?action=link_storage" class="btn btn-secondary">🔗 Buat Shortcut Storage Gambar</a>
+                <a href="?action=setup_db" class="btn-action btn-primary">🚀 Jalankan Migrasi Database & Key</a>
+                <a href="?action=link_storage" class="btn-action btn-secondary">🔗 Buat Storage Link Gambar</a>
+            <?php elseif (!$hasVendor): ?>
+                <div class="btn-action btn-disabled">
+                    🔒 Upload folder vendor.zip ke httpdocs/backend/ untuk mengaktifkan tombol setup
+                </div>
             <?php else: ?>
-                <p style="color:#e2e8f0; font-size:14px; text-align:center; padding:10px;">
-                    ⚠️ Ikuti daftar cek status di atas. Setelah `.env` disetting dan database terhubung, tombol instalasi otomatis akan aktif.
-                </p>
+                <div class="btn-action btn-disabled">
+                    🔒 Lengkapi status berwarna kuning/merah di atas untuk melanjutkan
+                </div>
             <?php endif; ?>
         </div>
 
-        <?php if ($actionMessage): ?>
-            <div class="console">
-                <strong>[LOG EKSEKUSI]:</strong><br>
-                <?= htmlspecialchars($actionMessage) ?>
+        <?php if ($actionLog): ?>
+            <div class="console-box">
+                <strong>[LOG LOG SISTEM]:</strong><br>
+                <?= htmlspecialchars($actionLog) ?>
             </div>
         <?php endif; ?>
     </div>
