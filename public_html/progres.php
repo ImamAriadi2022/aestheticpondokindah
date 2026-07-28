@@ -10,16 +10,17 @@ header('Content-Type: text/html; charset=utf-8');
 
 // Metric Data Progress Utama (Hasil Audit Nyata Source Code)
 $metrics = [
-    'overall'       => 86,
+    'overall'       => 82,
     'backend'       => 92,
     'website'       => 95,
-    'mobile'        => 45,
+    'mobile'        => 33,
     'database'      => 98,
     'api'           => 95,
     'testing'       => 60,
     'deployment'    => 95,
     'documentation' => 90,
 ];
+$lastAuditAt = '2026-07-28 18:10 WIB';
 
 // 1. Milestones Project Management
 $milestones = [
@@ -56,15 +57,15 @@ $milestones = [
     [
         'id' => 3,
         'title' => 'Milestone 3: Native Mobile Apps & Payment Gateway Live',
-        'progress' => 40,
+        'progress' => 33,
         'status' => '🟡 In Progress',
         'status_code' => 'warning',
         'evidence' => [
-            'src/react-app/pages/mobile/MobileHome.tsx',
-            'src/react-app/pages/mobile/MobileBooking.tsx',
+            'mobile-native/app/(tabs)/index.tsx',
+            'mobile-native/app/booking/new.tsx',
             'backend/app/Http/Controllers/Api/User/MembershipPaymentController.php'
         ],
-        'notes' => 'Mobile Web PWA Responsive selesai 100%. Aplikasi Native Android APK (Java/Kotlin/Flutter) belum dibuat. Production Key Midtrans belum dimasukkan.'
+        'notes' => 'Audit native: 5 dari 15 fitur target memiliki implementasi end-to-end (Authentication, Dashboard, Membership, Artikel, dan Form booking publik), sehingga progress native 33%. Appointment history, points, gallery, banner, settings, offline background sync, Firebase, signing APK, serta payment production belum selesai.'
     ],
 ];
 
@@ -96,7 +97,7 @@ $mobileDetails = [
     ['feature' => 'Offline Support / PWA Cache', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'public/sw.js, manifest.json, offline.html, PwaManager.tsx, guestSession.ts'],
     ['feature' => 'Data Synchronization', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobileSyncManager.ts (pub/sub events, online/offline, app lifecycle), PullToRefresh.tsx, Skeleton.tsx, MobileHome+Riwayat+Booking synced'],
     ['feature' => 'Mobile Error Handling', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts global handler, apiError.ts mapping (400-504/Network/Timeout/Offline), toast variants, ErrorBoundary.tsx, logger.ts sanitized'],
-    ['feature' => 'Native Android Application (APK)', 'status' => '🔴 Not Started', 'progress' => 0, 'evidence' => 'Belum ada repository Android Native (Java/Kotlin/Flutter) terpisah'],
+    ['feature' => 'Native Android Application (APK)', 'status' => '🟡 In Progress', 'progress' => 33, 'evidence' => 'mobile-native/: Expo Router, SecureStore, AsyncStorage cache, auth, dashboard, membership, artikel, notifikasi, dan POST /public/reservations; tsc + Android bundle passed.'],
 ];
 
 // 4. Detail API Registry (Semua Endpoints dari routes/api.php)
@@ -157,12 +158,12 @@ $databaseDetails = [
 
 // 6. Detail Testing Metrics
 $testingDetails = [
-    'functional_test' => '🟢 Pass (Diagnostic suite test_system.php 100% Pass)',
+    'functional_test' => '🟡 In Progress (Diagnostic suite web pass; native TypeScript dan Android bundle pass, device E2E belum dilakukan)',
     'api_test'        => '🟢 Pass (Endpoint GET /api/public/posts HTTP 200 OK JSON verified)',
     'critical_bugs'   => 0,
     'minor_bugs'      => 0,
-    'pending_bugs'    => 0,
-    'status'          => '🟢 All Systems Operational'
+    'pending_bugs'    => 3,
+    'status'          => '🟡 Native integration masih perlu verifikasi perangkat dan API produksi'
 ];
 
 // 7. Detail Deployment Infrastructure
@@ -186,6 +187,14 @@ $docDetails = [
 
 // 9. Recent Changes Log
 $recentChanges = [
+    [
+        'date' => '2026-07-28',
+        'time' => '18:10',
+        'file' => 'mobile-native/*, public_html/progres.php',
+        'change' => 'Audit ulang sesuai skill project-progress: booking native dipastikan memakai POST /api/public/reservations; entry Expo dan bundling Android diperbaiki. Progress native dihitung dari 5/15 fitur selesai.',
+        'before' => '86% overall / Native 0%',
+        'after'  => '82% overall / Native 33%'
+    ],
     [
         'date' => '2026-07-28',
         'time' => '16:34',
@@ -223,23 +232,28 @@ $recentChanges = [
 // 10. Remaining Tasks Breakdown
 $remainingTasks = [
     'belum_dikerjakan' => [
-        'Aplikasi Native Android (Java/Kotlin/Flutter) jika diputuskan membuat versi APK terpisah',
+        'Native: Gallery, Banner/Popup, Profile Settings, Points, dan riwayat booking pasien',
         'FCM Push Notification Service untuk notifikasi mobile'
     ],
     'sedang_dikerjakan' => [
-        'Integrasi Kredensial Produksi Midtrans Payment Gateway di backend/.env'
+        'Integrasi Kredensial Produksi Midtrans Payment Gateway di backend/.env',
+        'Native: sinkronisasi background dan deteksi konektivitas'
     ],
     'menunggu_backend' => [
-        'Integrasi Midtrans Signature Key & Callback Webhook URL di backend'
+        'Integrasi Midtrans Signature Key & Callback Webhook URL di backend',
+        'Kontrak API riwayat booking per pasien (belum tersedia di routes/api.php)'
     ],
     'menunggu_frontend' => [
-        'Refactoring tipe data TypeScript `any` di ClinicDashboard.tsx'
+        'Refactoring tipe data TypeScript `any` di ClinicDashboard.tsx',
+        'Ganti data mock pada DesktopReservasi.tsx dan DesktopPengaduan.tsx dengan API produksi'
     ],
     'menunggu_mobile' => [
+        'Firebase credentials, device token production, keystore signing, dan EAS APK',
         'Opsional: PWA ServiceWorker Cache Strategy untuk offline mode'
     ],
     'menunggu_testing' => [
-        'Pengetesan transaksi payment gateway live dengan akun Sandbox Midtrans'
+        'Pengetesan transaksi payment gateway live dengan akun Sandbox Midtrans',
+        'Native device/API end-to-end test dengan backend produksi'
     ],
     'menunggu_deployment' => [
         'Pembersihan file installer `setup_backend.php` dan `data_setup.php` sebelum rilis publik akhir'
@@ -410,6 +424,7 @@ $remainingTasks = [
                     </span>
                     <h1 class="font-display fw-bold text-gradient-gold display-5 mb-2">Progress Project Dashboard</h1>
                     <p class="text-secondary mb-0 fs-6">Laporan Transparan Sampai Level Fitur Berdasarkan Evidence Source Code Nyata (React 19 + Laravel 12)</p>
+                    <small class="text-muted d-block mt-2"><i class="bi bi-clock-history me-1"></i>Audit terakhir: <?= $lastAuditAt ?></small>
                 </div>
                 <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
                     <div class="p-4 rounded-4 bg-white border border-warning border-opacity-30 d-inline-block text-center shadow-sm">
@@ -431,10 +446,10 @@ $remainingTasks = [
             $cardItems = [
                 ['label' => 'Backend Laravel', 'val' => $metrics['backend'], 'icon' => 'bi-server', 'desc' => 'Sanctum, Roles, REST API'],
                 ['label' => 'Website React JS', 'val' => $metrics['website'], 'icon' => 'bi-window', 'desc' => '25+ Halaman SPA + Admin'],
-                ['label' => 'Mobile (PWA)', 'val' => $metrics['mobile'], 'icon' => 'bi-phone', 'desc' => 'PWA 100%, Native APK 0%'],
+                ['label' => 'Mobile Native', 'val' => $metrics['mobile'], 'icon' => 'bi-phone', 'desc' => 'Expo Android 5/15 fitur selesai; PWA terpisah'],
                 ['label' => 'Database MySQL', 'val' => $metrics['database'], 'icon' => 'bi-database', 'desc' => '32 Migrasi & 19 Models'],
                 ['label' => 'API Endpoints', 'val' => $metrics['api'], 'icon' => 'bi-cloud-arrow-up', 'desc' => '>45 Active Endpoints'],
-                ['label' => 'QA & Testing', 'val' => $metrics['testing'], 'icon' => 'bi-speedometer2', 'desc' => 'Diagnostic Suite 100% Pass'],
+                ['label' => 'QA & Testing', 'val' => $metrics['testing'], 'icon' => 'bi-speedometer2', 'desc' => 'Native type-check + Android bundle; E2E perangkat belum'],
                 ['label' => 'Deployment', 'val' => $metrics['deployment'], 'icon' => 'bi-box-seam', 'desc' => 'Plesk Git Auto-Deploy'],
                 ['label' => 'Documentation', 'val' => $metrics['documentation'], 'icon' => 'bi-file-earmark-text', 'desc' => 'Guides & API Specs'],
             ];

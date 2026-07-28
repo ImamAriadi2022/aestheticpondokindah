@@ -10,10 +10,10 @@ header('Content-Type: text/html; charset=utf-8');
 
 // Metric Data Progress Utama (Hasil Audit Nyata Source Code)
 $metrics = [
-    'overall'       => 86,
+    'overall'       => 82,
     'backend'       => 92,
     'website'       => 95,
-    'mobile'        => 45,
+    'mobile'        => 33,
     'database'      => 98,
     'api'           => 95,
     'testing'       => 60,
@@ -56,7 +56,7 @@ $milestones = [
     [
         'id' => 3,
         'title' => 'Milestone 3: Native Mobile Apps & Payment Gateway Live',
-        'progress' => 45,
+        'progress' => 33,
         'status' => '🟡 In Progress',
         'status_code' => 'warning',
         'evidence' => [
@@ -64,7 +64,7 @@ $milestones = [
             'mobile-native/app/booking/new.tsx',
             'backend/app/Http/Controllers/Api/User/MembershipPaymentController.php'
         ],
-        'notes' => 'Mobile Web PWA Responsive selesai 100%. React Native/Expo Android sedang berjalan: auth, dashboard, membership, notifikasi, artikel, dan booking public terhubung ke kontrak Laravel yang ada. Gallery, profile settings, riwayat booking, sinkronisasi background, dan konfigurasi Firebase/keystore masih tersisa. Production Key Midtrans belum dimasukkan.'
+        'notes' => 'Audit native: 5 dari 15 fitur target memiliki implementasi end-to-end (Authentication, Dashboard, Membership, Artikel, dan Form booking publik), sehingga progress native 33%. Appointment history, points, gallery, banner, settings, offline background sync, Firebase, signing APK, serta payment production belum selesai.'
     ],
 ];
 
@@ -96,7 +96,7 @@ $mobileDetails = [
     ['feature' => 'Offline Support / PWA Cache', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'public/sw.js, manifest.json, offline.html, PwaManager.tsx, guestSession.ts'],
     ['feature' => 'Data Synchronization', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobileSyncManager.ts (pub/sub events, online/offline, app lifecycle), PullToRefresh.tsx, Skeleton.tsx, MobileHome+Riwayat+Booking synced'],
     ['feature' => 'Mobile Error Handling', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts global handler, apiError.ts mapping (400-504/Network/Timeout/Offline), toast variants, ErrorBoundary.tsx, logger.ts sanitized'],
-    ['feature' => 'Native Android Application (APK)', 'status' => '🟡 In Progress', 'progress' => 45, 'evidence' => 'mobile-native/ (Expo+React Native): auth, tabs, article, membership upgrade, public booking; TypeScript verified.'],
+    ['feature' => 'Native Android Application (APK)', 'status' => '🟡 In Progress', 'progress' => 33, 'evidence' => 'mobile-native/: Expo Router, SecureStore, AsyncStorage cache, auth, dashboard, membership, artikel, notifikasi, dan POST /public/reservations; tsc + Android bundle passed.'],
 ];
 
 // 4. Detail API Registry (Semua Endpoints dari routes/api.php)
@@ -431,7 +431,7 @@ $remainingTasks = [
             $cardItems = [
                 ['label' => 'Backend Laravel', 'val' => $metrics['backend'], 'icon' => 'bi-server', 'desc' => 'Sanctum, Roles, REST API'],
                 ['label' => 'Website React JS', 'val' => $metrics['website'], 'icon' => 'bi-window', 'desc' => '25+ Halaman SPA + Admin'],
-                ['label' => 'Mobile (PWA)', 'val' => $metrics['mobile'], 'icon' => 'bi-phone', 'desc' => 'PWA 100%, Native APK 0%'],
+                ['label' => 'Mobile Native', 'val' => $metrics['mobile'], 'icon' => 'bi-phone', 'desc' => 'Expo Android 5/15 fitur selesai; PWA terpisah'],
                 ['label' => 'Database MySQL', 'val' => $metrics['database'], 'icon' => 'bi-database', 'desc' => '32 Migrasi & 19 Models'],
                 ['label' => 'API Endpoints', 'val' => $metrics['api'], 'icon' => 'bi-cloud-arrow-up', 'desc' => '>45 Active Endpoints'],
                 ['label' => 'QA & Testing', 'val' => $metrics['testing'], 'icon' => 'bi-speedometer2', 'desc' => 'Diagnostic Suite 100% Pass'],
