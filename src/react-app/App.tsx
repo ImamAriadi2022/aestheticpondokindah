@@ -7,6 +7,7 @@ import ProtectedRoute from "@/react-app/components/routing/ProtectedRoute";
 import ChatBot from "@/react-app/components/chatbot/ChatBot";
 import { ToastViewport } from "@/react-app/components/ui/toast";
 import { trackVisit } from "@/react-app/lib/analyticsApi";
+import { PwaManager } from "@/react-app/components/pwa/PwaManager";
 
 const HomePage = lazy(() => import("@/react-app/pages/Home"));
 const AboutPage = lazy(() => import("@/react-app/pages/About"));
@@ -200,6 +201,7 @@ export default function App() {
       </Suspense>
       <ChatBotWrapper />
       <ToastViewport />
+      <PwaManager />
     </Router>
   );
 }
