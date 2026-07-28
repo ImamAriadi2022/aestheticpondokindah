@@ -4,3 +4,5 @@ node_modules/
 .dev.vars
 worker-configuration.d.ts
 .agent
+
+note.md
