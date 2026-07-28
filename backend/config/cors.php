@@ -21,10 +21,13 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
+        'https://aestheticpondokindah.com',
+        'http://aestheticpondokindah.com',
         'https://aestheticpondokindah.web.id',
+        '*',
     ],
 
-    'allowed_origins_patterns' => ['/https?:\/\/([a-z0-9-]+\.)*aestheticpondokindah\.web\.id/'],
+    'allowed_origins_patterns' => ['*'],
 
     'allowed_headers' => ['*'],
 

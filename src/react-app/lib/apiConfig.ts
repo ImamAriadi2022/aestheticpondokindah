@@ -6,7 +6,10 @@
 const getApiBaseUrl = (): string => {
   // Cek apakah di environment production
   if (import.meta.env.PROD) {
-    return "https://aestheticpondokindah.web.id/backend/public/api";
+    if (typeof window !== "undefined" && window.location.origin) {
+      return `${window.location.origin}/backend/public/api`;
+    }
+    return "https://aestheticpondokindah.com/backend/public/api";
   }
 
   // Untuk development, gunakan localhost
