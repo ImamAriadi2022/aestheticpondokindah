@@ -3,6 +3,8 @@ import { useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/react-app/components/dashboard/NewMobileDashboardLayout";
 import { ArrowRight, Check, Search } from "lucide-react";
 import { services as allServices } from "@/react-app/pages/Services";
+import { PullToRefresh } from "@/react-app/components/ui/PullToRefresh";
+import { mobileSyncManager } from "@/react-app/lib/mobileSyncManager";
 
 export default function MobileBookingPage() {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ export default function MobileBookingPage() {
 
   return (
     <NewMobileDashboardLayout role="user" hideBottomNav>
+      <PullToRefresh onRefresh={async () => { mobileSyncManager.syncAll(true); }}>
       {/* Progress Steps */}
       <div className="px-4 py-4 bg-white border-b border-gray-100">
         <div className="flex items-center justify-center gap-2">
@@ -120,6 +123,7 @@ export default function MobileBookingPage() {
           })}
         </div>
       </div>
+      </PullToRefresh>
     </NewMobileDashboardLayout>
   );
 }

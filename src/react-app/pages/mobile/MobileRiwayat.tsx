@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/react-app/components/dashboard/NewMobileDashboardLayout";
 import { Button } from "@/react-app/components/ui/button";
+import { PullToRefresh } from "@/react-app/components/ui/PullToRefresh";
+import { mobileSyncManager } from "@/react-app/lib/mobileSyncManager";
 import { 
   CalendarDays,
   Clock,
@@ -64,12 +66,19 @@ export default function MobileRiwayatPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate loading data
+  const loadData = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-    }, 500);
+    }, 400);
+  };
+
+  useEffect(() => {
+    loadData();
+    const unsubscribe = mobileSyncManager.subscribe(() => {
+      loadData();
+    });
+    return () => unsubscribe();
   }, []);
 
   const filteredBookings = mockBookings.filter(booking => {
@@ -83,6 +92,7 @@ export default function MobileRiwayatPage() {
 
   return (
     <NewMobileDashboardLayout role="user">
+      <PullToRefresh onRefresh={async () => { mobileSyncManager.syncAll(true); }}>
       {/* Search Header */}
       <div className="px-4 py-3 bg-white">
         <div className="flex items-center gap-3">
@@ -244,6 +254,7 @@ export default function MobileRiwayatPage() {
           </button>
         )}
       </div>
+      </PullToRefresh>
     </NewMobileDashboardLayout>
   );
 }

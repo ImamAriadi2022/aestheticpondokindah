@@ -94,8 +94,8 @@ $mobileDetails = [
     ['feature' => 'Mobile Profile Management', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/mobile/MobileAkun.tsx'],
     ['feature' => 'Mobile REST API Client', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/lib/apiConfig.ts'],
     ['feature' => 'Offline Support / PWA Cache', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'public/sw.js, manifest.json, offline.html, PwaManager.tsx, guestSession.ts'],
-    ['feature' => 'Data Synchronization', 'status' => '🟢 Complete', 'progress' => 90, 'evidence' => 'Automatic refetch & state sync in React Query / hooks'],
-    ['feature' => 'Mobile Error Handling', 'status' => '🟢 Complete', 'progress' => 90, 'evidence' => 'Mobile toast notifications & inline validation messages'],
+    ['feature' => 'Data Synchronization', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobileSyncManager.ts (pub/sub events, online/offline, app lifecycle), PullToRefresh.tsx, Skeleton.tsx, MobileHome+Riwayat+Booking synced'],
+    ['feature' => 'Mobile Error Handling', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts global handler, apiError.ts mapping (400-504/Network/Timeout/Offline), toast variants, ErrorBoundary.tsx, logger.ts sanitized'],
     ['feature' => 'Native Android Application (APK)', 'status' => '🔴 Not Started', 'progress' => 0, 'evidence' => 'Belum ada repository Android Native (Java/Kotlin/Flutter) terpisah'],
 ];
 

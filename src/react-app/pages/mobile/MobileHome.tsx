@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/react-app/components/dashboard/NewMobileDashboardLayout";
 import { getSession } from "@/react-app/lib/demoAuth";
 import { Button } from "@/react-app/components/ui/button";
+import { PullToRefresh } from "@/react-app/components/ui/PullToRefresh";
+import { mobileSyncManager } from "@/react-app/lib/mobileSyncManager";
 import { 
   CalendarDays, 
   MessageSquareText, 
@@ -46,7 +48,7 @@ export default function MobileHomePage() {
   const [session, setSession] = useState<any>(null);
   const [activeSlide, setActiveSlide] = useState(0);
 
-  useEffect(() => {
+  const loadUserSession = () => {
     let s = getSession();
     const storedUser = localStorage.getItem("apident:user");
     if (storedUser) {
@@ -56,6 +58,14 @@ export default function MobileHomePage() {
       } catch (e) {}
     }
     setSession(s);
+  };
+
+  useEffect(() => {
+    loadUserSession();
+    const unsubscribe = mobileSyncManager.subscribe(() => {
+      loadUserSession();
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -73,6 +83,7 @@ export default function MobileHomePage() {
 
   return (
     <NewMobileDashboardLayout role="user">
+      <PullToRefresh onRefresh={async () => { mobileSyncManager.syncAll(true); }}>
       {/* LUXURY HEADER SECTION */}
       <div className="relative bg-gradient-to-br from-white via-white to-[#c9a24a]/10 px-4 pt-6 pb-5 overflow-hidden">
         {/* Decorative background elements */}
@@ -416,8 +427,9 @@ export default function MobileHomePage() {
             </div>
           </div>
         </div>
+        </div>
 
-      </div>
+      </PullToRefresh>
     </NewMobileDashboardLayout>
   );
 }
