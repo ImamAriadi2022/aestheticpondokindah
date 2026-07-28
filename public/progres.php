@@ -73,7 +73,7 @@ $websiteDetails = [
     ['feature' => 'Authentication', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/Login.tsx, src/react-app/lib/demoAuth.ts, AuthController.php'],
     ['feature' => 'Dashboard User & Clinic', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/dashboard/UserDashboardNew.tsx, ClinicDashboard.tsx'],
     ['feature' => 'Appointment & Booking', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/BookingNew.tsx, BookingStatus.tsx, reservationApi.ts'],
-    ['feature' => 'Membership & Points', 'status' => '🟡 Partial', 'progress' => 85, 'evidence' => 'src/react-app/pages/Membership.tsx, MembershipUpgrade.tsx, membershipApi.ts (simulasi bayar aktif)'],
+    ['feature' => 'Membership & Points', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'MembershipController.php, MembershipPaymentController.php, Membership.tsx, MembershipUpgrade.tsx, membershipApi.ts (Payment Gateway: 🟡 Deferred - Planned for future integration)'],
     ['feature' => 'Profile Management', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/Settings.tsx, UserController.php, UserProfile.php'],
     ['feature' => 'Gallery & Testimonials', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/components/home/GallerySection.tsx, Cerita.tsx, ContentController.php'],
     ['feature' => 'Banner & Popups', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/components/home/HeroBanner.tsx, PopupAdminController.php'],

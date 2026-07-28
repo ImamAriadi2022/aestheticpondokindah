@@ -338,4 +338,39 @@ class MembershipController extends Controller
             ], 400);
         }
     }
+
+    /**
+     * Cancel membership
+     */
+    public function cancel(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->membership_status === 'cancelled') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Membership sudah dibatalkan sebelumnya',
+            ], 400);
+        }
+
+        $user->update([
+            'membership_status' => 'cancelled',
+        ]);
+
+        $this->membershipService->recordHistory(
+            $user,
+            $user->membership_level,
+            $user->membership_level,
+            'Pembatalan membership oleh pengguna',
+            $user->id
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Membership berhasil dibatalkan',
+            'data' => [
+                'status' => 'cancelled',
+            ],
+        ]);
+    }
 }

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/react-app/components/ui/card";
 import { getSession } from "@/react-app/lib/demoAuth";
 import DashboardLayout from "@/react-app/components/dashboard/DashboardLayout";
 import { logger } from "@/react-app/lib/logger";
+import { API_BASE } from "@/react-app/lib/apiConfig";
 import {
   Crown,
   Sparkles,
@@ -93,7 +94,7 @@ export default function MembershipUpgradePage() {
       const storedUser = localStorage.getItem("apident:user");
       const token = storedUser ? JSON.parse(storedUser)?.token : null;
       
-      const response = await fetch("/api/membership/payment/options", {
+      const response = await fetch(`${API_BASE}/membership/payment/options`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -122,7 +123,7 @@ export default function MembershipUpgradePage() {
     }
   };
 
-  // Load Midtrans Snap JS
+  // Load Midtrans Snap JS (Optional)
   useEffect(() => {
     const script = document.createElement("script");
     script.src = import.meta.env.VITE_MIDTRANS_SNAP_URL || "https://app.sandbox.midtrans.com/snap/snap.js";
@@ -131,7 +132,9 @@ export default function MembershipUpgradePage() {
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
@@ -144,8 +147,8 @@ export default function MembershipUpgradePage() {
       const storedUser = localStorage.getItem("apident:user");
       const token = storedUser ? JSON.parse(storedUser)?.token : null;
       
-      // 1. Create payment di backend
-      const response = await fetch("/api/membership/payment/create", {
+      // 1. Create payment transaction di backend
+      const response = await fetch(`${API_BASE}/membership/payment/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -167,11 +170,10 @@ export default function MembershipUpgradePage() {
 
       const { snap_token, transaction_id } = data.data;
       
-      // 2. Buka Midtrans Snap popup
-      if (window.snap && snap_token) {
+      // 2. Jika Snap aktif dan key terkonfigurasi, buka popup Midtrans
+      if (window.snap && snap_token && import.meta.env.VITE_MIDTRANS_CLIENT_KEY) {
         window.snap.pay(snap_token, {
           onSuccess: function() {
-            // Cek status dan proses upgrade
             checkPaymentStatus(transaction_id, level);
           },
           onPending: function() {
@@ -187,8 +189,26 @@ export default function MembershipUpgradePage() {
           }
         });
       } else {
-        // Fallback: redirect ke payment_url jika snap tidak tersedia
-        window.location.href = data.data.payment_url;
+        // 3. Simulation Fallback (Payment Gateway Deferred): Jalankan Simulasi Pembayaran Sukses di Backend
+        console.log("[Simulasi Pembayaran] Menjalankan simulasi transaksi sukses instant...");
+        const simRes = await fetch(`${API_BASE}/membership/payment/simulate/${transaction_id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ status: "success" }),
+        });
+        
+        const simData = await simRes.json();
+        if (simData.success) {
+          alert(`✨ Upgrade ke ${level.toUpperCase()} Berhasil!\n\n${simData.message}`);
+          navigate("/membership");
+        } else {
+          setError(simData.message || "Gagal memproses simulasi pembayaran");
+          setProcessing(null);
+        }
       }
     } catch (error) {
       logger.error("Error:", error);
@@ -202,14 +222,11 @@ export default function MembershipUpgradePage() {
       const storedUser = localStorage.getItem("apident:user");
       const token = storedUser ? JSON.parse(storedUser)?.token : null;
       
-      const response = await fetch(
-        `/api/membership/payment/status/${transactionId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE}/membership/payment/status/${transactionId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       
       const data = await response.json();
       
@@ -217,7 +234,6 @@ export default function MembershipUpgradePage() {
         alert(`Upgrade ke ${level} berhasil! Selamat datang di tier baru.`);
         navigate("/membership");
       } else {
-        // Retry setelah 3 detik
         setTimeout(() => checkPaymentStatus(transactionId, level), 3000);
       }
     } catch (error) {

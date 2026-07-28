@@ -150,13 +150,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/transactions', [MembershipController::class, 'getTransactions']);
         Route::post('/upgrade', [MembershipController::class, 'upgrade']);
         Route::post('/renew', [MembershipController::class, 'renew']);
+        Route::post('/cancel', [MembershipController::class, 'cancel']);
         Route::post('/redeem-points', [MembershipController::class, 'redeemPoints']);
+        Route::post('/points/redeem', [MembershipController::class, 'redeemPoints']);
         
         // Payment Routes
         Route::get('/payment/options', [MembershipPaymentController::class, 'getUpgradeOptions']);
         Route::post('/payment/create', [MembershipPaymentController::class, 'createPayment']);
         Route::get('/payment/status/{transactionId}', [MembershipPaymentController::class, 'checkStatus']);
         Route::get('/payment/simulate/{transactionId}', [MembershipPaymentController::class, 'simulatePayment']);
+        Route::post('/payment/simulate/{transactionId}', [MembershipPaymentController::class, 'simulatePayment']);
     });
 
     Route::middleware('role:doctor')->group(function () {

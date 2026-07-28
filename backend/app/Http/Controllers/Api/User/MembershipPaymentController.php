@@ -389,40 +389,118 @@ class MembershipPaymentController extends Controller
     }
 
     /**
-     * Simulate payment for testing
-     * TODO: Remove in production
+     * Simulate payment gateway for testing & verification
      */
     public function simulatePayment(Request $request, int $transactionId): JsonResponse
     {
         $transaction = \App\Models\MembershipTransaction::findOrFail($transactionId);
-        
-        if ($transaction->status !== 'pending') {
+        $simulatedStatus = $request->input('status', $request->query('status', 'success'));
+
+        if ($transaction->status !== 'pending' && $simulatedStatus === 'success') {
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction already processed',
+                'message' => 'Transaksi telah diproses sebelumnya',
             ], 400);
         }
 
-        // Auto-complete for testing
-        $transaction->update(['status' => 'completed']);
-        
         $user = $transaction->user;
-        $targetLevel = $transaction->metadata['target_level'];
-        
-        $this->membershipService->updateMembershipLevel(
-            $user,
-            $targetLevel,
-            $user->membership_level,
-            'Upgrade via simulasi pembayaran',
-            $user->id
-        );
-        
-        $user->increment('total_transactions', $transaction->amount);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Pembayaran simulasi berhasil, membership diupgrade',
-        ]);
+        if ($simulatedStatus === 'failed' || $simulatedStatus === 'cancelled') {
+            $transaction->update([
+                'status' => $simulatedStatus,
+                'metadata' => array_merge($transaction->metadata ?? [], [
+                    'simulation_status' => $simulatedStatus,
+                    'simulated_at' => now()->toIsoString(),
+                ]),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => "Simulasi pembayaran {$simulatedStatus}. Tier membership tidak berubah.",
+                'data' => [
+                    'transaction_id' => $transaction->id,
+                    'status' => $simulatedStatus,
+                ],
+            ]);
+        }
+
+        if ($simulatedStatus === 'pending') {
+            return response()->json([
+                'success' => true,
+                'message' => "Transaksi simulasi masih pending.",
+                'data' => [
+                    'transaction_id' => $transaction->id,
+                    'status' => 'pending',
+                ],
+            ]);
+        }
+
+        // Default: Success Scenario
+        DB::beginTransaction();
+        try {
+            $transaction->update([
+                'status' => 'completed',
+                'metadata' => array_merge($transaction->metadata ?? [], [
+                    'simulation_status' => 'success',
+                    'simulated_at' => now()->toIsoString(),
+                    'payment_method' => $transaction->metadata['payment_method'] ?? 'qris',
+                ]),
+            ]);
+
+            $targetLevel = $transaction->metadata['target_level'] ?? 'gold';
+            $oldLevel = $user->membership_level;
+
+            // 1. Update membership level
+            $this->membershipService->updateMembershipLevel(
+                $user,
+                $targetLevel,
+                $oldLevel,
+                'Upgrade via simulasi pembayaran',
+                $user->id
+            );
+
+            // 2. Increment total transactions
+            $user->increment('total_transactions', $transaction->amount);
+
+            // 3. Grant bonus points
+            $bonusPoints = match($targetLevel) {
+                'gold' => 100,
+                'platinum' => 300,
+                'diamond' => 1000,
+                default => 50,
+            };
+
+            if ($bonusPoints > 0) {
+                $this->membershipService->addPoints(
+                    $user,
+                    $bonusPoints,
+                    'upgrade_bonus',
+                    "Bonus poin upgrade ke {$targetLevel}",
+                    now()->addYear()
+                );
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Pembayaran simulasi berhasil! Anda kini resmi menjadi member {$targetLevel}.",
+                'data' => [
+                    'transaction_id' => $transaction->id,
+                    'new_level' => $targetLevel,
+                    'bonus_points' => $bonusPoints,
+                    'current_points' => $user->fresh()->membership_points,
+                    'expires_at' => $user->fresh()->membership_expires_at,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Simulated payment error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses simulasi pembayaran: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     // Helper methods

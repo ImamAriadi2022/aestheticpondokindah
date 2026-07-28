@@ -240,11 +240,26 @@ export const membershipApi = {
     });
   },
 
+  // Cancel membership
+  cancel: async (): Promise<any> => {
+    return apiRequest('/membership/cancel', {
+      method: 'POST',
+    });
+  },
+
   // Redeem points
   redeemPoints: async (points: number, description: string): Promise<any> => {
     return apiRequest('/membership/redeem-points', {
       method: 'POST',
       body: JSON.stringify({ points, description }),
+    });
+  },
+
+  // Simulate payment for testing
+  simulatePayment: async (transactionId: number, status: 'success' | 'failed' | 'cancelled' | 'pending' = 'success'): Promise<any> => {
+    return apiRequest(`/membership/payment/simulate/${transactionId}`, {
+      method: 'POST',
+      body: JSON.stringify({ status }),
     });
   },
 };

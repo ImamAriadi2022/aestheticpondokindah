@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/react-app/components/ui/dialog";
 import * as htmlToImage from 'html-to-image';
+import { membershipApi, MembershipData } from "@/react-app/lib/membershipApi";
 
 export default function MembershipPage() {
   // Detect mobile to decide which layout (ensure new bottom bar on mobile)
@@ -54,6 +55,17 @@ export default function MembershipPage() {
 
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [apiMembership, setApiMembership] = useState<MembershipData | null>(null);
+
+  useEffect(() => {
+    membershipApi.getMembership()
+      .then((data) => {
+        if (data) setApiMembership(data);
+      })
+      .catch((err) => {
+        logger.warn("Fetch real membership API fallback to session:", err);
+      });
+  }, []);
 
   // Unified Gold Theme Membership Configuration
   const tierConfig = {
@@ -102,30 +114,13 @@ export default function MembershipPage() {
     diamond: null,
   };
 
-  // Ambil tier dari session (default bronze)
-  const currentTier = (session as any)?.membership_level || 'bronze';
+  // Ambil tier dari API backend (atau fallback ke session)
+  const currentTier = apiMembership?.membership?.level || (session as any)?.membership_level || 'bronze';
   const config = tierConfig[currentTier as keyof typeof tierConfig] || tierConfig.bronze;
-
-  // Progress ke next tier
-  const getNextTierProgress = () => {
-    const threshold = upgradeThresholds[currentTier as keyof typeof upgradeThresholds];
-    if (!threshold) return null;
-
-    const totalTransactions = (session as any)?.total_transactions || 0;
-    const percentage = Math.min(100, (totalTransactions / threshold.amount) * 100);
-    const remaining = Math.max(0, threshold.amount - totalTransactions);
-
-    return {
-      threshold,
-      percentage,
-      remaining,
-      currentAmount: totalTransactions,
-    };
-  };
-
-  const tierProgress = getNextTierProgress();
-
-  const membershipExpiry = "31 Des 2024";
+  const userPoints = apiMembership?.membership?.points ?? (session as any)?.membership_points ?? 0;
+  const membershipExpiry = apiMembership?.membership?.expires_at 
+    ? new Date(apiMembership.membership.expires_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+    : "Seumur Hidup";
   const generateMemberId = (userId: string | number) => {
     const id = String(userId).toUpperCase();
     if (id.startsWith("AESPI_")) return `MEM-${id}`;
@@ -340,7 +335,7 @@ export default function MembershipPage() {
                       <Star className="w-3.5 h-3.5 text-[#C9A24A]" />
                       <p className="text-[10px] text-gray-400 uppercase tracking-wider">Poin Saat Ini</p>
                     </div>
-                    <p className="text-xs font-bold text-white">0</p>
+                    <p className="text-xs font-bold text-white">{userPoints} Pts</p>
                   </div>
                   <div className="col-span-2 bg-white/5 rounded-xl p-3 border border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
