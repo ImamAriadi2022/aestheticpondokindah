@@ -42,15 +42,13 @@ export default function NewBookingScreen() {
     setIsSubmitting(true);
     setErrors({});
     try {
-      const reservation = await bookingService.submitPublicReservation({
-        name: name.trim(),
-        phone: phone.trim(),
+      const result = await bookingService.createReservation({
         complaint: complaint.trim(),
         date: date || null,
       });
       Alert.alert(
         'Permintaan booking terkirim',
-        `Nomor permintaan Anda: #${reservation.id}. Tim klinik akan menghubungi Anda untuk konfirmasi jadwal.`,
+        `Nomor permintaan Anda: ${result.reservation.code}. Tim klinik akan menghubungi Anda untuk konfirmasi jadwal.`,
         [{ text: 'Selesai', onPress: () => router.replace('/(tabs)/booking') }],
       );
     } catch (error: any) {

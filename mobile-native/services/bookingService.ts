@@ -1,7 +1,7 @@
 import { apiClient } from './apiClient';
 import { cacheStorage } from '@/storage/cacheStorage';
 import { ENDPOINTS } from '@/constants/api';
-import type { Reservation, ReservationCreatePayload } from '@/types/booking';
+import type { Reservation } from '@/types/booking';
 
 export interface PublicReservationPayload {
   name: string;
@@ -51,18 +51,8 @@ export const bookingService = {
     return res;
   },
 
-  async getReservation(id: string): Promise<{ reservation: Reservation }> {
-    return await apiClient.get(ENDPOINTS.RESERVATION_DETAIL(id));
-  },
-
-  async createReservation(payload: ReservationCreatePayload): Promise<any> {
-    const res = await apiClient.post(ENDPOINTS.RESERVATION_CREATE, payload);
-    await cacheStorage.invalidate('reservations');
-    return res;
-  },
-
-  async cancelReservation(id: string): Promise<any> {
-    const res = await apiClient.post(ENDPOINTS.RESERVATION_CANCEL(id));
+  async createReservation(payload: Pick<PublicReservationPayload, 'complaint' | 'date'>): Promise<{ reservation: Reservation }> {
+    const res = await apiClient.post<{ reservation: Reservation }>(ENDPOINTS.RESERVATION_CREATE, payload);
     await cacheStorage.invalidate('reservations');
     return res;
   },

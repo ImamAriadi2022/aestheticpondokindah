@@ -5,8 +5,8 @@ export interface Reservation {
   code: string;
   service_name: string;
   doctor_name: string | null;
-  scheduled_date: string;
-  scheduled_time: string;
+  scheduled_date: string | null;
+  scheduled_time: string | null;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   notes: string | null;
   price: number | null;
@@ -72,4 +72,13 @@ export interface Promo {
   discount_text: string | null;
   thumbnail_url: string | null;
   valid_until: string | null;
+}
+
+export interface Popup {
+  id: number;
+  title: string | null;
+  headline: string | null;
+  message: string | null;
+  button_label: string | null;
+  image_url: string | null;
 }

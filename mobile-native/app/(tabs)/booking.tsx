@@ -61,7 +61,7 @@ export default function BookingScreen() {
         <Text style={styles.serviceName}>{item.service_name}</Text>
         {item.doctor_name && <Text style={styles.doctorName}>drg. {item.doctor_name}</Text>}
         <View style={styles.cardFooter}>
-          <Text style={styles.dateText}>📅 {item.scheduled_date} · {item.scheduled_time}</Text>
+          <Text style={styles.dateText}>📅 {item.scheduled_date ?? 'Menunggu konfirmasi'}{item.scheduled_time ? ` · ${item.scheduled_time}` : ''}</Text>
           {item.price && <Text style={styles.priceText}>Rp {Number(item.price).toLocaleString('id-ID')}</Text>}
         </View>
       </View>

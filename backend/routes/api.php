@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\User\MembershipController;
 use App\Http\Controllers\Api\User\MembershipPaymentController;
 use App\Http\Controllers\Api\User\NotificationController;
+use App\Http\Controllers\Api\User\ReservationController as UserReservationController;
 use App\Http\Controllers\Api\WilayahController;
 use App\Http\Controllers\Api\Public\AnalyticsVisitController;
 use Illuminate\Support\Facades\Route;
@@ -125,6 +126,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
     Route::get('/user/consultations', [ConsultationController::class, 'index']);
     Route::post('/user/consultations', [ConsultationController::class, 'store']);
+    Route::get('/user/reservations', [UserReservationController::class, 'index']);
+    Route::post('/user/reservations', [UserReservationController::class, 'store']);
     Route::get('/user/complaints', [ComplaintController::class, 'index']);
     Route::post('/user/complaints', [ComplaintController::class, 'store']);
     Route::get('/user/complaints/{complaint}', [ComplaintController::class, 'show']);

@@ -49,10 +49,8 @@ export const ENDPOINTS = {
   // Reservations / Appointments
   PUBLIC_RESERVATIONS: '/public/reservations',
   PUBLIC_DOCTOR_SCHEDULES: '/public/doctor-schedules',
-  RESERVATIONS: '/reservations',
-  RESERVATION_CREATE: '/reservations',
-  RESERVATION_DETAIL: (id: string) => `/reservations/${id}`,
-  RESERVATION_CANCEL: (id: string) => `/reservations/${id}/cancel`,
+  RESERVATIONS: '/user/reservations',
+  RESERVATION_CREATE: '/user/reservations',
 
   // Notifications
   NOTIFICATIONS: '/notifications',
@@ -65,13 +63,13 @@ export const ENDPOINTS = {
   DEVICE_TOKENS_DELETE: (token: string) => `/notifications/device-token/${token}`,
 
   // Content (Public)
-  POSTS: '/posts',
-  POST_DETAIL: (slug: string) => `/posts/${slug}`,
-  GALLERY: '/gallery-items',
-  PROMOS: '/promos',
-  PROMO_DETAIL: (slug: string) => `/promos/${slug}`,
-  TESTIMONIALS: '/testimonials',
-  POPUPS: '/popups',
+  POSTS: '/public/posts',
+  POST_DETAIL: (slug: string) => `/public/posts/${slug}`,
+  GALLERY: '/public/gallery-items',
+  PROMOS: '/public/promos',
+  PROMO_DETAIL: (slug: string) => `/public/promos/${slug}`,
+  TESTIMONIALS: '/public/testimonials',
+  POPUPS: '/public/popup/active',
 
   // Doctor Schedules
   DOCTOR_SCHEDULES: '/doctor-schedules',
