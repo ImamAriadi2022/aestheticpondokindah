@@ -90,7 +90,7 @@ $mobileDetails = [
     ['feature' => 'Mobile Home View', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/mobile/MobileHome.tsx'],
     ['feature' => 'Mobile Appointment Booking', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/mobile/MobileBooking.tsx, MobileBookingConfirm.tsx'],
     ['feature' => 'Mobile Membership & Card', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/mobile/MobileAkun.tsx'],
-    ['feature' => 'Mobile Notification', 'status' => '🟡 Partial', 'progress' => 50, 'evidence' => 'Notification UI ready in MobileHome; FCM Push Service belum terintegrasi'],
+    ['feature' => 'Mobile Notification', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'NotificationController.php, notifications table, NotificationCenterModal.tsx, notificationApi.ts'],
     ['feature' => 'Mobile Profile Management', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/mobile/MobileAkun.tsx'],
     ['feature' => 'Mobile REST API Client', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/lib/apiConfig.ts'],
     ['feature' => 'Offline Support / PWA Cache', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'public/sw.js, manifest.json, offline.html, PwaManager.tsx, guestSession.ts'],

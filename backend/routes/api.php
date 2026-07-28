@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\User\MembershipController;
 use App\Http\Controllers\Api\User\MembershipPaymentController;
+use App\Http\Controllers\Api\User\NotificationController;
 use App\Http\Controllers\Api\WilayahController;
 use App\Http\Controllers\Api\Public\AnalyticsVisitController;
 use Illuminate\Support\Facades\Route;
@@ -127,6 +128,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/complaints', [ComplaintController::class, 'index']);
     Route::post('/user/complaints', [ComplaintController::class, 'store']);
     Route::get('/user/complaints/{complaint}', [ComplaintController::class, 'show']);
+
+    // Notification Routes
+    Route::get('/user/notifications', [NotificationController::class, 'index']);
+    Route::get('/user/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/user/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/user/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::delete('/user/notifications/{id}', [NotificationController::class, 'destroy']);
+    Route::delete('/user/notifications', [NotificationController::class, 'clearAll']);
+    Route::post('/user/device-token', [NotificationController::class, 'storeDeviceToken']);
+    Route::delete('/user/device-token', [NotificationController::class, 'deleteDeviceToken']);
 
     // Membership User Routes
     Route::prefix('membership')->group(function () {

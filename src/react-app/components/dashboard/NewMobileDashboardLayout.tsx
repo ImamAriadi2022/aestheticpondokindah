@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { clearSession, getSession } from "@/react-app/lib/demoAuth";
 import { clearSessionStorage } from "@/react-app/lib/sessionTtl";
 import { logger } from "@/react-app/lib/logger";
+import { NotificationCenterModal } from "@/react-app/components/notification/NotificationCenterModal";
+import { fetchNotifications } from "@/react-app/lib/notificationApi";
+import { initializePushNotifications } from "@/react-app/lib/firebaseNotification";
 import {
   Home,
   CalendarDays,
@@ -45,7 +48,19 @@ export default function NewMobileDashboardLayout({
   const location = useLocation();
   const navigate = useNavigate();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Inisialisasi Push Notification & token registration
+    initializePushNotifications();
+
+    // Fetch initial unread count
+    fetchNotifications().then(({ unreadCount }) => {
+      setUnreadNotifCount(unreadCount);
+    });
+  }, []);
 
   let session = getSession();
   const storedUser = localStorage.getItem("apident:user");
@@ -179,11 +194,16 @@ export default function NewMobileDashboardLayout({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center"
+                onClick={() => setIsNotifModalOpen(true)}
+                className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
                 aria-label="Notifikasi"
               >
                 <Bell className="w-4 h-4 text-gray-600" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                {unreadNotifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                    {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                  </span>
+                )}
               </button>
 
               <div className="relative" ref={profileMenuRef}>
@@ -300,6 +320,13 @@ export default function NewMobileDashboardLayout({
           <div className="h-[env(safe-area-inset-bottom)]" />
         </nav>
       )}
+
+      {/* Notification Center Modal */}
+      <NotificationCenterModal
+        isOpen={isNotifModalOpen}
+        onClose={() => setIsNotifModalOpen(false)}
+        onUnreadCountChange={setUnreadNotifCount}
+      />
     </div>
   );
 }
