@@ -117,7 +117,7 @@ export function ToastViewport() {
   }, []);
 
   const rendered = useMemo(() => {
-    const getVariantStyles = (variant: ToastVariant) => {
+    const getVariantStyles = (variant: ToastVariant = "info") => {
       switch (variant) {
         case "success":
           return {
@@ -153,7 +153,7 @@ export function ToastViewport() {
     };
 
     return toasts.map((t) => {
-      const styles = getVariantStyles(t.variant);
+      const styles = getVariantStyles(t.variant || "info");
 
       return (
         <div

@@ -45,24 +45,24 @@ export const logger = {
       console.log(...args.map(sanitize));
     }
   },
-  info: (module: string, message: string, ...args: unknown[]) => {
+  info: (...args: unknown[]) => {
     if (isDev) {
-      console.info(`%c[INFO] [${module}]`, 'color: #3b82f6; font-weight: bold;', message, ...args.map(sanitize));
+      console.info('%c[INFO]', 'color: #3b82f6; font-weight: bold;', ...args.map(sanitize));
     }
   },
-  debug: (module: string, message: string, ...args: unknown[]) => {
+  debug: (...args: unknown[]) => {
     if (isDev) {
-      console.debug(`%c[DEBUG] [${module}]`, 'color: #8b5cf6; font-weight: bold;', message, ...args.map(sanitize));
+      console.debug('%c[DEBUG]', 'color: #8b5cf6; font-weight: bold;', ...args.map(sanitize));
     }
   },
-  warn: (module: string, message: string, ...args: unknown[]) => {
+  warn: (...args: unknown[]) => {
     if (isDev) {
-      console.warn(`[WARN] [${module}]`, message, ...args.map(sanitize));
+      console.warn('[WARN]', ...args.map(sanitize));
     }
   },
-  error: (module: string, message: string, ...args: unknown[]) => {
+  error: (...args: unknown[]) => {
     // Errors are logged in all environments but sanitized
-    console.error(`[ERROR] [${module}]`, message, ...args.map(sanitize));
+    console.error('[ERROR]', ...args.map(sanitize));
   },
   request: (method: string, url: string, data?: unknown) => {
     if (isDev) {
