@@ -18,6 +18,14 @@ if (!$backendDir) {
     die("ERROR: Target backend directory does not exist.\n");
 }
 
+// Buat symlink backend di public_html jika Document Root adalah httpdocs/public_html
+$backendLinkInPublic = __DIR__ . '/backend';
+if (!file_exists($backendLinkInPublic) && is_dir(dirname(__DIR__) . '/backend')) {
+    if (@symlink(dirname(__DIR__) . '/backend', $backendLinkInPublic)) {
+        echo "SUCCESS: Backend symlink created in public_html/backend!\n";
+    }
+}
+
 // Hapus storage link yang SALAH di backend/public/storage
 $wrongLink = $backendDir . '/public/storage';
 if (is_link($wrongLink)) {
