@@ -80,8 +80,8 @@ $websiteDetails = [
     ['feature' => 'Article & Blog CMS', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/pages/Blog.tsx, BlogDetail.tsx, PostAdminController.php'],
     ['feature' => 'Responsive Design', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/react-app/index.css, tailwind.config.js (Breakpoints sm/md/lg/xl/2xl)'],
     ['feature' => 'Form Validation', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'Zod validation & Laravel Validator di AuthController & RegistrationController'],
-    ['feature' => 'Error Handling & Toast', 'status' => '🟢 Complete', 'progress' => 95, 'evidence' => 'src/react-app/components/ui/toast.tsx, src/react-app/lib/logger.ts'],
-    ['feature' => 'API Integration', 'status' => '🟢 Complete', 'progress' => 95, 'evidence' => 'src/react-app/lib/apiConfig.ts (window.location.origin dynamic API base)'],
+    ['feature' => 'Error Handling & Toast', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'toast.tsx (deduplication, variants, promise, accessibility), logger.ts (sanitization, levels), ErrorBoundary.tsx'],
+    ['feature' => 'API Integration', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts (interceptors, timeout, retries, 401 auto logout), apiError.ts, apiConfig.ts'],
 ];
 
 // 3. Detail Mobile Components

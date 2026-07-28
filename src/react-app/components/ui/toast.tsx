@@ -1,12 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, AlertCircle, AlertTriangle, Info, Loader2, X } from "lucide-react";
 
-type ToastVariant = "success" | "error" | "info";
+export type ToastVariant = "success" | "error" | "warning" | "info" | "loading";
 
-type ToastItem = {
-  id: string;
+export type ToastOptions = {
+  id?: string;
   title?: string;
   message: string;
-  variant: ToastVariant;
+  variant?: ToastVariant;
+  durationMs?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+};
+
+export type ToastItem = ToastOptions & {
+  id: string;
   createdAt: number;
   durationMs: number;
 };
@@ -15,36 +25,91 @@ type Listener = (toasts: ToastItem[]) => void;
 
 const listeners = new Set<Listener>();
 let store: ToastItem[] = [];
+const MAX_VISIBLE_TOASTS = 3;
+const recentMessages = new Map<string, number>();
 
 function emit() {
   for (const l of listeners) l(store);
 }
 
-export function toast(input: { title?: string; message: string; variant?: ToastVariant; durationMs?: number }) {
-  const id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+export function toast(input: ToastOptions): string {
+  const messageKey = `${input.variant || 'info'}_${input.message}`;
+  const now = Date.now();
+
+  // Deduplication check: ignore identical toasts within 2 seconds
+  if (recentMessages.has(messageKey)) {
+    const lastTime = recentMessages.get(messageKey)!;
+    if (now - lastTime < 2000) {
+      return store.find((t) => t.message === input.message)?.id || "";
+    }
+  }
+  recentMessages.set(messageKey, now);
+
+  const id = input.id || `toast_${Date.now()}_${Math.random().toString(16).slice(2)}`;
   const item: ToastItem = {
+    ...input,
     id,
-    title: input.title,
-    message: input.message,
     variant: input.variant ?? "info",
-    createdAt: Date.now(),
-    durationMs: input.durationMs ?? 3200,
+    createdAt: now,
+    durationMs: input.durationMs ?? (input.variant === "loading" ? 0 : 3500),
   };
 
-  store = [item, ...store].slice(0, 3);
+  // Remove existing toast with same id if any
+  store = store.filter((t) => t.id !== id);
+  store = [item, ...store].slice(0, MAX_VISIBLE_TOASTS);
   emit();
 
-  window.setTimeout(() => {
-    store = store.filter((t) => t.id !== id);
-    emit();
-  }, item.durationMs);
+  if (item.durationMs > 0) {
+    window.setTimeout(() => {
+      toast.dismiss(id);
+    }, item.durationMs);
+  }
+
+  return id;
 }
+
+toast.dismiss = (id: string) => {
+  store = store.filter((t) => t.id !== id);
+  emit();
+};
+
+toast.success = (message: string, options?: Omit<ToastOptions, "message" | "variant">) =>
+  toast({ message, variant: "success", title: "Berhasil", ...options });
+
+toast.error = (message: string, options?: Omit<ToastOptions, "message" | "variant">) =>
+  toast({ message, variant: "error", title: "Gagal", ...options });
+
+toast.warning = (message: string, options?: Omit<ToastOptions, "message" | "variant">) =>
+  toast({ message, variant: "warning", title: "Peringatan", ...options });
+
+toast.info = (message: string, options?: Omit<ToastOptions, "message" | "variant">) =>
+  toast({ message, variant: "info", title: "Informasi", ...options });
+
+toast.loading = (message: string, options?: Omit<ToastOptions, "message" | "variant">) =>
+  toast({ message, variant: "loading", title: "Memuat...", ...options });
+
+toast.promise = async <T,>(
+  promise: Promise<T>,
+  messages: { loading: string; success: string; error: string }
+): Promise<T> => {
+  const loadingId = toast.loading(messages.loading);
+  try {
+    const result = await promise;
+    toast.dismiss(loadingId);
+    toast.success(messages.success);
+    return result;
+  } catch (err) {
+    toast.dismiss(loadingId);
+    toast.error(messages.error);
+    throw err;
+  }
+};
 
 export function ToastViewport() {
   const [toasts, setToasts] = useState<ToastItem[]>(store);
 
   useEffect(() => {
-    const listener: Listener = (next) => setToasts(next);
+    const listener: Listener = (next) => setToasts([...next]);
     listeners.add(listener);
     return () => {
       listeners.delete(listener);
@@ -52,55 +117,84 @@ export function ToastViewport() {
   }, []);
 
   const rendered = useMemo(() => {
-    const getAccent = (variant: ToastVariant) => {
-      if (variant === "success") return "border-[#c9a24a]/35 bg-white";
-      if (variant === "error") return "border-red-200 bg-white";
-      return "border-gray-200 bg-white";
+    const getVariantStyles = (variant: ToastVariant) => {
+      switch (variant) {
+        case "success":
+          return {
+            bg: "bg-white border-[#C59E3F]/40 shadow-xl",
+            icon: <CheckCircle2 className="w-5 h-5 text-[#C59E3F] shrink-0" />,
+            title: "text-[#2C2416]",
+          };
+        case "error":
+          return {
+            bg: "bg-white border-red-200 shadow-xl",
+            icon: <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />,
+            title: "text-red-900",
+          };
+        case "warning":
+          return {
+            bg: "bg-white border-amber-200 shadow-xl",
+            icon: <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />,
+            title: "text-amber-900",
+          };
+        case "loading":
+          return {
+            bg: "bg-white border-blue-200 shadow-xl",
+            icon: <Loader2 className="w-5 h-5 text-blue-500 animate-spin shrink-0" />,
+            title: "text-blue-900",
+          };
+        default:
+          return {
+            bg: "bg-white border-gray-200 shadow-xl",
+            icon: <Info className="w-5 h-5 text-gray-500 shrink-0" />,
+            title: "text-gray-900",
+          };
+      }
     };
 
-    const getDot = (variant: ToastVariant) => {
-      if (variant === "success") return "bg-gradient-to-br from-[#c9a24a] to-[#a8843a]";
-      if (variant === "error") return "bg-red-500";
-      return "bg-gray-400";
-    };
+    return toasts.map((t) => {
+      const styles = getVariantStyles(t.variant);
 
-    const getTitleColor = (variant: ToastVariant) => {
-      if (variant === "success") return "text-[#8a6b2b]";
-      if (variant === "error") return "text-red-700";
-      return "text-gray-900";
-    };
-
-    return toasts.map((t) => (
-      <div
-        key={t.id}
-        className={`pointer-events-auto w-full max-w-[360px] sm:max-w-[420px] rounded-sm border shadow-lg ${getAccent(
-          t.variant
-        )}`}
-        role="status"
-        aria-live="polite"
-      >
-        <div className="p-3 sm:p-4 flex gap-3">
-          <div className={`mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0 ${getDot(t.variant)}`} />
-          <div className="min-w-0 flex-1">
-            {t.title ? (
-              <p className={`text-sm font-semibold ${getTitleColor(t.variant)} truncate`}>{t.title}</p>
-            ) : null}
-            <p className="text-sm text-gray-600 leading-relaxed break-words">{t.message}</p>
+      return (
+        <div
+          key={t.id}
+          className={`pointer-events-auto w-full max-w-[360px] sm:max-w-[420px] rounded-2xl border p-4 transition-all duration-300 transform translate-y-0 ${styles.bg}`}
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3">
+            {styles.icon}
+            <div className="min-w-0 flex-1">
+              {t.title && (
+                <p className={`text-xs font-bold uppercase tracking-wider mb-0.5 ${styles.title}`}>
+                  {t.title}
+                </p>
+              )}
+              <p className="text-xs text-[#5C5546] leading-relaxed break-words font-medium">{t.message}</p>
+              {t.action && (
+                <button
+                  onClick={() => {
+                    t.action?.onClick();
+                    toast.dismiss(t.id);
+                  }}
+                  className="mt-2 text-xs font-bold text-[#C59E3F] hover:underline block"
+                >
+                  {t.action.label}
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => toast.dismiss(t.id)}
+              className="text-gray-400 hover:text-gray-600 p-1 rounded-lg transition-colors"
+              aria-label="Tutup notifikasi"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              store = store.filter((x) => x.id !== t.id);
-              emit();
-            }}
-            className="h-7 w-7 rounded-sm flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors"
-            aria-label="Tutup notifikasi"
-          >
-            <span className="text-base leading-none">×</span>
-          </button>
         </div>
-      </div>
-    ));
+      );
+    });
   }, [toasts]);
 
   return (
