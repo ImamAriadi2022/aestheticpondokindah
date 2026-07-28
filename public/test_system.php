@@ -134,6 +134,39 @@ addTestResult(
     'Path: backend/vendor/autoload.php'
 );
 
+// Test 11: Direct API Endpoint Response
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? 'https' : 'http';
+$apiTestUrl = $protocol . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/backend/public/api/public/posts';
+$apiPassed = false;
+$apiMsg = '';
+
+$ch = curl_init($apiTestUrl);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 DiagnosticTester');
+$apiBody = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+curl_close($ch);
+
+if ($httpCode === 200 && str_contains(strtolower($contentType ?? ''), 'json')) {
+    $apiPassed = true;
+    $apiMsg = 'API Endpoint Backend merespons JSON 200 OK dengan sukses!';
+} else {
+    $apiPassed = false;
+    $apiMsg = 'API Endpoint merespons HTTP ' . $httpCode . ' (' . ($contentType ?: 'Format HTML/Teks') . ').' ;
+}
+$apiMeta = 'URL: ' . $apiTestUrl . ' | Snippet: ' . substr(strip_tags($apiBody ?? ''), 0, 75);
+
+addTestResult(
+    $results['backend'],
+    'Respon API Endpoint Backend (/backend/public/api)',
+    $apiPassed,
+    $apiMsg,
+    $apiMeta
+);
+
 
 // ==================== C. DATABASE TESTS ====================
 $pdo = null;
