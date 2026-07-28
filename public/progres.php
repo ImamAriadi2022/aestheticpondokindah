@@ -56,15 +56,15 @@ $milestones = [
     [
         'id' => 3,
         'title' => 'Milestone 3: Native Mobile Apps & Payment Gateway Live',
-        'progress' => 40,
+        'progress' => 45,
         'status' => '🟡 In Progress',
         'status_code' => 'warning',
         'evidence' => [
-            'src/react-app/pages/mobile/MobileHome.tsx',
-            'src/react-app/pages/mobile/MobileBooking.tsx',
+            'mobile-native/app/(tabs)/index.tsx',
+            'mobile-native/app/booking/new.tsx',
             'backend/app/Http/Controllers/Api/User/MembershipPaymentController.php'
         ],
-        'notes' => 'Mobile Web PWA Responsive selesai 100%. Aplikasi Native Android APK (Java/Kotlin/Flutter) belum dibuat. Production Key Midtrans belum dimasukkan.'
+        'notes' => 'Mobile Web PWA Responsive selesai 100%. React Native/Expo Android sedang berjalan: auth, dashboard, membership, notifikasi, artikel, dan booking public terhubung ke kontrak Laravel yang ada. Gallery, profile settings, riwayat booking, sinkronisasi background, dan konfigurasi Firebase/keystore masih tersisa. Production Key Midtrans belum dimasukkan.'
     ],
 ];
 
@@ -96,7 +96,7 @@ $mobileDetails = [
     ['feature' => 'Offline Support / PWA Cache', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'public/sw.js, manifest.json, offline.html, PwaManager.tsx, guestSession.ts'],
     ['feature' => 'Data Synchronization', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobileSyncManager.ts (pub/sub events, online/offline, app lifecycle), PullToRefresh.tsx, Skeleton.tsx, MobileHome+Riwayat+Booking synced'],
     ['feature' => 'Mobile Error Handling', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts global handler, apiError.ts mapping (400-504/Network/Timeout/Offline), toast variants, ErrorBoundary.tsx, logger.ts sanitized'],
-    ['feature' => 'Native Android Application (APK)', 'status' => '🔴 Not Started', 'progress' => 0, 'evidence' => 'Belum ada repository Android Native (Java/Kotlin/Flutter) terpisah'],
+    ['feature' => 'Native Android Application (APK)', 'status' => '🟡 In Progress', 'progress' => 45, 'evidence' => 'mobile-native/ (Expo+React Native): auth, tabs, article, membership upgrade, public booking; TypeScript verified.'],
 ];
 
 // 4. Detail API Registry (Semua Endpoints dari routes/api.php)
