@@ -1,7 +1,8 @@
 <?php
 /**
- * Detailed Progress Dashboard & Source Code Audit System
+ * Detailed Audit & Project Progress Management Dashboard
  * Aesthetic Pondok Indah Dental Clinic
+ * Style UI matched to Website Design System (Playfair Display, Warm Gold, Soft Cream, Charcoal)
  * Akses via Browser: https://domain-anda.com/progres.php
  */
 
@@ -187,6 +188,14 @@ $docDetails = [
 $recentChanges = [
     [
         'date' => '2026-07-28',
+        'time' => '16:34',
+        'file' => 'public_html/progres.php & public/progres.php',
+        'change' => 'Pembaruan Tampilan UI Progres Dashboard mengikuti Design System Website (Warm Gold, Champagne Cream, Playfair Display & Charcoal)',
+        'before' => '86%',
+        'after'  => '86%'
+    ],
+    [
+        'date' => '2026-07-28',
         'time' => '16:30',
         'file' => 'public_html/progres.php & public/progres.php',
         'change' => 'Membuat Dashboard Audit Project Management versi detail komprehensif dengan evidence source code empiris',
@@ -208,14 +217,6 @@ $recentChanges = [
         'change' => 'Mengubah API Base URL dinamis ke window.location.origin dan mengizinkan CORS domain .com',
         'before' => '82%',
         'after'  => '84%'
-    ],
-    [
-        'date' => '2026-07-28',
-        'time' => '09:18',
-        'file' => 'public/data_setup.php & public_html/data_setup.php',
-        'change' => 'Membuat UI installer data awal & seeder akun admin 085788322061 / admin123',
-        'before' => '78%',
-        'after'  => '82%'
     ],
 ];
 
@@ -246,106 +247,236 @@ $remainingTasks = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id" data-bs-theme="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Audit Project Detailed Progress - Aesthetic Pondok Indah</title>
+    <title>Progress & Audit Dashboard — Aesthetic Pondok Indah</title>
     <!-- Bootstrap 5 CSS & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Brand Fonts: Playfair Display & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b1329; color: #f8fafc; }
-        .card-custom { background-color: #151f38; border: 1px solid #233154; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .badge-status { font-size: 0.8rem; padding: 5px 10px; border-radius: 50rem; }
-        .table-custom { color: #f8fafc; font-size: 0.85rem; }
-        .table-custom th { background-color: #0f172a; border-color: #233154; text-transform: uppercase; letter-spacing: 0.5px; }
-        .table-custom td { border-color: #233154; vertical-align: middle; }
-        .progress { background-color: rgba(255,255,255,0.08); border-radius: 50rem; height: 8px; }
-        .section-header { border-bottom: 2px solid #233154; padding-bottom: 8px; margin-bottom: 20px; }
-        .code-evidence { font-family: monospace; font-size: 0.78rem; color: #34d399; background: #070d19; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+        :root {
+            --cream-bg: #FAF8F5;
+            --gold: #C59E3F;
+            --gold-dark: #A37E28;
+            --gold-light: #F4EFE4;
+            --gold-border: rgba(197, 158, 63, 0.25);
+            --charcoal: #2C2416;
+            --warm-gray: #5C5546;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--cream-bg);
+            color: var(--charcoal);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(197, 158, 63, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(197, 158, 63, 0.05) 0%, transparent 40%);
+            min-height: 100vh;
+        }
+
+        .font-display {
+            font-family: 'Playfair Display', Georgia, serif;
+        }
+
+        /* Luxury Cards */
+        .card-luxury {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--gold-border);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(44, 36, 22, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .card-luxury:hover {
+            box-shadow: 0 15px 35px rgba(197, 158, 63, 0.12);
+            transform: translateY(-2px);
+        }
+
+        /* Text Gradients */
+        .text-gradient-gold {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Gold Buttons */
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 50rem;
+            font-weight: 600;
+            padding: 10px 24px;
+            box-shadow: 0 4px 14px rgba(197, 158, 63, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-gold:hover {
+            opacity: 0.95;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Luxury Badges */
+        .badge-luxury {
+            background-color: var(--gold-light);
+            color: var(--gold-dark);
+            border: 1px solid var(--gold-border);
+            border-radius: 50rem;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Gold Progress Bar */
+        .progress-luxury {
+            background-color: rgba(197, 158, 63, 0.12);
+            border-radius: 50rem;
+            height: 10px;
+        }
+
+        .progress-bar-gold {
+            background: linear-gradient(90deg, var(--gold) 0%, var(--gold-dark) 100%);
+            border-radius: 50rem;
+        }
+
+        /* Tables */
+        .table-luxury {
+            color: var(--charcoal);
+            font-size: 0.88rem;
+        }
+
+        .table-luxury th {
+            background-color: var(--gold-light);
+            color: var(--charcoal);
+            border-color: var(--gold-border);
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table-luxury td {
+            border-color: rgba(197, 158, 63, 0.12);
+            vertical-align: middle;
+        }
+
+        .code-chip {
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: #065f46;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
     </style>
 </head>
-<body class="py-4">
-    <div class="container-fluid max-width-xl px-4">
-        
-        <!-- HEADER METRICS SUMMARY -->
-        <div class="card card-custom p-4 mb-4">
-            <div class="row align-items-center">
-                <div class="col-lg-7">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill mb-2 px-3 py-2">
-                        <i class="bi bi-patch-check-fill me-1"></i> Official Codebase Audit Dashboard
-                    </span>
-                    <h2 class="fw-bold text-white mb-1">Aesthetic Pondok Indah Dental Clinic</h2>
-                    <p class="text-muted mb-0">Laporan Audit Progres Implementasi Sampai Level Fitur (Evidence-Based)</p>
+<body class="py-5">
+
+    <!-- TOP BRAND NAVBAR -->
+    <div class="container max-width-xl mb-4">
+        <div class="d-flex justify-content-between align-items-center bg-white px-4 py-3 rounded-pill border border-warning-subtle shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-warning bg-opacity-10 p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <i class="bi bi-gem text-warning fs-5"></i>
                 </div>
-                <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
-                    <div class="p-3 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 d-inline-block text-center">
-                        <span class="d-block text-uppercase text-muted fw-semibold small">Overall Project Progress</span>
-                        <span class="fs-1 fw-extrabold text-info"><?= $metrics['overall'] ?>%</span>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark font-display" style="letter-spacing: -0.3px;">aesthetic <span class="fw-normal text-muted fs-6">pondok indah</span></h5>
+                    <small class="text-secondary" style="font-size: 0.75rem;">The solution to brighten your smile</small>
+                </div>
+            </div>
+            <div>
+                <span class="badge badge-luxury"><i class="bi bi-shield-check me-1"></i> Audit Codebase Dashboard</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container max-width-xl">
+
+        <!-- HEADER AUDIT SUMMARY CARD -->
+        <div class="card card-luxury p-4 p-md-5 mb-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25 rounded-pill mb-3 px-3 py-2">
+                        <i class="bi bi-patch-check-fill text-warning me-1"></i> Official Project Audit & Progress Report
+                    </span>
+                    <h1 class="font-display fw-bold text-gradient-gold display-5 mb-2">Progress Project Dashboard</h1>
+                    <p class="text-secondary mb-0 fs-6">Laporan Transparan Sampai Level Fitur Berdasarkan Evidence Source Code Nyata (React 19 + Laravel 12)</p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-4 mt-lg-0">
+                    <div class="p-4 rounded-4 bg-white border border-warning border-opacity-30 d-inline-block text-center shadow-sm">
+                        <span class="d-block text-uppercase text-secondary fw-semibold small" style="letter-spacing: 1px;">Overall Progress</span>
+                        <span class="font-display display-4 fw-bold text-gradient-gold"><?= $metrics['overall'] ?>%</span>
                     </div>
                 </div>
             </div>
-            <div class="mt-3">
-                <div class="progress" style="height: 12px;">
-                    <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style="width: <?= $metrics['overall'] ?>%"></div>
+            <div class="mt-4">
+                <div class="progress progress-luxury" style="height: 14px;">
+                    <div class="progress-bar progress-bar-gold progress-bar-striped progress-bar-animated" role="progressbar" style="width: <?= $metrics['overall'] ?>%"></div>
                 </div>
             </div>
         </div>
 
-        <!-- METRIC CARDS OVERVIEW -->
+        <!-- METRICS OVERVIEW CARDS -->
         <div class="row g-3 mb-4">
             <?php 
             $cardItems = [
-                ['label' => 'Backend Laravel', 'val' => $metrics['backend'], 'icon' => 'bi-server', 'color' => 'info', 'desc' => 'Sanctum, Roles, REST API'],
-                ['label' => 'Website React JS', 'val' => $metrics['website'], 'icon' => 'bi-window', 'color' => 'success', 'desc' => '25+ Halaman SPA + Admin'],
-                ['label' => 'Mobile (PWA)', 'val' => $metrics['mobile'], 'icon' => 'bi-phone', 'color' => 'warning', 'desc' => 'PWA 100%, Native APK 0%'],
-                ['label' => 'Database MySQL', 'val' => $metrics['database'], 'icon' => 'bi-database', 'color' => 'primary', 'desc' => '32 Migrasi & 19 Models'],
-                ['label' => 'API Endpoints', 'val' => $metrics['api'], 'icon' => 'bi-cloud-arrow-up', 'color' => 'info', 'desc' => '>45 Active Endpoints'],
-                ['label' => 'QA & Testing', 'val' => $metrics['testing'], 'icon' => 'bi-speedometer2', 'color' => 'secondary', 'desc' => 'Diagnostic Suite 100% Pass'],
-                ['label' => 'Deployment', 'val' => $metrics['deployment'], 'icon' => 'bi-box-seam', 'color' => 'success', 'desc' => 'Plesk Git Auto-Deploy'],
-                ['label' => 'Documentation', 'val' => $metrics['documentation'], 'icon' => 'bi-file-earmark-text', 'color' => 'primary', 'desc' => 'Guides & API Specs'],
+                ['label' => 'Backend Laravel', 'val' => $metrics['backend'], 'icon' => 'bi-server', 'desc' => 'Sanctum, Roles, REST API'],
+                ['label' => 'Website React JS', 'val' => $metrics['website'], 'icon' => 'bi-window', 'desc' => '25+ Halaman SPA + Admin'],
+                ['label' => 'Mobile (PWA)', 'val' => $metrics['mobile'], 'icon' => 'bi-phone', 'desc' => 'PWA 100%, Native APK 0%'],
+                ['label' => 'Database MySQL', 'val' => $metrics['database'], 'icon' => 'bi-database', 'desc' => '32 Migrasi & 19 Models'],
+                ['label' => 'API Endpoints', 'val' => $metrics['api'], 'icon' => 'bi-cloud-arrow-up', 'desc' => '>45 Active Endpoints'],
+                ['label' => 'QA & Testing', 'val' => $metrics['testing'], 'icon' => 'bi-speedometer2', 'desc' => 'Diagnostic Suite 100% Pass'],
+                ['label' => 'Deployment', 'val' => $metrics['deployment'], 'icon' => 'bi-box-seam', 'desc' => 'Plesk Git Auto-Deploy'],
+                ['label' => 'Documentation', 'val' => $metrics['documentation'], 'icon' => 'bi-file-earmark-text', 'desc' => 'Guides & API Specs'],
             ];
             foreach ($cardItems as $c):
             ?>
             <div class="col-md-3 col-sm-6">
-                <div class="card card-custom p-3 h-100">
+                <div class="card card-luxury p-3 h-100">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-semibold text-muted small"><i class="bi <?= $c['icon'] ?> text-<?= $c['color'] ?> me-1"></i> <?= $c['label'] ?></span>
-                        <span class="fw-bold text-<?= $c['color'] ?>"><?= $c['val'] ?>%</span>
+                        <span class="fw-semibold text-secondary small"><i class="bi <?= $c['icon'] ?> text-warning me-1"></i> <?= $c['label'] ?></span>
+                        <span class="fw-bold text-dark font-display"><?= $c['val'] ?>%</span>
                     </div>
-                    <div class="progress mb-1">
-                        <div class="progress-bar bg-<?= $c['color'] ?>" style="width: <?= $c['val'] ?>%"></div>
+                    <div class="progress progress-luxury mb-2">
+                        <div class="progress-bar progress-bar-gold" style="width: <?= $c['val'] ?>%"></div>
                     </div>
-                    <small class="text-secondary" style="font-size: 0.75rem;"><?= $c['desc'] ?></small>
+                    <small class="text-muted" style="font-size: 0.75rem;"><?= $c['desc'] ?></small>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
 
         <!-- SECTION 1: MILESTONES & CHECKLIST -->
-        <div class="card card-custom p-4 mb-4">
-            <h5 class="fw-bold text-white section-header"><i class="bi bi-flag-fill text-warning me-2"></i>Milestones & Fitur Utama</h5>
+        <div class="card card-luxury p-4 p-md-5 mb-4">
+            <h4 class="font-display fw-bold text-dark mb-4"><i class="bi bi-flag-fill text-warning me-2"></i>Milestones Project & Status Key Features</h4>
             <div class="row g-4">
                 <?php foreach ($milestones as $ms): ?>
                 <div class="col-md-4">
-                    <div class="p-3 rounded-3 bg-dark bg-opacity-40 border border-secondary border-opacity-25 h-100">
+                    <div class="p-4 rounded-4 bg-white border border-warning border-opacity-20 h-100 shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold text-white mb-0"><?= $ms['title'] ?></h6>
-                            <span class="badge bg-<?= $ms['status_code'] ?> bg-opacity-25 text-<?= $ms['status_code'] ?> badge-status"><?= $ms['status'] ?></span>
+                            <h6 class="fw-bold text-dark mb-0 font-display"><?= $ms['title'] ?></h6>
+                            <span class="badge badge-luxury"><?= $ms['status'] ?></span>
                         </div>
                         <div class="d-flex align-items-center gap-2 mb-3">
-                            <div class="progress flex-grow-1">
-                                <div class="progress-bar bg-<?= $ms['status_code'] ?>" style="width: <?= $ms['progress'] ?>%"></div>
+                            <div class="progress progress-luxury flex-grow-1">
+                                <div class="progress-bar progress-bar-gold" style="width: <?= $ms['progress'] ?>%"></div>
                             </div>
-                            <span class="fw-bold small"><?= $ms['progress'] ?>%</span>
+                            <span class="fw-bold small text-dark"><?= $ms['progress'] ?>%</span>
                         </div>
-                        <p class="small text-muted mb-2"><?= $ms['notes'] ?></p>
-                        <div class="mt-2">
-                            <span class="d-block text-uppercase text-secondary fw-semibold" style="font-size: 0.7rem;">File Evidence:</span>
+                        <p class="small text-secondary mb-3"><?= $ms['notes'] ?></p>
+                        <div>
+                            <span class="d-block text-uppercase text-muted fw-semibold mb-1" style="font-size: 0.7rem;">File Evidence:</span>
                             <?php foreach ($ms['evidence'] as $ev): ?>
-                                <span class="code-evidence d-block mb-1"><?= $ev ?></span>
+                                <span class="code-chip d-block mb-1 text-truncate"><?= $ev ?></span>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -358,10 +489,10 @@ $remainingTasks = [
         <div class="row g-4 mb-4">
             <!-- Detail Website -->
             <div class="col-lg-6">
-                <div class="card card-custom p-4 h-100">
-                    <h5 class="fw-bold text-white section-header"><i class="bi bi-window text-success me-2"></i>Detail Fitur Website (React SPA)</h5>
+                <div class="card card-luxury p-4 h-100">
+                    <h5 class="font-display fw-bold text-dark mb-3"><i class="bi bi-window text-warning me-2"></i>Detail Fitur Website (React SPA)</h5>
                     <div class="table-responsive">
-                        <table class="table table-custom align-middle mb-0">
+                        <table class="table table-luxury align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th>Fitur</th>
@@ -373,10 +504,10 @@ $remainingTasks = [
                             <tbody>
                                 <?php foreach ($websiteDetails as $w): ?>
                                 <tr>
-                                    <td class="fw-semibold text-white"><?= $w['feature'] ?></td>
-                                    <td><span class="badge bg-<?= str_contains($w['status'], 'Complete') ? 'success' : 'warning' ?> bg-opacity-25 text-<?= str_contains($w['status'], 'Complete') ? 'success' : 'warning' ?> badge-status"><?= $w['status'] ?></span></td>
-                                    <td><?= $w['progress'] ?>%</td>
-                                    <td><span class="code-evidence"><?= $w['evidence'] ?></span></td>
+                                    <td class="fw-semibold text-dark"><?= $w['feature'] ?></td>
+                                    <td><span class="badge badge-luxury"><?= $w['status'] ?></span></td>
+                                    <td class="fw-bold"><?= $w['progress'] ?>%</td>
+                                    <td><span class="code-chip"><?= $w['evidence'] ?></span></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -387,10 +518,10 @@ $remainingTasks = [
 
             <!-- Detail Mobile -->
             <div class="col-lg-6">
-                <div class="card card-custom p-4 h-100">
-                    <h5 class="fw-bold text-white section-header"><i class="bi bi-phone text-warning me-2"></i>Detail Fitur Mobile (PWA / Responsive)</h5>
+                <div class="card card-luxury p-4 h-100">
+                    <h5 class="font-display fw-bold text-dark mb-3"><i class="bi bi-phone text-warning me-2"></i>Detail Fitur Mobile (PWA & Responsive)</h5>
                     <div class="table-responsive">
-                        <table class="table table-custom align-middle mb-0">
+                        <table class="table table-luxury align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th>Fitur</th>
@@ -402,10 +533,10 @@ $remainingTasks = [
                             <tbody>
                                 <?php foreach ($mobileDetails as $m): ?>
                                 <tr>
-                                    <td class="fw-semibold text-white"><?= $m['feature'] ?></td>
-                                    <td><span class="badge bg-<?= str_contains($m['status'], 'Complete') ? 'success' : (str_contains($m['status'], 'Partial') ? 'warning' : 'danger') ?> bg-opacity-25 text-<?= str_contains($m['status'], 'Complete') ? 'success' : (str_contains($m['status'], 'Partial') ? 'warning' : 'danger') ?> badge-status"><?= $m['status'] ?></span></td>
-                                    <td><?= $m['progress'] ?>%</td>
-                                    <td><span class="code-evidence"><?= $m['evidence'] ?></span></td>
+                                    <td class="fw-semibold text-dark"><?= $m['feature'] ?></td>
+                                    <td><span class="badge badge-luxury"><?= $m['status'] ?></span></td>
+                                    <td class="fw-bold"><?= $m['progress'] ?>%</td>
+                                    <td><span class="code-chip"><?= $m['evidence'] ?></span></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -415,11 +546,11 @@ $remainingTasks = [
             </div>
         </div>
 
-        <!-- SECTION 3: DETAIL REST API ENDPOINTS REGISTRY -->
-        <div class="card card-custom p-4 mb-4">
-            <h5 class="fw-bold text-white section-header"><i class="bi bi-cloud-arrow-up text-info me-2"></i>Registry Endpoint REST API Backend (Lengkap)</h5>
-            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <table class="table table-custom align-middle mb-0">
+        <!-- SECTION 3: REST API ENDPOINTS REGISTRY -->
+        <div class="card card-luxury p-4 p-md-5 mb-4">
+            <h4 class="font-display fw-bold text-dark mb-3"><i class="bi bi-cloud-arrow-up text-warning me-2"></i>Registry Endpoint REST API Backend (Lengkap >45 Endpoints)</h4>
+            <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+                <table class="table table-luxury align-middle mb-0">
                     <thead style="position: sticky; top: 0; z-index: 10;">
                         <tr>
                             <th>Method</th>
@@ -433,12 +564,12 @@ $remainingTasks = [
                     <tbody>
                         <?php foreach ($apiEndpoints as $api): ?>
                         <tr>
-                            <td><span class="badge bg-<?= $api['method'] === 'GET' ? 'primary' : ($api['method'] === 'POST' ? 'success' : 'warning') ?>"><?= $api['method'] ?></span></td>
-                            <td class="fw-semibold text-info"><?= $api['uri'] ?></td>
-                            <td><span class="code-evidence"><?= $api['controller'] ?></span></td>
+                            <td><span class="badge bg-dark text-white"><?= $api['method'] ?></span></td>
+                            <td class="fw-bold text-warning-emphasis"><?= $api['uri'] ?></td>
+                            <td><span class="code-chip"><?= $api['controller'] ?></span></td>
                             <td><small class="text-muted"><?= $api['val'] ?></small></td>
                             <td><small class="text-secondary"><?= $api['fe'] ?></small></td>
-                            <td><span class="badge bg-<?= str_contains($api['status'], 'Complete') ? 'success' : 'warning' ?> bg-opacity-25 text-<?= str_contains($api['status'], 'Complete') ? 'success' : 'warning' ?> badge-status"><?= $api['status'] ?></span></td>
+                            <td><span class="badge badge-luxury"><?= $api['status'] ?></span></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -450,52 +581,52 @@ $remainingTasks = [
         <div class="row g-4 mb-4">
             <!-- Database -->
             <div class="col-md-3">
-                <div class="card card-custom p-3 h-100">
-                    <h6 class="fw-bold text-white mb-3"><i class="bi bi-database text-primary me-2"></i>Database Status</h6>
+                <div class="card card-luxury p-4 h-100">
+                    <h6 class="font-display fw-bold text-dark mb-3"><i class="bi bi-database text-warning me-2"></i>Database</h6>
                     <ul class="list-group list-group-flush bg-transparent small">
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Migrations: <strong class="text-info"><?= $databaseDetails['migrations_count'] ?> Files</strong></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Eloquent Models: <strong class="text-info"><?= $databaseDetails['models_count'] ?> Models</strong></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Foreign Keys: <span class="text-muted"><?= $databaseDetails['has_foreign_keys'] ?></span></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Soft Deletes: <span class="text-muted"><?= $databaseDetails['has_soft_deletes'] ?></span></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Migrations: <strong class="text-dark"><?= $databaseDetails['migrations_count'] ?> Files</strong></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Models: <strong class="text-dark"><?= $databaseDetails['models_count'] ?> Models</strong></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Foreign Keys: <span class="text-secondary"><?= $databaseDetails['has_foreign_keys'] ?></span></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Soft Deletes: <span class="text-secondary"><?= $databaseDetails['has_soft_deletes'] ?></span></li>
                     </ul>
                 </div>
             </div>
 
             <!-- Testing -->
             <div class="col-md-3">
-                <div class="card card-custom p-3 h-100">
-                    <h6 class="fw-bold text-white mb-3"><i class="bi bi-speedometer2 text-secondary me-2"></i>Testing & QA</h6>
+                <div class="card card-luxury p-4 h-100">
+                    <h6 class="font-display fw-bold text-dark mb-3"><i class="bi bi-speedometer2 text-warning me-2"></i>Testing QA</h6>
                     <ul class="list-group list-group-flush bg-transparent small">
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Diagnostic Suite: <strong class="text-success">100% Pass</strong></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Critical Bugs: <strong class="text-success">0</strong></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Minor Bugs: <strong class="text-success">0</strong></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Pending Bugs: <strong class="text-success">0</strong></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Diagnostic Suite: <strong class="text-success">100% Pass</strong></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Critical Bugs: <strong class="text-success">0</strong></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Minor Bugs: <strong class="text-success">0</strong></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Pending Bugs: <strong class="text-success">0</strong></li>
                     </ul>
                 </div>
             </div>
 
             <!-- Deployment -->
             <div class="col-md-3">
-                <div class="card card-custom p-3 h-100">
-                    <h6 class="fw-bold text-white mb-3"><i class="bi bi-cloud-upload text-success me-2"></i>Deployment Info</h6>
+                <div class="card card-luxury p-4 h-100">
+                    <h6 class="font-display fw-bold text-dark mb-3"><i class="bi bi-cloud-upload text-warning me-2"></i>Deployment</h6>
                     <ul class="list-group list-group-flush bg-transparent small">
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Environment: <span class="text-muted"><?= $deploymentDetails['environment'] ?></span></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Domain: <strong class="text-info"><?= $deploymentDetails['domain'] ?></strong></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">SSL: <span class="text-success"><?= $deploymentDetails['ssl'] ?></span></li>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0">Storage Symlink: <span class="text-success"><?= $deploymentDetails['storage'] ?></span></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Environment: <span class="text-secondary"><?= $deploymentDetails['environment'] ?></span></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Domain: <strong class="text-dark"><?= $deploymentDetails['domain'] ?></strong></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">SSL: <span class="text-success"><?= $deploymentDetails['ssl'] ?></span></li>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0">Storage Symlink: <span class="text-success"><?= $deploymentDetails['storage'] ?></span></li>
                     </ul>
                 </div>
             </div>
 
             <!-- Documentation -->
             <div class="col-md-3">
-                <div class="card card-custom p-3 h-100">
-                    <h6 class="fw-bold text-white mb-3"><i class="bi bi-file-earmark-text text-info me-2"></i>Documentation</h6>
+                <div class="card card-luxury p-4 h-100">
+                    <h6 class="font-display fw-bold text-dark mb-3"><i class="bi bi-file-earmark-text text-warning me-2"></i>Documentation</h6>
                     <ul class="list-group list-group-flush bg-transparent small">
                         <?php foreach ($docDetails as $d): ?>
-                        <li class="list-group-item bg-transparent text-white border-secondary border-opacity-25 px-0 d-flex justify-content-between">
-                            <span><?= $d['doc'] ?></span>
-                            <span class="badge bg-success bg-opacity-25 text-success"><?= $d['status'] ?></span>
+                        <li class="list-group-item bg-transparent border-warning-subtle px-0 d-flex justify-content-between">
+                            <span class="fw-semibold text-dark"><?= $d['doc'] ?></span>
+                            <span class="badge badge-luxury"><?= $d['status'] ?></span>
                         </li>
                         <?php endforeach; ?>
                     </ul>
@@ -507,10 +638,10 @@ $remainingTasks = [
         <div class="row g-4 mb-4">
             <!-- Recent Changes -->
             <div class="col-lg-6">
-                <div class="card card-custom p-4 h-100">
-                    <h5 class="fw-bold text-white section-header"><i class="bi bi-clock-history text-info me-2"></i>Recent Changes Log</h5>
+                <div class="card card-luxury p-4 h-100">
+                    <h5 class="font-display fw-bold text-dark mb-3"><i class="bi bi-clock-history text-warning me-2"></i>Recent Changes Log</h5>
                     <div class="table-responsive">
-                        <table class="table table-custom align-middle mb-0">
+                        <table class="table table-luxury align-middle mb-0">
                             <thead>
                                 <tr>
                                     <th>Tanggal & Jam</th>
@@ -522,8 +653,8 @@ $remainingTasks = [
                                 <?php foreach ($recentChanges as $rc): ?>
                                 <tr>
                                     <td class="text-nowrap"><small><?= $rc['date'] ?> <?= $rc['time'] ?></small></td>
-                                    <td><span class="code-evidence"><?= $rc['file'] ?></span></td>
-                                    <td class="small text-muted"><?= $rc['change'] ?></td>
+                                    <td><span class="code-chip"><?= $rc['file'] ?></span></td>
+                                    <td class="small text-secondary"><?= $rc['change'] ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -534,12 +665,12 @@ $remainingTasks = [
 
             <!-- Remaining Tasks -->
             <div class="col-lg-6">
-                <div class="card card-custom p-4 h-100">
-                    <h5 class="fw-bold text-white section-header"><i class="bi bi-list-task text-warning me-2"></i>Daftar Tugas Tersisa & Task Dependencies</h5>
+                <div class="card card-luxury p-4 h-100">
+                    <h5 class="font-display fw-bold text-dark mb-3"><i class="bi bi-list-task text-warning me-2"></i>Remaining Tasks & Dependencies</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <span class="fw-bold text-danger small d-block mb-1"><i class="bi bi-circle me-1"></i> Belum Dikerjakan:</span>
-                            <ul class="small text-muted ps-3 mb-3">
+                            <ul class="small text-secondary ps-3 mb-3">
                                 <?php foreach ($remainingTasks['belum_dikerjakan'] as $t): ?>
                                     <li><?= $t ?></li>
                                 <?php endforeach; ?>
@@ -547,15 +678,15 @@ $remainingTasks = [
                         </div>
                         <div class="col-md-6">
                             <span class="fw-bold text-warning small d-block mb-1"><i class="bi bi-dash-circle me-1"></i> Sedang Dikerjakan:</span>
-                            <ul class="small text-muted ps-3 mb-3">
+                            <ul class="small text-secondary ps-3 mb-3">
                                 <?php foreach ($remainingTasks['sedang_dikerjakan'] as $t): ?>
                                     <li><?= $t ?></li>
                                 <?php endforeach; ?>
                             </ul>
                         </div>
                         <div class="col-md-6">
-                            <span class="fw-bold text-info small d-block mb-1"><i class="bi bi-hourglass-split me-1"></i> Menunggu Backend:</span>
-                            <ul class="small text-muted ps-3 mb-0">
+                            <span class="fw-bold text-primary small d-block mb-1"><i class="bi bi-hourglass-split me-1"></i> Menunggu Backend:</span>
+                            <ul class="small text-secondary ps-3 mb-0">
                                 <?php foreach ($remainingTasks['menunggu_backend'] as $t): ?>
                                     <li><?= $t ?></li>
                                 <?php endforeach; ?>
@@ -563,7 +694,7 @@ $remainingTasks = [
                         </div>
                         <div class="col-md-6">
                             <span class="fw-bold text-success small d-block mb-1"><i class="bi bi-check2-square me-1"></i> Menunggu Deployment:</span>
-                            <ul class="small text-muted ps-3 mb-0">
+                            <ul class="small text-secondary ps-3 mb-0">
                                 <?php foreach ($remainingTasks['menunggu_deployment'] as $t): ?>
                                     <li><?= $t ?></li>
                                 <?php endforeach; ?>
@@ -575,11 +706,11 @@ $remainingTasks = [
         </div>
 
         <!-- FOOTER LINKS -->
-        <div class="text-center text-muted small py-3 border-top border-secondary border-opacity-25">
-            <a href="test_system.php" class="text-info text-decoration-none me-3"><i class="bi bi-speedometer2 me-1"></i> System Diagnostic Suite</a> • 
-            <a href="setup_backend.php" class="text-info text-decoration-none me-3"><i class="bi bi-sliders me-1"></i> Setup Backend Control Center</a> • 
-            <a href="data_setup.php" class="text-info text-decoration-none me-3"><i class="bi bi-database-add me-1"></i> Data Initializer</a> • 
-            <a href="https://aestheticpondokindah.com" class="text-info text-decoration-none" target="_blank"><i class="bi bi-globe me-1"></i> Website Utama</a>
+        <div class="text-center text-muted small py-4 border-top border-warning-subtle">
+            <a href="test_system.php" class="text-dark fw-semibold text-decoration-none me-3"><i class="bi bi-speedometer2 text-warning me-1"></i> Diagnostic Suite</a> • 
+            <a href="setup_backend.php" class="text-dark fw-semibold text-decoration-none me-3"><i class="bi bi-sliders text-warning me-1"></i> Backend Control Center</a> • 
+            <a href="data_setup.php" class="text-dark fw-semibold text-decoration-none me-3"><i class="bi bi-database-add text-warning me-1"></i> Data Initializer</a> • 
+            <a href="https://aestheticpondokindah.com" class="text-dark fw-semibold text-decoration-none" target="_blank"><i class="bi bi-globe text-warning me-1"></i> Website Utama</a>
         </div>
     </div>
 
