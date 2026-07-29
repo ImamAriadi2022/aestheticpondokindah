@@ -21,6 +21,13 @@ $metrics = [
     'documentation' => 90,
 ];
 
+// Persistent Data Loading: Development Activity Journal
+$logFilePath = __DIR__ . '/activity_log.json';
+$activityLogs = [];
+if (file_exists($logFilePath)) {
+    $activityLogs = json_decode(file_get_contents($logFilePath), true) ?? [];
+}
+
 // Detail Rincian per Kategori (Menjawab Transparan "Selesai" vs "Kurangnya Mana")
 $categoryBreakdown = [
     'backend' => [
@@ -271,33 +278,6 @@ $apiEndpoints = [
     ['method' => 'POST', 'uri' => '/api/public/reservations', 'controller' => 'ReservationController@store', 'val' => 'Throttle 5/m', 'res' => 'JSON Object', 'fe' => 'reservationApi.ts', 'status' => '🟢 Complete'],
 ];
 
-// Log Perubahan Terakhir
-$recentChanges = [
-    [
-        'date' => '2026-07-29',
-        'time' => '09:30',
-        'file' => 'public_html/progres.php & public/progres.php',
-        'change' => 'Memperbarui Dashboard Audit dengan Rincian Transparan "Selesai" dan "Kurangnya Mana" untuk Setiap Modul (Dokumentasi 90%, Mobile Native 85%, Database 98%, Backend 95%, dst)',
-        'before' => '82%',
-        'after'  => '94%'
-    ],
-    [
-        'date' => '2026-07-28',
-        'time' => '17:35',
-        'file' => 'mobile-native/',
-        'change' => 'Membuat Aplikasi Android Native (React Native + Expo Router) lengkap 11 Screens, SecureStore token, AsyncStorage TTL cache, API Client, & EAS build config',
-        'before' => '33%',
-        'after'  => '85%'
-    ],
-    [
-        'date' => '2026-07-28',
-        'time' => '17:15',
-        'file' => 'mobileSyncManager.ts & PullToRefresh.tsx',
-        'change' => 'Implementasi Mobile Data Synchronization (Pub/Sub, App Lifecycle) & Gesture Pull-to-Refresh di seluruh halaman mobile',
-        'before' => '90%',
-        'after'  => '100%'
-    ],
-];
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -417,6 +397,74 @@ $recentChanges = [
             border-radius: 6px;
             display: inline-block;
         }
+
+        /* Timeline Journal Styling */
+        .timeline-day-card {
+            background: #ffffff;
+            border: 1px solid var(--gold-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(44, 36, 22, 0.03);
+        }
+
+        .stat-pill {
+            background: var(--gold-light);
+            border: 1px solid var(--gold-border);
+            border-radius: 50rem;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 32px;
+            border-left: 2px solid var(--gold-border);
+            padding-bottom: 20px;
+        }
+
+        .timeline-item:last-child {
+            border-left-color: transparent;
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -9px;
+            top: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--gold);
+            border: 3px solid #ffffff;
+            box-shadow: 0 0 0 2px var(--gold-border);
+        }
+
+        .timeline-content {
+            background: var(--cream-bg);
+            border: 1px solid rgba(197, 158, 63, 0.18);
+            border-radius: 14px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-content:hover {
+            border-color: var(--gold);
+            background: #ffffff;
+        }
+
+        .expand-toggle {
+            cursor: pointer;
+            color: var(--gold-dark);
+            font-weight: 600;
+            font-size: 0.82rem;
+            user-select: none;
+        }
+        .expand-toggle:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body class="py-5">
@@ -430,7 +478,7 @@ $recentChanges = [
                 </div>
                 <div>
                     <h5 class="fw-bold mb-0 text-dark font-display" style="letter-spacing: -0.3px;">aesthetic <span class="fw-normal text-muted fs-6">pondok indah</span></h5>
-                    <small class="text-secondary" style="font-size: 0.75rem;">Audit & Transparency Report Dashboard</small>
+                    <small class="text-secondary" style="font-size: 0.75rem;">Audit & Development Activity Journal</small>
                 </div>
             </div>
             <div>
@@ -495,7 +543,7 @@ $recentChanges = [
             <?php endforeach; ?>
         </div>
 
-        <!-- DETAILED CATEGORY BREAKDOWN (MENJAWAB: APA YANG KURANG AGAR 100%) -->
+        <!-- DETAILED CATEGORY BREAKDOWN -->
         <div class="card card-luxury p-4 p-md-5 mb-4">
             <h4 class="font-display fw-bold text-dark mb-2"><i class="bi bi-search text-warning me-2"></i>Rincian Detail per Modul: Selesai vs Kekurangan (Sisa %)</h4>
             <p class="text-secondary small mb-4">Tabel di bawah menjelaskan secara eksplisit apa yang sudah rampung dan apa saja kekurangan spesifik yang belum dikerjakan untuk setiap modul.</p>
@@ -665,32 +713,87 @@ $recentChanges = [
             </div>
         </div>
 
-        <!-- SECTION: RECENT CHANGES LOG -->
-        <div class="card card-luxury p-4 p-md-5 mb-4">
-            <h5 class="font-display fw-bold text-dark mb-3"><i class="bi bi-clock-history text-warning me-2"></i>Recent Changes Log</h5>
-            <div class="table-responsive">
-                <table class="table table-luxury align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Tanggal & Jam</th>
-                            <th>File Target</th>
-                            <th>Ringkasan Perubahan</th>
-                            <th>Sebelum</th>
-                            <th>Sesudah</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($recentChanges as $rc): ?>
-                        <tr>
-                            <td class="text-nowrap"><small><?= $rc['date'] ?> <?= $rc['time'] ?></small></td>
-                            <td><span class="code-chip"><?= $rc['file'] ?></span></td>
-                            <td class="small text-secondary"><?= $rc['change'] ?></td>
-                            <td class="fw-bold text-muted"><?= $rc['before'] ?></td>
-                            <td class="fw-bold text-success"><?= $rc['after'] ?></td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+        <!-- NEW SECTION: DEVELOPMENT ACTIVITY TIMELINE (REPLACES RECENT LOG) -->
+        <div class="card card-luxury p-4 p-md-5 mb-4" id="timelineSection">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <div>
+                    <h4 class="font-display fw-bold text-dark mb-1">
+                        <i class="bi bi-journal-text text-warning me-2"></i>Development Activity Timeline
+                    </h4>
+                    <p class="text-secondary small mb-0">Jurnal Pengubahan Source Code Komprehensif Berdasarkan Tanggal (Persistent Storage JSON)</p>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <span class="badge badge-luxury fs-7"><i class="bi bi-hdd-stack me-1"></i> JSON Storage Persistent</span>
+                </div>
+            </div>
+
+            <!-- SEARCH & FILTERS CONTROLS -->
+            <div class="row g-3 mb-4 bg-white p-3 rounded-4 border border-warning border-opacity-25 shadow-sm">
+                <div class="col-lg-4 col-md-6">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="timelineSearch" class="form-control form-control-sm border-start-0 ps-0" placeholder="Cari fitur, file, keyword, author...">
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <select id="categoryFilter" class="form-select form-select-sm">
+                        <option value="">Semua Kategori</option>
+                        <option value="Backend">Backend</option>
+                        <option value="Frontend">Frontend</option>
+                        <option value="React">React</option>
+                        <option value="React Native">React Native</option>
+                        <option value="Laravel">Laravel</option>
+                        <option value="API">API</option>
+                        <option value="Database">Database</option>
+                        <option value="Authentication">Authentication</option>
+                        <option value="Membership">Membership</option>
+                        <option value="Appointment">Appointment</option>
+                        <option value="Notification">Notification</option>
+                        <option value="Security">Security</option>
+                        <option value="Testing">Testing</option>
+                        <option value="Deployment">Deployment</option>
+                        <option value="Refactor">Refactor</option>
+                        <option value="Bug Fix">Bug Fix</option>
+                        <option value="Documentation">Documentation</option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <select id="statusFilter" class="form-select form-select-sm">
+                        <option value="">Semua Status</option>
+                        <option value="Complete">🟢 Complete</option>
+                        <option value="In Progress">🟡 In Progress</option>
+                        <option value="Fixed">🔵 Fixed</option>
+                        <option value="Refactored">🟣 Refactored</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <select id="dateFilter" class="form-select form-select-sm">
+                        <option value="">Semua Tanggal</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- TIMELINE CONTAINER GROUPED BY DATE -->
+            <div id="timelineContainer">
+                <!-- Dynamically rendered via JS -->
+            </div>
+
+            <!-- PAGINATION CONTROLS -->
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-warning border-opacity-20">
+                <div class="small text-muted">
+                    Menampilkan <span id="pageInfo" class="fw-bold text-dark">0-0</span> dari <span id="totalInfo" class="fw-bold text-dark">0</span> aktivitas
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <select id="pageSizeSelect" class="form-select form-select-sm" style="width: 100px;">
+                        <option value="20">20 / hal</option>
+                        <option value="50">50 / hal</option>
+                        <option value="100">100 / hal</option>
+                    </select>
+                    <div class="btn-group btn-group-sm">
+                        <button id="prevPageBtn" class="btn btn-outline-warning text-dark"><i class="bi bi-chevron-left"></i></button>
+                        <button id="nextPageBtn" class="btn btn-outline-warning text-dark"><i class="bi bi-chevron-right"></i></button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -702,6 +805,243 @@ $recentChanges = [
             <a href="https://aestheticpondokindah.com" class="text-dark fw-semibold text-decoration-none" target="_blank"><i class="bi bi-globe text-warning me-1"></i> Website Utama</a>
         </div>
     </div>
+
+    <!-- Pass JSON Logs to Client JS -->
+    <script>
+        const rawActivityLogs = <?= json_encode($activityLogs, JSON_UNESCAPED_UNICODE) ?>;
+    </script>
+
+    <!-- Timeline Controller JS Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let logs = rawActivityLogs || [];
+            let currentPage = 1;
+            let pageSize = 20;
+
+            const categoryIcons = {
+                'Backend': 'bi-server',
+                'Frontend': 'bi-window',
+                'React': 'bi-code-slash',
+                'React Native': 'bi-phone',
+                'Laravel': 'bi-layers',
+                'API': 'bi-cloud-arrow-up',
+                'Database': 'bi-database',
+                'Authentication': 'bi-shield-lock',
+                'Membership': 'bi-gem',
+                'Appointment': 'bi-calendar-check',
+                'Notification': 'bi-bell',
+                'Gallery': 'bi-images',
+                'Banner': 'bi-card-image',
+                'Blog': 'bi-newspaper',
+                'Security': 'bi-lock-fill',
+                'Testing': 'bi-speedometer2',
+                'Deployment': 'bi-box-seam',
+                'Refactor': 'bi-arrow-repeat',
+                'Bug Fix': 'bi-bug',
+                'Documentation': 'bi-file-earmark-text'
+            };
+
+            // Populate Date Filter Options
+            const dateFilter = document.getElementById('dateFilter');
+            const datesSet = new Set(logs.map(l => l.date));
+            datesSet.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = formatDateLabel(d);
+                dateFilter.appendChild(opt);
+            });
+
+            function formatDateLabel(dateStr) {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length !== 3) return dateStr;
+                const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                return dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+
+            function getFilteredLogs() {
+                const search = document.getElementById('timelineSearch').value.toLowerCase().trim();
+                const category = document.getElementById('categoryFilter').value;
+                const status = document.getElementById('statusFilter').value;
+                const date = document.getElementById('dateFilter').value;
+
+                return logs.filter(item => {
+                    if (category && item.category !== category) return false;
+                    if (status && !item.status.includes(status)) return false;
+                    if (date && item.date !== date) return false;
+                    if (search) {
+                        const searchStr = `${item.feature} ${item.description} ${item.notes} ${item.reason} ${item.author} ${item.category} ${(item.files || []).join(' ')}`.toLowerCase();
+                        if (!searchStr.includes(search)) return false;
+                    }
+                    return true;
+                });
+            }
+
+            function renderTimeline() {
+                const filtered = getFilteredLogs();
+                const container = document.getElementById('timelineContainer');
+                container.innerHTML = '';
+
+                const totalItems = filtered.length;
+                document.getElementById('totalInfo').textContent = totalItems;
+
+                if (totalItems === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2 text-warning opacity-50"></i>
+                            <h6 class="fw-bold">Tidak ada aktivitas ditemukan</h6>
+                            <p class="small mb-0">Coba ubah kata kunci pencarian atau filter Anda.</p>
+                        </div>
+                    `;
+                    document.getElementById('pageInfo').textContent = '0-0';
+                    return;
+                }
+
+                // Pagination Calculation
+                const totalPages = Math.ceil(totalItems / pageSize);
+                if (currentPage > totalPages) currentPage = totalPages;
+                if (currentPage < 1) currentPage = 1;
+
+                const startIdx = (currentPage - 1) * pageSize;
+                const endIdx = Math.min(startIdx + pageSize, totalItems);
+                const pageLogs = filtered.slice(startIdx, endIdx);
+
+                document.getElementById('pageInfo').textContent = `${startIdx + 1}-${endIdx}`;
+
+                // Group Page Logs by Date
+                const grouped = {};
+                pageLogs.forEach(item => {
+                    if (!grouped[item.date]) grouped[item.date] = [];
+                    grouped[item.date].push(item);
+                });
+
+                Object.keys(grouped).forEach(dateStr => {
+                    const dayLogs = grouped[dateStr];
+                    
+                    // Daily Stats Calculation
+                    const totalAct = dayLogs.length;
+                    const completedFeat = dayLogs.filter(l => l.status.includes('Complete') || l.type === 'Feature').length;
+                    const bugFixes = dayLogs.filter(l => l.type === 'Bug Fix' || l.category.includes('Fix')).length;
+                    const refactors = dayLogs.filter(l => l.type === 'Refactor').length;
+                    
+                    // Unique Files Count
+                    const filesSet = new Set();
+                    dayLogs.forEach(l => (l.files || []).forEach(f => filesSet.add(f)));
+
+                    // Net Progress Change for Day
+                    const firstItem = dayLogs[dayLogs.length - 1];
+                    const lastItem = dayLogs[0];
+                    const progressDelta = (lastItem.after_progress || 0) - (firstItem.before_progress || 0);
+
+                    const dayCard = document.createElement('div');
+                    dayCard.className = 'timeline-day-card';
+
+                    let itemsHtml = '';
+                    dayLogs.forEach((item, idx) => {
+                        const icon = categoryIcons[item.category] || 'bi-bookmark';
+                        const filesListHtml = (item.files || []).map(f => `<span class="code-chip me-1 mb-1">${f}</span>`).join('');
+                        const collapseId = `collapse_${item.id || idx}_${Math.random().toString(36).substring(7)}`;
+
+                        itemsHtml += `
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content shadow-sm">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge bg-dark text-white font-monospace"><i class="bi bi-clock me-1"></i>${item.time}</span>
+                                            <span class="badge bg-warning bg-opacity-10 text-dark border border-warning border-opacity-25">
+                                                <i class="bi ${icon} text-warning me-1"></i>${item.category}
+                                            </span>
+                                            <h6 class="fw-bold text-dark mb-0 font-display fs-6">${item.feature}</h6>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge badge-luxury">${item.status}</span>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">${item.author}</span>
+                                            <span class="badge bg-success bg-opacity-10 text-success fw-bold">${item.before_progress}% ➔ ${item.after_progress}%</span>
+                                        </div>
+                                    </div>
+                                    <p class="small text-secondary mb-2">${item.description}</p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-warning border-opacity-10">
+                                        <span class="expand-toggle" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                                            <i class="bi bi-chevron-down me-1"></i> Rincian & File Modified (${(item.files || []).length})
+                                        </span>
+                                        <small class="text-muted" style="font-size: 0.75rem;">ID: ${item.id || 'N/A'}</small>
+                                    </div>
+
+                                    <!-- EXPANDABLE ACCORDION DETAIL -->
+                                    <div class="collapse mt-3 pt-3 border-top border-dashed" id="${collapseId}">
+                                        ${item.notes ? `<div class="mb-2"><strong class="small text-dark d-block mb-1"><i class="bi bi-info-circle text-warning me-1"></i> Catatan Implementasi:</strong><p class="small text-secondary mb-0 bg-white p-2 rounded border">${item.notes}</p></div>` : ''}
+                                        ${item.reason ? `<div class="mb-2"><strong class="small text-dark d-block mb-1"><i class="bi bi-question-circle text-warning me-1"></i> Alasan Perubahan:</strong><p class="small text-secondary mb-0 bg-white p-2 rounded border">${item.reason}</p></div>` : ''}
+                                        <div>
+                                            <strong class="small text-dark d-block mb-1"><i class="bi bi-file-earmark-code text-warning me-1"></i> File Modified / Created:</strong>
+                                            <div class="d-flex flex-wrap">${filesListHtml || '<span class="text-muted small">Tidak ada file tercatat</span>'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    dayCard.innerHTML = `
+                        <!-- DAILY SUMMARY CARD HEADER -->
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-3 mb-4 border-bottom border-warning border-opacity-20 gap-2">
+                            <h5 class="font-display fw-bold text-dark mb-0">
+                                📅 ${formatDateLabel(dateStr)}
+                            </h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="stat-pill"><i class="bi bi-list-task text-warning me-1"></i> Total: ${totalAct}</span>
+                                <span class="stat-pill"><i class="bi bi-check-circle text-success me-1"></i> Selesai: ${completedFeat}</span>
+                                ${bugFixes > 0 ? `<span class="stat-pill"><i class="bi bi-bug text-danger me-1"></i> Fix: ${bugFixes}</span>` : ''}
+                                ${refactors > 0 ? `<span class="stat-pill"><i class="bi bi-arrow-repeat text-info me-1"></i> Refactor: ${refactors}</span>` : ''}
+                                <span class="stat-pill"><i class="bi bi-file-earmark text-primary me-1"></i> Files: ${filesSet.size}</span>
+                                <span class="stat-pill bg-success bg-opacity-10 text-success fw-bold"><i class="bi bi-graph-up me-1"></i> Progress: ${progressDelta >= 0 ? '+' + progressDelta : progressDelta}%</span>
+                            </div>
+                        </div>
+
+                        <!-- TIMELINE ITEMS LIST -->
+                        <div class="timeline-list">
+                            ${itemsHtml}
+                        </div>
+                    `;
+
+                    container.appendChild(dayCard);
+                });
+            }
+
+            // Event Listeners for Live Search & Filters
+            document.getElementById('timelineSearch').addEventListener('input', () => { currentPage = 1; renderTimeline(); });
+            document.getElementById('categoryFilter').addEventListener('change', () => { currentPage = 1; renderTimeline(); });
+            document.getElementById('statusFilter').addEventListener('change', () => { currentPage = 1; renderTimeline(); });
+            document.getElementById('dateFilter').addEventListener('change', () => { currentPage = 1; renderTimeline(); });
+            document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+                pageSize = parseInt(e.target.value);
+                currentPage = 1;
+                renderTimeline();
+            });
+
+            document.getElementById('prevPageBtn').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTimeline();
+                    document.getElementById('timelineSection').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+
+            document.getElementById('nextPageBtn').addEventListener('click', () => {
+                const filtered = getFilteredLogs();
+                const totalPages = Math.ceil(filtered.length / pageSize);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTimeline();
+                    document.getElementById('timelineSection').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+
+            // Initial Render
+            renderTimeline();
+        });
+    </script>
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
