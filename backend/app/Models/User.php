@@ -31,7 +31,9 @@ class User extends Authenticatable
         'city',
         'postal_code',
         'profile_completed_at',
+        'membership_level',
         'membership_status',
+        'membership_points',
         'membership_started_at',
         'membership_expires_at',
         'gender',
@@ -196,7 +198,7 @@ class User extends Authenticatable
             default => 0,
         };
 
-        $percentage = min(100, ($this->total_transactions / $requiredAmount) * 100);
+        $percentage = $requiredAmount > 0 ? min(100, ($this->total_transactions / $requiredAmount) * 100) : 100;
         $remaining = max(0, $requiredAmount - $this->total_transactions);
 
         return [

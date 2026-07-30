@@ -23,13 +23,20 @@ export default function BookingNewPage() {
   const branches = useMemo(() => getDemoBranches(), []);
 
   const preselectedBranchId = searchParams.get("branch");
+  const preselectedDoctor = searchParams.get("doctor");
+  const preselectedDate = searchParams.get("date");
+  const preselectedSlot = searchParams.get("slot");
+
+  const today = new Date().toISOString().split("T")[0];
 
   const [form, setForm] = useState({
     branchId: preselectedBranchId ?? branches[0]?.id ?? "",
-    preferredDate: "",
+    preferredDate: preselectedDate ?? today,
     patientName: "",
     phone: "",
-    note: "",
+    note: preselectedDoctor
+      ? `Jadwal Dokter: ${preselectedDoctor}${preselectedSlot ? ` (${preselectedSlot})` : ""}`
+      : "",
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -38,13 +45,15 @@ export default function BookingNewPage() {
   const validate = () => {
     if (!form.branchId) return "Cabang wajib dipilih.";
     if (!form.preferredDate) return "Tanggal wajib diisi.";
-    if (!form.patientName) return "Nama wajib diisi.";
-    if (!form.phone) return "Nomor WhatsApp/Telepon wajib diisi.";
+    if (form.preferredDate < today) return "Tanggal reservasi tidak boleh di masa lalu.";
+    if (!form.patientName || form.patientName.trim().length < 2) return "Nama pasien minimal 2 karakter.";
+    if (!form.phone || !/^[0-9+\-\s]{8,20}$/.test(form.phone.trim())) return "Format nomor WhatsApp/Telepon tidak valid.";
     return null;
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     setError(null);
 
     const v = validate();
@@ -55,17 +64,30 @@ export default function BookingNewPage() {
 
     setSubmitting(true);
     try {
-      // 1. Persist to Backend and Open WA
-      const branchName = branches.find(b => b.id === form.branchId)?.name || "Klinik";
-      await submitPublicReservation({
-        name: form.patientName,
-        phone: form.phone,
+      // 1. Submit to Laravel Backend Database
+      const apiRes = await submitPublicReservation({
+        name: form.patientName.trim(),
+        phone: form.phone.trim(),
         complaint: form.note || "Booking Baru",
         date: form.preferredDate,
         source: "booking_new_page",
       });
+
+      // 2. Persist in Guest Local Session for Status View
+      const demoRes = createBookingRequestDemo({
+        branchId: form.branchId,
+        preferredDate: form.preferredDate,
+        preferredStartTime: preselectedSlot ? preselectedSlot.split("-")[0] : "09:00",
+        preferredEndTime: preselectedSlot ? preselectedSlot.split("-")[1] : "11:00",
+        patientName: form.patientName.trim(),
+        phone: form.phone.trim(),
+        note: form.note,
+      });
+
+      const highlightId = demoRes.ok ? demoRes.request.id : apiRes?.id || "";
+      navigate(`/booking/status?highlight=${encodeURIComponent(highlightId)}`);
     } catch (e) {
-      setError("Gagal mengirim permintaan. Silakan coba lagi.");
+      setError("Gagal mengirim permintaan reservasi. Silakan coba lagi.");
     } finally {
       setSubmitting(false);
     }
@@ -113,6 +135,7 @@ export default function BookingNewPage() {
                         <Input
                           id="preferredDate"
                           type="date"
+                          min={today}
                           className="h-12 rounded-xl font-body"
                           value={form.preferredDate}
                           onChange={(e) => setForm((p) => ({ ...p, preferredDate: e.target.value }))}

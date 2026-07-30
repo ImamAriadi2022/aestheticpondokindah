@@ -9,6 +9,7 @@ class Reservation extends Model
 {
     protected $fillable = [
         'user_id',
+        'doctor_id',
         'name',
         'phone',
         'complaint',
@@ -25,5 +26,10 @@ class Reservation extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function doctor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'doctor_id');
     }
 }

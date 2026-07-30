@@ -147,16 +147,19 @@ export interface MembershipTierInfo {
 
 // Helper function to get auth token
 const getAuthToken = (): string | null => {
+  const apidentToken = localStorage.getItem('apident:token');
+  if (apidentToken) return apidentToken;
+
   const userStr = localStorage.getItem('apident:user');
   if (userStr) {
     try {
       const user = JSON.parse(userStr);
-      return user.token || null;
+      if (user.token) return user.token;
     } catch (e) {
-      return null;
+      // ignore
     }
   }
-  return null;
+  return localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
 };
 
 // Helper function to make API requests

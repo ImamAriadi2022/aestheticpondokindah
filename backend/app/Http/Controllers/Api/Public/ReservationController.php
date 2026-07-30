@@ -18,18 +18,28 @@ class ReservationController extends Controller
             'source' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $reservation = Reservation::create([
-            'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'complaint' => $validated['complaint'],
-            'date' => $validated['date'] ?? null,
-            'source' => $validated['source'] ?? null,
-            'status' => 'Baru',
-        ]);
+        $reservation = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            return Reservation::create([
+                'name' => $validated['name'],
+                'phone' => $validated['phone'],
+                'complaint' => $validated['complaint'],
+                'date' => $validated['date'] ?? null,
+                'source' => $validated['source'] ?? null,
+                'status' => 'Baru',
+            ]);
+        });
+
+        $code = 'RSV-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT);
 
         return response()->json([
-            'id' => $reservation->id,
+            'id' => (string) $reservation->id,
+            'code' => $code,
+            'name' => $reservation->name,
+            'phone' => $reservation->phone,
+            'complaint' => $reservation->complaint,
+            'date' => optional($reservation->date)->format('Y-m-d'),
             'status' => $reservation->status,
+            'message' => 'Reservasi berhasil dibuat.',
         ], 201);
     }
 }

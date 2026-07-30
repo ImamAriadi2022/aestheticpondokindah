@@ -96,25 +96,42 @@ export default function MembershipUpgradePage() {
       
       const response = await fetch(`${API_BASE}/membership/payment/options`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
           Accept: "application/json",
         },
       });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch options");
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setOptions(data.data.upgrade_options);
+          setCurrentLevel(data.data.current_level);
+          setCurrentLabel(data.data.current_label);
+          setAutoProgress(data.data.auto_upgrade_progress);
+          return;
+        }
       }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setOptions(data.data.upgrade_options);
-        setCurrentLevel(data.data.current_level);
-        setCurrentLabel(data.data.current_label);
-        setAutoProgress(data.data.auto_upgrade_progress);
-      } else {
-        setError(data.message || "Gagal memuat opsi");
+
+      // Fallback to public membership tiers
+      const tiersRes = await fetch(`${API_BASE}/public/membership/tiers`);
+      if (tiersRes.ok) {
+        const tiersData = await tiersRes.json();
+        if (tiersData.success && tiersData.data) {
+          const formatted: UpgradeOption[] = Object.entries(tiersData.data)
+            .filter(([level]) => level !== 'bronze')
+            .map(([level, info]: [string, any]) => ({
+              level: level as 'gold' | 'platinum' | 'diamond',
+              label: info.label,
+              price: info.price,
+              price_formatted: `Rp ${info.price.toLocaleString('id-ID')}`,
+              benefits: info.benefits,
+            }));
+          setOptions(formatted);
+          return;
+        }
       }
+
+      setError("Gagal memuat opsi upgrade. Silakan coba lagi.");
     } catch (error) {
       logger.error("Error fetching options:", error);
       setError("Gagal memuat opsi upgrade. Silakan coba lagi.");

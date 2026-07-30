@@ -19,10 +19,18 @@ use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\PromoClaimController;
 use App\Http\Controllers\Api\ConsultationController;
 use App\Http\Controllers\Api\DoctorConsultationController;
+use App\Http\Controllers\Api\Doctor\DoctorQueueController;
 use App\Http\Controllers\Api\DoctorScheduleController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\User\MembershipController;
+use App\Http\Controllers\Api\User\PaymentController;
+use App\Http\Controllers\Api\VisitController;
+use App\Http\Controllers\Api\MedicalRecordController;
+use App\Http\Controllers\Api\SoapController;
+use App\Http\Controllers\Api\DiagnosisController;
+use App\Http\Controllers\Api\ProcedureController;
+use App\Http\Controllers\Api\OdontogramController;
 use App\Http\Controllers\Api\User\MembershipPaymentController;
 use App\Http\Controllers\Api\User\NotificationController;
 use App\Http\Controllers\Api\User\ReservationController as UserReservationController;
@@ -109,6 +117,12 @@ Route::prefix('admin')->group(function () {
         // Membership Admin Routes
         Route::prefix('membership')->group(function () {
             Route::get('/', [MembershipAdminController::class, 'index']);
+            Route::get('/upgrade-requests', [MembershipAdminController::class, 'requests']);
+            Route::get('/upgrade-requests/{id}', [MembershipAdminController::class, 'showRequest']);
+            Route::post('/upgrade-requests/{id}/approve', [MembershipAdminController::class, 'approveRequest']);
+            Route::post('/upgrade-requests/{id}/reject', [MembershipAdminController::class, 'rejectRequest']);
+            Route::get('/invoices', [MembershipAdminController::class, 'invoices']);
+            Route::get('/invoices/{id}', [MembershipAdminController::class, 'showInvoice']);
             Route::get('/{id}', [MembershipAdminController::class, 'show']);
             Route::patch('/{id}/level', [MembershipAdminController::class, 'updateLevel']);
             Route::patch('/{id}/points', [MembershipAdminController::class, 'updatePoints']);
@@ -128,9 +142,35 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/consultations', [ConsultationController::class, 'store']);
     Route::get('/user/reservations', [UserReservationController::class, 'index']);
     Route::post('/user/reservations', [UserReservationController::class, 'store']);
+    Route::get('/user/reservations/{id}', [UserReservationController::class, 'show']);
+    Route::put('/user/reservations/{id}/cancel', [UserReservationController::class, 'cancel']);
     Route::get('/user/complaints', [ComplaintController::class, 'index']);
     Route::post('/user/complaints', [ComplaintController::class, 'store']);
     Route::get('/user/complaints/{complaint}', [ComplaintController::class, 'show']);
+
+    // Patient Visit Routes (Task 5.1)
+    Route::get('/user/visits', [VisitController::class, 'patientIndex']);
+    Route::get('/user/visits/{id}', [VisitController::class, 'patientShow']);
+
+    // Patient Medical Record Routes (Task 5.2 & 5.3 & 5.4 & 5.5 & 5.6)
+    Route::get('/user/medical-records', [MedicalRecordController::class, 'patientIndex']);
+    Route::get('/user/medical-records/{id}', [MedicalRecordController::class, 'patientShow']);
+    Route::get('/user/medical-records/{id}/soap', [SoapController::class, 'patientShow']);
+    Route::get('/user/medical-records/{id}/diagnoses', [DiagnosisController::class, 'patientIndex']);
+    Route::get('/user/medical-records/{id}/procedures', [ProcedureController::class, 'patientIndex']);
+    Route::get('/user/medical-records/{id}/odontogram', [OdontogramController::class, 'patientShow']);
+    Route::get('/icd10', [DiagnosisController::class, 'searchIcd10']);
+    Route::get('/procedure-catalog', [ProcedureController::class, 'searchCatalog']);
+
+    // Payment Simulation Engine Routes (Task 4.4)
+    Route::get('/user/payments', [PaymentController::class, 'index']);
+    Route::post('/user/invoices/{id}/payment', [PaymentController::class, 'createPayment']);
+    Route::get('/user/payments/{id}', [PaymentController::class, 'show']);
+    Route::post('/user/payments/{id}/simulate-settlement', [PaymentController::class, 'simulateSettlement']);
+    Route::post('/user/payments/{id}/simulate-expire', [PaymentController::class, 'simulateExpire']);
+    Route::post('/user/payments/{id}/simulate-cancel', [PaymentController::class, 'simulateCancel']);
+    Route::post('/user/payments/{id}/simulate-deny', [PaymentController::class, 'simulateDeny']);
+    Route::post('/user/payments/{id}/simulate-failure', [PaymentController::class, 'simulateFailure']);
 
     // Notification Routes
     Route::get('/user/notifications', [NotificationController::class, 'index']);
@@ -152,6 +192,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/history', [MembershipController::class, 'getHistory']);
         Route::get('/transactions', [MembershipController::class, 'getTransactions']);
         Route::post('/upgrade', [MembershipController::class, 'upgrade']);
+        Route::post('/request-upgrade', [MembershipController::class, 'requestUpgrade']);
         Route::post('/renew', [MembershipController::class, 'renew']);
         Route::post('/cancel', [MembershipController::class, 'cancel']);
         Route::post('/redeem-points', [MembershipController::class, 'redeemPoints']);
@@ -173,6 +214,43 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/doctor/schedules/{schedule}', [DoctorScheduleController::class, 'destroy']);
 
         Route::get('/doctor/consultations', [DoctorConsultationController::class, 'index']);
+        Route::get('/doctor/queue', [DoctorQueueController::class, 'queue']);
+        Route::get('/doctor/reservations/{id}', [DoctorQueueController::class, 'show']);
+        Route::put('/doctor/reservations/{id}/start', [DoctorQueueController::class, 'start']);
+        Route::put('/doctor/reservations/{id}/complete', [DoctorQueueController::class, 'complete']);
+
+        // Doctor Visit Routes (Task 5.1)
+        Route::get('/doctor/visits', [VisitController::class, 'doctorIndex']);
+        Route::get('/doctor/visits/{id}', [VisitController::class, 'doctorShow']);
+        Route::put('/doctor/visits/{id}/status', [VisitController::class, 'updateStatus']);
+
+        // Doctor Medical Record Routes (Task 5.2)
+        Route::get('/doctor/medical-records', [MedicalRecordController::class, 'doctorIndex']);
+        Route::get('/doctor/medical-records/{id}', [MedicalRecordController::class, 'doctorShow']);
+        Route::put('/doctor/medical-records/{id}/status', [MedicalRecordController::class, 'updateStatus']);
+        Route::post('/doctor/medical-records/{id}/finalize', [MedicalRecordController::class, 'finalize']);
+        Route::post('/doctor/medical-records/{id}/lock', [MedicalRecordController::class, 'lock']);
+
+        // Structured SOAP Note Routes (Task 5.3)
+        Route::get('/doctor/medical-records/{id}/soap', [SoapController::class, 'doctorShow']);
+        Route::post('/doctor/medical-records/{id}/soap', [SoapController::class, 'storeOrUpdate']);
+
+        // Clinical Diagnosis Routes (Task 5.4)
+        Route::get('/doctor/medical-records/{id}/diagnoses', [DiagnosisController::class, 'doctorIndex']);
+        Route::post('/doctor/medical-records/{id}/diagnoses', [DiagnosisController::class, 'store']);
+        Route::put('/doctor/diagnoses/{id}', [DiagnosisController::class, 'update']);
+        Route::delete('/doctor/diagnoses/{id}', [DiagnosisController::class, 'destroy']);
+
+        // Clinical Procedure Routes (Task 5.5)
+        Route::get('/doctor/medical-records/{id}/procedures', [ProcedureController::class, 'doctorIndex']);
+        Route::post('/doctor/medical-records/{id}/procedures', [ProcedureController::class, 'store']);
+        Route::put('/doctor/procedures/{id}', [ProcedureController::class, 'update']);
+        Route::delete('/doctor/procedures/{id}', [ProcedureController::class, 'destroy']);
+
+        // Electronic Odontogram Routes (Task 5.6)
+        Route::get('/doctor/medical-records/{id}/odontogram', [OdontogramController::class, 'doctorShow']);
+        Route::post('/doctor/medical-records/{id}/odontogram/tooth', [OdontogramController::class, 'updateTooth']);
+        Route::post('/doctor/medical-records/{id}/odontogram/bulk', [OdontogramController::class, 'bulkUpdate']);
     });
 });
 
@@ -186,5 +264,6 @@ Route::prefix('public')->group(function () {
     Route::get('/promos', [ContentController::class, 'promos']);
     Route::get('/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
+    Route::get('/membership/tiers', [MembershipController::class, 'tiers']);
     Route::middleware('throttle:5,1')->post('/reservations', [ReservationController::class, 'store']);
 });

@@ -48,23 +48,35 @@ class ReservationAdminController extends Controller
     public function update(Request $request, Reservation $reservation)
     {
         $validated = $request->validate([
-            'status' => ['required', 'in:Baru,Dikonfirmasi,Selesai,Dibatalkan'],
+            'status' => ['required', 'in:Baru,Dikonfirmasi,Ditolak,Dibatalkan,Selesai'],
             'paymentStatus' => ['nullable', 'in:Belum Bayar,Sudah Bayar,Bayar DP,Uang Dikembalikan,Dibatalkan'],
         ]);
+
+        $currentStatus = $reservation->status;
+        $targetStatus = $validated['status'];
+
+        // Enforce Status Transition Matrix
+        if ($currentStatus !== $targetStatus) {
+            if (!$this->isValidTransition($currentStatus, $targetStatus)) {
+                return response()->json([
+                    'message' => "Perubahan status dari '{$currentStatus}' ke '{$targetStatus}' tidak diperbolehkan secara aturan bisnis."
+                ], 422);
+            }
+        }
 
         $adminId = $request->user()?->id;
 
         // Audit Status Change
-        if ($reservation->status !== $validated['status']) {
+        if ($reservation->status !== $targetStatus) {
             ReservationAudit::create([
                 'reservation_id' => $reservation->id,
                 'user_id' => $adminId,
                 'action' => 'update_status',
                 'field' => 'status',
                 'old_value' => $reservation->status,
-                'new_value' => $validated['status'],
+                'new_value' => $targetStatus,
             ]);
-            $reservation->status = $validated['status'];
+            $reservation->status = $targetStatus;
         }
 
         // Audit Payment Status Change
@@ -101,5 +113,25 @@ class ReservationAdminController extends Controller
             'createdAt' => optional($reservation->created_at)->toISOString(),
             'notes' => null,
         ]);
+    }
+
+    private function isValidTransition(string $current, string $target): bool
+    {
+        if ($current === $target) {
+            return true;
+        }
+
+        switch ($current) {
+            case 'Baru':
+                return in_array($target, ['Dikonfirmasi', 'Ditolak', 'Dibatalkan', 'Selesai'], true);
+            case 'Dikonfirmasi':
+                return in_array($target, ['Selesai', 'Dibatalkan', 'Ditolak'], true);
+            case 'Ditolak':
+            case 'Dibatalkan':
+            case 'Selesai':
+                return false;
+            default:
+                return false;
+        }
     }
 }

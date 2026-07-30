@@ -186,15 +186,73 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/membership" element={<MembershipPage />} />
-              <Route path="/membership/upgrade" element={<MembershipUpgradePage />} />
-              <Route path="/security" element={<SecurityPage />} />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute allow={["user", "doctor", "clinic"]}>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/membership"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <MembershipPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/membership/upgrade"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <MembershipUpgradePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/security"
+                element={
+                  <ProtectedRoute allow={["user", "doctor", "clinic"]}>
+                    <SecurityPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/help" element={<HelpPage />} />
 
-              {/* Onboarding & Mobile Login */}
+              {/* Onboarding & Mobile PWA Routes */}
               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/mobile-login" element={<MobileLoginPage />} />
+              <Route path="/mobile" element={<MobileHomePage />} />
+              <Route path="/mobile/booking" element={<MobileBookingPage />} />
+              <Route path="/mobile/booking/doctor" element={<MobileBookingDoctorPage />} />
+              <Route path="/mobile/booking/schedule" element={<MobileBookingSchedulePage />} />
+              <Route path="/mobile/booking/confirm" element={<MobileBookingConfirmPage />} />
+              <Route path="/mobile/booking/success" element={<MobileBookingSuccessPage />} />
+              <Route
+                path="/mobile/konsultasi"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <MobileKonsultasiPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mobile/riwayat"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <MobileRiwayatPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mobile/akun"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <MobileAkunPage />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </RouteTransition>
         </ErrorBoundary>

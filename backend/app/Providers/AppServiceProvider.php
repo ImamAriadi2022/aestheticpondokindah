@@ -11,7 +11,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            \App\Contracts\PaymentServiceInterface::class,
+            \App\Services\Payment\SimulationPaymentService::class
+        );
     }
 
     /**
@@ -19,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Event::listen(
+            \App\Events\PaymentSettled::class,
+            \App\Listeners\ProcessMembershipActivation::class
+        );
     }
 }

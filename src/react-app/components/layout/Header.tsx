@@ -67,21 +67,22 @@ export default function Header() {
     const computeIsLoggedIn = () => {
       const token = localStorage.getItem("apident:token");
       const userRaw = localStorage.getItem("apident:user");
+      const demoSession = localStorage.getItem("apident:demo_session_v1");
 
-      if (!token || !userRaw) return false;
-      try {
-        const parsed = JSON.parse(userRaw);
-        return Boolean(parsed);
-      } catch {
-        return false;
-      }
+      if (token || userRaw || demoSession) return true;
+      return false;
     };
 
     const sync = () => setIsLoggedIn(computeIsLoggedIn());
     sync();
 
     const onStorage = (e: StorageEvent) => {
-      if (e.key === "apident:token" || e.key === "apident:user") sync();
+      if (
+        e.key === "apident:token" ||
+        e.key === "apident:user" ||
+        e.key === "apident:demo_session_v1"
+      )
+        sync();
     };
 
     window.addEventListener("storage", onStorage);

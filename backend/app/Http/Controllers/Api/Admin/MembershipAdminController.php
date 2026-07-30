@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Membership\UpdateLevelRequest;
 use App\Http\Requests\Admin\Membership\UpdatePointsRequest;
 use App\Models\User;
+use App\Models\MembershipTransaction;
+use App\Models\Invoice;
 use App\Services\MembershipService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -233,6 +235,243 @@ class MembershipAdminController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Member deleted successfully',
+        ]);
+    }
+
+    /**
+     * Get pending/all membership upgrade requests (Task 4.3)
+     */
+    public function requests(Request $request): JsonResponse
+    {
+        $query = MembershipTransaction::with('user')
+            ->where('transaction_type', 'upgrade')
+            ->latest();
+
+        if ($request->has('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $requests = $query->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $requests,
+        ]);
+    }
+
+    /**
+     * Get specific upgrade request details
+     */
+    public function showRequest(Request $request, int|string $id): JsonResponse
+    {
+        $upgradeRequest = MembershipTransaction::with('user')
+            ->where('transaction_type', 'upgrade')
+            ->find($id);
+
+        if (!$upgradeRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade tidak ditemukan.',
+            ], 404);
+        }
+
+        $invoice = Invoice::where('membership_transaction_id', $upgradeRequest->id)->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'request' => $upgradeRequest,
+                'invoice' => $invoice,
+            ],
+        ]);
+    }
+
+    /**
+     * Approve membership upgrade request & generate UNPAID invoice (Task 4.3)
+     */
+    public function approveRequest(Request $request, int|string $id): JsonResponse
+    {
+        $upgradeRequest = MembershipTransaction::with('user')->find($id);
+
+        if (!$upgradeRequest || $upgradeRequest->transaction_type !== 'upgrade') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade tidak ditemukan.',
+            ], 404);
+        }
+
+        // Business Rules Validation
+        if ($upgradeRequest->status === 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade sudah disetujui sebelumnya.',
+            ], 422);
+        }
+
+        if ($upgradeRequest->status === 'rejected') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade yang sudah ditolak tidak dapat disetujui.',
+            ], 422);
+        }
+
+        if ($upgradeRequest->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya permintaan upgrade dengan status Pending yang dapat disetujui.',
+            ], 422);
+        }
+
+        // Update Upgrade Request Status to Approved
+        $upgradeRequest->status = 'approved';
+        $upgradeRequest->save();
+
+        // Target Level Extracted from Metadata or Description
+        $targetLevel = $upgradeRequest->metadata['target_level'] ?? 'gold';
+        if (preg_match('/(gold|platinum|diamond)/i', $upgradeRequest->description, $matches)) {
+            $targetLevel = strtolower($matches[1]);
+        }
+
+        // Duplicate Invoice Prevention Guard
+        $existingInvoice = Invoice::where('membership_transaction_id', $upgradeRequest->id)->first();
+
+        if (!$existingInvoice) {
+            $invoiceNumber = 'INV-MEM-' . date('Ymd') . '-' . str_pad((string) $upgradeRequest->id, 6, '0', STR_PAD_LEFT);
+
+            $invoice = Invoice::create([
+                'invoice_number' => $invoiceNumber,
+                'user_id' => $upgradeRequest->user_id,
+                'membership_transaction_id' => $upgradeRequest->id,
+                'target_level' => $targetLevel,
+                'amount' => $upgradeRequest->amount,
+                'status' => 'unpaid', // UNPAID - Ready for Payment Simulation
+                'description' => "Tagihan Pembayaran Upgrade Membership " . ucfirst($targetLevel),
+                'invoice_date' => now(),
+                'due_date' => now()->addDays(7),
+            ]);
+        } else {
+            $invoice = $existingInvoice;
+        }
+
+        // IMPORTANT INVARIANT: User's membership level MUST NOT change on approval (remains unchanged until payment)
+        $userLevelUnchanged = $upgradeRequest->user ? $upgradeRequest->user->membership_level : 'bronze';
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permintaan upgrade disetujui. Tagihan invoice berhasil diterbitkan dengan status UNPAID.',
+            'data' => [
+                'request' => $upgradeRequest->fresh(),
+                'invoice' => $invoice,
+                'user_membership_level' => $userLevelUnchanged,
+                'membership_active' => false, // MUST NOT BE ACTIVE
+            ],
+        ]);
+    }
+
+    /**
+     * Reject membership upgrade request (Task 4.3)
+     */
+    public function rejectRequest(Request $request, int|string $id): JsonResponse
+    {
+        $upgradeRequest = MembershipTransaction::find($id);
+
+        if (!$upgradeRequest || $upgradeRequest->transaction_type !== 'upgrade') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade tidak ditemukan.',
+            ], 404);
+        }
+
+        // Business Rules Validation
+        if ($upgradeRequest->status === 'rejected') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade sudah ditolak sebelumnya.',
+            ], 422);
+        }
+
+        if ($upgradeRequest->status === 'approved') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade yang sudah disetujui tidak dapat ditolak.',
+            ], 422);
+        }
+
+        if ($upgradeRequest->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya permintaan upgrade dengan status Pending yang dapat ditolak.',
+            ], 422);
+        }
+
+        $upgradeRequest->status = 'rejected';
+        $upgradeRequest->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Permintaan upgrade berhasil ditolak.',
+            'data' => [
+                'request' => $upgradeRequest->fresh(),
+                'invoice_generated' => false, // NO INVOICE FOR REJECTED
+            ],
+        ]);
+    }
+
+    /**
+     * Admin list of invoices
+     */
+    public function invoices(Request $request): JsonResponse
+    {
+        $query = Invoice::with(['user', 'membershipTransaction'])->latest();
+
+        if ($request->has('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->input('status'));
+        }
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($u) use ($search) {
+                      $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $invoices = $query->paginate(20);
+
+        return response()->json([
+            'success' => true,
+            'data' => $invoices,
+        ]);
+    }
+
+    /**
+     * Admin show invoice detail
+     */
+    public function showInvoice(Request $request, int|string $id): JsonResponse
+    {
+        $invoice = Invoice::with(['user', 'membershipTransaction'])->find($id);
+
+        if (!$invoice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $invoice,
         ]);
     }
 }

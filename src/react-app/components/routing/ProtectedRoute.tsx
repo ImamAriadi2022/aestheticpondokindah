@@ -37,32 +37,17 @@ export default function ProtectedRoute({ children, allow }: Props) {
   }
 
   if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-700">
-          <div className="font-semibold text-gray-900">Session tidak ditemukan</div>
-          <div className="mt-2 text-gray-600 break-all">
-            path: {location.pathname}
-          </div>
-          <div className="mt-3">
-            <button
-              className="px-3 py-2 rounded bg-black text-white"
-              onClick={() => {
-                navigate("/login");
-              }}
-            >
-              Ke halaman login
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   touchSessionLastActive();
 
-  if (allow && !allow.includes(session.role)) {
-    return <Navigate to={getDefaultDashboardPath(session.role)} replace />;
+  const rawRole = (session as any)?.role;
+  const normalizedRole: DemoRole =
+    rawRole === "patient" ? "user" : rawRole === "clinic_admin" ? "clinic" : session.role;
+
+  if (allow && !allow.includes(normalizedRole)) {
+    return <Navigate to={getDefaultDashboardPath(normalizedRole)} replace />;
   }
 
   return children;

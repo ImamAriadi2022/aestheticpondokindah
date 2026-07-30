@@ -274,6 +274,89 @@ class MembershipController extends Controller
     }
 
     /**
+     * Submit an upgrade request for review (Task 4.2)
+     */
+    public function requestUpgrade(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'target_level' => 'required|in:gold,platinum,diamond',
+        ]);
+
+        $user = $request->user();
+        $targetLevel = $validated['target_level'];
+        $currentLevel = $user->membership_level ?? 'bronze';
+
+        $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2, 'diamond' => 3];
+
+        if (!array_key_exists($targetLevel, $levelOrder)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Level membership target tidak valid.',
+            ], 422);
+        }
+
+        if ($levelOrder[$targetLevel] <= $levelOrder[$currentLevel]) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Permintaan upgrade hanya diperbolehkan untuk level membership yang lebih tinggi.',
+            ], 422);
+        }
+
+        // Duplicate Pending Request Guard
+        $existingPending = MembershipTransaction::where('user_id', $user->id)
+            ->where('transaction_type', 'upgrade')
+            ->where('status', 'pending')
+            ->where('description', 'like', "%{$targetLevel}%")
+            ->first();
+
+        if ($existingPending) {
+            return response()->json([
+                'success' => false,
+                'message' => "Permintaan upgrade ke level {$targetLevel} sudah terdaftar dan sedang menunggu proses review.",
+                'data' => [
+                    'id' => (string) $existingPending->id,
+                    'user_id' => (string) $user->id,
+                    'current_level' => $currentLevel,
+                    'target_level' => $targetLevel,
+                    'status' => 'pending',
+                ]
+            ], 422);
+        }
+
+        $upgradeFees = [
+            'gold' => 499000,
+            'platinum' => 1500000,
+            'diamond' => 5000000,
+        ];
+
+        $fee = $upgradeFees[$targetLevel] ?? 0;
+
+        $transaction = MembershipTransaction::create([
+            'user_id' => $user->id,
+            'amount' => $fee,
+            'transaction_type' => 'upgrade',
+            'status' => 'pending',
+            'description' => "Permintaan upgrade ke membership {$targetLevel}",
+            'metadata' => ['target_level' => $targetLevel, 'current_level' => $currentLevel],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Permintaan upgrade ke membership {$targetLevel} berhasil dibuat.",
+            'data' => [
+                'id' => (string) $transaction->id,
+                'user_id' => (string) $user->id,
+                'current_level' => $currentLevel,
+                'target_level' => $targetLevel,
+                'amount' => $fee,
+                'amount_formatted' => 'Rp ' . number_format($fee, 0, ',', '.'),
+                'status' => 'pending',
+                'created_at' => optional($transaction->created_at)->toISOString(),
+            ],
+        ], 201);
+    }
+
+    /**
      * Renew membership to last paid level
      */
     public function renew(Request $request): JsonResponse

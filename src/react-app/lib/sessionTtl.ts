@@ -26,6 +26,9 @@ export function clearSessionStorage() {
   try {
     localStorage.removeItem("apident:token");
     localStorage.removeItem("apident:user");
+    localStorage.removeItem("apident:demo_session_v1");
+    localStorage.removeItem("auth_token");
+    sessionStorage.removeItem("auth_token");
     localStorage.removeItem(SESSION_LAST_ACTIVE_KEY);
   } catch {
     // ignore

@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router";
-import { Award, MapPin, MessageCircle, Stethoscope, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
+import { Award, MapPin, MessageCircle, Stethoscope, ChevronRight, Calendar, Clock } from "lucide-react";
 import { Button } from "@/react-app/components/ui/button";
 import { Badge } from "@/react-app/components/ui/badge";
 import {
@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/react-app/components/ui/dialog";
+import { getPublicDoctorSchedules, type PublicDoctorScheduleItem } from "@/react-app/lib/publicDoctorScheduleApi";
 
 interface Doctor {
   id: number;
@@ -27,28 +28,55 @@ interface DoctorCardProps {
 }
 
 export default function DoctorCard({ doctor }: DoctorCardProps) {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const [liveSchedules, setLiveSchedules] = useState<PublicDoctorScheduleItem[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<PublicDoctorScheduleItem | null>(null);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
 
-  // Parse long text to array if needed
-  const schedule = doctor.schedule || [
-    "Tuesday: 10:00 AM - 06:00 PM",
-    "Wednesday: 10:00 AM - 06:00 PM",
-    "Friday: 10:00 AM - 06:00 PM",
-  ];
+  useEffect(() => {
+    let mounted = true;
+    setLoadingSchedule(true);
+    getPublicDoctorSchedules()
+      .then((items) => {
+        if (!mounted) return;
+        // Filter slots matching doctor name
+        const doctorNameClean = doctor.name.toLowerCase().trim();
+        const matched = items.filter(
+          (s) =>
+            s.doctorName &&
+            (s.doctorName.toLowerCase().includes(doctorNameClean) ||
+              doctorNameClean.includes(s.doctorName.toLowerCase()))
+        );
+        setLiveSchedules(matched.length > 0 ? matched : items.slice(0, 3));
+        setLoadingSchedule(false);
+      })
+      .catch(() => {
+        if (mounted) setLoadingSchedule(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [doctor.name]);
 
   const fellowship = doctor.fellowship || [
-    "Penn Endodontic Global Symposium 2025 - Lecture session in the amount of 16 hours",
-    "The Soul of Speaking 2023",
+    "Penn Endodontic Global Symposium 2025 - Lecture session",
     "Micro Dentistry: Ceramic and Composite Restoration",
-    "HDI Scientific Seminar 'The Future of Dentistry, Trends & Technologies' 2022",
-    "Hands On Endo Like A Boss - The Protocol of Bulk Fill Resin Composite For Post-Endodontic Cavity 2022",
-    "Endo Use Like A Boss 2022",
+    "HDI Scientific Seminar 'The Future of Dentistry'",
   ];
 
-  const organization = doctor.organization || [
-    "PDGI South Jakarta",
-    "Lions Club",
-  ];
+  const organization = doctor.organization || ["PDGI South Jakarta", "Lions Club"];
+
+  const handleBookingRedirect = () => {
+    const params = new URLSearchParams();
+    params.set("doctor", doctor.name);
+    if (selectedSlot) {
+      params.set("date", selectedSlot.date);
+      params.set("slot", selectedSlot.timeRange);
+    }
+    navigate(`/booking/new?${params.toString()}`);
+  };
 
   return (
     <Dialog>
@@ -194,17 +222,62 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
                 <p className="text-sm text-gray-600 font-body leading-relaxed">{doctor.education}</p>
               </div>
 
-              {/* Schedule */}
-              <div className="mb-4">
-                <h4 className="text-sm font-bold text-[#c9a24a] font-body uppercase tracking-wider mb-2">Schedule</h4>
-                <div className="bg-[#f8f6f3] rounded-xl p-4 space-y-2">
-                  {schedule.map((time, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600 font-body">{time.split(':')[0]}</span>
-                      <span className="text-gray-800 font-medium">{time.split(':').slice(1).join(':')}</span>
-                    </div>
-                  ))}
-                </div>
+              {/* Live Schedule & Available Slots */}
+              <div className="mb-6">
+                <h4 className="text-sm font-bold text-[#c9a24a] font-body uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Jadwal & Kuota Praktik
+                </h4>
+                {loadingSchedule ? (
+                  <div className="text-xs text-gray-500 py-2">Memuat jadwal dokter...</div>
+                ) : liveSchedules.length === 0 ? (
+                  <div className="text-xs text-gray-500 py-2 bg-[#f8f6f3] rounded-xl p-3">
+                    Belum ada jadwal tersedia untuk dokter ini.
+                  </div>
+                ) : (
+                  <div className="bg-[#f8f6f3] rounded-xl p-3 sm:p-4 space-y-2">
+                    {liveSchedules.map((slot) => {
+                      const disabled = slot.isFull || slot.slotsLeft <= 0;
+                      const isSelected = selectedSlot?.id === slot.id;
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={`w-full text-left p-2.5 sm:p-3 rounded-lg border transition-all flex justify-between items-center ${
+                            disabled
+                              ? "bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed text-gray-400"
+                              : isSelected
+                              ? "bg-[#c9a24a]/15 border-[#c9a24a] ring-1 ring-[#c9a24a]"
+                              : "bg-white border-gray-200 hover:border-[#c9a24a]/50 text-gray-700"
+                          }`}
+                        >
+                          <div>
+                            <div className="text-xs font-bold text-gray-800">
+                              {slot.displayDate || slot.date} ({slot.location})
+                            </div>
+                            <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
+                              <Clock className="w-3 h-3 text-[#c9a24a]" />
+                              <span>{slot.timeRange}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {disabled ? (
+                              <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 text-[10px]">
+                                Penuh
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
+                                {slot.slotsLeft} slot tersisa
+                              </Badge>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Fellowship */}
@@ -233,16 +306,15 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
                 </ul>
               </div>
 
-              {/* Konsultasi Button */}
-              <Link to="/login">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto rounded-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold px-8 shadow-lg shadow-[#c9a24a]/20 hover:shadow-[#c9a24a]/30 transition-all duration-300"
-                >
-                  <MessageCircle className="w-5 h-5 mr-2" />
-                  Konsultasi
-                </Button>
-              </Link>
+              {/* Buat Janji / Konsultasi Button */}
+              <Button
+                size="lg"
+                onClick={handleBookingRedirect}
+                className="w-full sm:w-auto rounded-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold px-8 shadow-lg shadow-[#c9a24a]/20 hover:shadow-[#c9a24a]/30 transition-all duration-300"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                {selectedSlot ? `Pilih Jadwal ${selectedSlot.displayDate}` : "Pilih Jadwal & Booking"}
+              </Button>
             </div>
           </div>
         </div>
