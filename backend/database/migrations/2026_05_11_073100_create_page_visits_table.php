@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('landing_page', 255);
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
-            $table->timestamp('visited_at');
+            $table->timestamp('visited_at')->useCurrent();
             $table->timestamps();
 
             $table->index(['visited_at']);

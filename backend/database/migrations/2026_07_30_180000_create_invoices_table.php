@@ -18,8 +18,8 @@ return new class extends Migration
                 $table->decimal('amount', 12, 2);
                 $table->string('status')->default('unpaid'); // unpaid, paid, cancelled, expired
                 $table->string('description');
-                $table->timestamp('invoice_date');
-                $table->timestamp('due_date');
+                $table->timestamp('invoice_date')->useCurrent();
+                $table->timestamp('due_date')->nullable();
                 $table->json('payment_details')->nullable();
                 $table->timestamps();
             });

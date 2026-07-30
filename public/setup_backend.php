@@ -77,7 +77,7 @@ if (isset($_GET['action'])) {
             $output = new Symfony\Component\Console\Output\BufferedOutput();
             $kernel->call('key:generate', ['--force' => true], $output);
             $kernel->call('migrate', ['--force' => true], $output);
-            @$kernel->call('db:seed', ['--force' => true], $output);
+            $kernel->call('db:seed', ['--force' => true], $output);
             $kernel->call('config:clear', [], $output);
 
             $actionLog = $output->fetch();
