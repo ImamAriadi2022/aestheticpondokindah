@@ -119,28 +119,31 @@ draft → in_progress → finalized → locked
 
 ### 3.1 Akun Pengguna Default (Dari Seeder)
 
-| Role | Nama | Email | Password | Tujuan Pengujian |
-|---|---|---|---|---|
-| **Clinic Admin** | Admin Klinik | `clinic@aestheticpondokindah.local` | `admin123` | Manajemen klinik, reservasi, konten, keanggotaan |
-| **Patient (Default)** | Pengguna | `user@aestheticpondokindah.local` | `user123` | Pengujian alur pasien standar |
+> [!NOTE]
+> **Catatan Pengidentifikasi Login**: Sistem Klinik Aesthetic Pondok Indah menggunakan **Nomor WhatsApp** sebagai pengidentifikasi login utama di UI dan API Backend (`POST /api/auth/login`).
+
+| Role | Nama | No. WhatsApp (Login Utama) | Email (Profil) | Password | Tujuan Pengujian |
+|---|---|---|---|---|---|
+| **Clinic Admin** | Admin Klinik | `+62887437525303` | `clinic@aestheticpondokindah.local` | `admin123` | Manajemen klinik, reservasi, konten, keanggotaan |
+| **Patient (Default)** | Pengguna | `+62887437525305` | `user@aestheticpondokindah.local` | `user123` | Pengujian alur pasien standar |
 
 ### 3.2 Akun Dokter (Dari DoctorSeeder)
 
-| Nama Dokter | Email | Password | Spesialisasi |
-|---|---|---|---|
-| drg. Yulita Dora | `yulita.dora@aestheticpondokindah.local` | `doctor123` | Aesthetic Dentistry (Veneers) |
-| drg. Della Sparringa | `della.sparringa@aestheticpondokindah.local` | `doctor123` | Aesthetic & Pediatric Dentistry |
-| drg. Ryan Jusuf | `ryan.jusuf@aestheticpondokindah.local` | `doctor123` | Aesthetic & Pediatric Dentistry |
-| drg. Nona Lolita T | `nona.lolita@aestheticpondokindah.local` | `doctor123` | Aesthetic Dentistry |
-| drg. Melati Putri, Sp. Pros | `melati.putri@aestheticpondokindah.local` | `doctor123` | Prosthodontist, Full Mouth Rehab |
-| drg. Shilvy | `shilvy@aestheticpondokindah.local` | `doctor123` | Aesthetic & Pediatric Dentistry |
-| drg. Achmad Riwandy | `achmad.riwandy@aestheticpondokindah.local` | `doctor123` | Full Denture, Prosthodontist |
-| drg. Ramayani Ramli | `ramayani.ramli@aestheticpondokindah.local` | `doctor123` | Cosmetic Dentistry |
-| drg. Sharah Syam, Sp. Ort | `sharah.syam@aestheticpondokindah.local` | `doctor123` | Orthodontist |
-| drg. Eric Sulistio, Sp. Perio | `eric.sulistio@aestheticpondokindah.local` | `doctor123` | Periodontist |
-| drg. Pramodanti, Sp.KG | `pramodanti.jiwanakusuma@aestheticpondokindah.local` | `doctor123` | Root Canal Treatment |
-| drg. Riesta Paluvi, Sp.KG | `riesta.paluvi@aestheticpondokindah.local` | `doctor123` | RCT & Oral Health |
-| drg. Yudy Ardila, Sp.BMM | `yudy.ardila@aestheticpondokindah.local` | `doctor123` | Oral Surgeon Consultant |
+| Nama Dokter | No. WhatsApp (Login Utama) | Email (Profil) | Password | Spesialisasi |
+|---|---|---|---|---|
+| drg. Yulita Dora | `+62887437525310` | `yulita.dora@aestheticpondokindah.local` | `doctor123` | Aesthetic Dentistry (Veneers) |
+| drg. Della Sparringa | `+62887437525311` | `della.sparringa@aestheticpondokindah.local` | `doctor123` | Aesthetic & Pediatric Dentistry |
+| drg. Ryan Jusuf | `+62887437525312` | `ryan.jusuf@aestheticpondokindah.local` | `doctor123` | Aesthetic & Pediatric Dentistry |
+| drg. Nona Lolita T | `+62887437525313` | `nona.lolita@aestheticpondokindah.local` | `doctor123` | Aesthetic Dentistry |
+| drg. Melati Putri, Sp. Pros | `+62887437525314` | `melati.putri@aestheticpondokindah.local` | `doctor123` | Prosthodontist, Full Mouth Rehab |
+| drg. Shilvy | `+62887437525315` | `shilvy@aestheticpondokindah.local` | `doctor123` | Aesthetic & Pediatric Dentistry |
+| drg. Achmad Riwandy | `+62887437525316` | `achmad.riwandy@aestheticpondokindah.local` | `doctor123` | Full Denture, Prosthodontist |
+| drg. Ramayani Ramli | `+62887437525317` | `ramayani.ramli@aestheticpondokindah.local` | `doctor123` | Cosmetic Dentistry |
+| drg. Sharah Syam, Sp. Ort | `+62887437525318` | `sharah.syam@aestheticpondokindah.local` | `doctor123` | Orthodontist |
+| drg. Eric Sulistio, Sp. Perio | `+62887437525319` | `eric.sulistio@aestheticpondokindah.local` | `doctor123` | Periodontist |
+| drg. Pramodanti, Sp.KG | `+62887437525320` | `pramodanti.jiwanakusuma@aestheticpondokindah.local` | `doctor123` | Root Canal Treatment |
+| drg. Riesta Paluvi, Sp.KG | `+62887437525321` | `riesta.paluvi@aestheticpondokindah.local` | `doctor123` | RCT & Oral Health |
+| drg. Yudy Ardila, Sp.BMM | `+62887437525322` | `yudy.ardila@aestheticpondokindah.local` | `doctor123` | Oral Surgeon Consultant |
 
 ### 3.3 Akun Test Tambahan (Buat Manual)
 
@@ -242,7 +245,7 @@ Diagram alur klinis lengkap yang harus dapat dilakukan dari awal hingga akhir ol
 | **Prioritas** | 🔴 Kritis |
 | **Tipe** | Happy Path |
 | **Role Penguji** | QA Engineer |
-| **Kredensial** | Email: `clinic@aestheticpondokindah.local` / Password: `admin123` |
+| **Kredensial** | No. WhatsApp: `+62887437525303` / Password: `admin123` |
 
 **Prasyarat**: Seeder telah dijalankan. Aplikasi berjalan.
 
@@ -251,7 +254,7 @@ Diagram alur klinis lengkap yang harus dapat dilakukan dari awal hingga akhir ol
 **Langkah-Langkah**:
 1. Buka browser, navigasi ke halaman utama aplikasi.
 2. Klik tombol **Login**.
-3. Masukkan Email: `clinic@aestheticpondokindah.local`.
+3. Masukkan No. WhatsApp: `+62887437525303`.
 4. Masukkan Password: `admin123`.
 5. Klik tombol **Masuk** / **Login**.
 
@@ -279,11 +282,11 @@ Diagram alur klinis lengkap yang harus dapat dilakukan dari awal hingga akhir ol
 | **Prioritas** | 🔴 Kritis |
 | **Tipe** | Happy Path |
 | **Role Penguji** | QA Engineer |
-| **Kredensial** | Email: `yulita.dora@aestheticpondokindah.local` / Password: `doctor123` |
+| **Kredensial** | No. WhatsApp: `+62887437525310` / Password: `doctor123` |
 
 **Langkah-Langkah**:
 1. Buka halaman Login.
-2. Masukkan email dan password dokter Yulita Dora.
+2. Masukkan No. WhatsApp (`+62887437525310`) dan password dokter Yulita Dora.
 3. Klik **Login**.
 
 **Hasil yang Diharapkan**:
@@ -309,11 +312,11 @@ Diagram alur klinis lengkap yang harus dapat dilakukan dari awal hingga akhir ol
 | **Prioritas** | 🔴 Kritis |
 | **Tipe** | Happy Path |
 | **Role Penguji** | QA Engineer |
-| **Kredensial** | Email: `user@aestheticpondokindah.local` / Password: `user123` |
+| **Kredensial** | No. WhatsApp: `+62887437525305` / Password: `user123` |
 
 **Langkah-Langkah**:
 1. Buka halaman Login.
-2. Masukkan email dan password pasien default.
+2. Masukkan No. WhatsApp (`+62887437525305`) dan password pasien default.
 3. Klik **Login**.
 
 **Hasil yang Diharapkan**:
@@ -340,13 +343,13 @@ Diagram alur klinis lengkap yang harus dapat dilakukan dari awal hingga akhir ol
 
 **Langkah-Langkah**:
 1. Buka halaman Login.
-2. Masukkan Email: `clinic@aestheticpondokindah.local`.
+2. Masukkan No. WhatsApp: `+62887437525303`.
 3. Masukkan Password: `password_salah_123`.
 4. Klik **Login**.
 
 **Hasil yang Diharapkan**:
 - Login **GAGAL**.
-- Pesan error ditampilkan: "Email atau password salah" (atau sejenisnya).
+- Pesan error ditampilkan: "WhatsApp atau password salah" (atau sejenisnya).
 - Pengguna **tidak** diarahkan ke dashboard.
 - Tidak ada token yang tersimpan.
 
