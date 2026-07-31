@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Services\MembershipService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class MembershipAdminController extends Controller
 {
@@ -422,6 +423,65 @@ class MembershipAdminController extends Controller
                 'request' => $upgradeRequest->fresh(),
                 'invoice_generated' => false, // NO INVOICE FOR REJECTED
             ],
+        ]);
+    }
+
+    /**
+     * Confirm a manual (WhatsApp/offline) membership payment.
+     */
+    public function confirmManualPayment(Request $request, int|string $id): JsonResponse
+    {
+        $request->validate(['note' => 'nullable|string|max:1000']);
+
+        $transaction = MembershipTransaction::with('user')->find($id);
+        if (!$transaction || $transaction->transaction_type !== 'upgrade') {
+            return response()->json(['success' => false, 'message' => 'Permintaan upgrade tidak ditemukan.'], 404);
+        }
+
+        if ($transaction->status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Hanya pembayaran pending yang dapat dikonfirmasi.'], 422);
+        }
+
+        $targetLevel = $transaction->metadata['target_level'] ?? null;
+        if (!in_array($targetLevel, ['gold', 'platinum'], true)) {
+            return response()->json(['success' => false, 'message' => 'Tier transaksi tidak valid.'], 422);
+        }
+
+        DB::transaction(function () use ($transaction, $targetLevel, $request): void {
+            $user = $transaction->user;
+            $transaction->update([
+                'status' => 'completed',
+                'metadata' => array_merge($transaction->metadata ?? [], [
+                    'payment_confirmation' => 'manual_admin',
+                    'confirmed_by' => $request->user()->id,
+                    'confirmed_at' => now()->toISOString(),
+                    'confirmation_note' => $request->input('note'),
+                ]),
+            ]);
+
+            $this->membershipService->updateMembershipLevel(
+                $user,
+                $targetLevel,
+                $user->membership_level,
+                'Pembayaran upgrade dikonfirmasi admin',
+                $request->user()->id
+            );
+            $user->increment('total_transactions', $transaction->amount);
+
+            $bonusPoints = $targetLevel === 'gold' ? 100 : 300;
+            $this->membershipService->addPoints(
+                $user,
+                $bonusPoints,
+                'upgrade_bonus',
+                "Bonus poin upgrade ke {$targetLevel}",
+                now()->addYear()
+            );
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran manual dikonfirmasi dan membership telah di-upgrade.',
+            'data' => ['transaction' => $transaction->fresh()],
         ]);
     }
 

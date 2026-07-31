@@ -21,13 +21,14 @@ return [
 
     'allowed_origins' => [
         env('FRONTEND_URL', 'http://localhost:5173'),
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
         'https://aestheticpondokindah.com',
         'http://aestheticpondokindah.com',
         'https://aestheticpondokindah.web.id',
-        '*',
     ],
 
-    'allowed_origins_patterns' => ['*'],
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
@@ -35,6 +36,7 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    // API authentication uses Bearer tokens, not cross-origin cookies.
+    'supports_credentials' => false,
 
 ];

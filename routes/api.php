@@ -121,6 +121,7 @@ Route::prefix('admin')->group(function () {
             Route::get('/upgrade-requests', [MembershipAdminController::class, 'requests']);
             Route::get('/upgrade-requests/{id}', [MembershipAdminController::class, 'showRequest']);
             Route::post('/upgrade-requests/{id}/approve', [MembershipAdminController::class, 'approveRequest']);
+            Route::post('/upgrade-requests/{id}/confirm-payment', [MembershipAdminController::class, 'confirmManualPayment']);
             Route::post('/upgrade-requests/{id}/reject', [MembershipAdminController::class, 'rejectRequest']);
             Route::get('/invoices', [MembershipAdminController::class, 'invoices']);
             Route::get('/invoices/{id}', [MembershipAdminController::class, 'showInvoice']);

@@ -49,6 +49,19 @@ class MembershipPaymentController extends Controller
         $currentIndex = array_search($currentLevel, self::LEVEL_ORDER, true);
 
         $options = [];
+        $tiers = [];
+
+        foreach (self::LEVEL_ORDER as $level) {
+            $amount = self::UPGRADE_FEES[$level] ?? 0;
+            $tiers[] = [
+                'level' => $level,
+                'label' => self::TIER_LABELS[$level],
+                'price' => $amount,
+                'price_formatted' => 'Rp ' . number_format($amount, 0, ',', '.'),
+                'benefits' => $this->membershipService->getMembershipBenefits($level),
+                'is_current' => $level === $currentLevel,
+            ];
+        }
 
         // Generate options untuk tier yang lebih tinggi
         for ($i = $currentIndex + 1; $i < count(self::LEVEL_ORDER); $i++) {
@@ -74,6 +87,7 @@ class MembershipPaymentController extends Controller
             'data' => [
                 'current_level' => $currentLevel,
                 'current_label' => self::TIER_LABELS[$currentLevel],
+                'tiers' => $tiers,
                 'upgrade_options' => $options,
                 'auto_upgrade_progress' => $progress, // Progress dari transaksi treatment
                 'can_auto_upgrade' => $progress['percentage'] >= 100,
@@ -119,14 +133,47 @@ class MembershipPaymentController extends Controller
             ], 422);
         }
 
-        if (!$this->midtransService->isConfigured()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Pembayaran Midtrans belum dikonfigurasi. Silakan hubungi administrator.',
-            ], 503);
-        }
-
         $amount = self::UPGRADE_FEES[$targetLevel];
+
+        // Keep membership operational before Midtrans is enabled. The same
+        // pending transaction is visible to admin and can be confirmed after
+        // the patient sends proof of payment via WhatsApp.
+        if (!$this->midtransService->isConfigured()) {
+            $transaction = $user->membershipTransactions()->create([
+                'amount' => $amount,
+                'transaction_type' => 'upgrade',
+                'description' => "Konfirmasi WhatsApp upgrade membership ke {$targetLevel}",
+                'status' => 'pending',
+                'metadata' => [
+                    'target_level' => $targetLevel,
+                    'current_level' => $currentLevel,
+                    'payment_method' => $request->input('payment_method'),
+                    'payment_mode' => 'manual_confirmation',
+                    'order_id' => 'UPG-' . strtoupper(Str::random(10)),
+                ],
+            ]);
+
+            $clinicWhatsapp = preg_replace('/\D+/', '', (string) config('clinic.whatsapp', ''));
+            $message = "Halo, saya ingin mengonfirmasi pembayaran upgrade membership " . ucfirst($targetLevel)
+                . " sebesar Rp " . number_format($amount, 0, ',', '.')
+                . ". Nomor transaksi: " . ($transaction->metadata['order_id'] ?? $transaction->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Permintaan upgrade dibuat. Silakan konfirmasi pembayaran kepada admin.',
+                'data' => [
+                    'transaction_id' => $transaction->id,
+                    'order_id' => $transaction->metadata['order_id'],
+                    'amount' => $amount,
+                    'amount_formatted' => 'Rp ' . number_format($amount, 0, ',', '.'),
+                    'target_level' => $targetLevel,
+                    'payment_mode' => 'manual_confirmation',
+                    'whatsapp_url' => $clinicWhatsapp !== ''
+                        ? 'https://wa.me/' . $clinicWhatsapp . '?text=' . rawurlencode($message)
+                        : null,
+                ],
+            ], 201);
+        }
 
         DB::beginTransaction();
         try {

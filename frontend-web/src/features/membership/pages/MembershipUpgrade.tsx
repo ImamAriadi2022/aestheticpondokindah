@@ -10,6 +10,7 @@ import { API_BASE } from "@/lib/apiConfig";
 import {
   Crown,
   Sparkles,
+  Star,
   Zap,
   Check,
   Loader2,
@@ -34,11 +35,17 @@ declare global {
 }
 
 const tierIcons = {
+  bronze: Star,
   gold: Crown,
   platinum: Sparkles,
 };
 
 const tierColors = {
+  bronze: {
+    gradient: "from-[#CD7F32] to-[#A0522D]",
+    text: "text-[#A0522D]",
+    bg: "bg-[#CD7F32]",
+  },
   gold: {
     gradient: "from-[#c9a24a] to-[#a8843a]",
     text: "text-[#a8843a]",
@@ -52,7 +59,7 @@ const tierColors = {
 };
 
 interface UpgradeOption {
-  level: 'gold' | 'platinum';
+  level: 'bronze' | 'gold' | 'platinum';
   label: string;
   price: number;
   price_formatted: string;
@@ -66,6 +73,23 @@ interface UpgradeOption {
   };
 }
 
+/**
+ * Login menyimpan token Sanctum di `apident:token`. Beberapa versi lama juga
+ * menyimpannya di objek user, sehingga keduanya tetap didukung selama masa
+ * transisi tanpa pernah mengirim `Bearer undefined`.
+ */
+const getMembershipAuthToken = (): string | null => {
+  const directToken = localStorage.getItem("apident:token");
+  if (directToken) return directToken;
+
+  try {
+    const storedUser = localStorage.getItem("apident:user");
+    return storedUser ? JSON.parse(storedUser)?.token ?? null : null;
+  } catch {
+    return null;
+  }
+};
+
 export default function MembershipUpgradePage() {
   const navigate = useNavigate();
   const [options, setOptions] = useState<UpgradeOption[]>([]);
@@ -78,6 +102,7 @@ export default function MembershipUpgradePage() {
   const [paymentGatewayAvailable, setPaymentGatewayAvailable] = useState(false);
   const [unmetRequirements, setUnmetRequirements] = useState<Array<{ message: string; action: string }>>([]);
   const [showRequirementsDialog, setShowRequirementsDialog] = useState(false);
+  const [manualPayment, setManualPayment] = useState<{ whatsappUrl: string | null; orderId: string } | null>(null);
 
   void currentLevel;
   const session = getSession();
@@ -89,8 +114,7 @@ export default function MembershipUpgradePage() {
 
   const fetchUpgradeOptions = async () => {
     try {
-      const storedUser = localStorage.getItem("apident:user");
-      const token = storedUser ? JSON.parse(storedUser)?.token : null;
+      const token = getMembershipAuthToken();
       
       const response = await fetch(`${API_BASE}/membership/payment/options`, {
         headers: {
@@ -102,7 +126,7 @@ export default function MembershipUpgradePage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setOptions(data.data.upgrade_options);
+          setOptions(data.data.tiers || data.data.upgrade_options);
           setCurrentLevel(data.data.current_level);
           setCurrentLabel(data.data.current_label);
           setAutoProgress(data.data.auto_upgrade_progress);
@@ -118,9 +142,9 @@ export default function MembershipUpgradePage() {
         const tiersData = await tiersRes.json();
         if (tiersData.success && tiersData.data) {
           const formatted: UpgradeOption[] = Object.entries(tiersData.data)
-            .filter(([level]) => level === 'gold' || level === 'platinum')
+            .filter(([level]) => level === 'bronze' || level === 'gold' || level === 'platinum')
             .map(([level, info]: [string, any]) => ({
-              level: level as 'gold' | 'platinum',
+              level: level as 'bronze' | 'gold' | 'platinum',
               label: info.label,
               price: info.price,
               price_formatted: `Rp ${info.price.toLocaleString('id-ID')}`,
@@ -167,23 +191,25 @@ export default function MembershipUpgradePage() {
       return;
     }
 
-    if (!paymentGatewayAvailable) {
-      setError("Pembayaran membership sedang belum tersedia. Silakan hubungi administrator.");
-      return;
-    }
-
     setProcessing(level);
     setError(null);
     
     try {
-      const storedUser = localStorage.getItem("apident:user");
-      const token = storedUser ? JSON.parse(storedUser)?.token : null;
+      const token = getMembershipAuthToken();
+
+      if (!token) {
+        setError("Sesi Anda telah berakhir. Silakan login kembali.");
+        setProcessing(null);
+        navigate("/login");
+        return;
+      }
       
       // 1. Create payment transaction di backend
       const response = await fetch(`${API_BASE}/membership/payment/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -205,6 +231,15 @@ export default function MembershipUpgradePage() {
       }
 
       const { snap_token, transaction_id, payment_url } = data.data;
+
+      if (data.data.payment_mode === "manual_confirmation") {
+        setManualPayment({
+          whatsappUrl: data.data.whatsapp_url || null,
+          orderId: data.data.order_id,
+        });
+        setProcessing(null);
+        return;
+      }
       
       // 2. Jika Snap sudah siap, buka popup Midtrans.
       // Token dari backend adalah sumber kebenaran; client key hanya diperlukan
@@ -243,12 +278,12 @@ export default function MembershipUpgradePage() {
 
   const checkPaymentStatus = async (transactionId: number, level: string) => {
     try {
-      const storedUser = localStorage.getItem("apident:user");
-      const token = storedUser ? JSON.parse(storedUser)?.token : null;
+      const token = getMembershipAuthToken();
       
       const response = await fetch(`${API_BASE}/membership/payment/status/${transactionId}`, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token && { Authorization: `Bearer ${token}` }),
+          Accept: "application/json",
         },
       });
       
@@ -298,6 +333,26 @@ export default function MembershipUpgradePage() {
                 Mengerti
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+        <Dialog open={manualPayment !== null} onOpenChange={(open) => !open && setManualPayment(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Konfirmasi pembayaran ke admin</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-gray-600">
+              Permintaan upgrade Anda telah dicatat dengan nomor transaksi {manualPayment?.orderId}.
+              Silakan kirim bukti pembayaran melalui WhatsApp agar admin dapat mengonfirmasi membership Anda.
+            </p>
+            {manualPayment?.whatsappUrl ? (
+              <Button className="w-full bg-[#c9a24a] text-white" onClick={() => window.open(manualPayment.whatsappUrl!, "_blank", "noopener,noreferrer")}>
+                Konfirmasi via WhatsApp
+              </Button>
+            ) : (
+              <Button className="w-full bg-[#c9a24a] text-white" onClick={() => setManualPayment(null)}>
+                Mengerti
+              </Button>
+            )}
           </DialogContent>
         </Dialog>
         {/* Header */}
@@ -404,8 +459,7 @@ export default function MembershipUpgradePage() {
             <CardContent className="flex items-start gap-3 p-4 text-sm text-amber-800">
               <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <p>
-                Upgrade berbayar akan tersedia setelah pembayaran Midtrans diaktifkan.
-                Informasi membership dan seluruh fitur lain tetap dapat digunakan.
+                Midtrans belum aktif. Anda tetap dapat mengajukan upgrade dan mengonfirmasi pembayaran melalui WhatsApp admin.
               </p>
             </CardContent>
           </Card>
@@ -428,6 +482,7 @@ export default function MembershipUpgradePage() {
             options.map((option) => {
               const Icon = tierIcons[option.level] || Crown;
               const colors = tierColors[option.level];
+              const isCurrentTier = option.level === currentLevel;
               
               return (
                 <Card
@@ -492,20 +547,20 @@ export default function MembershipUpgradePage() {
                     <Button
                       className={`w-full bg-gradient-to-r ${colors.gradient} text-white font-bold hover:opacity-90`}
                       onClick={() => handleUpgrade(option.level, option.price)}
-                      disabled={processing === option.level || !paymentGatewayAvailable}
+                      disabled={processing === option.level || isCurrentTier}
                     >
-                      {processing === option.level ? (
+                      {isCurrentTier ? (
+                        "Tier Saat Ini"
+                      ) : processing === option.level ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Memproses...
                         </>
-                      ) : paymentGatewayAvailable ? (
+                      ) : (
                         <>
                           <CreditCard className="w-4 h-4 mr-2" />
                           Upgrade Sekarang
                         </>
-                      ) : (
-                        "Pembayaran Belum Tersedia"
                       )}
                     </Button>
                     
