@@ -6,18 +6,18 @@ import DesktopDoctorHome from "@/components/dashboard/DesktopDoctorHome";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getSession } from "@/lib/demoAuth";
+import { getSession } from "@/features/auth/services/demoAuth";
 import {
   Calendar, Users, ChevronRight, Clock, PlayCircle, Plus, Pencil, Trash2, Eye, ArrowLeft, Loader2,
   Phone, History, Heart, Image, Stethoscope, MessageSquare, FileText, Lightbulb, AlertCircle, User,
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
-import { getDoctorScheduledConsultations, type ConsultationItem } from "@/lib/consultationApi";
+import { getDoctorScheduledConsultations, type ConsultationItem } from "@/features/consultation/services/consultationApi";
 import {
   getDoctorSchedules,
   deleteDoctorSchedule,
   type DoctorScheduleItem,
-} from "@/lib/doctorScheduleApi";
+} from "@/features/doctors/services/doctorScheduleApi";
 
 export default function DoctorDashboardPage() {
   const session = getSession()!;

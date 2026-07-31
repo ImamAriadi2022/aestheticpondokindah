@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { clearSession, getSession } from "@/lib/demoAuth";
-import { clearSessionStorage } from "@/lib/sessionTtl";
+import { clearSession, getSession } from "@/features/auth/services/demoAuth";
+import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
 import { logger } from "@/lib/logger";
 import { NotificationCenterModal } from "@/components/notification/NotificationCenterModal";
 import { fetchNotifications } from "@/lib/notificationApi";

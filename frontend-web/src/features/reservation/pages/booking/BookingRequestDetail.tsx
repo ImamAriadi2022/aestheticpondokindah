@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { listMyBookingRequestsDemo, type BookingRequest } from "@/lib/bookingDemo";
+import { listMyBookingRequestsDemo, type BookingRequest } from "@/features/reservation/services/bookingDemo";
 
 const statusLabel = (status: BookingRequest["status"]) => {
   switch (status) {

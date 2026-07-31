@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getSession } from "@/lib/demoAuth";
+import { getSession } from "@/features/auth/services/demoAuth";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardLayout";
 import { logger } from "@/lib/logger";
@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import * as htmlToImage from 'html-to-image';
-import { membershipApi, MembershipData } from "@/lib/membershipApi";
+import { membershipApi, MembershipData } from "@/features/membership/services/membershipApi";
 
 export default function MembershipPage() {
   // Detect mobile to decide which layout (ensure new bottom bar on mobile)

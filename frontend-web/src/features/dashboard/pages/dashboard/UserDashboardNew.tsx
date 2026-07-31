@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { getSession, clearSession } from "@/lib/demoAuth";
-import { clearSessionStorage } from "@/lib/sessionTtl";
-import { getMyConsultations } from "@/lib/consultationApi";
-import { getMyComplaints } from "@/lib/complaintApi";
-import { getPublicDoctorSchedules } from "@/lib/publicDoctorScheduleApi";
+import { getSession, clearSession } from "@/features/auth/services/demoAuth";
+import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
+import { getMyConsultations } from "@/features/consultation/services/consultationApi";
+import { getMyComplaints } from "@/features/consultation/services/complaintApi";
+import { getPublicDoctorSchedules } from "@/features/doctors/services/publicDoctorScheduleApi";
 import { toast } from "@/components/ui/toast";
 import { logger } from "@/lib/logger";
 import DesktopUserHome from "@/components/dashboard/DesktopUserHome";

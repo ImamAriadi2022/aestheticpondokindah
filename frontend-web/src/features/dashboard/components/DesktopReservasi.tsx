@@ -20,7 +20,7 @@ import {
   Image as ImageIcon
 } from "lucide-react";
 import { services as allServices } from "@/pages/Services";
-import { getPublicDoctorSchedules } from "@/lib/publicDoctorScheduleApi";
+import { getPublicDoctorSchedules } from "@/features/doctors/services/publicDoctorScheduleApi";
 import { apiClient } from "@/lib/apiClient";
 
 // Map judul layanan -> ikon bernuansa; fallback jika tidak ada mapping

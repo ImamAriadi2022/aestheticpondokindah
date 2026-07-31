@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { submitPublicReservation } from "@/lib/reservationApi";
+import { submitPublicReservation } from "@/features/reservation/services/reservationApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";

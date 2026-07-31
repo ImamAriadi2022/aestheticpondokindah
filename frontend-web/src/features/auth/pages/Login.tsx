@@ -17,10 +17,10 @@ import {
   getDefaultDashboardPath,
   resetPasswordDemo,
   signInWithGoogleDemo,
-} from "@/lib/demoAuth";
+} from "@/features/auth/services/demoAuth";
 import { GENDER_OPTIONS, BLOOD_TYPE_OPTIONS, JOB_OPTIONS } from "@/lib/regionData";
 import { getDistricts, getProvinces, getRegencies } from "@/lib/wilayahApi";
-import { touchSessionLastActive } from "@/lib/sessionTtl";
+import { touchSessionLastActive } from "@/features/auth/services/sessionTtl";
 import { API_BASE } from "@/lib/apiConfig";
 
 type LoginRole = "user" | "clinic" | "doctor";

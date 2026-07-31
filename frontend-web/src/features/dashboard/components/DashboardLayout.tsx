@@ -1,22 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { clearSession, getSession } from "@/lib/demoAuth";
-import { clearSessionStorage, touchSessionLastActive } from "@/lib/sessionTtl";
+import { clearSession, getSession } from "@/features/auth/services/demoAuth";
+import { clearSessionStorage, touchSessionLastActive } from "@/features/auth/services/sessionTtl";
 import AccountSidebar from "@/components/dashboard/AccountSidebar";
 import MobileDashboardLayout from "./MobileDashboardLayout";
 import { logger } from "@/lib/logger";
 import DashboardRightPanel from "./DashboardRightPanel";
+import { getMenuItems, CONTENT_SUBMENU, type MenuItem } from "@/authorization";
 import {
-  LayoutDashboard,
-  Calendar,
-  Users,
-  FileText,
-  MessageSquare,
-  AlertCircle,
   LogOut,
   ChevronDown,
-  Stethoscope,
-  Crown,
   ChevronRight,
 } from "lucide-react";
 
@@ -38,13 +31,6 @@ function useIsMobile() {
     return () => mq.removeEventListener("change", onChange);
   }, []);
   return isMobile;
-}
-
-interface MenuItem {
-  label: string;
-  icon: React.ElementType;
-  href: string;
-  badge?: number;
 }
 
 export default function DashboardLayout({ 
@@ -150,37 +136,7 @@ export default function DashboardLayout({
     touchSessionLastActive();
   }, [location.pathname, location.search]);
 
-  const getMenuItems = (): MenuItem[] => {
-    switch (role) {
-      case "user":
-        return [
-          { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/user" },
-          { label: "Konsultasi", icon: Calendar, href: "/dashboard/user?tab=konsultasi" },
-          { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/user?tab=pengaduan" },
-        ];
-      case "clinic":
-        return [
-          { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/clinic" },
-          { label: "Reservasi", icon: Calendar, href: "/dashboard/clinic?tab=reservasi" },
-          { label: "Konsultasi", icon: MessageSquare, href: "/dashboard/clinic?tab=konsultasi" },
-          { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan" },
-          { label: "Konten", icon: FileText, href: "/dashboard/clinic?tab=content-blog" },
-          { label: "Pengguna", icon: Users, href: "/dashboard/clinic?tab=users" },
-          { label: "Membership", icon: Crown, href: "/dashboard/clinic/membership" },
-          { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
-        ];
-      case "doctor":
-        return [
-          { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },
-          { label: "Jadwal", icon: Calendar, href: "/dashboard/doctor?tab=jadwal" },
-          { label: "Klien", icon: Users, href: "/dashboard/doctor?tab=klien", badge: 3 },
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const menuItems = getMenuItems();
+  const menuItems = getMenuItems(role);
 
   const handleLogout = () => {
     clearSession();
@@ -484,14 +440,7 @@ export default function DashboardLayout({
               className="fixed z-[60] bg-[#1a1612] border border-[#C9A24A]/40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-2 min-w-[180px] pointer-events-auto flex flex-col gap-1"
               style={{ top: contentMenuPos.top, left: contentMenuPos.left }}
             >
-              {[
-                { label: "Blog", href: "/dashboard/clinic?tab=content-blog" },
-                { label: "Promo", href: "/dashboard/clinic?tab=content-promo" },
-                { label: "Pop Up", href: "/dashboard/clinic?tab=content-popup" },
-                { label: "Galeri", href: "/dashboard/clinic?tab=content-gallery" },
-                { label: "Testimoni", href: "/dashboard/clinic?tab=content-testimonials" },
-                { label: "Download App", href: "/dashboard/clinic?tab=content-download" },
-              ].map((sub) => {
+              {CONTENT_SUBMENU?.map((sub) => {
                 const subActive = isActive(sub.href);
                 return (
                   <Link

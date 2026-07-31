@@ -7,7 +7,7 @@ import {
   ArrowRight,
   Check
 } from "lucide-react";
-import { getPublicDoctorSchedules, PublicDoctorScheduleItem } from "@/lib/publicDoctorScheduleApi";
+import { getPublicDoctorSchedules, PublicDoctorScheduleItem } from "@/features/doctors/services/publicDoctorScheduleApi";
 
 type DoctorLite = { id: string; name: string; firstSchedule?: PublicDoctorScheduleItem };
 

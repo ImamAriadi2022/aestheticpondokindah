@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardLayout";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
-import { mobileSyncManager } from "@/lib/mobileSyncManager";
+import { mobileSyncManager } from "@/features/mobile/services/mobileSyncManager";
 import { 
   CalendarDays,
   Clock,

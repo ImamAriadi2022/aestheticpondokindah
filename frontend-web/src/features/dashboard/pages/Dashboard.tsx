@@ -1,5 +1,5 @@
 import { Navigate } from "react-router";
-import { getDefaultDashboardPath, getSession } from "@/lib/demoAuth";
+import { getDefaultDashboardPath, getSession } from "@/features/auth/services/demoAuth";
 import { logger } from "@/lib/logger";
 
 export default function DashboardPage() {

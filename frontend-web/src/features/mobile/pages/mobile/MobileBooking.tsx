@@ -4,7 +4,7 @@ import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardL
 import { ArrowRight, Check, Search } from "lucide-react";
 import { services as allServices } from "@/pages/Services";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
-import { mobileSyncManager } from "@/lib/mobileSyncManager";
+import { mobileSyncManager } from "@/features/mobile/services/mobileSyncManager";
 
 export default function MobileBookingPage() {
   const navigate = useNavigate();

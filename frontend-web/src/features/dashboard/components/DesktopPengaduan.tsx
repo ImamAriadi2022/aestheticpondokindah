@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
-import { createComplaint, getMyComplaints, type ComplaintItem } from "@/lib/complaintApi";
+import { createComplaint, getMyComplaints, type ComplaintItem } from "@/features/consultation/services/complaintApi";
 import { 
   AlertCircle,
   Send,

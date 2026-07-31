@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardLayout";
-import { getSession } from "@/lib/demoAuth";
+import { getSession } from "@/features/auth/services/demoAuth";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
-import { mobileSyncManager } from "@/lib/mobileSyncManager";
+import { mobileSyncManager } from "@/features/mobile/services/mobileSyncManager";
 import { 
   CalendarDays, 
   MessageSquareText, 

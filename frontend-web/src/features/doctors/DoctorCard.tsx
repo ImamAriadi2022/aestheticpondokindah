@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { getPublicDoctorSchedules, type PublicDoctorScheduleItem } from "@/lib/publicDoctorScheduleApi";
+import { getPublicDoctorSchedules, type PublicDoctorScheduleItem } from "@/features/doctors/services/publicDoctorScheduleApi";
 
 interface Doctor {
   id: number;

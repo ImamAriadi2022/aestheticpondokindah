@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { getSession } from "@/lib/demoAuth";
+import { getSession } from "@/features/auth/services/demoAuth";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Sparkles, Shield, Clock, Heart } from "lucide-react";
 

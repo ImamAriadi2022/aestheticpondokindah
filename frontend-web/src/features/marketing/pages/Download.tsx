@@ -2,7 +2,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Smartphone, Download, Globe, AlertTriangle, HardDrive } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getDownloadApps, type DownloadAppItem } from "@/lib/downloadApi";
+import { getDownloadApps, type DownloadAppItem } from "@/features/marketing/services/downloadApi";
 import { Button } from "@/components/ui/button";
 
 export default function DownloadPage() {

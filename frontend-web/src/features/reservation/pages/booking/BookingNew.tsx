@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { submitPublicReservation } from "@/lib/reservationApi";
+import { submitPublicReservation } from "@/features/reservation/services/reservationApi";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createBookingRequestDemo, getDemoBranches } from "@/lib/bookingDemo";
+import { createBookingRequestDemo, getDemoBranches } from "@/features/reservation/services/bookingDemo";
 
 export default function BookingNewPage() {
   const navigate = useNavigate();

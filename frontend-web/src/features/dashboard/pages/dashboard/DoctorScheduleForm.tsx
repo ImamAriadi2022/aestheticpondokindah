@@ -12,7 +12,7 @@ import {
   createDoctorSchedule,
   getDoctorSchedule,
   updateDoctorSchedule,
-} from "@/lib/doctorScheduleApi";
+} from "@/features/doctors/services/doctorScheduleApi";
 
 export default function DoctorScheduleFormPage() {
   const navigate = useNavigate();

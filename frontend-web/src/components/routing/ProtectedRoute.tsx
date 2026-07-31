@@ -1,23 +1,23 @@
 import { type ReactNode } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router";
-import { getDefaultDashboardPath, getSession, type DemoRole } from "@/lib/demoAuth";
-import { clearSessionStorage, isSessionExpired, touchSessionLastActive } from "@/lib/sessionTtl";
+import { Navigate, useLocation } from "react-router";
+import { getSession } from "@/features/auth/services/demoAuth";
+import { clearSessionStorage, isSessionExpired, touchSessionLastActive } from "@/features/auth/services/sessionTtl";
 import { logger } from "@/lib/logger";
+import { canActivate, getRedirectPath, normalizeRole, ROLES, type AppRole } from "@/authorization";
 
 type Props = {
   children: ReactNode;
-  allow?: DemoRole[];
+  allow?: AppRole[];
 };
 
 export default function ProtectedRoute({ children, allow }: Props) {
   const location = useLocation();
-  const navigate = useNavigate();
 
   if (isSessionExpired()) {
     clearSessionStorage();
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
-  
+
   // Ambil session dari demo atau backend asli
   let session = getSession();
   if (!session) {
@@ -25,10 +25,7 @@ export default function ProtectedRoute({ children, allow }: Props) {
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
-        // Map role backend ke role yang diharapkan frontend jika perlu
-        const role = user.role === "clinic_admin" ? "clinic" : 
-                    user.role === "patient" ? "user" : user.role;
-        
+        const role = normalizeRole(user.role);
         session = { ...user, role };
       } catch (e) {
         logger.error("Gagal parse user session", e);
@@ -42,12 +39,14 @@ export default function ProtectedRoute({ children, allow }: Props) {
 
   touchSessionLastActive();
 
-  const rawRole = (session as any)?.role;
-  const normalizedRole: DemoRole =
-    rawRole === "patient" ? "user" : rawRole === "clinic_admin" ? "clinic" : session.role;
+  const normalizedRole = normalizeRole((session as any)?.role);
 
-  if (allow && !allow.includes(normalizedRole)) {
-    return <Navigate to={getDefaultDashboardPath(normalizedRole)} replace />;
+  if (normalizedRole === ROLES.GUEST) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (allow && !canActivate(normalizedRole, allow)) {
+    return <Navigate to={getRedirectPath(normalizedRole)} replace />;
   }
 
   return children;

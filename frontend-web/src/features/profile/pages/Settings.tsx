@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-select";
-import { getSession, updateSessionProfile } from "@/lib/demoAuth";
+import { getSession, updateSessionProfile } from "@/features/auth/services/demoAuth";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { JOB_OPTIONS, GENDER_OPTIONS, BLOOD_TYPE_OPTIONS } from "@/lib/regionData";
 import { getProvinces, getRegencies, getDistricts } from "@/lib/wilayahApi";

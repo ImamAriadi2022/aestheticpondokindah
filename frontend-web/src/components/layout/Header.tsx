@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
-import { submitPublicReservation, WA_NUMBER } from "@/lib/reservationApi";
+import { submitPublicReservation, WA_NUMBER } from "@/features/reservation/services/reservationApi";
 import { Menu, X, Mail, Clock, MessageCircle, LogIn, User, Phone, Calendar, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

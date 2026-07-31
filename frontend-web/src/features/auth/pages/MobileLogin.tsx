@@ -3,9 +3,9 @@ import { useNavigate, useLocation, Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, ArrowLeft, ChevronRight, Heart, Lock, Mail, Phone, Chrome } from "lucide-react";
-import { getDefaultDashboardPath, getSession } from "@/lib/demoAuth";
+import { getDefaultDashboardPath, getSession } from "@/features/auth/services/demoAuth";
 import { API_BASE } from "@/lib/apiConfig";
-import { touchSessionLastActive } from "@/lib/sessionTtl";
+import { touchSessionLastActive } from "@/features/auth/services/sessionTtl";
 import { toast } from "@/components/ui/toast";
 
 type AuthMode = "welcome" | "login" | "register" | "forgot";

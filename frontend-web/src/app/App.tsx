@@ -8,6 +8,8 @@ import ChatBot from "@/components/chatbot/ChatBot";
 import { ToastViewport } from "@/components/ui/toast";
 import { trackVisit } from "@/lib/analyticsApi";
 import { PwaManager } from "@/components/pwa/PwaManager";
+import NotFoundPage from "@/shared/pages/NotFoundPage";
+import ForbiddenPage from "@/shared/pages/ForbiddenPage";
 
 const HomePage = lazy(() => import("@/features/marketing/pages/Home"));
 const AboutPage = lazy(() => import("@/features/marketing/pages/About"));
@@ -230,6 +232,10 @@ export default function App() {
                 }
               />
               <Route path="/help" element={<HelpPage />} />
+
+              {/* Shared pages */}
+              <Route path="/403" element={<ForbiddenPage />} />
+              <Route path="*" element={<NotFoundPage />} />
 
               {/* Onboarding & Mobile PWA Routes */}
               <Route path="/onboarding" element={<OnboardingPage />} />

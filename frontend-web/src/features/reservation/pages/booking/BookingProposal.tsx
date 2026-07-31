@@ -11,7 +11,7 @@ import {
   acceptProposalDemo,
   getProposalByTokenDemo,
   requestChangeProposalDemo,
-} from "@/lib/bookingDemo";
+} from "@/features/reservation/services/bookingDemo";
 
 const timeLeftLabel = (expiresAt: string) => {
   const ms = new Date(expiresAt).getTime() - Date.now();

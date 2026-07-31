@@ -5,7 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { listMyBookingRequestsDemo, type BookingRequest } from "@/lib/bookingDemo";
+import { listMyBookingRequestsDemo, type BookingRequest } from "@/features/reservation/services/bookingDemo";
 
 type Filter = "all" | "needs_action" | "pending" | "confirmed";
 

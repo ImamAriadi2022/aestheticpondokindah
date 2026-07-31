@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardLayout";
 import { Button } from "@/components/ui/button";
-import { getSession, clearSession } from "@/lib/demoAuth";
-import { clearSessionStorage } from "@/lib/sessionTtl";
+import { getSession, clearSession } from "@/features/auth/services/demoAuth";
+import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
 import { 
   User,
   ChevronRight,

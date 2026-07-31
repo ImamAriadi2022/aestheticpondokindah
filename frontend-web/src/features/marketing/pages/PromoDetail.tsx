@@ -5,7 +5,7 @@ import { Calendar, ArrowLeft, MessageCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { API_BASE, getStorageUrl } from "@/lib/apiConfig";
 import { Button } from "@/components/ui/button";
-import { updateMetaTags, resetMetaTags } from "@/lib/metaTags";
+import { updateMetaTags, resetMetaTags } from "@/features/marketing/services/metaTags";
 
 const WA_NUMBER = "6281990114949";
 

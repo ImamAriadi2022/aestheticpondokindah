@@ -4,7 +4,7 @@ import Footer from "@/components/layout/Footer";
 import { Calendar, ArrowRight, Tag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { API_BASE, getStorageUrl } from "@/lib/apiConfig";
-import { updateMetaTags, resetMetaTags } from "@/lib/metaTags";
+import { updateMetaTags, resetMetaTags } from "@/features/marketing/services/metaTags";
 
 export default function PromoPage() {
   const [promos, setPromos] = useState<any[]>([]);

@@ -1,7 +1,7 @@
 import { Smartphone, Download, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { getDownloadApps, type DownloadAppItem } from "@/lib/downloadApi";
+import { getDownloadApps, type DownloadAppItem } from "@/features/marketing/services/downloadApi";
 import { Link } from "react-router";
 
 export default function DownloadSection() {

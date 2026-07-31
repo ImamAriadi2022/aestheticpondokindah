@@ -4,7 +4,7 @@ import Footer from "@/components/layout/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, MessageCircle, ArrowLeft } from "lucide-react";
-import { getDemoBranches } from "@/lib/bookingDemo";
+import { getDemoBranches } from "@/features/reservation/services/bookingDemo";
 
 const slugify = (s: string) =>
   s

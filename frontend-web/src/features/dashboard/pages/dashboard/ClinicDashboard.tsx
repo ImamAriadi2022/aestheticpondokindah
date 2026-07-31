@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-select";
-import { getSession } from "@/lib/demoAuth";
+import { getSession } from "@/features/auth/services/demoAuth";
 import {
   BLOOD_TYPE_OPTIONS,
   GENDER_OPTIONS,
@@ -16,16 +16,16 @@ import {
   JOB_OPTIONS,
   PROVINCES,
 } from "@/lib/regionData";
-import { demoVisitorAnalytics, getSummaryForRole } from "@/lib/demoData";
-import { getAllConsultations, updateConsultationStatus, type ConsultationItem } from "@/lib/consultationApi";
-import { getAdminDoctorSchedules, type AdminDoctorScheduleItem } from "@/lib/adminDoctorScheduleApi";
+import { demoVisitorAnalytics, getSummaryForRole } from "@/features/dashboard/services/demoData";
+import { getAllConsultations, updateConsultationStatus, type ConsultationItem } from "@/features/consultation/services/consultationApi";
+import { getAdminDoctorSchedules, type AdminDoctorScheduleItem } from "@/features/doctors/services/adminDoctorScheduleApi";
 import {
   getAllComplaints,
   updateComplaintStatus,
   deleteComplaint,
   ComplaintItem,
   ComplaintStatus as ApiComplaintStatus,
-} from "@/lib/complaintApi";
+} from "@/features/consultation/services/complaintApi";
 import { toast } from "@/components/ui/toast";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE, getStorageUrl } from "@/lib/apiConfig";
