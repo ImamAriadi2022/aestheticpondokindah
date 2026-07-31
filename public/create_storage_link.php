@@ -4,30 +4,10 @@
  * Run this script on the server after deployment
  */
 
-$backendDir = null;
-$rootDir = __DIR__;
+$rootDir = dirname(__DIR__);
 
-if (is_dir(__DIR__ . '/backend/storage/app/public')) {
-    $backendDir = __DIR__ . '/backend';
-} elseif (is_dir(dirname(__DIR__) . '/backend/storage/app/public')) {
-    $backendDir = dirname(__DIR__) . '/backend';
-    $rootDir = dirname(__DIR__);
-}
-
-if (!$backendDir) {
-    die("ERROR: Target backend directory does not exist.\n");
-}
-
-// Buat symlink backend di public_html jika Document Root adalah httpdocs/public_html
-$backendLinkInPublic = __DIR__ . '/backend';
-if (!file_exists($backendLinkInPublic) && is_dir(dirname(__DIR__) . '/backend')) {
-    if (@symlink(dirname(__DIR__) . '/backend', $backendLinkInPublic)) {
-        echo "SUCCESS: Backend symlink created in public_html/backend!\n";
-    }
-}
-
-// Hapus storage link yang SALAH di backend/public/storage
-$wrongLink = $backendDir . '/public/storage';
+// Hapus storage link yang SALAH di Laravel public directory.
+$wrongLink = __DIR__ . '/storage';
 if (is_link($wrongLink)) {
     echo "MENGHAPUS storage link yang SALAH: $wrongLink\n";
     unlink($wrongLink);
@@ -35,7 +15,7 @@ if (is_link($wrongLink)) {
 }
 
 // Buat storage link yang BENAR di public_html/storage atau httpdocs/storage
-$target = $backendDir . '/storage/app/public';
+$target = $rootDir . '/storage/app/public';
 $link = __DIR__ . '/storage';
 
 // Check if target exists

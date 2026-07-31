@@ -1,14 +1,12 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "src/main.tsx",
-    "src/worker/index.ts"
+    "src/main.tsx"
   ],
   "project": ["src/**/*.{ts,tsx}"],
   "ignore": [
     ".bun/**",
     "dist/**",
-    "worker-configuration.d.ts",
     "src/vite-env.d.ts"
   ],
   "ignoreDependencies": [

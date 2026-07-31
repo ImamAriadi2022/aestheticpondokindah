@@ -15,7 +15,8 @@ export default defineConfig({
 	    allowedHosts: true,
 	  },
   build: {
-    outDir: "public_html",
+    // `deploy.sh` continues publishing the repository-level webroot.
+    outDir: "../public_html",
     emptyOutDir: true,
     chunkSizeWarningLimit: 5000,
   },

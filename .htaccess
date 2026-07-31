@@ -1,0 +1,35 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Preserve bearer-token authentication for Laravel API requests.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Laravel is now at repository root; serve its API front controller.
+    RewriteRule ^api(?:/.*)?$ public/index.php [L,QSA]
+
+    # Protect application internals from direct web access.
+    RewriteRule \.env$ - [F,L]
+    RewriteRule composer\.(json|lock)$ - [F,L]
+    RewriteRule package\.json$ - [F,L]
+    RewriteRule package-lock\.json$ - [F,L]
+    RewriteRule artisan$ - [F,L]
+    RewriteRule phpunit\.xml$ - [F,L]
+
+    # Blokir akses ke file hidden (dimulai dengan titik)
+    RewriteRule ^\. - [F,L]
+
+    # Block sensitive Laravel directories.
+    RewriteRule ^(app|bootstrap|config|database|routes|storage|vendor|tests)/ - [F,L]
+
+    # Serve existing React build assets and public files as-is.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # React SPA fallback.
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# Mencegah listing directory (Di-comment agar tidak 500 di Plesk/cPanel tertentu)
+# Options -Indexes

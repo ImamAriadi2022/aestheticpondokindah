@@ -29,30 +29,22 @@ fi
 
 echo "Using PHP CLI: $($PHP_BIN -r 'echo PHP_VERSION;')"
 
-# 1. Salin isi public_html ke root domain
+# 1. Publish the React build without replacing the Laravel/API rewrite rules.
 cp -rn public_html/* . 2>/dev/null || true
 cp -f public_html/index.html . 2>/dev/null || true
-cp -f public_html/.htaccess . 2>/dev/null || true
 
-# 2. Install dependensi backend dan refresh cache Laravel. Dengan ini perubahan
-#    .env (termasuk kredensial Midtrans) langsung terbaca tanpa akses terminal.
-if [ -d "backend" ]; then
-    cd backend
-    COMPOSER_BIN="$(command -v composer || true)"
-    if [ -z "$COMPOSER_BIN" ]; then
-        echo "ERROR: Composer tidak ditemukan pada server deployment." >&2
-        exit 1
-    fi
-    # Always reconcile vendor with composer.lock. This installs newly added
-    # integrations (such as Midtrans) on an existing production release.
-    "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
-
-    "$PHP_BIN" artisan migrate --force
-    "$PHP_BIN" artisan optimize:clear
-    "$PHP_BIN" artisan config:cache
-    "$PHP_BIN" artisan route:cache
-    "$PHP_BIN" artisan view:cache
-    cd ..
+# 2. Laravel is now the repository root. Reconcile dependencies and caches.
+COMPOSER_BIN="$(command -v composer || true)"
+if [ -z "$COMPOSER_BIN" ]; then
+    echo "ERROR: Composer tidak ditemukan pada server deployment." >&2
+    exit 1
 fi
+
+"$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+"$PHP_BIN" artisan migrate --force
+"$PHP_BIN" artisan optimize:clear
+"$PHP_BIN" artisan config:cache
+"$PHP_BIN" artisan route:cache
+"$PHP_BIN" artisan view:cache
 
 echo "Deploy finished successfully!"

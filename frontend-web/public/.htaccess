@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Jangan rewrite request ke backend/ ke index.html
+  RewriteRule ^backend/ - [L]
+
+  RewriteRule ^index\.html$ - [L]
+
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Promo pages: serve with dynamic OG meta tags
+  RewriteRule ^promo(/.*)?$ /promo-meta.php [L]
+
+  RewriteRule . /index.html [L]
+</IfModule>

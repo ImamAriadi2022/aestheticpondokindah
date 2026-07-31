@@ -1,15 +1,15 @@
 // Konfigurasi API Base URL
 // Untuk development: http://localhost:8000/api
-// Untuk production: https://aestheticpondokindah.web.id/backend/public/api
-// (backend berada di dalam public_html)
+// Untuk production: https://aestheticpondokindah.web.id/api
+// Laravel lives at the repository root and is exposed through the webroot.
 
 const getApiBaseUrl = (): string => {
   // Cek apakah di environment production
   if (import.meta.env.PROD) {
     if (typeof window !== "undefined" && window.location.origin) {
-      return `${window.location.origin}/backend/public/api`;
+      return `${window.location.origin}/api`;
     }
-    return "https://aestheticpondokindah.com/backend/public/api";
+    return "https://aestheticpondokindah.com/api";
   }
 
   // Untuk development, gunakan localhost

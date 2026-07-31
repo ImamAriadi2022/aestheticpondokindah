@@ -9,8 +9,8 @@
 
 ### 1. Struktur Folder
 
-**Backend di Dalam public_html (Struktur yang Digunakan)**
-- Backend ditaruh di dalam `public_html/backend`
+**Laravel di Root Repository (Struktur yang Digunakan)**
+- Laravel ditaruh di root repository/deployment
 - Membutuhkan `.htaccess` proteksi tambahan untuk folder backend
 - Cocok untuk shared hosting yang tidak mengizinkan akses di luar `public_html`
 - **Perlu konfigurasi keamanan ekstra dengan .htaccess**

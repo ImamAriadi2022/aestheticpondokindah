@@ -4,12 +4,12 @@
  * Run this script on the server after deployment
  *
  * PENTING: Script ini akan:
- * 1. Hapus storage link yang SALAH di backend/public/storage
+ * 1. Hapus storage link yang SALAH di public/storage
  * 2. Membuat storage link yang BENAR di public_html/storage
  */
 
-// Hapus storage link yang SALAH di backend/public/storage
-$wrongLink = __DIR__ . '/backend/public/storage';
+// Hapus storage link yang SALAH di public/storage
+$wrongLink = __DIR__ . '/public/storage';
 if (is_link($wrongLink)) {
     echo "MENGHAPUS storage link yang SALAH: $wrongLink\n";
     unlink($wrongLink);
@@ -19,7 +19,7 @@ if (is_link($wrongLink)) {
 }
 
 // Buat storage link yang BENAR di public_html/storage
-$target = __DIR__ . '/backend/storage/app/public';
+$target = __DIR__ . '/storage/app/public';
 $link = __DIR__ . '/storage';
 
 // Check if target exists
@@ -42,11 +42,11 @@ if (symlink($target, $link)) {
     echo "Link: $link\n";
     echo "\nYou can now access files at: /storage/{path}\n";
     echo "\nStruktur yang BENAR:\n";
-    echo "- public_html/storage -> backend/storage/app/public\n";
-    echo "- backend/public/storage TIDAK ADA (dihapus)\n";
+    echo "- public_html/storage -> storage/app/public\n";
+    echo "- public/storage TIDAK ADA (dihapus)\n";
 } else {
     echo "ERROR: Failed to create storage link\n";
     echo "This might be due to server restrictions. Try creating it manually via SSH:\n";
-    echo "cd public_html && ln -s backend/storage/app/public storage\n";
+    echo "cd public_html && ln -s storage/app/public storage\n";
 }
 ?>
