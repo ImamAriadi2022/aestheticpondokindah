@@ -27,9 +27,7 @@ class MembershipAdminController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = User::with(['membershipProfile', 'membershipPoints' => function ($q) {
-            $q->latest()->limit(5);
-        }]);
+        $query = User::with(['membershipProfile']);
 
         // Filter by membership level
         if ($request->has('level')) {
@@ -467,7 +465,7 @@ class MembershipAdminController extends Controller
             $this->membershipService->addPoints(
                 $user,
                 $bonusPoints,
-                'upgrade_bonus',
+                'earned',
                 "Bonus poin upgrade ke {$targetLevel}",
                 (string) $transaction->id,
                 'membership_upgrade'

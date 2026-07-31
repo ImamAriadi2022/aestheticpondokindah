@@ -3,7 +3,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiClient } from "@/lib/apiClient";
 import { toast } from "@/components/ui/toast";
 import { Crown, Loader2, RefreshCw, Search, Star, Sparkles, Wallet } from "lucide-react";
@@ -209,11 +209,11 @@ export default function AdminMembershipPage() {
       </div>
 
       <Dialog open={pointMember !== null} onOpenChange={(open) => !open && setPointMember(null)}>
-        <DialogContent><DialogHeader><DialogTitle>Sesuaikan poin membership</DialogTitle></DialogHeader><p className="text-sm text-gray-500">Member: <span className="font-semibold text-gray-800">{pointMember?.name}</span>. Gunakan nilai negatif untuk mengurangi poin.</p><Input type="number" value={pointAdjustment} onChange={(event) => setPointAdjustment(Number(event.target.value))} placeholder="Contoh: 100 atau -50" /><Input value={pointNote} onChange={(event) => setPointNote(event.target.value)} placeholder="Catatan penyesuaian (opsional)" /><DialogFooter><Button variant="outline" onClick={() => setPointMember(null)}>Batal</Button><Button onClick={() => void adjustPoints()} disabled={savingId === pointMember?.id} className="bg-[#c9a24a] text-white hover:bg-[#a8843a]">Simpan poin</Button></DialogFooter></DialogContent>
+        <DialogContent><DialogHeader><DialogTitle>Sesuaikan poin membership</DialogTitle></DialogHeader><DialogDescription>Member: <span className="font-semibold text-gray-800">{pointMember?.name}</span>. Gunakan nilai negatif untuk mengurangi poin.</DialogDescription><Input type="number" value={pointAdjustment} onChange={(event) => setPointAdjustment(Number(event.target.value))} placeholder="Contoh: 100 atau -50" /><Input value={pointNote} onChange={(event) => setPointNote(event.target.value)} placeholder="Catatan penyesuaian (opsional)" /><DialogFooter><Button variant="outline" onClick={() => setPointMember(null)}>Batal</Button><Button onClick={() => void adjustPoints()} disabled={savingId === pointMember?.id} className="bg-[#c9a24a] text-white hover:bg-[#a8843a]">Simpan poin</Button></DialogFooter></DialogContent>
       </Dialog>
 
       <Dialog open={paymentRequest !== null} onOpenChange={(open) => !open && setPaymentRequest(null)}>
-        <DialogContent><DialogHeader><DialogTitle>Konfirmasi pembayaran upgrade</DialogTitle></DialogHeader><p className="text-sm text-gray-600">Konfirmasi hanya setelah bukti pembayaran {paymentRequest?.user.name} diterima. Tier akan langsung di-upgrade dan poin bonus ditambahkan.</p><Input value={paymentNote} onChange={(event) => setPaymentNote(event.target.value)} placeholder="Catatan admin (opsional)" /><DialogFooter><Button variant="outline" onClick={() => setPaymentRequest(null)}>Batal</Button><Button onClick={() => void confirmManualPayment()} disabled={savingId === paymentRequest?.id} className="bg-[#c9a24a] text-white hover:bg-[#a8843a]">Konfirmasi pembayaran</Button></DialogFooter></DialogContent>
+        <DialogContent><DialogHeader><DialogTitle>Konfirmasi pembayaran upgrade</DialogTitle></DialogHeader><DialogDescription>Konfirmasi hanya setelah bukti pembayaran {paymentRequest?.user.name} diterima. Tier akan langsung di-upgrade dan poin bonus ditambahkan.</DialogDescription><Input value={paymentNote} onChange={(event) => setPaymentNote(event.target.value)} placeholder="Catatan admin (opsional)" /><DialogFooter><Button variant="outline" onClick={() => setPaymentRequest(null)}>Batal</Button><Button onClick={() => void confirmManualPayment()} disabled={savingId === paymentRequest?.id} className="bg-[#c9a24a] text-white hover:bg-[#a8843a]">Konfirmasi pembayaran</Button></DialogFooter></DialogContent>
       </Dialog>
     </DashboardLayout>
   );
