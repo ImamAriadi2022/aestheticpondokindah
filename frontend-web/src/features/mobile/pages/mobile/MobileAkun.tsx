@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardLayout";
 import { Button } from "@/components/ui/button";
-import { getSession, clearSession } from "@/features/auth/services/demoAuth";
+import { getSession, clearSession } from "@/features/auth/services/session";
 import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
 import { 
   User,
@@ -37,20 +37,13 @@ export default function MobileAkunPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
-    let s = getSession();
-    const storedUser = localStorage.getItem("apident:user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        s = { ...(s || {}), ...parsed };
-      } catch (e) {}
-    }
-    setSession(s);
+    setSession(getSession());
   }, []);
 
-  const isMembership =
-    session?.membership_status === "active" ||
-    session?.membershipStatus === "active";
+  // Semua pengguna terdaftar adalah member. Tier menentukan label.
+  const isPaidMember =
+    session?.membership_level === "gold" || session?.membership_level === "platinum";
+  const currentTier = (session as any)?.membership_level || "bronze";
 
   const handleLogout = () => {
     clearSession();
@@ -86,12 +79,12 @@ export default function MobileAkunPage() {
               </p>
               <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                  isMembership 
+                  isPaidMember 
                     ? "bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white" 
-                    : "bg-gray-100 text-gray-600"
+                    : "bg-gradient-to-r from-[#CD7F32] to-[#A0522D] text-white"
                 }`}>
                   <Crown className="w-3 h-3" />
-                  {isMembership ? "Gold Member" : "Bronze Member"}
+                  {currentTier === 'gold' ? "Gold Member" : currentTier === 'platinum' ? "Platinum Member" : "Bronze Member"}
                 </span>
               </div>
             </div>
@@ -118,23 +111,23 @@ export default function MobileAkunPage() {
         <div className="px-4">
           <Link to="/membership">
             <div className={`relative overflow-hidden rounded-2xl p-4 ${
-              isMembership 
+              isPaidMember 
                 ? "bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460]" 
-                : "bg-gradient-to-r from-gray-600 to-gray-700"
+                : "bg-gradient-to-r from-[#CD7F32] to-[#A0522D]"
             }`}>
               <div className="relative flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Award className="w-4 h-4 text-[#c9a24a]" />
                     <span className="text-xs text-[#c9a24a] font-medium">
-                      {isMembership ? "Gold Membership" : "Upgrade Membership"}
+                      {isPaidMember ? "Gold Membership" : "Upgrade Membership"}
                     </span>
                   </div>
                   <h3 className="text-white font-bold mb-1">
-                    {isMembership ? "Member Eksklusif" : "Jadilah Gold Member"}
+                    {isPaidMember ? "Member Eksklusif" : "Jadilah Gold Member"}
                   </h3>
                   <p className="text-white/70 text-xs">
-                    {isMembership 
+                    {isPaidMember 
                       ? "Nikmati diskon 25% untuk semua layanan" 
                       : "Dapatkan diskon dan benefit menarik"}
                   </p>

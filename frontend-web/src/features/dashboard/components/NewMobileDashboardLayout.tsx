@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { clearSession, getSession } from "@/features/auth/services/demoAuth";
+import { clearSession, getSession } from "@/features/auth/services/session";
 import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
-import { logger } from "@/lib/logger";
 import { NotificationCenterModal } from "@/components/notification/NotificationCenterModal";
 import { fetchNotifications } from "@/lib/notificationApi";
 import { initializePushNotifications } from "@/lib/firebaseNotification";
@@ -62,16 +61,7 @@ export default function NewMobileDashboardLayout({
     });
   }, []);
 
-  let session = getSession();
-  const storedUser = localStorage.getItem("apident:user");
-  if (storedUser) {
-    try {
-      const parsed = JSON.parse(storedUser);
-      session = { ...(session || {}), ...parsed };
-    } catch (e) {
-      logger.error("Gagal parse user session", e);
-    }
-  }
+  const session = getSession();
 
   const isMembership =
     (session as any)?.membership_status === "active" ||
@@ -219,7 +209,7 @@ export default function NewMobileDashboardLayout({
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl py-3 z-50 border border-gray-100">
                     <div className="px-4 py-3 border-b border-gray-100 mb-1">
                       <p className="text-sm font-semibold text-gray-900">{session?.name || "User"}</p>
-                      <p className="text-xs text-gray-500">{isMembership ? "Gold Member" : "Bronze Member"}</p>
+                      <p className="text-xs text-gray-500">{(session as any)?.membership_level === 'gold' ? "Gold Member" : (session as any)?.membership_level === 'platinum' ? "Platinum Member" : "Bronze Member"}</p>
                     </div>
                     <Link
                       to="/m/akun"

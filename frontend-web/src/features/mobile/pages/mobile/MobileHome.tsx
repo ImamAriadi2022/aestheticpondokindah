@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardLayout";
-import { getSession } from "@/features/auth/services/demoAuth";
+import { getSession } from "@/features/auth/services/session";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/PullToRefresh";
 import { mobileSyncManager } from "@/features/mobile/services/mobileSyncManager";
@@ -49,15 +49,7 @@ export default function MobileHomePage() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   const loadUserSession = () => {
-    let s = getSession();
-    const storedUser = localStorage.getItem("apident:user");
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
-        s = { ...(s || {}), ...parsed };
-      } catch (e) {}
-    }
-    setSession(s);
+    setSession(getSession());
   };
 
   useEffect(() => {
@@ -75,7 +67,8 @@ export default function MobileHomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  const isMembership = session?.membership_status === "active" || session?.membershipStatus === "active";
+  // Semua pengguna terdaftar adalah member. Tier menentukan label.
+  const isPaidMember = session?.membership_level === "gold" || session?.membership_level === "platinum";
   const userName = session?.name?.split(" ")[0] || "Pengguna";
   // Determine current membership tier for assets (default bronze)
   const currentTier = (session as any)?.membership_level || "bronze";
@@ -150,18 +143,18 @@ export default function MobileHomePage() {
                 <div className="flex items-center gap-2 mb-3">
                   <div className="flex items-center gap-1.5 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] px-3 py-1.5 rounded-full">
                     <Crown className="w-3.5 h-3.5 text-white" />
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">{isMembership ? 'Gold Member' : 'Bronze Member'}</span>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">{currentTier === 'gold' ? 'Gold Member' : currentTier === 'platinum' ? 'Platinum Member' : 'Bronze Member'}</span>
                   </div>
                 </div>
-                <h3 className="text-white font-bold text-lg mb-2">{isMembership ? 'Member Eksklusif' : 'Upgrade Membership'}</h3>
+                <h3 className="text-white font-bold text-lg mb-2">{isPaidMember ? 'Member Eksklusif' : 'Bronze Member Gratis'}</h3>
                 <p className="text-gray-400 text-xs mb-4 leading-relaxed">
-                  {isMembership ? 'Nikmati diskon 25% untuk semua perawatan gigi premium' : 'Dapatkan benefit eksklusif dengan upgrade ke Gold'}
+                  {isPaidMember ? 'Nikmati diskon 25% untuk semua perawatan gigi premium' : 'Dapatkan benefit eksklusif dengan upgrade ke Gold'}
                 </p>
                 <button
                   onClick={() => navigate('/membership')}
                   className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white text-xs font-semibold px-4 py-2.5 rounded-xl transition-all"
                 >
-                  {isMembership ? 'Lihat Benefit' : 'Update Sekarang'}
+                  {isPaidMember ? 'Lihat Benefit' : 'Upgrade Sekarang'}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>

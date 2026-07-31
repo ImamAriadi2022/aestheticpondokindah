@@ -1,4 +1,4 @@
-import type { DemoRole } from "@/features/auth/services/demoAuth";
+import type { AppRole } from "@/authorization";
 
 export type DemoDoctorSchedule = {
   id: string;
@@ -225,7 +225,7 @@ export const demoVisitorAnalytics: DemoVisitorAnalytics[] = [
   { region: "Jawa Tengah", visitors: 310, consultationsViaButton: 12 },
 ];
 
-export function getSummaryForRole(role: DemoRole) {
+export function getSummaryForRole(role: AppRole) {
   if (role === "user") {
     return {
       headline: "Ringkasan akun pengguna",

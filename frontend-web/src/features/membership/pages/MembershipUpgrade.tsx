@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getSession } from "@/features/auth/services/demoAuth";
+import { getSession } from "@/features/auth/services/session";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { logger } from "@/lib/logger";
 import { API_BASE } from "@/lib/apiConfig";

@@ -68,9 +68,8 @@ export default function Header() {
     const computeIsLoggedIn = () => {
       const token = localStorage.getItem("apident:token");
       const userRaw = localStorage.getItem("apident:user");
-      const demoSession = localStorage.getItem("apident:demo_session_v1");
 
-      if (token || userRaw || demoSession) return true;
+      if (token || userRaw) return true;
       return false;
     };
 
@@ -80,8 +79,7 @@ export default function Header() {
     const onStorage = (e: StorageEvent) => {
       if (
         e.key === "apident:token" ||
-        e.key === "apident:user" ||
-        e.key === "apident:demo_session_v1"
+        e.key === "apident:user"
       )
         sync();
     };

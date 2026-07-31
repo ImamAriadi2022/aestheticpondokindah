@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Services\MembershipService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +14,12 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    protected MembershipService $membershipService;
+
+    public function __construct(MembershipService $membershipService)
+    {
+        $this->membershipService = $membershipService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -37,7 +44,11 @@ class UserController extends Controller
                     'email' => $u->email,
                     'phone' => $u->whatsapp,
                     'domicile' => $domicile,
-                    'membership_status' => $u->membership_status ?? 'regular',
+                    'membership_status' => $u->membership_status ?? 'active',
+                    'membership_level' => $u->membership_level ?? 'bronze',
+                    'membership_points' => (int) ($u->membership_points ?? 0),
+                    'membership_started_at' => optional($u->membership_started_at)->format('Y-m-d'),
+                    'membership_expires_at' => optional($u->membership_expires_at)->format('Y-m-d'),
                     'role' => $u->role,
                     'created_at' => optional($u->created_at)->toISOString(),
                     // Extended profile fields
@@ -67,7 +78,10 @@ class UserController extends Controller
             })
             ->values();
 
-        return response()->json($users);
+        return response()->json($users, 200, [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ]);
     }
 
     /**
@@ -92,7 +106,7 @@ class UserController extends Controller
                     'email' => $u->email,
                     'phone' => $u->whatsapp,
                     'domicile' => $domicile,
-                    'membership_status' => $u->membership_status ?? 'regular',
+                    'membership_status' => $u->membership_status ?? 'active',
                     'role' => $u->role,
                     'created_at' => optional($u->created_at)->toISOString(),
                     'birthDate' => optional($u->birth_date)->format('Y-m-d'),
@@ -209,6 +223,7 @@ class UserController extends Controller
             'sourceInfo' => 'nullable|string|max:255',
             'insuranceProvider' => 'nullable|string|max:255',
             'membership_status' => 'nullable|string|max:20',
+            'membership_level' => 'nullable|in:bronze,gold,platinum',
             'password' => 'nullable|string|min:6',
             'dentalComplaints' => 'nullable|array',
             'dentalComplaints.*' => 'string|max:100',
@@ -252,6 +267,18 @@ class UserController extends Controller
             if (array_key_exists('sourceInfo', $data)) $user->source_info = $data['sourceInfo'];
             if (array_key_exists('insuranceProvider', $data)) $user->insurance_provider = $data['insuranceProvider'];
             if (array_key_exists('membership_status', $data)) $user->membership_status = $data['membership_status'];
+            if (array_key_exists('membership_level', $data)) {
+                $newLevel = $data['membership_level'];
+                if ($newLevel !== $user->membership_level) {
+                    $this->membershipService->updateMembershipLevel(
+                        $user,
+                        $newLevel,
+                        $user->membership_level,
+                        'Update level oleh admin',
+                        $request->user()?->id
+                    );
+                }
+            }
             if (array_key_exists('password', $data) && !empty($data['password'])) {
                 $user->password = Hash::make($data['password']);
             }
@@ -344,7 +371,7 @@ class UserController extends Controller
             'email' => $user->email,
             'phone' => $user->whatsapp,
             'domicile' => $domicile,
-            'membership_status' => $user->membership_status ?? 'regular',
+            'membership_status' => $user->membership_status ?? 'active',
             'role' => $user->role,
             'created_at' => optional($user->created_at)->toISOString(),
             'birthDate' => optional($user->birth_date)->format('Y-m-d'),
@@ -566,7 +593,8 @@ class UserController extends Controller
 
         $isMembershipProfileComplete = $membershipProfile->isComplete();
         $user->membership_profile_completed = $isMembershipProfileComplete;
-        if ($isMembershipProfileComplete && $user->membership_level === 'bronze') {
+        // Semua pengguna adalah Bronze member (gratis & otomatis aktif)
+        if ($user->membership_level === 'bronze') {
             $user->membership_status = 'active';
         }
         $user->save();
@@ -606,7 +634,7 @@ class UserController extends Controller
             'email' => $user->email,
             'phone' => $user->whatsapp,
             'domicile' => $domicile,
-            'membership_status' => $user->membership_status ?? 'regular',
+            'membership_status' => $user->membership_status ?? 'active',
             'role' => $user->role,
             'created_at' => optional($user->created_at)->toISOString(),
             'birthDate' => optional($user->birth_date)->format('Y-m-d'),

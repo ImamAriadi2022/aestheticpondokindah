@@ -12,19 +12,15 @@ import {
 } from "@/components/ui/input-group";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { Chrome, Eye, EyeOff, ArrowLeft } from "lucide-react";
-import {
-  getDefaultDashboardPath,
-  resetPasswordDemo,
-  signInWithGoogleDemo,
-} from "@/features/auth/services/demoAuth";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { getDefaultDashboardPath } from "@/features/auth/services/session";
 import { GENDER_OPTIONS, BLOOD_TYPE_OPTIONS, JOB_OPTIONS } from "@/lib/regionData";
 import { getDistricts, getProvinces, getRegencies } from "@/lib/wilayahApi";
 import { touchSessionLastActive } from "@/features/auth/services/sessionTtl";
 import { API_BASE } from "@/lib/apiConfig";
 
 type LoginRole = "user" | "clinic" | "doctor";
-type UserMode = "login" | "register" | "forgot";
+type UserMode = "login" | "register";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -66,7 +62,6 @@ export default function LoginPage() {
   const districtOptions = registerForm.cityId ? getDistricts(registerForm.cityId) : [];
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [forgotForm, setForgotForm] = useState({ identifier: "", newPassword: "" });
   const [success, setSuccess] = useState<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
@@ -104,24 +99,12 @@ export default function LoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      // SINKRONISASI PENTING:
-      // Beberapa komponen masih mengecek "apident:demo_session_v1".
-      // Kita perlu mengisi itu juga agar rute tidak terblokir.
+      setSuccess("Login berhasil! Mengalihkan...");
+
       let targetRole = data.user.role;
       if (targetRole === "clinic_admin") targetRole = "clinic";
       if (targetRole === "patient") targetRole = "user";
 
-      const sessionData = {
-        ...data.user,
-        role: targetRole,
-        id: data.user.id.toString(),
-        phone: data.user.whatsapp || ""
-      };
-      localStorage.setItem("apident:demo_session_v1", JSON.stringify(sessionData));
-      touchSessionLastActive();
-
-      setSuccess("Login berhasil! Mengalihkan...");
-      
       const targetPath = getDefaultDashboardPath(targetRole);
       
       setTimeout(() => {
@@ -133,18 +116,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const onGoogleDemo = () => {
-    setError(null);
-    setSuccess(null);
-    const result = signInWithGoogleDemo();
-    if (!result.ok) {
-      setError("Gagal login dengan Google (demo).");
-      return;
-    }
-    const from = (location.state as { from?: string } | null)?.from;
-    navigate(from || getDefaultDashboardPath(result.session.role), { replace: true });
   };
 
   const onRegister = async (e: React.FormEvent) => {
@@ -189,15 +160,6 @@ export default function LoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      const sessionData = {
-        ...data.user,
-        role: "user",
-        id: data.user.id.toString(),
-        phone: data.user.whatsapp || "",
-      };
-      localStorage.setItem("apident:demo_session_v1", JSON.stringify(sessionData));
-      touchSessionLastActive();
-      
       setSuccess("Pendaftaran berhasil! Mengalihkan ke dashboard...");
       setTimeout(() => {
         navigate("/dashboard/user", { replace: true });
@@ -208,19 +170,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const onResetPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    const result = resetPasswordDemo(forgotForm.identifier, forgotForm.newPassword);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    setSuccess("Password berhasil diperbarui. Silakan login kembali.");
-    setUserMode("login");
   };
 
   const renderLoginForm = (role: LoginRole) => {
@@ -264,30 +213,10 @@ export default function LoginPage() {
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
-          {role === "user" && (
-            <button
-              type="button"
-              className="text-xs text-brand-warm-gray hover:text-brand-gold transition-colors font-body underline underline-offset-4"
-              onClick={() => setUserMode("forgot")}
-            >
-              Lupa kata sandi?
-            </button>
-          )}
         </div>
         <Button type="submit" className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white font-semibold rounded-xl font-body">
           Login
         </Button>
-        {role === "user" && (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-12 rounded-xl font-body"
-            onClick={onGoogleDemo}
-          >
-            <Chrome className="w-4 h-4 mr-2" />
-            Login dengan Google
-          </Button>
-        )}
         {error && (
           <div className="text-xs text-red-600 font-body" role="alert">
             {error}
@@ -537,71 +466,6 @@ export default function LoginPage() {
     );
   };
 
-  const renderForgotPasswordForm = () => {
-    return (
-      <form className="mt-7 space-y-4" onSubmit={onResetPassword}>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-xl px-2"
-            onClick={() => setUserMode("login")}
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Kembali
-          </Button>
-          <div className="text-sm font-medium text-brand-charcoal">Pemulihan akun</div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="forgot-identifier">Email atau Nomor Telepon</Label>
-          <Input
-            id="forgot-identifier"
-            value={forgotForm.identifier}
-            onChange={(e) => setForgotForm((p) => ({ ...p, identifier: e.target.value }))}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="forgot-new-password">Password Baru</Label>
-          <InputGroup>
-            <InputGroupInput
-              id="forgot-new-password"
-              type={showPassword.user ? "text" : "password"}
-              placeholder="Password baru"
-              value={forgotForm.newPassword}
-              onChange={(e) => setForgotForm((p) => ({ ...p, newPassword: e.target.value }))}
-              required
-            />
-            <InputGroupAddon align="inline-end">
-              <InputGroupButton
-                size="icon-sm"
-                aria-label={showPassword.user ? "Sembunyikan password" : "Lihat password"}
-                onClick={() => setShowPassword((prev) => ({ ...prev, user: !prev.user }))}
-              >
-                {showPassword.user ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </InputGroupButton>
-            </InputGroupAddon>
-          </InputGroup>
-        </div>
-
-        <Button type="submit" className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white font-semibold rounded-xl font-body">
-          Verifikasi & Simpan Password
-        </Button>
-        {error && (
-          <div className="text-xs text-red-600 font-body" role="alert">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="text-xs text-[#8a6b2b] font-body" role="status">
-            {success}
-          </div>
-        )}
-      </form>
-    );
-  };
-
   return (
     <div className="min-h-screen">
       <Header />
@@ -638,9 +502,7 @@ export default function LoginPage() {
                     <TabsContent value="user">
                       {userMode === "login"
                         ? renderLoginForm("user")
-                        : userMode === "register"
-                          ? renderRegisterForm()
-                          : renderForgotPasswordForm()}
+                        : renderRegisterForm()}
                     </TabsContent>
                     <TabsContent value="doctor">{renderLoginForm("doctor")}</TabsContent>
                   </Tabs>

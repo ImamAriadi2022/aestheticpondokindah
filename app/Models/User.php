@@ -93,9 +93,9 @@ class User extends Authenticatable
 
     public function isMembershipActive(): bool
     {
-        // Bronze selalu aktif (gratis, tidak expired)
+        // Bronze selalu aktif (gratis, otomatis untuk semua pengguna terdaftar, tidak expired)
         if ($this->membership_level === 'bronze') {
-            return $this->membership_profile_completed;
+            return true;
         }
 
         return $this->membership_status === 'active'
@@ -114,11 +114,11 @@ class User extends Authenticatable
                 'bronze' => 'bronze',
                 'gold' => 'gold_bonus',
                 'platinum' => 'platinum_bonus',
-                default => 'regular',
+                default => 'bronze',
             };
         }
 
-        return 'regular';
+        return 'bronze';
     }
 
     public function isBronze(): bool

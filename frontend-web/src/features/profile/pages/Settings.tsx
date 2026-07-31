@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-select";
-import { getSession, updateSessionProfile } from "@/features/auth/services/demoAuth";
+import { getSession, updateSessionProfile } from "@/features/auth/services/session";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { JOB_OPTIONS, GENDER_OPTIONS, BLOOD_TYPE_OPTIONS } from "@/lib/regionData";
 import { getProvinces, getRegencies, getDistricts } from "@/lib/wilayahApi";
@@ -49,22 +49,8 @@ const normalizeGenderValue = (gender: string | null | undefined): string => {
 };
 
 export default function SettingsPage() {
-  // Ambil session dari demo atau backend asli
-  let session = getSession();
-  if (!session) {
-    const storedUser = localStorage.getItem("apident:user");
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        // Map role backend ke role yang diharapkan frontend
-        const role = user.role === "patient" ? "user" : 
-                    user.role === "clinic_admin" ? "clinic" : user.role;
-        session = { ...user, role };
-      } catch (e) {
-        logger.error("Gagal parse user session", e);
-      }
-    }
-  }
+  // Ambil session dari backend asli
+  const session = getSession();
 
   const navigate = useNavigate();
 
@@ -163,17 +149,6 @@ export default function SettingsPage() {
             address_line: data?.address ?? currentUser?.address_line,
           };
           localStorage.setItem("apident:user", JSON.stringify(mergedUser));
-
-          const rawSession = localStorage.getItem("apident:demo_session_v1");
-          const currentSession = rawSession ? JSON.parse(rawSession) : {};
-          localStorage.setItem(
-            "apident:demo_session_v1",
-            JSON.stringify({
-              ...currentSession,
-              ...mergedUser,
-              phone: mergedUser?.whatsapp ?? mergedUser?.phone ?? "",
-            })
-          );
         } catch (e) {
           logger.error("Gagal sinkronkan profil ke localStorage", e);
         }
@@ -454,22 +429,8 @@ export default function SettingsPage() {
             preferredCommunicationChannels: updated?.preferredCommunicationChannels ?? profile.preferredCommunicationChannels,
           };
           localStorage.setItem("apident:user", JSON.stringify(nextUser));
-          try {
-            const rawSession = localStorage.getItem("apident:demo_session_v1");
-            const currentSession = rawSession ? JSON.parse(rawSession) : {};
-            localStorage.setItem(
-              "apident:demo_session_v1",
-              JSON.stringify({
-                ...currentSession,
-                ...nextUser,
-                phone: nextUser?.whatsapp ?? nextUser?.phone ?? "",
-              })
-            );
-          } catch (e) {
-            logger.error("Gagal sinkronkan session", e);
-          }
 
-      updateSessionProfile({
+          updateSessionProfile({
         ...profile,
         phone: nextUser?.whatsapp ?? nextUser?.phone ?? profile.phone,
       } as any);

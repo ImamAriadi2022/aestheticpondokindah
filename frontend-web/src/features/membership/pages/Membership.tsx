@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getSession } from "@/features/auth/services/demoAuth";
+import { getSession } from "@/features/auth/services/session";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import NewMobileDashboardLayout from "@/components/dashboard/NewMobileDashboardLayout";
 import { logger } from "@/lib/logger";
@@ -34,21 +34,8 @@ export default function MembershipPage() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
-  // Ambil session dari demo atau backend asli
-  let session = getSession();
-  if (!session) {
-    const storedUser = localStorage.getItem("apident:user");
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        // Map role backend ke role yang diharapkan frontend
-        const role = user.role === "patient" ? "user" : user.role;
-        session = { ...user, role };
-      } catch (e) {
-        logger.error("Gagal parse user session", e);
-      }
-    }
-  }
+  // Ambil session dari backend asli
+  const session = getSession();
 
   const navigate = useNavigate();
 

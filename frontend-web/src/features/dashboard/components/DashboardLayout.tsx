@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { clearSession, getSession } from "@/features/auth/services/demoAuth";
+import { clearSession, getSession } from "@/features/auth/services/session";
 import { clearSessionStorage, touchSessionLastActive } from "@/features/auth/services/sessionTtl";
 import AccountSidebar from "@/components/dashboard/AccountSidebar";
 import MobileDashboardLayout from "./MobileDashboardLayout";
-import { logger } from "@/lib/logger";
 import DashboardRightPanel from "./DashboardRightPanel";
 import { getMenuItems, CONTENT_SUBMENU, type MenuItem } from "@/authorization";
 import {
@@ -57,17 +56,8 @@ export default function DashboardLayout({
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Ambil session dari demo atau backend asli
-  let session = getSession();
-  const storedUser = localStorage.getItem("apident:user");
-  if (storedUser) {
-    try {
-      const parsed = JSON.parse(storedUser);
-      session = { ...(session || {}), ...parsed };
-    } catch (e) {
-      logger.error("Gagal parse user session", e);
-    }
-  }
+  // Ambil session dari backend asli
+  const session = getSession();
 
   // Helper: calculate progress (same logic as MembershipPage)
   const calculateProgress = () => {
@@ -126,7 +116,7 @@ export default function DashboardLayout({
   const getNavbarLabel = () => {
     if (role === "clinic") return "Admin Klinik";
     if (role === "doctor") return "Dokter Klinik";
-    if (role === "user" && isMembership) return config.label;
+    if (role === "user") return config.label;
     return "Client Klinik";
   };
 

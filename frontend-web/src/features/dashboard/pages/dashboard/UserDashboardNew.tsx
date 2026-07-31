@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { getSession, clearSession } from "@/features/auth/services/demoAuth";
+import { getSession, clearSession } from "@/features/auth/services/session";
 import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
 import { getMyConsultations } from "@/features/consultation/services/consultationApi";
 import { getMyComplaints } from "@/features/consultation/services/complaintApi";
@@ -48,19 +48,7 @@ export default function UserDashboardPage() {
   const activeTab = searchParams.get("tab") || "dashboard";
 
   // Ambil session
-  let session = getSession();
-  if (!session) {
-    const storedUser = localStorage.getItem("apident:user");
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        const role = user.role === "patient" ? "user" : user.role;
-        session = { ...user, role };
-      } catch (e) {
-        logger.error("Gagal parse user session", e);
-      }
-    }
-  }
+  const session = getSession();
 
   const [consultations, setConsultations] = useState<any[]>([]);
   const [complaints, setComplaints] = useState<any[]>([]);
@@ -94,10 +82,14 @@ export default function UserDashboardPage() {
       .catch(() => {});
   }, []);
 
-  // Calculate membership status
-  const isMembership =
-    (session as any)?.membershipStatus === "active" ||
-    (session as any)?.membership_status === "active";
+  // Semua pengguna terdaftar adalah member; navbar menunjukkan tier.
+  const isMembership = true;
+  const tierLabel =
+    (session as any)?.membership_level === 'platinum'
+      ? "Priority Member"
+      : (session as any)?.membership_level === 'gold'
+        ? "Premium Member"
+        : "Basic Member";
 
   // Calculate progress
   const calculateProgress = () => {
@@ -186,7 +178,7 @@ export default function UserDashboardPage() {
           {shouldShowRightPanel && (
             <DashboardRightPanel
               session={session}
-              navbarLabel={isMembership ? "Member Eksklusif" : "Client Klinik"}
+              navbarLabel={tierLabel}
               role="user"
               consultationsCount={consultations.length}
               activeTreatmentsCount={consultations.filter((c) => c.status !== "Selesai").length}

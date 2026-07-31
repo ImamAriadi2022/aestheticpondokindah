@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, ArrowLeft, ChevronRight, Heart, Lock, Mail, Phone, Chrome } from "lucide-react";
-import { getDefaultDashboardPath, getSession } from "@/features/auth/services/demoAuth";
+import { getDefaultDashboardPath, getSession } from "@/features/auth/services/session";
 import { API_BASE } from "@/lib/apiConfig";
 import { touchSessionLastActive } from "@/features/auth/services/sessionTtl";
 import { toast } from "@/components/ui/toast";
@@ -82,15 +82,6 @@ export default function MobileLoginPage() {
       if (targetRole === "clinic_admin") targetRole = "clinic";
       if (targetRole === "patient") targetRole = "user";
 
-      const sessionData = {
-        ...data.user,
-        role: targetRole,
-        id: data.user.id.toString(),
-        phone: data.user.whatsapp || "",
-      };
-      localStorage.setItem("apident:demo_session_v1", JSON.stringify(sessionData));
-      touchSessionLastActive();
-
       toast({ title: "Login Berhasil", message: "Selamat datang kembali!", variant: "success" });
       
       navigate(getDefaultDashboardPath(targetRole), { replace: true });
@@ -133,15 +124,6 @@ export default function MobileLoginPage() {
 
       localStorage.setItem("apident:token", data.token);
       localStorage.setItem("apident:user", JSON.stringify(data.user));
-      touchSessionLastActive();
-
-      const sessionData = {
-        ...data.user,
-        role: "user",
-        id: data.user.id.toString(),
-        phone: data.user.whatsapp || "",
-      };
-      localStorage.setItem("apident:demo_session_v1", JSON.stringify(sessionData));
       touchSessionLastActive();
 
       toast({ title: "Pendaftaran Berhasil", message: "Selamat datang!", variant: "success" });

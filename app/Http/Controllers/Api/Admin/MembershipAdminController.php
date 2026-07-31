@@ -172,10 +172,12 @@ class MembershipAdminController extends Controller
         // Revenue by membership level
         $revenueByLevel = [
             'bronze' => 0,  // Gratis, tidak ada revenue langsung dari langganan
-            'gold' => User::where('membership_level', 'gold')
+            'gold' => User::whereIn('role', ['user', 'patient'])
+                ->where('membership_level', 'gold')
                 ->where('membership_status', 'active')
                 ->sum('total_transactions'),
-            'platinum' => User::where('membership_level', 'platinum')
+            'platinum' => User::whereIn('role', ['user', 'patient'])
+                ->where('membership_level', 'platinum')
                 ->where('membership_status', 'active')
                 ->sum('total_transactions'),
         ];
@@ -195,9 +197,9 @@ class MembershipAdminController extends Controller
     public function levelDistribution(Request $request): JsonResponse
     {
         $distribution = [
-            'bronze' => User::where('membership_level', 'bronze')->count(),
-            'gold' => User::where('membership_level', 'gold')->count(),
-            'platinum' => User::where('membership_level', 'platinum')->count(),
+            'bronze' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'bronze')->count(),
+            'gold' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'gold')->count(),
+            'platinum' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'platinum')->count(),
         ];
 
         $total = array_sum($distribution);

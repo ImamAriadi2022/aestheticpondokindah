@@ -6,7 +6,7 @@ import DesktopDoctorHome from "@/components/dashboard/DesktopDoctorHome";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getSession } from "@/features/auth/services/demoAuth";
+import { getSession } from "@/features/auth/services/session";
 import {
   Calendar, Users, ChevronRight, Clock, PlayCircle, Plus, Pencil, Trash2, Eye, ArrowLeft, Loader2,
   Phone, History, Heart, Image, Stethoscope, MessageSquare, FileText, Lightbulb, AlertCircle, User,

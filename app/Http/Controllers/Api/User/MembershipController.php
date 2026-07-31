@@ -44,8 +44,8 @@ class MembershipController extends Controller
                     'whatsapp' => $user->whatsapp,
                 ],
                 'membership' => [
-                    'level' => $user->membership_level,
-                    'status' => $user->membership_status,
+                    'level' => $user->membership_level ?? 'bronze',
+                    'status' => $user->membership_level === 'bronze' ? 'active' : ($user->membership_status ?? 'active'),
                     'started_at' => $user->membership_started_at,
                     'expires_at' => $user->membership_expires_at,
                     'points' => $user->membership_points,
@@ -98,13 +98,13 @@ class MembershipController extends Controller
         $isComplete = $profile->isComplete();
         $user->update(['membership_profile_completed' => $isComplete]);
 
-        // If profile is complete, activate Bronze membership
-        if ($isComplete && $user->membership_level === 'bronze') {
+        // Semua pengguna adalah Bronze member (gratis & otomatis aktif)
+        if ($user->membership_level === 'bronze') {
             $user->update([
                 'membership_status' => 'active',
-                'membership_profile_completed' => true,
+                'membership_profile_completed' => $isComplete,
             ]);
-            // Tidak langsung upgrade ke gold - Gold hanya melalui transaksi atau langganan
+            // Tidak langsung upgrade ke gold - Gold hanya melalui pembayaran upgrade
         }
 
         // Check for auto-upgrade untuk semua level

@@ -1,8 +1,7 @@
 import { type ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
-import { getSession } from "@/features/auth/services/demoAuth";
+import { getSession } from "@/features/auth/services/session";
 import { clearSessionStorage, isSessionExpired, touchSessionLastActive } from "@/features/auth/services/sessionTtl";
-import { logger } from "@/lib/logger";
 import { canActivate, getRedirectPath, normalizeRole, ROLES, type AppRole } from "@/authorization";
 
 type Props = {
@@ -18,20 +17,8 @@ export default function ProtectedRoute({ children, allow }: Props) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  // Ambil session dari demo atau backend asli
-  let session = getSession();
-  if (!session) {
-    const storedUser = localStorage.getItem("apident:user");
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        const role = normalizeRole(user.role);
-        session = { ...user, role };
-      } catch (e) {
-        logger.error("Gagal parse user session", e);
-      }
-    }
-  }
+  // Ambil session dari backend asli
+  const session = getSession();
 
   if (!session) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;

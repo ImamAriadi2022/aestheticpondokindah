@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-select";
-import { getSession } from "@/features/auth/services/demoAuth";
+import { getSession } from "@/features/auth/services/session";
 import {
   BLOOD_TYPE_OPTIONS,
   GENDER_OPTIONS,
@@ -83,6 +83,7 @@ import {
   Clock,
   Zap,
   Crown,
+  Star,
   Tag,
   Save,
   Type,
@@ -349,6 +350,36 @@ function InfoItem({ icon, label, value }: { icon: any; label: string; value: str
       </div>
     </div>
   );
+}
+
+const TIER_PRESENTATION: Record<string, { label: string; badge: string; bar: string; dot: string }> = {
+  gold: {
+    label: "Gold",
+    badge: "bg-amber-50 text-amber-700 border-amber-200",
+    bar: "from-amber-300 to-amber-500",
+    dot: "bg-amber-500",
+  },
+  platinum: {
+    label: "Platinum",
+    badge: "bg-slate-100 text-slate-600 border-slate-300",
+    bar: "from-slate-300 to-slate-500",
+    dot: "bg-slate-500",
+  },
+  bronze: {
+    label: "Bronze",
+    badge: "bg-orange-50 text-orange-700 border-orange-200",
+    bar: "from-orange-300 to-orange-500",
+    dot: "bg-orange-500",
+  },
+};
+
+// Semua pengguna terdaftar otomatis menjadi Bronze member (gratis).
+function isMember(user: any): boolean {
+  return !!user;
+}
+
+function tierOf(user: any): string {
+  return user?.membership_level && TIER_PRESENTATION[user.membership_level] ? user.membership_level : "bronze";
 }
 
 export default function ClinicDashboardPage() {
@@ -748,6 +779,7 @@ export default function ClinicDashboardPage() {
         return;
       }
       const response = await fetch(`${API_BASE}/admin/users`, {
+        cache: "no-store",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Accept": "application/json",
@@ -823,7 +855,7 @@ export default function ClinicDashboardPage() {
           name: editingUser.name,
           email: editingUser.email,
           whatsapp: editingUser.phone,
-          membership_status: editingUser.membership_status,
+          membership_level: editingUser.membership_level,
           birthDate: editingUser.birthDate,
           gender: editingUser.gender,
           bloodType: editingUser.bloodType,
@@ -2276,11 +2308,50 @@ export default function ClinicDashboardPage() {
                         <span className="inline-flex items-center px-2.5 py-0.5 bg-[#c9a24a]/10 text-[#a8843a] rounded-full text-xs font-medium">
                           Pengguna
                         </span>
-                        {selectedUser.membership_status === 'active' && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 bg-amber-50 text-amber-700 rounded-full text-xs font-medium">
-                            Member Aktif
+                        {isMember(selectedUser) ? (
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${TIER_PRESENTATION[tierOf(selectedUser)].badge}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${TIER_PRESENTATION[tierOf(selectedUser)].dot}`} />
+                            Member {TIER_PRESENTATION[tierOf(selectedUser)].label}
                           </span>
-                        )}
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Membership */}
+                  <div className="mt-6 rounded-2xl border border-gray-100 overflow-hidden">
+                    <div className={`h-1.5 bg-gradient-to-r ${TIER_PRESENTATION[tierOf(selectedUser)].bar}`} />
+                    <div className="px-5 py-4 bg-gradient-to-br from-[#FDF8F0] to-white">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center">
+                            <Crown className={`w-5 h-5 ${isMember(selectedUser) ? "text-[#c9a24a]" : "text-gray-300"}`} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Status Member</p>
+                            <p className="text-sm font-bold text-gray-900">
+                              Member {TIER_PRESENTATION[tierOf(selectedUser)].label}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 sm:gap-6">
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Poin</p>
+                            <p className="text-sm font-bold text-gray-900">{selectedUser.membership_points ?? 0}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Mulai</p>
+                            <p className="text-sm font-semibold text-gray-700">
+                              {selectedUser.membership_started_at ? new Date(selectedUser.membership_started_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "-"}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Berakhir</p>
+                            <p className="text-sm font-semibold text-gray-700">
+                              {selectedUser.membership_expires_at ? new Date(selectedUser.membership_expires_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "-"}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2492,14 +2563,15 @@ export default function ClinicDashboardPage() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-700">Membership Status</label>
+                            <label className="text-xs font-bold text-gray-700">Membership Level</label>
                             <select
                               className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:ring-1 focus:ring-[#c9a24a]"
-                              value={editingUser.membership_status || "regular"}
-                              onChange={(e) => setEditingUser({ ...editingUser, membership_status: e.target.value })}
+                              value={editingUser.membership_level || "bronze"}
+                              onChange={(e) => setEditingUser({ ...editingUser, membership_level: e.target.value })}
                             >
-                              <option value="regular">Regular</option>
-                              <option value="active">Active (Member)</option>
+                              <option value="bronze">Bronze (Gratis)</option>
+                              <option value="gold">Gold (Berbayar)</option>
+                              <option value="platinum">Platinum (Berbayar)</option>
                             </select>
                           </div>
 
@@ -2883,8 +2955,8 @@ export default function ClinicDashboardPage() {
         const maxDomicile = Math.max(...domicileValues, 1);
 
         // Calculate member counts
-        const memberCount = regularUsers.filter(u => u.membership_status === 'active' || u.membership_status === 'member').length;
-        const regularCount = regularUsers.length - memberCount;
+        const bronzeCount = regularUsers.filter(u => tierOf(u) === 'bronze').length;
+        const paidMemberCount = regularUsers.length - bronzeCount;
 
         return (
           <div className="space-y-6">
@@ -2911,9 +2983,21 @@ export default function ClinicDashboardPage() {
                   <div className="w-10 h-10 rounded-xl bg-white/60 flex items-center justify-center">
                     <Crown className="w-5 h-5 text-[#B8943F]" />
                   </div>
-                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Member Aktif</p>
+                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Member Berbayar</p>
                 </div>
-                <p className="text-3xl font-bold text-[#4A3F35]">{memberCount}</p>
+                <p className="text-3xl font-bold text-[#4A3F35]">{paidMemberCount}</p>
+                <p className="text-xs text-[#B8A99A] mt-1">Gold & Platinum</p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
+                    <Star className="w-5 h-5 text-[#B8943F]" />
+                  </div>
+                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Member Bronze</p>
+                </div>
+                <p className="text-3xl font-bold text-[#4A3F35]">{bronzeCount}</p>
+                <p className="text-xs text-[#B8A99A] mt-1">Gratis & otomatis</p>
               </div>
 
               <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm hover:shadow-md transition-shadow">
@@ -3019,13 +3103,16 @@ export default function ClinicDashboardPage() {
                             </div>
                           </td>
                           <td className="py-4 px-5">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                              u.membership_status === 'active' || u.membership_status === 'member' 
-                              ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
-                              : 'bg-gray-50 text-gray-600 border-gray-200'
-                            }`}>
-                              {u.membership_status === 'active' || u.membership_status === 'member' ? 'Member' : 'Regular'}
-                            </span>
+                            {isMember(u) ? (
+                              <div className="flex items-center gap-2">
+                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${TIER_PRESENTATION[tierOf(u)].badge}`}>
+                                  Member {TIER_PRESENTATION[tierOf(u)].label}
+                                </span>
+                                {typeof u.membership_points === "number" && u.membership_points > 0 && (
+                                  <span className="text-[11px] text-[#B8A99A] font-medium">{u.membership_points} pts</span>
+                                )}
+                              </div>
+                            ) : null}
                           </td>
                           <td className="py-4 px-5 hidden sm:table-cell">
                             <span className="text-sm text-[#4A3F35]">{u.domicile || u.city || '-'}</span>
@@ -3097,15 +3184,15 @@ export default function ClinicDashboardPage() {
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs font-bold text-gray-700">Membership Status</label>
+                            <label className="text-xs font-bold text-gray-700">Membership Level</label>
                             <select
                               className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:ring-1 focus:ring-[#c9a24a]"
-                              value={editingUser.membership_status || ""}
-                              onChange={(e) => setEditingUser({ ...editingUser, membership_status: e.target.value })}
+                              value={editingUser.membership_level || "bronze"}
+                              onChange={(e) => setEditingUser({ ...editingUser, membership_level: e.target.value })}
                             >
-                              <option value="regular">Regular</option>
-                              <option value="active">Active</option>
-                              <option value="expired">Expired</option>
+                              <option value="bronze">Bronze (Gratis)</option>
+                              <option value="gold">Gold (Berbayar)</option>
+                              <option value="platinum">Platinum (Berbayar)</option>
                             </select>
                           </div>
                           <div className="space-y-1">

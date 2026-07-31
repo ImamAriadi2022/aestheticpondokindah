@@ -29,27 +29,18 @@ class MembershipService
 
     /**
      * Calculate the appropriate membership level for a user
+     *
+     * Semua pengguna terdaftar otomatis Bronze (gratis). Gold & Platinum
+     * hanya diperoleh melalui pembayaran/upgrade, bukan dari transaksi otomatis.
      */
     public function calculateMembershipLevel(User $user): string
     {
-        $profile = $user->membershipProfile;
-        $isProfileComplete = $profile && $profile->isComplete();
-
-        // Jika profil belum lengkap → bronze
-        if (!$isProfileComplete) {
-            return 'bronze';
+        // Gold & Platinum hanya lewat pembayaran, jangan turunkan level yang sudah dibayar
+        if (in_array($user->membership_level, ['gold', 'platinum'], true)) {
+            return $user->membership_level;
         }
 
-        // Check dari tertinggi ke terendah
-        if ($user->total_transactions >= 15000000 || $user->completed_treatments >= 8) {
-            return 'platinum';
-        }
-
-        if ($user->total_transactions >= 5000000) {
-            return 'gold';
-        }
-
-        // Profil lengkap tapi belum ada transaksi → bronze
+        // Default: semua pengguna adalah Bronze member
         return 'bronze';
     }
 
@@ -315,8 +306,8 @@ class MembershipService
             'Membership expired - downgraded to Bronze'
         );
 
-        // Set status inactive untuk paid tier (bronze tidak pakai status)
-        $user->update(['membership_status' => 'inactive']);
+        // Bronze selalu aktif (gratis, tidak butuh status berbayar)
+        $user->update(['membership_status' => 'active']);
     }
 
     /**
@@ -325,10 +316,10 @@ class MembershipService
     public function getAnalytics(): array
     {
         return [
-            'total_members' => User::where('membership_status', 'active')->orWhere('membership_level', 'bronze')->count(),
-            'bronze_members' => User::where('membership_level', 'bronze')->count(),
-            'gold_members' => User::where('membership_level', 'gold')->where('membership_status', 'active')->count(),
-            'platinum_members' => User::where('membership_level', 'platinum')->where('membership_status', 'active')->count(),
+            'total_members' => User::whereIn('role', ['user', 'patient'])->count(),
+            'bronze_members' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'bronze')->count(),
+            'gold_members' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'gold')->where('membership_status', 'active')->count(),
+            'platinum_members' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'platinum')->where('membership_status', 'active')->count(),
             'total_points_issued' => MembershipPoint::earned()->sum('points'),
             'total_points_redeemed' => MembershipPoint::redeemed()->sum('points'),
             'total_revenue' => MembershipTransaction::completed()->sum('amount'),

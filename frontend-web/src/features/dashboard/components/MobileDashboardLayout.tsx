@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { clearSession, getSession } from "@/features/auth/services/demoAuth";
+import { clearSession, getSession } from "@/features/auth/services/session";
 import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
-import { logger } from "@/lib/logger";
 import {
   Home,
   CalendarDays,
@@ -41,16 +40,7 @@ export default function MobileDashboardLayout({ children, role }: MobileDashboar
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  let session = getSession();
-  const storedUser = localStorage.getItem("apident:user");
-  if (storedUser) {
-    try {
-      const parsed = JSON.parse(storedUser);
-      session = { ...(session || {}), ...parsed };
-    } catch (e) {
-      logger.error("Gagal parse user session", e);
-    }
-  }
+  const session = getSession();
 
   const isMembership =
     (session as any)?.membership_status === "active" ||
@@ -61,7 +51,12 @@ export default function MobileDashboardLayout({ children, role }: MobileDashboar
   const getNavbarLabel = () => {
     if (role === "clinic") return "Admin Klinik";
     if (role === "doctor") return "Dokter Klinik";
-    if (role === "user" && isMembership) return "Member Eksklusif";
+    if (role === "user") {
+      const tier = (session as any)?.membership_level;
+      if (tier === 'gold') return "Premium Member";
+      if (tier === 'platinum') return "Priority Member";
+      return "Basic Member";
+    }
     return "Client Klinik";
   };
 
