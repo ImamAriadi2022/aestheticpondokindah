@@ -21,6 +21,15 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      "@/components/dashboard": path.resolve(__dirname, "./src/features/dashboard/components"),
+      "@/components/home": path.resolve(__dirname, "./src/features/home/components"),
+      "@/components/chatbot": path.resolve(__dirname, "./src/features/consultation/components"),
+      "@/components/DoctorCard": path.resolve(__dirname, "./src/features/doctors/DoctorCard.tsx"),
+      "@/lib": path.resolve(__dirname, "./src/shared/lib"),
+      "@/pages/booking": path.resolve(__dirname, "./src/features/reservation/pages/booking"),
+      "@/pages/dashboard": path.resolve(__dirname, "./src/features/dashboard/pages/dashboard"),
+      "@/pages/mobile": path.resolve(__dirname, "./src/features/mobile/pages/mobile"),
+      "@/pages": path.resolve(__dirname, "./src/features/marketing/pages"),
       "@": path.resolve(__dirname, "./src"),
     },
   },

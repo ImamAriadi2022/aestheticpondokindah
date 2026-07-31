@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "entry": [
-    "src/react-app/main.tsx",
+    "src/main.tsx",
     "src/worker/index.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
@@ -9,7 +9,7 @@
     ".bun/**",
     "dist/**",
     "worker-configuration.d.ts",
-    "src/react-app/vite-env.d.ts"
+    "src/vite-env.d.ts"
   ],
   "ignoreDependencies": [
     "@getmocha/vite-plugins",
