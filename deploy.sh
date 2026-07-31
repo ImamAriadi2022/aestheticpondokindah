@@ -38,14 +38,14 @@ cp -f public_html/.htaccess . 2>/dev/null || true
 #    .env (termasuk kredensial Midtrans) langsung terbaca tanpa akses terminal.
 if [ -d "backend" ]; then
     cd backend
-    if [ ! -d "vendor" ]; then
-        COMPOSER_BIN="$(command -v composer || true)"
-        if [ -z "$COMPOSER_BIN" ]; then
-            echo "ERROR: Composer tidak ditemukan pada server deployment." >&2
-            exit 1
-        fi
-        "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+    COMPOSER_BIN="$(command -v composer || true)"
+    if [ -z "$COMPOSER_BIN" ]; then
+        echo "ERROR: Composer tidak ditemukan pada server deployment." >&2
+        exit 1
     fi
+    # Always reconcile vendor with composer.lock. This installs newly added
+    # integrations (such as Midtrans) on an existing production release.
+    "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
     "$PHP_BIN" artisan migrate --force
     "$PHP_BIN" artisan optimize:clear

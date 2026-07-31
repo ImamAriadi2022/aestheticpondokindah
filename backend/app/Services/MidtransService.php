@@ -22,11 +22,14 @@ class MidtransService
         $this->serverKey = Config::get('midtrans.server_key', '');
         $this->clientKey = Config::get('midtrans.client_key', '');
 
-        // Configure Midtrans
-        MidtransConfig::$serverKey = $this->serverKey;
-        MidtransConfig::$isProduction = $this->isProduction;
-        MidtransConfig::$isSanitized = true;
-        MidtransConfig::$is3ds = true;
+        // Midtrans is an optional integration. Do not instantiate a missing
+        // SDK while the clinic is still operating without online payments.
+        if (class_exists(MidtransConfig::class)) {
+            MidtransConfig::$serverKey = $this->serverKey;
+            MidtransConfig::$isProduction = $this->isProduction;
+            MidtransConfig::$isSanitized = true;
+            MidtransConfig::$is3ds = true;
+        }
     }
 
     /**
@@ -36,7 +39,7 @@ class MidtransService
      */
     public function isConfigured(): bool
     {
-        return trim($this->serverKey) !== '';
+        return trim($this->serverKey) !== '' && class_exists(Snap::class);
     }
 
     /**

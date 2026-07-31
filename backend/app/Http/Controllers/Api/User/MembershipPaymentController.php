@@ -101,13 +101,6 @@ class MembershipPaymentController extends Controller
         $targetLevel = $request->input('target_level');
         $currentLevel = $this->resolveMembershipLevel($user->membership_level);
 
-        if (!$this->midtransService->isConfigured()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Pembayaran Midtrans belum dikonfigurasi. Silakan hubungi administrator.',
-            ], 503);
-        }
-
         // Validasi: tidak boleh downgrade
         $levelOrder = array_flip(self::LEVEL_ORDER);
         if ($levelOrder[$targetLevel] <= $levelOrder[$currentLevel]) {
@@ -124,6 +117,13 @@ class MembershipPaymentController extends Controller
                 'message' => 'Lengkapi ketentuan membership sebelum melakukan upgrade.',
                 'data' => ['unmet_requirements' => $unmetRequirements],
             ], 422);
+        }
+
+        if (!$this->midtransService->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pembayaran Midtrans belum dikonfigurasi. Silakan hubungi administrator.',
+            ], 503);
         }
 
         $amount = self::UPGRADE_FEES[$targetLevel];
