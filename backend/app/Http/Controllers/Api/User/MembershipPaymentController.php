@@ -31,6 +31,8 @@ class MembershipPaymentController extends Controller
         'diamond' => 'VIP Member',
     ];
 
+    private const LEVEL_ORDER = ['bronze', 'gold', 'platinum', 'diamond'];
+
     public function __construct(MembershipService $membershipService, MidtransService $midtransService)
     {
         $this->membershipService = $membershipService;
@@ -43,15 +45,16 @@ class MembershipPaymentController extends Controller
     public function getUpgradeOptions(Request $request): JsonResponse
     {
         $user = $request->user();
-        $currentLevel = $user->membership_level;
-        $levelOrder = ['bronze', 'gold', 'platinum', 'diamond'];
-        $currentIndex = array_search($currentLevel, $levelOrder);
+        // Older records can be missing a level. Treat them as Bronze so an
+        // undefined array key cannot make this endpoint return HTTP 500.
+        $currentLevel = $this->resolveMembershipLevel($user->membership_level);
+        $currentIndex = array_search($currentLevel, self::LEVEL_ORDER, true);
 
         $options = [];
 
         // Generate options untuk tier yang lebih tinggi
-        for ($i = $currentIndex + 1; $i < count($levelOrder); $i++) {
-            $targetLevel = $levelOrder[$i];
+        for ($i = $currentIndex + 1; $i < count(self::LEVEL_ORDER); $i++) {
+            $targetLevel = self::LEVEL_ORDER[$i];
             $amount = self::UPGRADE_FEES[$targetLevel];
             
             $options[] = [
@@ -75,6 +78,10 @@ class MembershipPaymentController extends Controller
                 'upgrade_options' => $options,
                 'auto_upgrade_progress' => $progress, // Progress dari transaksi treatment
                 'can_auto_upgrade' => $progress['percentage'] >= 100,
+                'payment_gateway' => [
+                    'provider' => 'midtrans',
+                    'available' => $this->midtransService->isConfigured(),
+                ],
             ],
         ]);
     }
@@ -91,7 +98,7 @@ class MembershipPaymentController extends Controller
 
         $user = $request->user();
         $targetLevel = $request->input('target_level');
-        $currentLevel = $user->membership_level;
+        $currentLevel = $this->resolveMembershipLevel($user->membership_level);
 
         if (!$this->midtransService->isConfigured()) {
             return response()->json([
@@ -101,7 +108,7 @@ class MembershipPaymentController extends Controller
         }
 
         // Validasi: tidak boleh downgrade
-        $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2, 'diamond' => 3];
+        $levelOrder = array_flip(self::LEVEL_ORDER);
         if ($levelOrder[$targetLevel] <= $levelOrder[$currentLevel]) {
             return response()->json([
                 'success' => false,
@@ -393,140 +400,8 @@ class MembershipPaymentController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /**
-     * Simulate payment gateway for testing & verification
-     */
-    public function simulatePayment(Request $request, int $transactionId): JsonResponse
+    private function resolveMembershipLevel(?string $level): string
     {
-        $transaction = $request->user()->membershipTransactions()->findOrFail($transactionId);
-        $simulatedStatus = $request->input('status', $request->query('status', 'success'));
-
-        if ($transaction->status !== 'pending' && $simulatedStatus === 'success') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Transaksi telah diproses sebelumnya',
-            ], 400);
-        }
-
-        $user = $transaction->user;
-
-        if ($simulatedStatus === 'failed' || $simulatedStatus === 'cancelled') {
-            $transaction->update([
-                'status' => $simulatedStatus,
-                'metadata' => array_merge($transaction->metadata ?? [], [
-                    'simulation_status' => $simulatedStatus,
-                    'simulated_at' => now()->toIsoString(),
-                ]),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => "Simulasi pembayaran {$simulatedStatus}. Tier membership tidak berubah.",
-                'data' => [
-                    'transaction_id' => $transaction->id,
-                    'status' => $simulatedStatus,
-                ],
-            ]);
-        }
-
-        if ($simulatedStatus === 'pending') {
-            return response()->json([
-                'success' => true,
-                'message' => "Transaksi simulasi masih pending.",
-                'data' => [
-                    'transaction_id' => $transaction->id,
-                    'status' => 'pending',
-                ],
-            ]);
-        }
-
-        // Default: Success Scenario
-        DB::beginTransaction();
-        try {
-            $transaction->update([
-                'status' => 'completed',
-                'metadata' => array_merge($transaction->metadata ?? [], [
-                    'simulation_status' => 'success',
-                    'simulated_at' => now()->toIsoString(),
-                    'payment_method' => $transaction->metadata['payment_method'] ?? 'qris',
-                ]),
-            ]);
-
-            $targetLevel = $transaction->metadata['target_level'] ?? 'gold';
-            $oldLevel = $user->membership_level;
-
-            // 1. Update membership level
-            $this->membershipService->updateMembershipLevel(
-                $user,
-                $targetLevel,
-                $oldLevel,
-                'Upgrade via simulasi pembayaran',
-                $user->id
-            );
-
-            // 2. Increment total transactions
-            $user->increment('total_transactions', $transaction->amount);
-
-            // 3. Grant bonus points
-            $bonusPoints = match($targetLevel) {
-                'gold' => 100,
-                'platinum' => 300,
-                'diamond' => 1000,
-                default => 50,
-            };
-
-            if ($bonusPoints > 0) {
-                $this->membershipService->addPoints(
-                    $user,
-                    $bonusPoints,
-                    'upgrade_bonus',
-                    "Bonus poin upgrade ke {$targetLevel}",
-                    now()->addYear()
-                );
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => "Pembayaran simulasi berhasil! Anda kini resmi menjadi member {$targetLevel}.",
-                'data' => [
-                    'transaction_id' => $transaction->id,
-                    'new_level' => $targetLevel,
-                    'bonus_points' => $bonusPoints,
-                    'current_points' => $user->fresh()->membership_points,
-                    'expires_at' => $user->fresh()->membership_expires_at,
-                ],
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Simulated payment error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal memproses simulasi pembayaran: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    // Helper methods
-    private function generatePaymentLink($transaction, $paymentMethod): array
-    {
-        // TODO: Integrasi dengan Midtrans/Xendit
-        // Simulasi sementara - generate URL lokal untuk testing
-        $simulateUrl = url("/api/membership/payment/simulate/{$transaction->id}");
-        
-        return [
-            'payment_url' => $simulateUrl, // Untuk testing langsung
-            'qr_code' => null, // TODO: Generate QRIS
-            'va_number' => null, // TODO: Generate VA
-            'status' => 'pending',
-        ];
-    }
-
-    private function simulatePaymentCheck($transaction): bool
-    {
-        // Simulasi: auto-approve setelah 5 detik (untuk testing)
-        // Di production, cek ke payment gateway
-        return $transaction->created_at->diffInSeconds(now()) > 5;
+        return array_key_exists($level, self::TIER_LABELS) ? $level : 'bronze';
     }
 }

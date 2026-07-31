@@ -80,6 +80,7 @@ export default function MembershipUpgradePage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentGatewayAvailable, setPaymentGatewayAvailable] = useState(false);
 
   void currentLevel;
   const session = getSession();
@@ -108,6 +109,7 @@ export default function MembershipUpgradePage() {
           setCurrentLevel(data.data.current_level);
           setCurrentLabel(data.data.current_label);
           setAutoProgress(data.data.auto_upgrade_progress);
+          setPaymentGatewayAvailable(data.data.payment_gateway?.available === true);
           return;
         }
       }
@@ -140,11 +142,15 @@ export default function MembershipUpgradePage() {
     }
   };
 
-  // Load Midtrans Snap JS (Optional)
+  // Load Snap only with a configured public client key. The hosted Midtrans
+  // checkout URL returned by the backend is used when the popup is unavailable.
   useEffect(() => {
+    const clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
+    if (!clientKey) return;
+
     const script = document.createElement("script");
     script.src = import.meta.env.VITE_MIDTRANS_SNAP_URL || "https://app.sandbox.midtrans.com/snap/snap.js";
-    script.setAttribute("data-client-key", import.meta.env.VITE_MIDTRANS_CLIENT_KEY || "");
+    script.setAttribute("data-client-key", clientKey);
     script.async = true;
     document.body.appendChild(script);
 
@@ -157,6 +163,12 @@ export default function MembershipUpgradePage() {
 
   const handleUpgrade = async (level: string, _price: number) => {
     void _price;
+
+    if (!paymentGatewayAvailable) {
+      setError("Pembayaran membership sedang belum tersedia. Silakan hubungi administrator.");
+      return;
+    }
+
     setProcessing(level);
     setError(null);
     
@@ -207,27 +219,6 @@ export default function MembershipUpgradePage() {
             setProcessing(null);
           }
         });
-      } else if (false) {
-        // 3. Development fallback saat gateway belum dikonfigurasi di backend.
-        console.log("[Simulasi Pembayaran] Menjalankan simulasi transaksi sukses instant...");
-        const simRes = await fetch(`${API_BASE}/membership/payment/simulate/${transaction_id}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-          body: JSON.stringify({ status: "success" }),
-        });
-        
-        const simData = await simRes.json();
-        if (simData.success) {
-          alert(`✨ Upgrade ke ${level.toUpperCase()} Berhasil!\n\n${simData.message}`);
-          navigate("/membership");
-        } else {
-          setError(simData.message || "Gagal memproses simulasi pembayaran");
-          setProcessing(null);
-        }
       } else if (payment_url) {
         // Script Snap gagal dimuat (mis. diblokir browser), tetapi transaksi
         // tetap dapat dilanjutkan melalui halaman pembayaran Midtrans.
@@ -383,6 +374,18 @@ export default function MembershipUpgradePage() {
           </p>
         </div>
 
+        {!paymentGatewayAvailable && (
+          <Card className="mb-4 border-amber-200 bg-amber-50">
+            <CardContent className="flex items-start gap-3 p-4 text-sm text-amber-800">
+              <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <p>
+                Upgrade berbayar akan tersedia setelah pembayaran Midtrans diaktifkan.
+                Informasi membership dan seluruh fitur lain tetap dapat digunakan.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Upgrade Options */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -464,18 +467,20 @@ export default function MembershipUpgradePage() {
                     <Button
                       className={`w-full bg-gradient-to-r ${colors.gradient} text-white font-bold hover:opacity-90`}
                       onClick={() => handleUpgrade(option.level, option.price)}
-                      disabled={processing === option.level}
+                      disabled={processing === option.level || !paymentGatewayAvailable}
                     >
                       {processing === option.level ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                           Memproses...
                         </>
-                      ) : (
+                      ) : paymentGatewayAvailable ? (
                         <>
                           <CreditCard className="w-4 h-4 mr-2" />
                           Upgrade Sekarang
                         </>
+                      ) : (
+                        "Pembayaran Belum Tersedia"
                       )}
                     </Button>
                     

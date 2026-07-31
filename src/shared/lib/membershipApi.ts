@@ -257,14 +257,6 @@ export const membershipApi = {
       body: JSON.stringify({ points, description }),
     });
   },
-
-  // Simulate payment for testing
-  simulatePayment: async (transactionId: number, status: 'success' | 'failed' | 'cancelled' | 'pending' = 'success'): Promise<any> => {
-    return apiRequest(`/membership/payment/simulate/${transactionId}`, {
-      method: 'POST',
-      body: JSON.stringify({ status }),
-    });
-  },
 };
 
 // Admin Membership API functions

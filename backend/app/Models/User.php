@@ -180,11 +180,12 @@ class User extends Authenticatable
 
     public function getProgressToNextLevel(): array
     {
+        $totalTransactions = (float) ($this->total_transactions ?? 0);
         $nextLevel = $this->getNextMembershipLevel();
         if (!$nextLevel) {
             return [
                 'next_level' => null,
-                'current_amount' => $this->total_transactions,
+                'current_amount' => $totalTransactions,
                 'required_amount' => 0,
                 'percentage' => 100,
                 'remaining' => 0,
@@ -198,12 +199,12 @@ class User extends Authenticatable
             default => 0,
         };
 
-        $percentage = $requiredAmount > 0 ? min(100, ($this->total_transactions / $requiredAmount) * 100) : 100;
-        $remaining = max(0, $requiredAmount - $this->total_transactions);
+        $percentage = $requiredAmount > 0 ? min(100, ($totalTransactions / $requiredAmount) * 100) : 100;
+        $remaining = max(0, $requiredAmount - $totalTransactions);
 
         return [
             'next_level' => $nextLevel,
-            'current_amount' => $this->total_transactions,
+            'current_amount' => $totalTransactions,
             'required_amount' => $requiredAmount,
             'percentage' => round($percentage, 1),
             'remaining' => $remaining,

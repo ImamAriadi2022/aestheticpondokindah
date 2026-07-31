@@ -57,7 +57,7 @@ class MidtransService
                 'customer_details' => [
                     'first_name' => $user->name,
                     'email' => $user->email,
-                    'phone' => $user->phone ?? '',
+                    'phone' => $user->whatsapp ?? '',
                 ],
                 'item_details' => [
                     [
@@ -98,10 +98,7 @@ class MidtransService
                 ? 'https://app.midtrans.com/snap/v2/vtweb/' . $snapToken
                 : 'https://app.sandbox.midtrans.com/snap/v2/vtweb/' . $snapToken;
 
-            Log::info('Snap token generated', [
-                'order_id' => $orderId,
-                'snap_token' => $snapToken,
-            ]);
+            Log::info('Snap token generated', ['order_id' => $orderId]);
 
             return [
                 'success' => true,
