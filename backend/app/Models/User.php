@@ -114,7 +114,6 @@ class User extends Authenticatable
                 'bronze' => 'bronze',
                 'gold' => 'gold_bonus',
                 'platinum' => 'platinum_bonus',
-                'diamond' => 'diamond_bonus',
                 default => 'regular',
             };
         }
@@ -129,7 +128,7 @@ class User extends Authenticatable
 
     public function isPaidMember(): bool
     {
-        return in_array($this->membership_level, ['gold', 'platinum', 'diamond']);
+        return in_array($this->membership_level, ['gold', 'platinum']);
     }
 
     public function promoClaims(): \Illuminate\Database\Eloquent\Relations\HasMany
@@ -172,8 +171,7 @@ class User extends Authenticatable
         return match($this->membership_level) {
             'bronze' => 'gold',
             'gold' => 'platinum',
-            'platinum' => 'diamond',
-            'diamond' => null,
+            'platinum' => null,
             default => 'bronze',
         };
     }
@@ -195,7 +193,6 @@ class User extends Authenticatable
         $requiredAmount = match($nextLevel) {
             'gold' => 5000000,
             'platinum' => 15000000,
-            'diamond' => 30000000,
             default => 0,
         };
 

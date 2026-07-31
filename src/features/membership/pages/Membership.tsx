@@ -12,7 +12,6 @@ import {
   Download,
   Crown,
   Sparkles,
-  Zap,
   TrendingUp,
   Percent,
   Bell,
@@ -96,22 +95,12 @@ export default function MembershipPage() {
       textColor: 'text-[#E8C547]',
       bgColor: 'bg-[#F5E6C8]',
     },
-    diamond: {
-      label: 'VIP Member',
-      badge: 'DIAMOND',
-      icon: Zap,
-      gradient: 'from-[#FFF8E7] to-[#F5E6C8]',
-      lightGradient: 'from-[#FFF8E7]/20 to-[#F5E6C8]/20',
-      textColor: 'text-[#F5E6C8]',
-      bgColor: 'bg-[#FFF8E7]',
-    },
   };
 
   const upgradeThresholds = {
     bronze: { to: 'gold', amount: 5000000, label: 'Gold' },
     gold: { to: 'platinum', amount: 15000000, label: 'Platinum' },
-    platinum: { to: 'diamond', amount: 30000000, label: 'Diamond' },
-    diamond: null,
+    platinum: null,
   };
 
   // Ambil tier dari API backend (atau fallback ke session)
@@ -432,4 +421,3 @@ export default function MembershipPage() {
     </Layout>
   );
 }
-

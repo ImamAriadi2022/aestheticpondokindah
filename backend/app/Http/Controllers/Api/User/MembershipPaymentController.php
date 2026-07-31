@@ -21,17 +21,15 @@ class MembershipPaymentController extends Controller
     const UPGRADE_FEES = [
         'gold' => 499000,
         'platinum' => 1500000,
-        'diamond' => 5000000,
     ];
 
     const TIER_LABELS = [
         'bronze' => 'Basic Member',
         'gold' => 'Premium Member',
         'platinum' => 'Priority Member',
-        'diamond' => 'VIP Member',
     ];
 
-    private const LEVEL_ORDER = ['bronze', 'gold', 'platinum', 'diamond'];
+    private const LEVEL_ORDER = ['bronze', 'gold', 'platinum'];
 
     public function __construct(MembershipService $membershipService, MidtransService $midtransService)
     {
@@ -69,6 +67,7 @@ class MembershipPaymentController extends Controller
 
         // Info current progress untuk auto-upgrade
         $progress = $user->getProgressToNextLevel();
+        $unmetRequirements = $this->getUnmetUpgradeRequirements($user);
 
         return response()->json([
             'success' => true,
@@ -78,6 +77,8 @@ class MembershipPaymentController extends Controller
                 'upgrade_options' => $options,
                 'auto_upgrade_progress' => $progress, // Progress dari transaksi treatment
                 'can_auto_upgrade' => $progress['percentage'] >= 100,
+                'can_upgrade' => $unmetRequirements === [],
+                'unmet_requirements' => $unmetRequirements,
                 'payment_gateway' => [
                     'provider' => 'midtrans',
                     'available' => $this->midtransService->isConfigured(),
@@ -92,7 +93,7 @@ class MembershipPaymentController extends Controller
     public function createPayment(Request $request): JsonResponse
     {
         $request->validate([
-            'target_level' => 'required|in:gold,platinum,diamond',
+            'target_level' => 'required|in:gold,platinum',
             'payment_method' => 'required|in:transfer,qris,va,gopay,ovo',
         ]);
 
@@ -114,6 +115,15 @@ class MembershipPaymentController extends Controller
                 'success' => false,
                 'message' => 'Tidak bisa downgrade ke tier yang lebih rendah',
             ], 400);
+        }
+
+        $unmetRequirements = $this->getUnmetUpgradeRequirements($user);
+        if ($unmetRequirements !== []) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lengkapi ketentuan membership sebelum melakukan upgrade.',
+                'data' => ['unmet_requirements' => $unmetRequirements],
+            ], 422);
         }
 
         $amount = self::UPGRADE_FEES[$targetLevel];
@@ -244,7 +254,6 @@ class MembershipPaymentController extends Controller
                 $bonusPoints = match($targetLevel) {
                     'gold' => 100,
                     'platinum' => 300,
-                    'diamond' => 1000,
                     default => 0,
                 };
                 
@@ -371,7 +380,6 @@ class MembershipPaymentController extends Controller
                 $bonusPoints = match($targetLevel) {
                     'gold' => 100,
                     'platinum' => 300,
-                    'diamond' => 1000,
                     default => 0,
                 };
                 
@@ -403,5 +411,20 @@ class MembershipPaymentController extends Controller
     private function resolveMembershipLevel(?string $level): string
     {
         return array_key_exists($level, self::TIER_LABELS) ? $level : 'bronze';
+    }
+
+    private function getUnmetUpgradeRequirements(User $user): array
+    {
+        $profile = $user->membershipProfile;
+
+        if ($profile && $profile->isComplete()) {
+            return [];
+        }
+
+        return [[
+            'code' => 'membership_profile',
+            'message' => 'Lengkapi profil membership: jenis kelamin, tanggal lahir, kota, keluhan gigi, dan minat perawatan.',
+            'action' => 'complete_membership_profile',
+        ]];
     }
 }

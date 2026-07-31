@@ -47,6 +47,7 @@ if [ -d "backend" ]; then
         "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
     fi
 
+    "$PHP_BIN" artisan migrate --force
     "$PHP_BIN" artisan optimize:clear
     "$PHP_BIN" artisan config:cache
     "$PHP_BIN" artisan route:cache

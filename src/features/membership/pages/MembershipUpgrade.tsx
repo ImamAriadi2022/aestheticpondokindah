@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSession } from "@/lib/demoAuth";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { logger } from "@/lib/logger";
@@ -35,7 +36,6 @@ declare global {
 const tierIcons = {
   gold: Crown,
   platinum: Sparkles,
-  diamond: Zap,
 };
 
 const tierColors = {
@@ -49,15 +49,10 @@ const tierColors = {
     text: "text-[#6B7D8F]",
     bg: "bg-[#8B9DAF]",
   },
-  diamond: {
-    gradient: "from-[#B9F2FF] to-[#7DD3E8]",
-    text: "text-[#5EB5D1]",
-    bg: "bg-[#7DD3E8]",
-  },
 };
 
 interface UpgradeOption {
-  level: 'gold' | 'platinum' | 'diamond';
+  level: 'gold' | 'platinum';
   label: string;
   price: number;
   price_formatted: string;
@@ -81,6 +76,8 @@ export default function MembershipUpgradePage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [paymentGatewayAvailable, setPaymentGatewayAvailable] = useState(false);
+  const [unmetRequirements, setUnmetRequirements] = useState<Array<{ message: string; action: string }>>([]);
+  const [showRequirementsDialog, setShowRequirementsDialog] = useState(false);
 
   void currentLevel;
   const session = getSession();
@@ -110,6 +107,7 @@ export default function MembershipUpgradePage() {
           setCurrentLabel(data.data.current_label);
           setAutoProgress(data.data.auto_upgrade_progress);
           setPaymentGatewayAvailable(data.data.payment_gateway?.available === true);
+          setUnmetRequirements(data.data.unmet_requirements || []);
           return;
         }
       }
@@ -120,9 +118,9 @@ export default function MembershipUpgradePage() {
         const tiersData = await tiersRes.json();
         if (tiersData.success && tiersData.data) {
           const formatted: UpgradeOption[] = Object.entries(tiersData.data)
-            .filter(([level]) => level !== 'bronze')
+            .filter(([level]) => level === 'gold' || level === 'platinum')
             .map(([level, info]: [string, any]) => ({
-              level: level as 'gold' | 'platinum' | 'diamond',
+              level: level as 'gold' | 'platinum',
               label: info.label,
               price: info.price,
               price_formatted: `Rp ${info.price.toLocaleString('id-ID')}`,
@@ -164,6 +162,11 @@ export default function MembershipUpgradePage() {
   const handleUpgrade = async (level: string, _price: number) => {
     void _price;
 
+    if (unmetRequirements.length > 0) {
+      setShowRequirementsDialog(true);
+      return;
+    }
+
     if (!paymentGatewayAvailable) {
       setError("Pembayaran membership sedang belum tersedia. Silakan hubungi administrator.");
       return;
@@ -192,6 +195,10 @@ export default function MembershipUpgradePage() {
       const data = await response.json();
       
       if (!data.success) {
+        if (data.data?.unmet_requirements?.length) {
+          setUnmetRequirements(data.data.unmet_requirements);
+          setShowRequirementsDialog(true);
+        }
         setError(data.message || "Gagal membuat pembayaran");
         setProcessing(null);
         return;
@@ -275,6 +282,24 @@ export default function MembershipUpgradePage() {
   return (
     <DashboardLayout role="user">
       <div className="w-full px-4 py-6 max-w-4xl mx-auto">
+        <Dialog open={showRequirementsDialog} onOpenChange={setShowRequirementsDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Ketentuan upgrade belum terpenuhi</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 text-sm text-gray-600">
+              {unmetRequirements.map((requirement, index) => (
+                <p key={index}>{requirement.message}</p>
+              ))}
+              <Button
+                className="w-full bg-[#c9a24a] text-white"
+                onClick={() => setShowRequirementsDialog(false)}
+              >
+                Mengerti
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
         {/* Header */}
         <div className="mb-6">
           <Button

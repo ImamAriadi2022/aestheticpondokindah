@@ -8,7 +8,7 @@ export interface MembershipData {
     whatsapp: string;
   };
   membership: {
-    level: 'bronze' | 'gold' | 'platinum' | 'diamond';
+    level: 'bronze' | 'gold' | 'platinum';
     status: string;
     started_at: string;
     expires_at: string | null;
@@ -16,7 +16,7 @@ export interface MembershipData {
     total_transactions: number;
     completed_treatments: number;
     profile_completed: boolean;
-    last_paid_level: 'gold' | 'platinum' | 'diamond' | null;
+    last_paid_level: 'gold' | 'platinum' | null;
   };
   progress: {
     next_level: string | null;
@@ -97,8 +97,8 @@ export interface PointHistory {
 export interface MembershipHistory {
   id: number;
   user_id: number;
-  old_level: 'bronze' | 'gold' | 'platinum' | 'diamond' | 'none';
-  new_level: 'bronze' | 'gold' | 'platinum' | 'diamond';
+  old_level: 'bronze' | 'gold' | 'platinum' | 'none';
+  new_level: 'bronze' | 'gold' | 'platinum';
   reason: string;
   changed_by: number | null;
   metadata: any;
@@ -121,7 +121,6 @@ export interface AnalyticsData {
   bronze_members: number;
   gold_members: number;
   platinum_members: number;
-  diamond_members: number;
   total_points_issued: number;
   total_points_redeemed: number;
   total_revenue: number;
@@ -134,7 +133,6 @@ export interface AnalyticsData {
     bronze: number;
     gold: number;
     platinum: number;
-    diamond: number;
   };
 }
 
@@ -194,7 +192,7 @@ export const membershipApi = {
   },
 
   // Get membership tiers info (public)
-  getTiers: async (): Promise<Record<'bronze' | 'gold' | 'platinum' | 'diamond', MembershipTierInfo>> => {
+  getTiers: async (): Promise<Record<'bronze' | 'gold' | 'platinum', MembershipTierInfo>> => {
     return apiRequest('/membership/tiers');
   },
 
@@ -229,7 +227,7 @@ export const membershipApi = {
   },
 
   // Upgrade membership
-  upgrade: async (targetLevel: 'gold' | 'platinum' | 'diamond'): Promise<any> => {
+  upgrade: async (targetLevel: 'gold' | 'platinum'): Promise<any> => {
     return apiRequest('/membership/upgrade', {
       method: 'POST',
       body: JSON.stringify({ target_level: targetLevel }),
@@ -263,7 +261,7 @@ export const membershipApi = {
 export const adminMembershipApi = {
   // Get all members
   getMembers: async (params?: {
-    level?: 'bronze' | 'gold' | 'platinum' | 'diamond';
+    level?: 'bronze' | 'gold' | 'platinum';
     status?: string;
     min_transaction?: number;
     search?: string;
@@ -306,8 +304,8 @@ export const adminMembershipApi = {
   // Get level distribution
   getLevelDistribution: async (): Promise<{
     data: {
-      counts: { bronze: number; gold: number; platinum: number; diamond: number };
-      percentages: { bronze: number; gold: number; platinum: number; diamond: number };
+      counts: { bronze: number; gold: number; platinum: number };
+      percentages: { bronze: number; gold: number; platinum: number };
       total: number;
     };
   }> => {

@@ -41,10 +41,6 @@ class MembershipService
         }
 
         // Check dari tertinggi ke terendah
-        if ($user->total_transactions >= 30000000) {
-            return 'diamond';
-        }
-
         if ($user->total_transactions >= 15000000 || $user->completed_treatments >= 8) {
             return 'platinum';
         }
@@ -116,7 +112,7 @@ class MembershipService
     {
         $level = $targetLevel ?? $user->last_paid_level;
 
-        if (!$level || !in_array($level, ['gold', 'platinum', 'diamond'])) {
+        if (!$level || !in_array($level, ['gold', 'platinum'])) {
             return false;
         }
 
@@ -283,22 +279,6 @@ class MembershipService
                 'discount_percentage' => 10,
                 'point_multiplier' => 1.5,
             ],
-            'diamond' => [
-                'birthday_voucher' => true,
-                'personalized_recommendation' => true,
-                'special_promo' => true,
-                'priority_booking' => true,
-                'vip_priority' => true,
-                'dedicated_customer_care' => true,
-                'emergency_appointment_priority' => true,
-                'exclusive_treatment_offers' => true,
-                'annual_smile_evaluation' => true,
-                'exclusive_event_invitation' => true,
-                'personal_treatment_plan' => true,
-                'special_gift' => true,
-                'discount_percentage' => 15,
-                'point_multiplier' => 2,
-            ],
             default => [],
         };
     }
@@ -349,7 +329,6 @@ class MembershipService
             'bronze_members' => User::where('membership_level', 'bronze')->count(),
             'gold_members' => User::where('membership_level', 'gold')->where('membership_status', 'active')->count(),
             'platinum_members' => User::where('membership_level', 'platinum')->where('membership_status', 'active')->count(),
-            'diamond_members' => User::where('membership_level', 'diamond')->where('membership_status', 'active')->count(),
             'total_points_issued' => MembershipPoint::earned()->sum('points'),
             'total_points_redeemed' => MembershipPoint::redeemed()->sum('points'),
             'total_revenue' => MembershipTransaction::completed()->sum('amount'),

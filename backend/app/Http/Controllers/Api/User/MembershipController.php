@@ -203,12 +203,6 @@ class MembershipController extends Controller
                 'threshold_transaction' => 15000000,
                 'benefits' => $this->membershipService->getMembershipBenefits('platinum'),
             ],
-            'diamond' => [
-                'label' => 'VIP Member',
-                'price' => 5000000,
-                'threshold_transaction' => 30000000,
-                'benefits' => $this->membershipService->getMembershipBenefits('diamond'),
-            ],
         ];
 
         return response()->json([
@@ -227,7 +221,7 @@ class MembershipController extends Controller
 
         // Validate upgrade
         $currentLevel = $user->membership_level;
-        $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2, 'diamond' => 3];
+        $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2];
 
         if ($levelOrder[$targetLevel] <= $levelOrder[$currentLevel]) {
             return response()->json([
@@ -240,7 +234,6 @@ class MembershipController extends Controller
         $upgradeFees = [
             'gold' => 499000,        // BARU: dari bronze ke gold
             'platinum' => 1500000,   // Tetap
-            'diamond' => 5000000,    // Tetap
         ];
 
         $fee = $upgradeFees[$targetLevel] ?? 0;
@@ -279,14 +272,14 @@ class MembershipController extends Controller
     public function requestUpgrade(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'target_level' => 'required|in:gold,platinum,diamond',
+            'target_level' => 'required|in:gold,platinum',
         ]);
 
         $user = $request->user();
         $targetLevel = $validated['target_level'];
         $currentLevel = $user->membership_level ?? 'bronze';
 
-        $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2, 'diamond' => 3];
+        $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2];
 
         if (!array_key_exists($targetLevel, $levelOrder)) {
             return response()->json([
@@ -326,7 +319,6 @@ class MembershipController extends Controller
         $upgradeFees = [
             'gold' => 499000,
             'platinum' => 1500000,
-            'diamond' => 5000000,
         ];
 
         $fee = $upgradeFees[$targetLevel] ?? 0;

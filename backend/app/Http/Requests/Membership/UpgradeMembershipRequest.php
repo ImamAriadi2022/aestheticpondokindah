@@ -14,7 +14,7 @@ class UpgradeMembershipRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'target_level' => 'required|in:platinum,diamond',
+            'target_level' => 'required|in:gold,platinum',
         ];
     }
 }

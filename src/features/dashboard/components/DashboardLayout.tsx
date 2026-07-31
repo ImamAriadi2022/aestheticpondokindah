@@ -104,7 +104,7 @@ export default function DashboardLayout({
     Array.isArray((session as any)?.dentalComplaints) && (session as any)?.dentalComplaints?.length > 0 &&
     Array.isArray((session as any)?.desiredServices) && (session as any)?.desiredServices?.length > 0;
 
-  // 4-Tier Membership System
+  // Bronze, Gold, and Platinum membership system.
   const currentTier = (session as any)?.membership_level || 'bronze';
 
   const tierConfig = {
@@ -122,11 +122,6 @@ export default function DashboardLayout({
       label: 'Priority Member',
       shortLabel: 'Priority',
       gradient: 'from-[#8B9DAF] to-[#6B7D8F]',
-    },
-    diamond: {
-      label: 'VIP Member',
-      shortLabel: 'VIP',
-      gradient: 'from-[#B9F2FF] to-[#7DD3E8]',
     },
   };
 
