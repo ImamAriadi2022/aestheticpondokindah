@@ -493,6 +493,7 @@ export default function DashboardLayout({
                 { label: "Pop Up", href: "/dashboard/clinic?tab=content-popup" },
                 { label: "Galeri", href: "/dashboard/clinic?tab=content-gallery" },
                 { label: "Testimoni", href: "/dashboard/clinic?tab=content-testimonials" },
+                { label: "Download App", href: "/dashboard/clinic?tab=content-download" },
               ].map((sub) => {
                 const subActive = isActive(sub.href);
                 return (

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\DownloadApp;
 use App\Models\GalleryItem;
 use App\Models\Popup;
 use App\Models\Post;
@@ -164,6 +165,41 @@ class ContentController extends Controller
             ->values();
 
         return response()->json($promos);
+    }
+
+    public function downloadApps(): JsonResponse
+    {
+        $apps = DownloadApp::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn (DownloadApp $a) => [
+                'id' => (string) $a->id,
+                'title' => $a->title,
+                'description' => $a->description,
+                'version' => $a->version,
+                'platform' => $a->platform,
+                'apk_url' => $a->apk_path ? asset('storage/' . $a->apk_path) : null,
+                'download_link' => $a->download_link,
+                'file_size' => (int) $a->file_size,
+                'file_size_formatted' => $a->file_size ? $this->formatBytes($a->file_size) : null,
+                'is_development' => (bool) $a->is_development,
+            ])
+            ->values();
+
+        return response()->json($apps);
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $i = 0;
+        while ($bytes >= 1024 && $i < count($units) - 1) {
+            $bytes /= 1024;
+            $i++;
+        }
+        return round($bytes, 2) . ' ' . $units[$i];
     }
 
     public function promoBySlug(string $slug): JsonResponse

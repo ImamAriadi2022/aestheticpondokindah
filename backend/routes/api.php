@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Admin\Content\PopupAdminController;
 use App\Http\Controllers\Api\Admin\Content\PostAdminController;
 use App\Http\Controllers\Api\Admin\Content\PromoAdminController;
 use App\Http\Controllers\Api\Admin\Content\TestimonialAdminController;
+use App\Http\Controllers\Api\Admin\DownloadAppAdminController;
 use App\Http\Controllers\Api\Admin\AnalyticsAdminController;
 use App\Http\Controllers\Api\Admin\ReservationAdminController;
 use App\Http\Controllers\Api\Admin\ConsultationAdminController;
@@ -130,6 +131,13 @@ Route::prefix('admin')->group(function () {
             Route::get('/analytics', [MembershipAdminController::class, 'analytics']);
             Route::get('/level-distribution', [MembershipAdminController::class, 'levelDistribution']);
         });
+
+        // Download App Admin Routes
+        Route::get('/download-apps', [DownloadAppAdminController::class, 'index']);
+        Route::post('/download-apps', [DownloadAppAdminController::class, 'store']);
+        Route::post('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'update']);
+        Route::put('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'update']);
+        Route::delete('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'destroy']);
     });
 });
 
@@ -162,15 +170,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/icd10', [DiagnosisController::class, 'searchIcd10']);
     Route::get('/procedure-catalog', [ProcedureController::class, 'searchCatalog']);
 
-    // Payment Simulation Engine Routes (Task 4.4)
     Route::get('/user/payments', [PaymentController::class, 'index']);
     Route::post('/user/invoices/{id}/payment', [PaymentController::class, 'createPayment']);
     Route::get('/user/payments/{id}', [PaymentController::class, 'show']);
-    Route::post('/user/payments/{id}/simulate-settlement', [PaymentController::class, 'simulateSettlement']);
-    Route::post('/user/payments/{id}/simulate-expire', [PaymentController::class, 'simulateExpire']);
-    Route::post('/user/payments/{id}/simulate-cancel', [PaymentController::class, 'simulateCancel']);
-    Route::post('/user/payments/{id}/simulate-deny', [PaymentController::class, 'simulateDeny']);
-    Route::post('/user/payments/{id}/simulate-failure', [PaymentController::class, 'simulateFailure']);
 
     // Notification Routes
     Route::get('/user/notifications', [NotificationController::class, 'index']);
@@ -202,8 +204,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/payment/options', [MembershipPaymentController::class, 'getUpgradeOptions']);
         Route::post('/payment/create', [MembershipPaymentController::class, 'createPayment']);
         Route::get('/payment/status/{transactionId}', [MembershipPaymentController::class, 'checkStatus']);
-        Route::get('/payment/simulate/{transactionId}', [MembershipPaymentController::class, 'simulatePayment']);
-        Route::post('/payment/simulate/{transactionId}', [MembershipPaymentController::class, 'simulatePayment']);
     });
 
     Route::middleware('role:doctor')->group(function () {
@@ -265,5 +265,9 @@ Route::prefix('public')->group(function () {
     Route::get('/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
     Route::get('/membership/tiers', [MembershipController::class, 'tiers']);
+    Route::get('/download-apps', [ContentController::class, 'downloadApps']);
     Route::middleware('throttle:5,1')->post('/reservations', [ReservationController::class, 'store']);
 });
+
+// Midtrans sends this callback without an application session/token.
+Route::post('/membership/payment/webhook', [MembershipPaymentController::class, 'webhook']);

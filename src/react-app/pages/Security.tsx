@@ -159,7 +159,6 @@ export default function SecurityPage() {
                   <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-gray-700">Kode OTP</label>
-                      <span className="text-[9px] font-bold text-[#c9a24a] uppercase bg-[#c9a24a]/5 px-2 py-0.5 rounded-md">Demo: 123456</span>
                     </div>
                     <div className="flex gap-2">
                       <Input 

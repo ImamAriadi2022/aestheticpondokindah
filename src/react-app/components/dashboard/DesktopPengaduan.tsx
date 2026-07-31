@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/react-app/components/ui/button";
 import { toast } from "@/react-app/components/ui/toast";
+import { createComplaint, getMyComplaints, type ComplaintItem } from "@/react-app/lib/complaintApi";
 import { 
   AlertCircle,
   Send,
@@ -28,27 +29,6 @@ const complaintCategories = [
   { id: "lainnya", label: "Lainnya", icon: MessageSquare, color: "bg-gray-100 text-gray-600", description: "Keluhan lainnya" },
 ];
 
-const mockComplaints = [
-  {
-    id: "CMP-001",
-    category: "pelayanan",
-    title: "Waktu tunggu terlalu lama",
-    description: "Saya menunggu hampir 2 jam untuk konsultasi padahal sudah booking",
-    status: "resolved",
-    date: "15 Mei 2026",
-    response: "Mohon maaf atas ketidaknyamanannya. Kami akan memperbaiki sistem antrian.",
-  },
-  {
-    id: "CMP-002",
-    category: "jadwal",
-    title: "Jadwal dokter berubah tiba-tiba",
-    description: "Jadwal saya di reschedule tanpa pemberitahuan sebelumnya",
-    status: "processing",
-    date: "20 Mei 2026",
-    response: null,
-  },
-];
-
 const statusConfig: Record<string, { label: string; color: string; bgColor: string }> = {
   pending: { label: "Menunggu", color: "text-gray-600", bgColor: "bg-gray-100" },
   processing: { label: "Diproses", color: "text-[#B8943F]", bgColor: "bg-[#E8C547]/20" },
@@ -64,6 +44,21 @@ export default function DesktopPengaduan() {
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadComplaints = async () => {
+    setLoading(true);
+    try {
+      setComplaints(await getMyComplaints());
+    } catch (error) {
+      toast({ title: "Gagal memuat pengaduan", message: error instanceof Error ? error.message : "Silakan coba lagi.", variant: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void loadComplaints(); }, []);
 
   const handleSubmit = async () => {
     if (!selectedCategory || !title.trim() || !description.trim()) {
@@ -76,12 +71,19 @@ export default function DesktopPengaduan() {
     }
 
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    setView("success");
+    try {
+      const category = complaintCategories.find((item) => item.id === selectedCategory);
+      await createComplaint({ category: category?.label || "Lainnya", title: title.trim(), description: description.trim() });
+      await loadComplaints();
+      setView("success");
+    } catch (error) {
+      toast({ title: "Pengaduan gagal dikirim", message: error instanceof Error ? error.message : "Silakan coba lagi.", variant: "error" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const filteredComplaints = mockComplaints.filter(complaint => {
+  const filteredComplaints = complaints.filter(complaint => {
     if (!searchQuery) return true;
     return complaint.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
            complaint.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -186,24 +188,24 @@ export default function DesktopPengaduan() {
           {/* Stats */}
           <div className="grid grid-cols-4 gap-4">
             <div className="bg-white rounded-xl p-4 border border-gray-100">
-              <p className="text-3xl font-bold text-[#c9a24a]">{mockComplaints.length}</p>
+              <p className="text-3xl font-bold text-[#c9a24a]">{complaints.length}</p>
               <p className="text-sm text-gray-500">Total Pengaduan</p>
             </div>
             <div className="bg-white rounded-xl p-4 border border-gray-100">
               <p className="text-3xl font-bold text-[#B8943F]">
-                {mockComplaints.filter(c => c.status === "processing").length}
+                {complaints.filter(c => c.status === "processing").length}
               </p>
               <p className="text-sm text-gray-500">Diproses</p>
             </div>
             <div className="bg-white rounded-xl p-4 border border-gray-100">
               <p className="text-3xl font-bold text-green-600">
-                {mockComplaints.filter(c => c.status === "resolved").length}
+                {complaints.filter(c => c.status === "resolved").length}
               </p>
               <p className="text-sm text-gray-500">Selesai</p>
             </div>
             <div className="bg-white rounded-xl p-4 border border-gray-100">
               <p className="text-3xl font-bold text-gray-400">
-                {mockComplaints.filter(c => c.status === "pending").length}
+                {complaints.filter(c => c.status === "pending").length}
               </p>
               <p className="text-sm text-gray-500">Menunggu</p>
             </div>
@@ -211,7 +213,9 @@ export default function DesktopPengaduan() {
 
           {/* Complaints List */}
           <div className="space-y-4">
-            {filteredComplaints.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 text-sm text-gray-500">Memuat pengaduan...</div>
+            ) : filteredComplaints.length === 0 ? (
               <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileText className="w-8 h-8 text-gray-400" />
@@ -229,7 +233,7 @@ export default function DesktopPengaduan() {
               </div>
             ) : (
               filteredComplaints.map((complaint) => {
-                const category = complaintCategories.find(c => c.id === complaint.category);
+                const category = complaintCategories.find(c => c.id === complaint.category.toLowerCase() || c.label === complaint.category);
                 const CategoryIcon = category?.icon || MessageSquare;
                 const status = statusConfig[complaint.status];
                 
@@ -260,10 +264,10 @@ export default function DesktopPengaduan() {
                     </p>
                     
                     {/* Response if exists */}
-                    {complaint.response && (
+                    {complaint.adminResponse && (
                       <div className="bg-green-50 rounded-xl p-4 mb-4 border border-green-100">
                         <p className="text-xs text-green-700 font-medium mb-1">Respons dari Klinik:</p>
-                        <p className="text-sm text-green-800">{complaint.response}</p>
+                        <p className="text-sm text-green-800">{complaint.adminResponse}</p>
                       </div>
                     )}
                     

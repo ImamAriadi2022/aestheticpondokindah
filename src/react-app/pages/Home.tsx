@@ -3,6 +3,7 @@ import Footer from "@/react-app/components/layout/Footer";
 import HeroSection from "@/react-app/components/home/HeroSection";
 import FeaturesSection from "@/react-app/components/home/FeaturesSection";
 import InsurancePartnersSection from "@/react-app/components/home/InsurancePartnersSection";
+import DownloadSection from "@/react-app/components/home/DownloadSection";
 import PromoCarousel from "@/react-app/components/home/PromoCarousel";
 import ServicesSection from "@/react-app/components/home/ServicesSection";
 import TestimonialsSection from "@/react-app/components/home/TestimonialsSection";
@@ -54,6 +55,7 @@ export default function HomePage() {
         <ServicesSection />
         <TestimonialsSection />
         <GallerySection />
+        <DownloadSection />
         <InsurancePartnersSection />
         <CTASection />
       </main>

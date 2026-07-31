@@ -15,8 +15,8 @@ import {
   AlertCircle,
   Clock,
   Check,
-  Video,
-  Phone,
+  Zap,
+  Calendar,
   FileText
 } from "lucide-react";
 
@@ -34,9 +34,8 @@ const symptoms = [
 const painLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const consultationTypes = [
-  { id: "quick", label: "Konsultasi Cepat", icon: MessageSquareText, description: "Chat dengan dokter untuk saran awal", color: "bg-[#c9a24a]" },
-  { id: "video", label: "Konsultasi Video", icon: Video, description: "Video call dengan dokter", color: "bg-blue-500" },
-  { id: "phone", label: "Konsultasi Telepon", icon: Phone, description: "Panggilan telepon dengan dokter", color: "bg-green-500" },
+  { id: "quick", label: "Konsultasi Instan", icon: Zap, description: "Chat langsung dengan dokter untuk saran awal & penanganan cepat", color: "bg-[#c9a24a]" },
+  { id: "scheduled", label: "Konsultasi Terjadwal", icon: Calendar, description: "Pilih tanggal & dokter untuk sesi konsultasi tatap muka", color: "bg-[#a8843a]" },
 ];
 
 export default function DesktopKonsultasi() {
@@ -198,7 +197,7 @@ export default function DesktopKonsultasi() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {consultationTypes.map((type) => {
                 const Icon = type.icon;
                 const isSelected = selectedType === type.id;
@@ -207,9 +206,9 @@ export default function DesktopKonsultasi() {
                   <button
                     key={type.id}
                     onClick={() => setSelectedType(type.id)}
-                    className={`p-5 rounded-xl border-2 flex flex-col items-center gap-3 transition-all text-left ${
+                    className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all text-center ${
                       isSelected
-                        ? "border-[#c9a24a] bg-[#c9a24a]/5"
+                        ? "border-[#c9a24a] bg-[#c9a24a]/5 shadow-md shadow-[#c9a24a]/10"
                         : "border-gray-100 bg-white hover:border-gray-200"
                     }`}
                   >
@@ -228,8 +227,14 @@ export default function DesktopKonsultasi() {
             </div>
 
             <Button
-              onClick={() => setStep("symptoms")}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl"
+              onClick={() => {
+                if (selectedType === "scheduled") {
+                  navigate("/dashboard/user?tab=reservasi");
+                } else {
+                  setStep("symptoms");
+                }
+              }}
+              className="w-full max-w-2xl mx-auto flex h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl"
             >
               Selanjutnya
               <ChevronRight className="w-5 h-5 ml-2" />

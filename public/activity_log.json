@@ -1,5 +1,23 @@
 [
     {
+        "id": "act-123",
+        "date": "2026-07-31",
+        "time": "02:54",
+        "category": "Frontend",
+        "type": "Refactor",
+        "feature": "Pilihan Jenis Konsultasi (User Dashboard)",
+        "description": "Menghapus opsi Konsultasi Video & Telepon, menyederhanakan menjadi Konsultasi Instan dan Konsultasi Terjadwal.",
+        "notes": "Memperbarui DesktopKonsultasi.tsx sehingga hanya menampilkan 2 kartu utama: Konsultasi Instan (chat langsung) dan Konsultasi Terjadwal (pilih dokter & tanggal reservasi).",
+        "reason": "Permintaan penyesuaian UX user dashboard untuk penyederhanaan alur konsultasi.",
+        "files": [
+            "src/react-app/components/dashboard/DesktopKonsultasi.tsx"
+        ],
+        "before_progress": 98,
+        "after_progress": 98,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-122",
         "date": "2026-07-31",
         "time": "02:20",

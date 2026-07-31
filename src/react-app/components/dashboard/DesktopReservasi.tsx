@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { services as allServices } from "@/react-app/pages/Services";
 import { getPublicDoctorSchedules } from "@/react-app/lib/publicDoctorScheduleApi";
+import { apiClient } from "@/react-app/lib/apiClient";
 
 // Map judul layanan -> ikon bernuansa; fallback jika tidak ada mapping
 const iconMap: Record<string, any> = {
@@ -64,37 +65,9 @@ const tabs = [
   { id: "cancelled", label: "Dibatalkan" },
 ];
 
-const mockBookings = [
-  {
-    id: "BK-060526-001",
-    service: "Scaling / Pembersihan Karang Gigi",
-    doctor: "drg. Jenny Wilson",
-    date: "Senin, 5 Mei 2026",
-    time: "10:00 - 11:00",
-    status: "upcoming",
-    price: "Rp 300.000",
-  },
-  {
-    id: "BK-042812-003",
-    service: "Konsultasi & Pemeriksaan",
-    doctor: "drg. Alana Rusner",
-    date: "Senin, 28 Apr 2026",
-    time: "14:00 - 15:00",
-    status: "completed",
-    price: "Rp 150.000",
-  },
-  {
-    id: "BK-041505-002",
-    service: "Tambal Gigi",
-    doctor: "drg. Arvin Primera",
-    date: "Selasa, 15 Apr 2026",
-    time: "09:30 - 10:30",
-    status: "completed",
-    price: "Rp 250.000",
-  },
-];
-
 const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
+  pending: { label: "Menunggu Konfirmasi", color: "bg-amber-100 text-amber-700", icon: Clock4 },
+  confirmed: { label: "Dikonfirmasi", color: "bg-blue-100 text-blue-700", icon: Clock4 },
   upcoming: { label: "Akan Datang", color: "bg-blue-100 text-blue-700", icon: Clock4 },
   completed: { label: "Selesai", color: "bg-green-100 text-green-700", icon: CheckCircle2 },
   cancelled: { label: "Dibatalkan", color: "bg-red-100 text-red-700", icon: AlertCircle },
@@ -108,6 +81,7 @@ export default function DesktopReservasi() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
   const step = searchParams.get("step") || "layanan";
   const [schedules, setSchedules] = useState<any[]>([]);
   const [schedLoading, setSchedLoading] = useState(false);
@@ -134,7 +108,10 @@ export default function DesktopReservasi() {
   useEffect(() => {
     if (view === "history") {
       setLoading(true);
-      setTimeout(() => setLoading(false), 500);
+      apiClient.get<{ reservations: any[] }>("/user/reservations")
+        .then((response) => setBookings(response.reservations || []))
+        .catch(() => setBookings([]))
+        .finally(() => setLoading(false));
     }
   }, [view, activeTab]);
 
@@ -155,13 +132,13 @@ export default function DesktopReservasi() {
     }, 300);
   };
 
-  const filteredBookings = mockBookings.filter(booking => {
+  const filteredBookings = bookings.filter(booking => {
     if (activeTab === "all") return true;
     return booking.status === activeTab;
   }).filter(booking => {
     if (!searchQuery) return true;
-    return booking.service.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           booking.doctor.toLowerCase().includes(searchQuery.toLowerCase());
+    return (booking.service_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+           (booking.doctor_name || "").toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   return (
@@ -467,18 +444,18 @@ export default function DesktopReservasi() {
           {/* Stats Cards */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-xl p-4 border border-gray-100">
-              <p className="text-3xl font-bold text-[#c9a24a]">{mockBookings.length}</p>
+              <p className="text-3xl font-bold text-[#c9a24a]">{bookings.length}</p>
               <p className="text-sm text-gray-500">Total Booking</p>
             </div>
             <div className="bg-white rounded-xl p-4 border border-gray-100">
               <p className="text-3xl font-bold text-blue-600">
-                {mockBookings.filter(b => b.status === "upcoming").length}
+                {bookings.filter(b => b.status === "confirmed" || b.status === "pending").length}
               </p>
               <p className="text-sm text-gray-500">Mendatang</p>
             </div>
             <div className="bg-white rounded-xl p-4 border border-gray-100">
               <p className="text-3xl font-bold text-green-600">
-                {mockBookings.filter(b => b.status === "completed").length}
+                {bookings.filter(b => b.status === "completed").length}
               </p>
               <p className="text-sm text-gray-500">Selesai</p>
             </div>
@@ -511,7 +488,7 @@ export default function DesktopReservasi() {
               </div>
             ) : (
               filteredBookings.map((booking) => {
-                const status = statusConfig[booking.status];
+                const status = statusConfig[booking.status] || statusConfig.upcoming;
                 const StatusIcon = status.icon;
                 
                 return (
@@ -537,18 +514,18 @@ export default function DesktopReservasi() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-base font-semibold text-gray-900 mb-1">
-                          {booking.service}
+                          {booking.service_name || "Reservasi"}
                         </h3>
-                        <p className="text-sm text-gray-500 mb-3">{booking.doctor}</p>
+                        <p className="text-sm text-gray-500 mb-3">{booking.doctor_name || "Dokter akan dikonfirmasi"}</p>
                         
                         <div className="flex items-center gap-4 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
                             <CalendarDays className="w-4 h-4 text-gray-400" />
-                            <span>{booking.date}</span>
+                            <span>{booking.scheduled_date ? new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(new Date(booking.scheduled_date)) : "Menunggu jadwal"}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4 text-gray-400" />
-                            <span>{booking.time}</span>
+                            <span>{booking.scheduled_time || "-"}</span>
                           </div>
                         </div>
                       </div>
@@ -557,7 +534,7 @@ export default function DesktopReservasi() {
                     {/* Footer */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                       <span className="text-base font-semibold text-[#c9a24a]">
-                        {booking.price}
+                        {booking.price ? `Rp ${Number(booking.price).toLocaleString("id-ID")}` : "Menunggu konfirmasi"}
                       </span>
                       <button className="flex items-center gap-1 text-sm text-[#c9a24a] font-medium hover:underline">
                         Lihat Detail

@@ -14,6 +14,7 @@ const navItems = [
   { name: "Layanan", path: "/services" },
   { name: "Blog", path: "/blog" },
   { name: "Promo", path: "/promo" },
+  { name: "Download", path: "/download" },
   { name: "Cerita", path: "/cerita" },
 ];
 

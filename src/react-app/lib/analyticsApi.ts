@@ -26,7 +26,10 @@ export type AnalyticsSummaryResponse = {
   totals: {
     visitors: number;
     visits: number;
+    bookings: number;
   };
+  booking_status: { status: string; count: number }[];
+  top_pages: { page: string; views: number }[];
 };
 
 export async function trackVisit(input: {

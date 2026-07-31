@@ -14,7 +14,7 @@ export interface AppNotification {
 const LOCAL_STORAGE_KEY = "apig_notifications_cache_v1";
 
 const getAuthToken = (): string | null => {
-  return localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
+  return localStorage.getItem("apident:token") || localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token");
 };
 
 // Helper: Get offline cached notifications
@@ -25,35 +25,7 @@ const getOfflineCache = (): AppNotification[] => {
   } catch (e) {
     console.warn("[NotificationApi] Error reading offline cache:", e);
   }
-  return [
-    {
-      id: "demo-1",
-      title: "Konfirmasi Janji Temu Clinic",
-      body: "Reservasi konsultasi Anda di Aesthetic Pondok Indah telah dikonfirmasi oleh tim klinik.",
-      type: "appointment",
-      deep_link: "/#/booking",
-      read_at: null,
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      id: "demo-2",
-      title: "Bonus Poin Membership Gold!",
-      body: "Selamat! Akun Anda mendapatkan 500 Poin Loyalty baru dari kunjungan terakhir.",
-      type: "membership",
-      deep_link: "/#/membership",
-      read_at: null,
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: "demo-3",
-      title: "Promo Spesial Veneer 20%",
-      body: "Nikmati penawaran terbatas paket Teeth Whitening & Veneer di cabang Pondok Indah.",
-      type: "promo",
-      deep_link: "/#/promo",
-      read_at: new Date().toISOString(),
-      created_at: new Date(Date.now() - 172800000).toISOString(),
-    },
-  ];
+  return [];
 };
 
 const saveOfflineCache = (items: AppNotification[]) => {

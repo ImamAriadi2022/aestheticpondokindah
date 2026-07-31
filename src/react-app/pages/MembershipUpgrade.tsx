@@ -185,10 +185,12 @@ export default function MembershipUpgradePage() {
         return;
       }
 
-      const { snap_token, transaction_id } = data.data;
+      const { snap_token, transaction_id, payment_url } = data.data;
       
-      // 2. Jika Snap aktif dan key terkonfigurasi, buka popup Midtrans
-      if (window.snap && snap_token && import.meta.env.VITE_MIDTRANS_CLIENT_KEY) {
+      // 2. Jika Snap sudah siap, buka popup Midtrans.
+      // Token dari backend adalah sumber kebenaran; client key hanya diperlukan
+      // untuk memuat script Snap, bukan untuk memutuskan apakah token valid.
+      if (window.snap && snap_token) {
         window.snap.pay(snap_token, {
           onSuccess: function() {
             checkPaymentStatus(transaction_id, level);
@@ -205,8 +207,8 @@ export default function MembershipUpgradePage() {
             setProcessing(null);
           }
         });
-      } else {
-        // 3. Simulation Fallback (Payment Gateway Deferred): Jalankan Simulasi Pembayaran Sukses di Backend
+      } else if (false) {
+        // 3. Development fallback saat gateway belum dikonfigurasi di backend.
         console.log("[Simulasi Pembayaran] Menjalankan simulasi transaksi sukses instant...");
         const simRes = await fetch(`${API_BASE}/membership/payment/simulate/${transaction_id}`, {
           method: "POST",
@@ -226,6 +228,13 @@ export default function MembershipUpgradePage() {
           setError(simData.message || "Gagal memproses simulasi pembayaran");
           setProcessing(null);
         }
+      } else if (payment_url) {
+        // Script Snap gagal dimuat (mis. diblokir browser), tetapi transaksi
+        // tetap dapat dilanjutkan melalui halaman pembayaran Midtrans.
+        window.location.assign(payment_url);
+      } else {
+        setError("Pembayaran tidak dapat dibuka. Silakan coba lagi.");
+        setProcessing(null);
       }
     } catch (error) {
       logger.error("Error:", error);

@@ -141,16 +141,9 @@ function useAnalyticsData(from: Date, to: Date) {
   const processed = useMemo(() => {
     if (!data) return null;
 
-    const days = Math.max(diffDaysInclusive(from, to), 1);
-    const multiplier = days / 30;
-
     const visitors = data.totals.visitors;
-    const bookings = Math.round(173 * multiplier);
-    const avgDuration = days <= 1 ? "2m 14s" : days >= 365 ? "3m 42s" : "2m 58s";
-    const bounceRate = days <= 1 ? 38.2 : days >= 365 ? 41.5 : 40.1;
+    const bookings = data.totals.bookings;
     const conversionRate = ((bookings / Math.max(visitors, 1)) * 100);
-    const newVisitors = Math.round(visitors * 0.68);
-    const returningVisitors = visitors - newVisitors;
 
     const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
     const dailyLabels = data.daily.labels.map((dateStr) => {
@@ -158,7 +151,6 @@ function useAnalyticsData(from: Date, to: Date) {
       return `${dayNames[d.getDay()]} ${d.getDate()}`;
     });
     const dailyVisitors = data.daily.visitors;
-    const dailyBookings = Array.from({ length: days }, () => Math.round((bookings / days) * (0.6 + Math.random() * 0.8)));
 
     const sourceColors: Record<string, string> = {
       google: "#c9a24a",
@@ -178,44 +170,19 @@ function useAnalyticsData(from: Date, to: Date) {
       color: sourceColors[s.label.toLowerCase()] || "#c9a24a",
     }));
 
-    const topPages = [
-      { page: "/", views: Math.round(visitors * 0.45), pct: 45 },
-      { page: "/layanan", views: Math.round(visitors * 0.22), pct: 22 },
-      { page: "/dokter", views: Math.round(visitors * 0.14), pct: 14 },
-      { page: "/galeri", views: Math.round(visitors * 0.09), pct: 9 },
-      { page: "/tentang", views: Math.round(visitors * 0.06), pct: 6 },
-      { page: "/blog", views: Math.round(visitors * 0.04), pct: 4 },
-    ];
+    const topPages = data.top_pages;
 
-    const regionData = [
-      { region: "DKI Jakarta", visitors: Math.round(1240 * multiplier), consultations: Math.round(86 * multiplier) },
-      { region: "Jawa Barat", visitors: Math.round(760 * multiplier), consultations: Math.round(49 * multiplier) },
-      { region: "Banten", visitors: Math.round(420 * multiplier), consultations: Math.round(18 * multiplier) },
-      { region: "Jawa Tengah", visitors: Math.round(310 * multiplier), consultations: Math.round(12 * multiplier) },
-      { region: "Lainnya", visitors: Math.round(1010 * multiplier), consultations: Math.round(8 * multiplier) },
-    ];
-
-    const bookingStatus = [
-      { status: "Baru", count: Math.round(bookings * 0.35), color: "bg-[#c9a24a]" },
-      { status: "Dikonfirmasi", count: Math.round(bookings * 0.30), color: "bg-blue-500" },
-      { status: "Selesai", count: Math.round(bookings * 0.25), color: "bg-green-500" },
-      { status: "Dibatalkan", count: Math.round(bookings * 0.10), color: "bg-red-500" },
-    ];
+    const bookingStatus = data.booking_status.map((item, index) => ({ ...item, color: ["bg-[#c9a24a]", "bg-blue-500", "bg-green-500", "bg-red-500"][index % 4] }));
 
     return {
       visitors,
       bookings,
-      avgDuration,
-      bounceRate,
       conversionRate,
-      newVisitors,
-      returningVisitors,
       dailyLabels,
       dailyVisitors,
-      dailyBookings,
       trafficSources,
       topPages,
-      regionData,
+      regionData: [] as { region: string; visitors: number; consultations: number }[],
       bookingStatus,
     };
   }, [data, from, to]);
@@ -579,7 +546,7 @@ export default function AnalyticsDashboard() {
           icon={Globe}
           label="Total Pengunjung"
           value={analyticsData.visitors.toLocaleString("id-ID")}
-          subtext={`${analyticsData.newVisitors.toLocaleString("id-ID")} baru, ${analyticsData.returningVisitors.toLocaleString("id-ID")} kembali`}
+          subtext={`${analyticsData.visitors.toLocaleString("id-ID")} pengunjung unik`}
           trend="up"
         />
         <StatCard
@@ -598,9 +565,9 @@ export default function AnalyticsDashboard() {
         />
         <StatCard
           icon={Clock}
-          label="Avg. Durasi"
-          value={analyticsData.avgDuration}
-          subtext={`Rata-rata sesi`}
+          label="Total Kunjungan"
+          value={analyticsData.dailyVisitors.reduce((total, value) => total + value, 0).toLocaleString("id-ID")}
+          subtext={`Terekam oleh backend`}
           trend="up"
         />
       </div>

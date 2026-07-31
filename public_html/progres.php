@@ -10,9 +10,9 @@ header('Content-Type: text/html; charset=utf-8');
 
 // Metric Data Progress Utama (Hasil Audit Nyata Source Code)
 $metrics = [
-    'overall'       => 98,
-    'backend'       => 98,
-    'website'       => 98,
+    'overall'       => 99,
+    'backend'       => 99,
+    'website'       => 99,
     'mobile'        => 85,
     'database'      => 100,
     'api'           => 100,
@@ -62,7 +62,6 @@ $categoryBreakdown = [
             'Komponen UI Klinis Terintegrasi (SOAP, Diagnosis, Odontogram Tooth Chart, Procedure List)'
         ],
         'missing' => [
-            'Refactoring beberapa tipe data `any` pada ClinicDashboard.tsx',
             'Penggantian polling refetch data dengan real-time WebSockets (opsional)'
         ]
     ],
@@ -222,6 +221,7 @@ $websiteDetails = [
     ['feature' => 'Form Validation', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'Zod validation & Laravel Validator di AuthController & RegistrationController', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'Error Handling & Toast', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'toast.tsx (deduplication, variants, promise, accessibility), logger.ts, ErrorBoundary.tsx', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'API Integration', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts (interceptors, timeout, retries, 401 auto logout), apiError.ts, apiConfig.ts', 'missing' => 'Sudah 100% Selesai'],
+    ['feature' => 'Download App', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'DownloadSection.tsx, Download.tsx, DownloadAppAdminController.php, downloadApi.ts', 'missing' => 'Sudah 100% Selesai'],
 ];
 
 // 3. Detail Mobile Components

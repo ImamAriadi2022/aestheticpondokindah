@@ -30,6 +30,16 @@ class MidtransService
     }
 
     /**
+     * A Snap request cannot be created without a server key.  Keeping this
+     * check here lets callers reject an incomplete gateway configuration
+     * before creating a payment transaction.
+     */
+    public function isConfigured(): bool
+    {
+        return trim($this->serverKey) !== '';
+    }
+
+    /**
      * Create Snap Token untuk pembayaran
      */
     public function createSnapToken(MembershipTransaction $transaction, User $user): array

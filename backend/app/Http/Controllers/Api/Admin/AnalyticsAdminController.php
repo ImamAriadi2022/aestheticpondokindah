@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PageVisit;
+use App\Models\Reservation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -68,6 +69,23 @@ class AnalyticsAdminController extends Controller
 
         $totalVisitors = array_sum($visitors);
         $totalVisits = PageVisit::query()->whereBetween('visited_at', [$from, $to])->count();
+        $bookingStatus = Reservation::query()
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn ($row) => ['status' => (string) $row->status, 'count' => (int) $row->count])
+            ->values();
+        $topPages = PageVisit::query()
+            ->whereBetween('visited_at', [$from, $to])
+            ->selectRaw('COALESCE(NULLIF(landing_page, ""), "/") as page, COUNT(*) as views')
+            ->groupBy('page')
+            ->orderByDesc('views')
+            ->limit(10)
+            ->get()
+            ->map(fn ($row) => ['page' => (string) $row->page, 'views' => (int) $row->views])
+            ->values();
 
         return response()->json([
             'from' => $from->toDateString(),
@@ -80,7 +98,10 @@ class AnalyticsAdminController extends Controller
             'totals' => [
                 'visitors' => $totalVisitors,
                 'visits' => $totalVisits,
+                'bookings' => (int) $bookingStatus->sum('count'),
             ],
+            'booking_status' => $bookingStatus,
+            'top_pages' => $topPages,
         ]);
     }
 }

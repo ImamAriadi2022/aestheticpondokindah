@@ -93,6 +93,13 @@ class MembershipPaymentController extends Controller
         $targetLevel = $request->input('target_level');
         $currentLevel = $user->membership_level;
 
+        if (!$this->midtransService->isConfigured()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pembayaran Midtrans belum dikonfigurasi. Silakan hubungi administrator.',
+            ], 503);
+        }
+
         // Validasi: tidak boleh downgrade
         $levelOrder = ['bronze' => 0, 'gold' => 1, 'platinum' => 2, 'diamond' => 3];
         if ($levelOrder[$targetLevel] <= $levelOrder[$currentLevel]) {
@@ -109,7 +116,7 @@ class MembershipPaymentController extends Controller
             // Buat transaction record (pending)
             $transaction = $user->membershipTransactions()->create([
                 'amount' => $amount,
-                'type' => 'upgrade',
+                'transaction_type' => 'upgrade',
                 'description' => "Upgrade membership ke {$targetLevel}",
                 'status' => 'pending',
                 'metadata' => [
@@ -120,7 +127,6 @@ class MembershipPaymentController extends Controller
                 ],
             ]);
 
-            // Integrasi dengan Midtrans Snap
             $midtransData = $this->midtransService->createSnapToken($transaction, $user);
 
             if (!$midtransData['success']) {
@@ -131,7 +137,6 @@ class MembershipPaymentController extends Controller
                 ], 500);
             }
 
-            // Update transaction dengan snap token
             $transaction->update([
                 'metadata' => array_merge($transaction->metadata, [
                     'snap_token' => $midtransData['snap_token'],
@@ -393,7 +398,7 @@ class MembershipPaymentController extends Controller
      */
     public function simulatePayment(Request $request, int $transactionId): JsonResponse
     {
-        $transaction = \App\Models\MembershipTransaction::findOrFail($transactionId);
+        $transaction = $request->user()->membershipTransactions()->findOrFail($transactionId);
         $simulatedStatus = $request->input('status', $request->query('status', 'success'));
 
         if ($transaction->status !== 'pending' && $simulatedStatus === 'success') {

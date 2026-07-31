@@ -18,6 +18,7 @@ const BlogPage = lazy(() => import("@/react-app/pages/Blog"));
 const BlogDetailPage = lazy(() => import("@/react-app/pages/BlogDetail"));
 const PromoPage = lazy(() => import("@/react-app/pages/Promo"));
 const PromoDetailPage = lazy(() => import("@/react-app/pages/PromoDetail"));
+const DownloadPage = lazy(() => import("@/react-app/pages/Download"));
 const ContactPage = lazy(() => import("@/react-app/pages/Contact"));
 const LoginPage = lazy(() => import("@/react-app/pages/Login"));
 const PrivacyPolicyPage = lazy(() => import("@/react-app/pages/PrivacyPolicy"));
@@ -113,6 +114,7 @@ export default function App() {
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="/branches/:slug" element={<BranchDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/download" element={<DownloadPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/klinik" element={<LoginPage />} />
               <Route path="/booking/new" element={<BookingNewPage />} />
