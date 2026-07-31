@@ -10,6 +10,7 @@ import { JOB_OPTIONS, GENDER_OPTIONS, BLOOD_TYPE_OPTIONS } from "@/lib/regionDat
 import { getProvinces, getRegencies, getDistricts } from "@/lib/wilayahApi";
 import { API_BASE } from "@/lib/apiConfig";
 import { logger } from "@/lib/logger";
+import { toast } from "@/components/ui/toast";
 import {
   User,
   Check,
@@ -27,6 +28,25 @@ import {
   Camera,
   Star,
 } from "lucide-react";
+
+const normalizeGenderValue = (gender: string | null | undefined): string => {
+  switch ((gender || "").trim().toLowerCase()) {
+    case "laki-laki":
+    case "laki laki":
+    case "pria":
+    case "male":
+      return "male";
+    case "perempuan":
+    case "wanita":
+    case "female":
+      return "female";
+    case "lainnya":
+    case "other":
+      return "other";
+    default:
+      return "";
+  }
+};
 
 export default function SettingsPage() {
   // Ambil session dari demo atau backend asli
@@ -52,7 +72,7 @@ export default function SettingsPage() {
     name: session?.name || "",
     email: session?.email || "",
     phone: (session as any)?.whatsapp || session?.phone || "",
-    gender: (session as any)?.gender || "",
+    gender: normalizeGenderValue((session as any)?.gender),
     birthDate: (session as any)?.birthDate || "",
     bloodType: (session as any)?.blood_type || (session as any)?.bloodType || "",
     job: (session as any)?.job || "",
@@ -105,7 +125,7 @@ export default function SettingsPage() {
           name: data?.name ?? p.name,
           email: data?.email ?? p.email,
           phone: data?.phone ?? (data?.whatsapp ?? p.phone),
-          gender: data?.gender ?? p.gender,
+          gender: normalizeGenderValue(data?.gender) || p.gender,
           birthDate: data?.birthDate ?? p.birthDate,
           bloodType: data?.bloodType ?? (data?.blood_type ?? p.bloodType),
           job: data?.job ?? p.job,
@@ -113,6 +133,7 @@ export default function SettingsPage() {
           province: data?.province ?? p.province,
           city: data?.city ?? p.city,
           district: data?.district ?? p.district,
+          postalCode: data?.postalCode ?? p.postalCode,
           interests: Array.isArray(data?.interests) ? data.interests : p.interests,
           consumptionHabits: Array.isArray(data?.consumptionHabits) ? data.consumptionHabits : p.consumptionHabits,
           sourceInfo: data?.sourceInfo ?? p.sourceInfo,
@@ -338,23 +359,36 @@ export default function SettingsPage() {
 
   const progress = calculateProgress();
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
   const handleProfileSave = async () => {
+    if (isSaving) return;
+
+    const token = localStorage.getItem("apident:token");
+    if (!token) {
+      toast({
+        title: "Sesi berakhir",
+        message: "Silakan login kembali sebelum menyimpan profil.",
+        variant: "error",
+      });
+      navigate("/login");
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      const token = localStorage.getItem("apident:token");
       const rawUser = localStorage.getItem("apident:user");
       const currentUser = rawUser ? JSON.parse(rawUser) : null;
 
-      if (token) {
-        const res = await fetch(`${API_BASE}/user/profile`, {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+      const res = await fetch(`${API_BASE}/user/profile`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
             name: profile.name,
             email: profile.email,
             whatsapp: profile.phone,
@@ -366,6 +400,7 @@ export default function SettingsPage() {
             province: profile.province,
             city: profile.city,
             district: profile.district,
+            postalCode: profile.postalCode,
             interests: profile.interests,
             consumptionHabits: profile.consumptionHabits,
             sourceInfo: profile.sourceInfo,
@@ -378,11 +413,18 @@ export default function SettingsPage() {
             lifestyleInterests: profile.lifestyleInterests,
             treatmentGoals: profile.treatmentGoals,
             preferredCommunicationChannels: profile.preferredCommunicationChannels,
-          }),
-        });
+        }),
+      });
 
-        if (res.ok) {
-          const updated = await res.json();
+      if (!res.ok) {
+        const errorPayload = await res.json().catch(() => null);
+        const firstValidationError = errorPayload?.errors
+          ? Object.values(errorPayload.errors).flat().find((message): message is string => typeof message === "string")
+          : null;
+        throw new Error(firstValidationError || errorPayload?.message || "Profil gagal disimpan.");
+      }
+
+      const updated = await res.json();
           const nextUser = {
             ...(currentUser || {}),
             name: updated?.name ?? profile.name,
@@ -426,18 +468,28 @@ export default function SettingsPage() {
           } catch (e) {
             logger.error("Gagal sinkronkan session", e);
           }
-        } else {
-          const err = await res.json().catch(() => null);
-          logger.error("Gagal simpan profil", err);
-        }
-      }
+
+      updateSessionProfile({
+        ...profile,
+        phone: nextUser?.whatsapp ?? nextUser?.phone ?? profile.phone,
+      } as any);
+      setSaved(true);
+      toast({
+        title: "Profil tersimpan",
+        message: "Perubahan profil Anda telah berhasil disimpan ke database.",
+        variant: "success",
+      });
+      window.setTimeout(() => setSaved(false), 2000);
     } catch (e) {
       logger.error("Gagal simpan profil", e);
+      toast({
+        title: "Profil belum tersimpan",
+        message: e instanceof Error ? e.message : "Terjadi kesalahan saat menyimpan profil.",
+        variant: "error",
+      });
+    } finally {
+      setIsSaving(false);
     }
-
-    updateSessionProfile(profile as any);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   const setDentalComplaints = (next: string[]) => {
@@ -672,7 +724,7 @@ export default function SettingsPage() {
                     >
                       <option value="">Pilih Jenis Kelamin</option>
                       {GENDER_OPTIONS.map((g) => (
-                        <option key={g} value={g}>{g}</option>
+                        <option key={g} value={normalizeGenderValue(g)}>{g}</option>
                       ))}
                     </select>
                   </div>
@@ -1011,10 +1063,11 @@ export default function SettingsPage() {
           <div className="flex justify-end pt-4">
             <Button
               onClick={handleProfileSave}
+              disabled={isSaving}
               className="h-12 px-8 rounded-xl bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-bold text-sm shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-[1.02] active:scale-95 transition-all gap-2"
             >
-              {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-              {saved ? "Tersimpan" : "Simpan Perubahan"}
+              {isSaving ? <Save className="w-4 h-4 animate-pulse" /> : saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+              {isSaving ? "Menyimpan..." : saved ? "Tersimpan" : "Simpan Perubahan"}
             </Button>
           </div>
           </div> {/* End right column */}

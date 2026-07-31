@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from "react";
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-}
-
 export const PwaManager: React.FC = () => {
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
   const [showReconnectedToast, setShowReconnectedToast] = useState<boolean>(false);
   const [newVersionAvailable, setNewVersionAvailable] = useState<boolean>(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
@@ -28,16 +21,7 @@ export const PwaManager: React.FC = () => {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // 2. PWA Install Prompt Listener
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowInstallBanner(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-
-    // 3. Service Worker Registration & Update Detection
+    // 2. Service Worker Registration & Update Detection
     if ("serviceWorker" in navigator && import.meta.env.PROD) {
       navigator.serviceWorker
         .register("/sw.js")
@@ -69,20 +53,8 @@ export const PwaManager: React.FC = () => {
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
     };
   }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-    if (choiceResult.outcome === "accepted") {
-      console.log("[PWA] User accepted the install prompt");
-    }
-    setDeferredPrompt(null);
-    setShowInstallBanner(false);
-  };
 
   const handleUpdateClick = () => {
     if (waitingWorker) {
@@ -131,33 +103,6 @@ export const PwaManager: React.FC = () => {
           >
             Perbarui
           </button>
-        </div>
-      )}
-
-      {/* 4. Install App PWA Banner */}
-      {showInstallBanner && (
-        <div className="pointer-events-auto bg-white/95 backdrop-blur-md text-[#2C2416] border border-[#C59E3F]/30 shadow-2xl p-4 rounded-2xl flex items-center justify-between gap-4 text-sm max-w-md w-full">
-          <div className="flex items-center gap-3">
-            <img src="/logo/logo.png" alt="Logo" className="w-9 h-9 rounded-xl object-contain bg-[#FAF8F5] p-1 border border-[#C59E3F]/20" />
-            <div>
-              <strong className="block font-semibold">Install Aplikasi Aesthetic PI</strong>
-              <span className="text-xs text-[#5C5546]">Akses lebih cepat & dapat digunakan offline.</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowInstallBanner(false)}
-              className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1"
-            >
-              Batal
-            </button>
-            <button
-              onClick={handleInstallClick}
-              className="bg-[#C59E3F] hover:bg-[#A37E28] text-white font-semibold text-xs px-3 py-2 rounded-xl transition-all shadow-md"
-            >
-              Install
-            </button>
-          </div>
         </div>
       )}
     </div>

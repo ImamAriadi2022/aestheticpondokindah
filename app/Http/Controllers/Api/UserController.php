@@ -404,12 +404,21 @@ class UserController extends Controller
     public function updateProfile(Request $request): JsonResponse
     {
         $user = $request->user();
+
+        // Older clients submit Indonesian display labels while the
+        // membership_profiles enum stores canonical values.
+        if ($request->has('gender')) {
+            $request->merge([
+                'gender' => $this->normalizeGender($request->input('gender')),
+            ]);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'whatsapp' => 'nullable|string|max:20|unique:users,whatsapp,' . $user->id,
             'birthDate' => 'nullable|date',
-            'gender' => 'nullable|string|max:20',
+            'gender' => 'nullable|in:male,female,other',
             'bloodType' => 'nullable|string|max:5',
             'job' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
@@ -537,7 +546,46 @@ class UserController extends Controller
             $user->loadMissing('profile');
         }
 
+        // Settings is the profile screen used by patients. Keep the
+        // membership profile in sync so the information they submit here is
+        // also the source used to validate a membership upgrade.
+        $membershipProfile = $user->membershipProfile()->firstOrNew();
+        $membershipProfile->fill([
+            'gender' => $data['gender'] ?? $user->gender,
+            'date_of_birth' => $data['birthDate'] ?? optional($user->birth_date)->format('Y-m-d'),
+            'city' => $data['city'] ?? $user->city,
+            'dental_concerns' => $data['dentalComplaints'] ?? $membershipProfile->dental_concerns ?? [],
+            'treatment_interests' => $data['desiredServices'] ?? $membershipProfile->treatment_interests ?? [],
+            'dental_conditions' => $data['currentDentalConditions'] ?? $membershipProfile->dental_conditions ?? [],
+            'lifestyle_interests' => $data['lifestyleInterests'] ?? $membershipProfile->lifestyle_interests ?? [],
+            'personal_goals' => $data['treatmentGoals'] ?? $membershipProfile->personal_goals ?? [],
+            'communication_preferences' => $data['preferredCommunicationChannels'] ?? $membershipProfile->communication_preferences ?? [],
+        ]);
+        $membershipProfile->user_id = $user->id;
+        $membershipProfile->save();
+
+        $isMembershipProfileComplete = $membershipProfile->isComplete();
+        $user->membership_profile_completed = $isMembershipProfileComplete;
+        if ($isMembershipProfileComplete && $user->membership_level === 'bronze') {
+            $user->membership_status = 'active';
+        }
+        $user->save();
+
         return response()->json($this->serialize($user));
+    }
+
+    private function normalizeGender(?string $gender): ?string
+    {
+        if ($gender === null || trim($gender) === '') {
+            return null;
+        }
+
+        return match (mb_strtolower(trim($gender))) {
+            'male', 'laki-laki', 'laki laki', 'pria' => 'male',
+            'female', 'perempuan', 'wanita' => 'female',
+            'other', 'lainnya' => 'other',
+            default => trim($gender),
+        };
     }
 
     private function serialize(User $user): array

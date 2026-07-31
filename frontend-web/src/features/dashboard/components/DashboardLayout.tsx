@@ -16,6 +16,7 @@ import {
   LogOut,
   ChevronDown,
   Stethoscope,
+  Crown,
   ChevronRight,
 } from "lucide-react";
 
@@ -165,6 +166,7 @@ export default function DashboardLayout({
           { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan" },
           { label: "Konten", icon: FileText, href: "/dashboard/clinic?tab=content-blog" },
           { label: "Pengguna", icon: Users, href: "/dashboard/clinic?tab=users" },
+          { label: "Membership", icon: Crown, href: "/dashboard/clinic/membership" },
           { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
         ];
       case "doctor":

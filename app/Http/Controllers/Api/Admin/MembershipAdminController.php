@@ -180,9 +180,6 @@ class MembershipAdminController extends Controller
             'platinum' => User::where('membership_level', 'platinum')
                 ->where('membership_status', 'active')
                 ->sum('total_transactions'),
-            'diamond' => User::where('membership_level', 'diamond')
-                ->where('membership_status', 'active')
-                ->sum('total_transactions'),
         ];
 
         return response()->json([
@@ -203,7 +200,6 @@ class MembershipAdminController extends Controller
             'bronze' => User::where('membership_level', 'bronze')->count(),
             'gold' => User::where('membership_level', 'gold')->count(),
             'platinum' => User::where('membership_level', 'platinum')->count(),
-            'diamond' => User::where('membership_level', 'diamond')->count(),
         ];
 
         $total = array_sum($distribution);
@@ -212,7 +208,6 @@ class MembershipAdminController extends Controller
             'bronze' => $total > 0 ? round(($distribution['bronze'] / $total) * 100, 1) : 0,
             'gold' => $total > 0 ? round(($distribution['gold'] / $total) * 100, 1) : 0,
             'platinum' => $total > 0 ? round(($distribution['platinum'] / $total) * 100, 1) : 0,
-            'diamond' => $total > 0 ? round(($distribution['diamond'] / $total) * 100, 1) : 0,
         ];
 
         return response()->json([
@@ -474,7 +469,8 @@ class MembershipAdminController extends Controller
                 $bonusPoints,
                 'upgrade_bonus',
                 "Bonus poin upgrade ke {$targetLevel}",
-                now()->addYear()
+                (string) $transaction->id,
+                'membership_upgrade'
             );
         });
 

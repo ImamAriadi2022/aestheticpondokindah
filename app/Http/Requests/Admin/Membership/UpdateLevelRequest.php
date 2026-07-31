@@ -14,7 +14,7 @@ class UpdateLevelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'level' => 'required|in:gold,platinum,diamond',
+            'level' => 'required|in:bronze,gold,platinum',
             'reason' => 'sometimes|string|max:500',
         ];
     }

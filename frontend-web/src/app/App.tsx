@@ -34,6 +34,7 @@ const ClinicDoctorFormPage = lazy(() => import("@/pages/dashboard/ClinicDoctorFo
 const SettingsPage = lazy(() => import("@/features/profile/pages/Settings"));
 const MembershipPage = lazy(() => import("@/features/membership/pages/Membership"));
 const MembershipUpgradePage = lazy(() => import("@/features/membership/pages/MembershipUpgrade"));
+const AdminMembershipPage = lazy(() => import("@/features/membership/pages/AdminMembership"));
 const SecurityPage = lazy(() => import("@/features/profile/pages/Security"));
 const HelpPage = lazy(() => import("@/features/marketing/pages/Help"));
 
@@ -169,6 +170,14 @@ export default function App() {
                 element={
                   <ProtectedRoute allow={["clinic"]}>
                     <ClinicDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/clinic/membership"
+                element={
+                  <ProtectedRoute allow={["clinic"]}>
+                    <AdminMembershipPage />
                   </ProtectedRoute>
                 }
               />

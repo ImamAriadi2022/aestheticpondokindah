@@ -1,35 +1,5 @@
 [
     {
-        "id": "act-124",
-        "date": "2026-07-31",
-        "time": "04:00",
-        "category": "Frontend",
-        "type": "Feature",
-        "feature": "Download App Feature - Landing Page & Admin Panel",
-        "description": "Menambahkan fitur download aplikasi di landing page, halaman /download, dan admin panel untuk manajemen upload APK / link download.",
-        "notes": "Membuat migration download_apps, model DownloadApp, admin controller DownloadAppAdminController, public API endpoint, DownloadSection di landing page, Download page, dan content-download tab di dashboard admin. Support mode development untuk menampilkan 'Aplikasi Sedang Dalam Tahap Development'.",
-        "reason": "Kebutuhan pengguna untuk mendownload aplikasi mobile dan admin dapat mengontrol ketersediaan APK download.",
-        "files": [
-            "backend/database/migrations/2026_07_31_210000_create_download_apps_table.php",
-            "backend/app/Models/DownloadApp.php",
-            "backend/app/Http/Controllers/Api/Admin/DownloadAppAdminController.php",
-            "backend/app/Http/Controllers/Api/Public/ContentController.php",
-            "backend/routes/api.php",
-            "src/react-app/lib/downloadApi.ts",
-            "src/react-app/pages/Download.tsx",
-            "src/react-app/components/home/DownloadSection.tsx",
-            "src/react-app/pages/Home.tsx",
-            "src/react-app/App.tsx",
-            "src/react-app/components/layout/Header.tsx",
-            "src/react-app/components/dashboard/DashboardLayout.tsx",
-            "src/react-app/pages/dashboard/ClinicDashboard.tsx"
-        ],
-        "before_progress": 98,
-        "after_progress": 99,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Imam Ariadi"
-    },
-    {
         "id": "act-123",
         "date": "2026-07-31",
         "time": "02:54",
@@ -157,7 +127,7 @@
         "before_progress": 94,
         "after_progress": 94,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-117",
@@ -176,7 +146,7 @@
         "before_progress": 82,
         "after_progress": 94,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-116",
@@ -209,7 +179,7 @@
         "before_progress": 33,
         "after_progress": 85,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-115",
@@ -233,7 +203,7 @@
         "before_progress": 90,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-114",
@@ -253,7 +223,7 @@
         "before_progress": 90,
         "after_progress": 95,
         "status": "🔵 Fixed",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-113",
@@ -275,7 +245,7 @@
         "before_progress": 50,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-112",
@@ -297,7 +267,7 @@
         "before_progress": 85,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-111",
@@ -317,7 +287,7 @@
         "before_progress": 84,
         "after_progress": 86,
         "status": "🔵 Fixed",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-110",
@@ -336,7 +306,7 @@
         "before_progress": 82,
         "after_progress": 84,
         "status": "🟣 Refactored",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-109",
@@ -357,7 +327,7 @@
         "before_progress": 75,
         "after_progress": 82,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-108",
@@ -378,7 +348,7 @@
         "before_progress": 60,
         "after_progress": 75,
         "status": "🟢 Complete",
-        "author": "Imam Ariadi"
+        "author": "Antigravity AI"
     },
     {
         "id": "act-107",

@@ -22,9 +22,9 @@ const EXCLUDED_PATTERNS = [
   /\/api\/user\//,
   /\/api\/admin\//,
   /\/api\/membership\/payment\//,
-  /\/backend\/public\/api\/auth\//,
-  /\/backend\/public\/api\/user\//,
-  /\/backend\/public\/api\/admin\//,
+  /\/api\/auth\//,
+  /\/api\/user\//,
+  /\/api\/admin\//,
   /\/setup_backend\.php/,
   /\/data_setup\.php/
 ];
