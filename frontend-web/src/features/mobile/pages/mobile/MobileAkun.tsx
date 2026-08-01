@@ -22,11 +22,10 @@ import {
 } from "lucide-react";
 
 const menuItems = [
-  { icon: User, label: "Edit Profil", href: "/settings?tab=profile", color: "bg-blue-100 text-blue-600" },
+  { icon: User, label: "Detail Profil", href: "/profile", color: "bg-blue-100 text-blue-600" },
+  { icon: Edit3, label: "Edit Profil", href: "/profile/edit", color: "bg-amber-100 text-amber-600" },
   { icon: CreditCard, label: "Membership", href: "/membership", color: "bg-purple-100 text-purple-600" },
-  { icon: Shield, label: "Keamanan Akun", href: "/security", color: "bg-green-100 text-green-600" },
-  { icon: MapPin, label: "Alamat Saya", href: "/settings?tab=address", color: "bg-orange-100 text-orange-600" },
-  { icon: Bell, label: "Notifikasi", href: "/settings?tab=notifications", color: "bg-pink-100 text-pink-600" },
+  { icon: Shield, label: "Pengaturan Aplikasi", href: "/settings", color: "bg-green-100 text-green-600" },
   { icon: FileText, label: "Syarat & Ketentuan", href: "/terms-of-service", color: "bg-gray-100 text-gray-600" },
   { icon: HelpCircle, label: "Pusat Bantuan", href: "/help", color: "bg-teal-100 text-teal-600" },
 ];
@@ -64,7 +63,7 @@ export default function MobileAkunPage() {
                 {(session?.name || "U")[0].toUpperCase()}
               </div>
               <button 
-                onClick={() => navigate("/settings?tab=profile")}
+                onClick={() => navigate("/profile/edit")}
                 className="absolute bottom-0 right-0 w-7 h-7 bg-white rounded-full shadow-md flex items-center justify-center border border-gray-100"
               >
                 <Edit3 className="w-3.5 h-3.5 text-gray-600" />

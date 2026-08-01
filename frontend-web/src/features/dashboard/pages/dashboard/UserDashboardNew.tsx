@@ -11,6 +11,10 @@ import DesktopUserHome from "@/components/dashboard/DesktopUserHome";
 import DesktopReservasi from "@/components/dashboard/DesktopReservasi";
 import DesktopKonsultasi from "@/components/dashboard/DesktopKonsultasi";
 import DesktopPengaduan from "@/components/dashboard/DesktopPengaduan";
+import DesktopUserPromo from "@/features/dashboard/components/DesktopUserPromo";
+import DesktopUserBlog from "@/features/dashboard/components/DesktopUserBlog";
+import DesktopUserBlogDetail from "@/features/dashboard/components/DesktopUserBlogDetail";
+import DesktopUserDownload from "@/features/dashboard/components/DesktopUserDownload";
 import AccountSidebar from "@/components/dashboard/AccountSidebar";
 import DashboardRightPanel from "@/components/dashboard/DashboardRightPanel";
 
@@ -145,6 +149,14 @@ export default function UserDashboardPage() {
         return <DesktopKonsultasi />;
       case "pengaduan":
         return <DesktopPengaduan />;
+      case "promo":
+        return <DesktopUserPromo />;
+      case "blog":
+        return <DesktopUserBlog />;
+      case "blog-detail":
+        return <DesktopUserBlogDetail />;
+      case "download":
+        return <DesktopUserDownload />;
       case "dashboard":
       default:
         return (

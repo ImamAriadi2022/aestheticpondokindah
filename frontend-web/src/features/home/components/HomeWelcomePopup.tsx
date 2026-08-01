@@ -85,6 +85,10 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
         showCloseButton
         className="p-0 overflow-hidden w-[calc(100vw-32px)] max-w-[320px] sm:max-w-3xl rounded-2xl sm:rounded-3xl border border-border mx-auto my-auto"
       >
+        <span className="sr-only">
+          <h2>{title || "Welcome Popup"}</h2>
+          <p>{headline || "Promo Info"}</p>
+        </span>
         <div className="grid grid-cols-1 md:grid-cols-2" onMouseDown={markInteracted} onKeyDown={markInteracted}>
           <div className="relative bg-brand-cream">
             <img

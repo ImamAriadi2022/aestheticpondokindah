@@ -160,14 +160,23 @@ export default function Header() {
               >
                 Book Now
               </Button>
-              <Link to={isLoggedIn ? "/dashboard" : "/login"} aria-label={isLoggedIn ? "Profile" : "Sign in"}>
+              <Link to={isLoggedIn ? "/dashboard" : "/login"}>
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="rounded-xl border-border text-brand-charcoal hover:bg-brand-gold-light"
+                  className="rounded-xl border-brand-gold/40 text-brand-charcoal hover:text-brand-gold hover:bg-brand-gold-light/60 font-semibold px-5 h-10 text-sm transition-all flex items-center"
                 >
-                  {isLoggedIn ? <User className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
+                  {isLoggedIn ? (
+                    <>
+                      <User className="w-4 h-4 mr-2 text-brand-gold" />
+                      Dashboard
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4 mr-2 text-brand-gold" />
+                      Login
+                    </>
+                  )}
                 </Button>
               </Link>
             </div>

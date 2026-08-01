@@ -158,7 +158,7 @@ export default function DashboardLayout({
   const pathname = location.pathname;
   
   // Pages that should NOT show right panel and should have wider content
-  const hideRightPanelPages = ["/membership", "/settings", "/help"];
+  const hideRightPanelPages = ["/membership", "/settings", "/help", "/profile"];
   const shouldHideRightPanel = (
     (role === "user" && (currentTab === "reservasi" || currentTab === "konsultasi" || currentTab === "pengaduan")) || // Specific tabs in user dashboard
     (role === "doctor" && currentTab !== "dashboard") || // Non-dashboard tabs in doctor dashboard

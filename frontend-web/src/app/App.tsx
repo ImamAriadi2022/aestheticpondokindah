@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
-import { HashRouter as Router, Routes, Route, useLocation } from "react-router";
+import { HashRouter as Router, Routes, Route, useLocation, Navigate } from "react-router";
 import ScrollToTop from "@/components/routing/ScrollToTop";
 import RouteTransition from "@/components/routing/RouteTransition";
 import ErrorBoundary from "@/components/routing/ErrorBoundary";
@@ -10,6 +10,17 @@ import { trackVisit } from "@/lib/analyticsApi";
 import { PwaManager } from "@/components/pwa/PwaManager";
 import NotFoundPage from "@/shared/pages/NotFoundPage";
 import ForbiddenPage from "@/shared/pages/ForbiddenPage";
+import { getSession } from "@/features/auth/services/session";
+import { getDefaultDashboardPath } from "@/authorization";
+
+function PublicRouteRedirect({ children }: { children: React.ReactNode }) {
+  const session = getSession();
+  if (session && session.role && session.role !== "guest") {
+    const targetPath = getDefaultDashboardPath(session.role);
+    return <Navigate to={targetPath} replace />;
+  }
+  return <>{children}</>;
+}
 
 const HomePage = lazy(() => import("@/features/marketing/pages/Home"));
 const AboutPage = lazy(() => import("@/features/marketing/pages/About"));
@@ -34,6 +45,8 @@ const DoctorScheduleFormPage = lazy(() => import("@/pages/dashboard/DoctorSchedu
 const ClinicDashboardPage = lazy(() => import("@/pages/dashboard/ClinicDashboard"));
 const ClinicDoctorFormPage = lazy(() => import("@/pages/dashboard/ClinicDoctorForm"));
 const SettingsPage = lazy(() => import("@/features/profile/pages/Settings"));
+const ProfileDetailPage = lazy(() => import("@/features/profile/pages/ProfileDetail"));
+const ProfileEditPage = lazy(() => import("@/features/profile/pages/ProfileEdit"));
 const MembershipPage = lazy(() => import("@/features/membership/pages/Membership"));
 const MembershipUpgradePage = lazy(() => import("@/features/membership/pages/MembershipUpgrade"));
 const AdminMembershipPage = lazy(() => import("@/features/membership/pages/AdminMembership"));
@@ -63,12 +76,13 @@ function ChatBotWrapper() {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith("/dashboard");
   const isSettings = location.pathname === "/settings";
+  const isProfile = location.pathname.startsWith("/profile");
   const isMembership = location.pathname === "/membership" || location.pathname === "/membership/upgrade";
   const isSecurity = location.pathname === "/security";
   const isHelp = location.pathname === "/help";
   const isOnboarding = location.pathname === "/onboarding" || location.pathname === "/mobile-login";
 
-  if (isDashboard || isSettings || isMembership || isSecurity || isHelp || isOnboarding) return null;
+  if (isDashboard || isSettings || isProfile || isMembership || isSecurity || isHelp || isOnboarding) return null;
   return <ChatBot />;
 }
 
@@ -105,7 +119,7 @@ export default function App() {
         <ErrorBoundary>
           <RouteTransition>
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<PublicRouteRedirect><HomePage /></PublicRouteRedirect>} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/doctors" element={<DoctorsPage />} />
               <Route path="/cerita" element={<CeritaPage />} />
@@ -118,8 +132,8 @@ export default function App() {
               <Route path="/branches/:slug" element={<BranchDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/download" element={<DownloadPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/klinik" element={<LoginPage />} />
+              <Route path="/login" element={<PublicRouteRedirect><LoginPage /></PublicRouteRedirect>} />
+              <Route path="/klinik" element={<PublicRouteRedirect><LoginPage /></PublicRouteRedirect>} />
               <Route path="/booking/new" element={<BookingNewPage />} />
               <Route path="/booking/status" element={<BookingStatusPage />} />
               <Route path="/booking/proposal/:token" element={<BookingProposalPage />} />
@@ -196,6 +210,22 @@ export default function App() {
                 element={
                   <ProtectedRoute allow={["clinic"]}>
                     <ClinicDoctorFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <ProfileDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile/edit"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <ProfileEditPage />
                   </ProtectedRoute>
                 }
               />

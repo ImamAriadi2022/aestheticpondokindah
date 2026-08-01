@@ -1,5 +1,426 @@
 [
     {
+        "id": "act-146",
+        "date": "2026-08-01",
+        "time": "17:26",
+        "category": "Frontend UX",
+        "type": "Feature",
+        "feature": "In-App Mobile App Download Page in User Dashboard",
+        "description": "Membuat halaman khusus pengunduhan aplikasi mobile resmi di dalam lingkup Dashboard Pengguna (DesktopUserDownload.tsx) dan menambahkan tautan \"Download Aplikasi\" di bawah menu Pengaturan pada Popup Avatar Sidebar.",
+        "notes": "Terhubung ke API GET /api/public/download-apps untuk pengunduhan berkas APK langsung, tautan store resmi, scan QR Code, serta fitur PWA. Kompilasi 0 error.",
+        "reason": "Permintaan pembuatan halaman unduh aplikasi mobile internal di dalam lingkup dashboard pengguna.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/DesktopUserDownload.tsx",
+            "frontend-web/src/features/dashboard/components/AccountSidebar.tsx",
+            "frontend-web/src/features/dashboard/pages/dashboard/UserDashboardNew.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-145",
+        "date": "2026-08-01",
+        "time": "17:23",
+        "category": "Frontend UX",
+        "type": "Feature",
+        "feature": "In-App Blog & Article Reading View in User Dashboard",
+        "description": "Membuat tampilan pembacaan artikel edukasi dan daftar blog internal di dalam layout Dashboard Pengguna (DesktopUserBlog.tsx & DesktopUserBlogDetail.tsx) agar pengguna yang sedang login tetap berada dalam lingkup Dashboard tanpa berpindah ke halaman landing page.",
+        "notes": "Tampilan pembacaan artikel berada di tab /dashboard/user?tab=blog-detail&slug=... lengkap dengan tombol kembali, foto sampul, isi artikel, dan CTA booking jadwal. Kompilasi 0 error.",
+        "reason": "Permintaan agar pembacaan artikel edukasi tetap berada dalam lingkup POV dashboard pengguna yang sudah login.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/DesktopUserBlogDetail.tsx",
+            "frontend-web/src/features/dashboard/components/DesktopUserBlog.tsx",
+            "frontend-web/src/features/dashboard/components/DesktopUserHome.tsx",
+            "frontend-web/src/features/dashboard/pages/dashboard/UserDashboardNew.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-144",
+        "date": "2026-08-01",
+        "time": "17:20",
+        "category": "Frontend Routing Fix",
+        "type": "Fix",
+        "feature": "PublicRouteRedirect Scope Correction & Article Detail Access Fix",
+        "description": "Memperbaiki masalah tombol \"Baca Selengkapnya\" artikel yang melakukan refresh halaman dengan membatasi cakupan PublicRouteRedirect hanya untuk rute utama (/, /login, /klinik). Rute artikel blog (/blog, /blog/:slug, /promo) kini dapat dibuka sepenuhnya oleh pengguna yang sudah login.",
+        "notes": "Pengguna terotentikasi kini dapat membaca seluruh artikel blog dan detail promo tanpa terlempar kembali ke beranda dashboard. Kompilasi 0 error.",
+        "reason": "Perbaikan bug navigasi pembacaan detail artikel blog untuk pengguna terotentikasi.",
+        "files": [
+            "frontend-web/src/app/App.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-143",
+        "date": "2026-08-01",
+        "time": "17:17",
+        "category": "Frontend & API Integration",
+        "type": "Enhancement",
+        "feature": "Live Backend Posts Integration for Dental Health Tips",
+        "description": "Menghubungkan kartu Edukasi & Tips ke API backend asli (GET /api/public/posts). Jika belum ada artikel terpublikasi di backend, bagian edukasi otomatis disembunyikan tanpa menggunakan data dummy.",
+        "notes": "Memastikan seluruh konten berasal dari data live backend MySQL posts table. Kompilasi 0 error.",
+        "reason": "Permintaan pengaksesan artikel edukasi murni dari API backend dan penghapusan data dummy.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/DesktopUserHome.tsx",
+            "app/Http/Controllers/Api/Public/ContentController.php"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-142",
+        "date": "2026-08-01",
+        "time": "17:16",
+        "category": "Frontend UX",
+        "type": "Enhancement",
+        "feature": "User Dashboard Bottom Layout Enrichment",
+        "description": "Mengisi ruang kosong di bagian bawah beranda pengguna (DesktopUserHome.tsx) dengan dua bagian utama: Kartu Jadwal & Kunjungan Periksa Mendatang serta Kartu Grid Edukasi & Tips Senyum Sehat.",
+        "notes": "Menambahkan ringkasan jadwal janji temu terdekat dengan tombol aksi periksa, serta 3 kartu artikel edukasi kesehatan gigi (Pencegahan, Estetika Senyum, dan Perawatan Bleaching). Kompilasi 0 error.",
+        "reason": "Permintaan pengisian ruang kosong di bagian bawah beranda pengguna dengan konten bermanfaat.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/DesktopUserHome.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-141",
+        "date": "2026-08-01",
+        "time": "17:15",
+        "category": "Frontend Routing & Auth",
+        "type": "Enhancement",
+        "feature": "Authenticated Users Landing Page Auto-Redirect",
+        "description": "Menambahkan komponen PublicRouteRedirect di App.tsx agar setiap pengguna yang sudah terdeteksi login otomatis di-redirect ke beranda/dashboard masing-masing sesuai role (User -> /dashboard/user, Admin -> /dashboard/clinic, Dokter -> /dashboard/doctor) walaupun mengakses domain landing page.",
+        "notes": "Mencegah pengguna yang sudah login melihat halaman landing page atau login form kembali. Pengunjung (guest) tetap dapat melihat landing page secara normal. Kompilasi 0 error.",
+        "reason": "Permintaan pengalihan otomatis pengguna terotentikasi dari landing page langsung ke beranda dashboard.",
+        "files": [
+            "frontend-web/src/app/App.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-140",
+        "date": "2026-08-01",
+        "time": "17:14",
+        "category": "Frontend Feature",
+        "type": "Feature",
+        "feature": "User Dashboard In-App Promo Page",
+        "description": "Membuat halaman promo internal di dalam layout Dashboard pengguna (DesktopUserPromo.tsx) sehingga pengguna tidak terlempar kembali ke landing page saat mengeklik tombol \"Cek Promo\".",
+        "notes": "Tombol \"Cek Promo\" kini mengarah ke /dashboard/user?tab=promo. Menampilkan daftar promo ber-tag diskon, penyalinan kode voucher sekali klik, dan navigasi langsung ke reservasi jadwal. Kompilasi 0 error.",
+        "reason": "Permintaan pembuatan halaman promo internal di dalam layout dashboard pengguna.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/DesktopUserPromo.tsx",
+            "frontend-web/src/features/dashboard/components/DesktopUserHome.tsx",
+            "frontend-web/src/features/dashboard/pages/dashboard/UserDashboardNew.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-139",
+        "date": "2026-08-01",
+        "time": "17:12",
+        "category": "Frontend & API Integration",
+        "type": "Enhancement",
+        "feature": "User Dashboard Right Panel API Integration & Quick Actions Cleanup",
+        "description": "Mengintegrasikan panel kanan Dashboard (DashboardRightPanel.tsx) dengan API backend (GET /api/user/profile) untuk informasi level membership, poin, dan persentase kelengkapan profil secara dinamis, serta menghapus 3 tombol cepat di bagian atas.",
+        "notes": "Menghapus 3 tombol (Reservasi, Layanan, Dokter) di atas panel kanan, menghubungkan data live membership dan progress profil 0-100% dari API backend. Kompilasi 0 error.",
+        "reason": "Permintaan integrasi data live membership dan persentase profil di panel kanan dashboard beranda.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/DashboardRightPanel.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-138",
+        "date": "2026-08-01",
+        "time": "17:09",
+        "category": "Frontend UX",
+        "type": "Enhancement",
+        "feature": "Sidebar Persistent State & Auto-close Removal",
+        "description": "Menghapus penutupan otomatis sidebar saat menu diklik dan menyimpan status sidebar (terbuka/tertutup) di localStorage (apident:sidebar_expanded).",
+        "notes": "Status sidebar kini persisten mengikuti preferensi terakhir pengguna. Jika dibuka, sidebar tetap terbuka saat berpindah halaman dan saat membuka web di lain waktu. Kompilasi 0 error.",
+        "reason": "Permintaan persistensi status sidebar dan penghapusan penutupan otomatis saat memilih menu.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/AccountSidebar.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-137",
+        "date": "2026-08-01",
+        "time": "17:07",
+        "category": "Frontend UX",
+        "type": "Refactor",
+        "feature": "Sidebar Menu Consolidation - Bantuan & Pengaduan Accordion",
+        "description": "Menggabungkan dua menu sidebar terpisah (Bantuan & Pengaduan) menjadi satu dropdown menu accordion berlabel \"Bantuan & Pengaduan\" di AccountSidebar.tsx.",
+        "notes": "Memiliki 2 sub-menu accordion: Pusat Bantuan (FAQ) dan Pengaduan & Masukan. Dilengkapi animasi smooth accordion, indikator aktif gold gradient, dan tooltip saat sidebar tertutup. Kompilasi 0 error.",
+        "reason": "Permintaan penyatuan menu Bantuan dan Pengaduan di sidebar menjadi dropdown.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/AccountSidebar.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-136",
+        "date": "2026-08-01",
+        "time": "17:04",
+        "category": "Frontend Bugfix",
+        "type": "Fix",
+        "feature": "AccountSidebar ReferenceError & Meta Tag Deprecation Fix",
+        "description": "Memperbaiki ReferenceError user is not defined di AccountSidebar.tsx dengan mereferensikan variabel session, serta menambahkan meta tag mobile-web-app-capable di index.html.",
+        "notes": "Mengubah (user as any) menjadi (session as any) di AccountSidebar.tsx dan menambahkan <meta name=\"mobile-web-app-capable\" content=\"yes\" /> di index.html. Kompilasi 0 error.",
+        "reason": "Perbaikan error runtime ReferenceError dan peringatan deprecation meta tag.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/AccountSidebar.tsx",
+            "frontend-web/index.html"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-135",
+        "date": "2026-08-01",
+        "time": "17:03",
+        "category": "Backend & Frontend Bugfix",
+        "type": "Fix",
+        "feature": "Avatar URL Base64 Storage Prefix & Persistence Fix",
+        "description": "Memperbaiki bug hilangnya foto profil secara intermiten dengan mengoreksi fungsi serialisasi avatar di UserController.php serta pembersihan URL avatar di frontend.",
+        "notes": "Sebelumnya UserController.php menambahkan prefix storage/ pada data:image Data URI base64 yang menghasilkan URL invalid (404). Diperbaiki di backend & frontend agar foto profil tersimpan persisten dan selalu tampil di Detail Profil, Edit Profil, dan AccountSidebar.",
+        "reason": "Perbaikan bug foto profil hilang secara intermiten setelah diunggah.",
+        "files": [
+            "app/Http/Controllers/Api/UserController.php",
+            "frontend-web/src/features/profile/pages/ProfileDetail.tsx",
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx",
+            "frontend-web/src/features/dashboard/components/AccountSidebar.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-134",
+        "date": "2026-08-01",
+        "time": "17:00",
+        "category": "Frontend & API Integration",
+        "type": "Enhancement",
+        "feature": "Profile Attributes Synchronization & Lifestyle Preferences Editor",
+        "description": "Menyingkronkan seluruh atribut preferensi medis, kebiasaan konsumsi (kopi/teh & perokok), keluhan gigi, layanan yang diinginkan, serta tujuan perawatan antara ProfileDetail.tsx dan ProfileEdit.tsx.",
+        "notes": "Menambahkan Kartu Preferensi Medis & Gaya Hidup di ProfileEdit.tsx dan ProfileDetail.tsx dengan chip interaktif dan status kebiasaan konsumsi. Kompilasi 0 error.",
+        "reason": "Permintaan penyinkronan atribut menyeluruh antara halaman detail profil dan edit profil.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileDetail.tsx",
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-133",
+        "date": "2026-08-01",
+        "time": "16:58",
+        "category": "Frontend Bugfix",
+        "type": "Fix",
+        "feature": "Profile Edit Dropdown Mapping & Pre-fill Bugfix",
+        "description": "Memperbaiki bug pemetaan opsi dropdown (Jenis Kelamin, Golongan Darah, Pekerjaan) dari array string serta menambahkan nilai awal (pre-fill data) yang valid dari API/sesi pengguna.",
+        "notes": "Penyebab utama opsi kosong sebelumnya adalah pemanggilan g.value & g.label pada array string sederhana (string[]). Diperbaiki dengan memetakan langsung elemen string g sebagai value & label, serta memasok fallback default data yang konsisten.",
+        "reason": "Perbaikan bug tampilan opsi kosong dan pre-fill data awal pada halaman edit profil.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-132",
+        "date": "2026-08-01",
+        "time": "16:55",
+        "category": "Frontend & API Integration",
+        "type": "Enhancement",
+        "feature": "Profile Edit Live API Integration",
+        "description": "Menghubungkan halaman Edit Profil (ProfileEdit.tsx) dengan API backend GET /api/user/profile pada mount.",
+        "notes": "Menambahkan pemanggilan API fetch GET /api/user/profile saat halaman dimuat untuk mengambil dan mengisi data live pengguna (Jenis Kelamin, Golongan Darah, Pekerjaan, Alamat, Wilayah) serta mencocokkan ID wilayah secara otomatis. Kompilasi 0 error.",
+        "reason": "Permintaan pengintegrasian API live pada halaman edit profil.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-131",
+        "date": "2026-08-01",
+        "time": "16:53",
+        "category": "UI/UX Polish",
+        "type": "Fix",
+        "feature": "Dropdown Select Styling Uniformity Fix",
+        "description": "Disamakan seluruh style dropdown (Jenis Kelamin, Golongan Darah, Pekerjaan, Provinsi, Kota, Kecamatan) secara 100% persis menggunakan max-h-60 overflow-y-auto.",
+        "notes": "Menambahkan max-h-60 overflow-y-auto pada SelectContent untuk Jenis Kelamin, Golongan Darah, dan Pekerjaan sehingga ukuran menu dropdown terkontrol rapi dan tidak membentang penuh.",
+        "reason": "Permintaan penyamaan style dropdown Informasi Pribadi agar persis seperti Alamat & Domisili.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-130",
+        "date": "2026-08-01",
+        "time": "16:52",
+        "category": "UI/UX Polish",
+        "type": "Refactor",
+        "feature": "Profile Edit Layout Synchronization & Radix UI Select Replacement",
+        "description": "Disamakan secara penuh dengan layout Detail Profil (max-w-5xl, 2-column grid cards) dan mengganti elemen native select HTML dengan komponen Radix UI Select untuk mengatasi bug teks opsi kosong pada browser widget.",
+        "notes": "Menggunakan Radix UI Select, SelectTrigger, SelectValue, SelectContent, dan SelectItem dari @/components/ui/select. Kompilasi 0 error.",
+        "reason": "Permintaan penyamaan layout Edit Profil dengan Detail Profil dan perbaikan tampilan opsi dropdown.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-129",
+        "date": "2026-08-01",
+        "time": "16:50",
+        "category": "UI/UX Polish",
+        "type": "Refactor",
+        "feature": "Centered Form Layout & UI Design System Standardization",
+        "description": "Mengubah arsitektur layout ProfileEdit.tsx menjadi centered container (max-w-2xl) dengan single-column select fields untuk mencegah bentrok/overlap pada menu dropdown.",
+        "notes": "Mengikuti pedoman UI design system Aesthetic Pondok Indah (.agent/skills/ui/skill.md) menggunakan warna Champagne Gold (#c59e3f), Charcoal (#2c2416), Warm Gray (#5c5546), rounded-3xl cards, h-12 input fields, serta custom ChevronDown icon.",
+        "reason": "Perbaikan UX layout form edit profil agar tidak bentrok dan lebih elegan di layar desktop & tablet.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-128",
+        "date": "2026-08-01",
+        "time": "16:47",
+        "category": "UI/UX Polish",
+        "type": "Fix",
+        "feature": "Profile Edit Select Dropdown Text Visibility Fix",
+        "description": "Memperbaiki keterbacaan teks opsi dropdown select pada Golongan Darah, Jenis Kelamin, Pekerjaan, dan Alamat Domisili.",
+        "notes": "Menambahkan kelas text-gray-900 dan bg-white pada elemen <select> dan <option> di ProfileEdit.tsx sehingga teks pilihan dropdown tampil kontras dan 100% terbaca.",
+        "reason": "Perbaikan bug keterbacaan teks opsi dropdown select di halaman edit profil.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-127",
+        "date": "2026-08-01",
+        "time": "16:43",
+        "category": "Bugfix",
+        "type": "Fix",
+        "feature": "Profile Edit Error Fix & UI Clean Up",
+        "description": "Memperbaiki TypeError pada ProfileEdit disebabkan oleh pemanggilan asynchronous pada getProvinces(), merapikan accessibility pada DialogContent, serta merapikan Settings.tsx.",
+        "notes": "Mengubah pemanggilan wilayahApi di ProfileEdit.tsx menjadi sinkron sesuai kontrak fungsinya, menambahkan elemen sr-only DialogTitle pada HomeWelcomePopup.tsx, dan memastikan kompilasi 0 error.",
+        "reason": "Perbaikan bug runtime TypeError saat membuka halaman edit profil.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx",
+            "frontend-web/src/features/home/components/HomeWelcomePopup.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-126",
+        "date": "2026-08-01",
+        "time": "16:39",
+        "category": "Frontend & Backend",
+        "type": "Fix & Enhancement",
+        "feature": "Profile Edit Fix, Avatar Upload & Settings Hardening",
+        "description": "Memperbaiki error impor di ProfileEdit, menambahkan migrasi avatar user di backend, menghubungkan status membership asli ke detail profil, menghapus Preferensi Tampilan & duplikasi sidebar Pengaturan, serta memfokuskan notifikasi ke izin browser web.",
+        "notes": "Menambahkan kolom avatar di database via migrasi 2026_08_01_000001_add_avatar_to_users_table, memperbarui UserController.php, memperbarui ProfileEdit.tsx & ProfileDetail.tsx untuk menggunakan @/shared/lib/..., dan merapikan Settings.tsx.",
+        "reason": "Perbaikan bug tampilan ProfileEdit dan penyempurnaan fitur UX profil pengguna.",
+        "files": [
+            "database/migrations/2026_08_01_000001_add_avatar_to_users_table.php",
+            "app/Http/Controllers/Api/UserController.php",
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx",
+            "frontend-web/src/features/profile/pages/ProfileDetail.tsx",
+            "frontend-web/src/features/profile/pages/Settings.tsx",
+            "frontend-web/src/features/dashboard/components/AccountSidebar.tsx"
+        ],
+        "before_progress": 99,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-125",
+        "date": "2026-08-01",
+        "time": "16:33",
+        "category": "Frontend & UX",
+        "type": "Refactor",
+        "feature": "Refactoring Profile & Application Settings UX Flow",
+        "description": "Memisahkan penuh antara Detail Profil (read-only), Edit Profil (form), dan Pengaturan Aplikasi (preferensi & keamanan) sesuai pola standar aplikasi modern.",
+        "notes": "Membuat ProfileDetail.tsx & ProfileEdit.tsx, merefaktor Settings.tsx menjadi murni preferensi aplikasi, menjadikan avatar di sidebar sebagai entry point dengan Popup Dropdown interaktif, dan memperbarui rute pada App.tsx.",
+        "reason": "Permintaan refactor alur UX Profil & Pengaturan Pengguna.",
+        "files": [
+            "frontend-web/src/features/profile/pages/ProfileDetail.tsx",
+            "frontend-web/src/features/profile/pages/ProfileEdit.tsx",
+            "frontend-web/src/features/profile/pages/Settings.tsx",
+            "frontend-web/src/features/dashboard/components/AccountSidebar.tsx",
+            "frontend-web/src/app/App.tsx",
+            "frontend-web/src/features/dashboard/components/DashboardLayout.tsx",
+            "frontend-web/src/features/mobile/pages/mobile/MobileAkun.tsx"
+        ],
+        "before_progress": 98,
+        "after_progress": 99,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-123",
         "date": "2026-07-31",
         "time": "02:54",

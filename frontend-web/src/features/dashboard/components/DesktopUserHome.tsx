@@ -1,15 +1,15 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
+import { API_BASE } from "@/shared/lib/apiConfig";
 import {
   Calendar,
   Stethoscope,
   MessageCircle,
   Sparkles,
   ChevronRight,
-  Shield,
-  Star,
-  ArrowRight,
-  Crown,
-  Zap,
+  Clock,
+  CheckCircle2,
+  BookOpen,
 } from "lucide-react";
 
 // Welcome Hero Section with Elegant Modern Design
@@ -26,9 +26,8 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
       <div className="absolute bottom-6 left-1/3 w-1.5 h-1.5 bg-[#E8C547]/50 rounded-full animate-pulse delay-300" />
       
       <div className="relative z-10 flex items-center justify-between gap-4">
-        {/* Left - Welcome Text - Optimized for left alignment */}
+        {/* Left - Welcome Text */}
         <div className="flex-1 min-w-10 pl-6">
-          {/* Main Name - Bold & Elegant */}
           <div className="mb-2">
             <span className="text-sm md:text-base text-[#8B7355] font-medium">Selamat datang kembali,</span>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#5C4A32] via-[#8B7355] to-[#5C4A32] bg-clip-text text-transparent tracking-tight mt-1">
@@ -36,7 +35,6 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
             </h1>
           </div>
           
-          {/* Elegant Subtitle */}
           <div className="flex items-center gap-2 text-sm text-[#8B7355]">
             <div className="w-1 h-1 rounded-full bg-[#C9A24A]" />
             <span className="italic">Semoga harimu menyenangkan!</span>
@@ -69,9 +67,7 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
 
         {/* Right Section - Doctor Image + Promo Card */}
         <div className="hidden lg:flex items-center gap-3 shrink-0 -ml-6">
-          {/* 3D Character Image */}
           <div className="w-48 h-52 relative shrink-0 -ml-4">
-            {/* Decorative ring behind character */}
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C9A24A]/10 to-[#E8C547]/5 blur-xl" />
             </div>
@@ -83,7 +79,6 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
             />
           </div>
 
-          {/* Promo Spesial Content - No card shape */}
           <div className="shrink-0 -ml-2">
             <div className="flex items-center justify-between mb-1">
               <p className="text-sm font-bold text-[#5C4A32]">Promo Spesial Untuk Anda</p>
@@ -99,7 +94,7 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
                 <p className="text-4xl font-bold text-[#C9A24A]">25%</p>
                 <p className="text-xs text-[#8B7355]">untuk semua perawatan</p>
                 <Link
-                  to="/promo"
+                  to="/dashboard/user?tab=promo"
                   className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white text-[10px] font-semibold rounded-full hover:shadow-lg hover:shadow-[#C9A24A]/25 hover:scale-105 transition-all"
                 >
                   <span>Cek Promo</span>
@@ -119,114 +114,47 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
   );
 }
 
-// Membership Benefits Banner - kept for future use
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _MembershipCTA() {
-  return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-[#1a1612] via-[#221b15] to-[#1a1612] rounded-3xl p-6 border border-[#C9A24A]/30">
-      {/* Decorative elements */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9A24A]/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#E8C547]/10 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
-
-      <div className="relative z-10 flex items-center justify-between">
-        {/* Left - Text Content */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] rounded-full">
-              <Crown className="w-3.5 h-3.5 text-[#1a1612]" />
-              <span className="text-xs font-semibold text-[#1a1612] uppercase tracking-wider">Member Eksklusif</span>
-            </div>
-            <div className="flex items-center gap-0.5">
-              <Sparkles className="w-4 h-4 text-[#E8C547]" />
-            </div>
-          </div>
-
-          <h3 className="text-xl font-bold text-white mb-2">
-            Upgrade ke <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E8C547] to-[#C9A24A]">Membership</span>
-          </h3>
-
-          <p className="text-sm text-[#A89F91] mb-4 max-w-md">
-            Nikmati berbagai keuntungan eksklusif: konsultasi prioritas, diskon perawatan hingga 25%, dan akses ke dokter spesialis tanpa antri.
-          </p>
-
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex items-center gap-1.5 text-xs text-[#D4C5B0]">
-              <div className="w-5 h-5 rounded-full bg-[#2a2319] flex items-center justify-center">
-                <Zap className="w-3 h-3 text-[#E8C547]" />
-              </div>
-              <span>Prioritas antrian</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#D4C5B0]">
-              <div className="w-5 h-5 rounded-full bg-[#2a2319] flex items-center justify-center">
-                <Shield className="w-3 h-3 text-[#E8C547]" />
-              </div>
-              <span>Garansi perawatan</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-[#D4C5B0]">
-              <div className="w-5 h-5 rounded-full bg-[#2a2319] flex items-center justify-center">
-                <Star className="w-3 h-3 text-[#E8C547]" />
-              </div>
-              <span>Diskon 25%</span>
-            </div>
-          </div>
-
-          <Link
-            to="/membership"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#E8C547] hover:to-[#C9A24A] text-[#1a1612] font-semibold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-[#C9A24A]/25 hover:scale-[1.02] group"
-          >
-            <span>Lihat Keuntungan</span>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
-
-        {/* Right - Visual Element - replaced */}
-        <div className="hidden sm:flex flex-col items-center justify-center w-40 h-40 relative">
-          <div className="absolute inset-0 bg-[#C9A24A]/10 rounded-full animate-pulse" />
-          <div className="relative w-24 h-24 bg-gradient-to-br from-[#E8C547] to-[#C9A24A] rounded-2xl rotate-12 flex items-center justify-center shadow-xl shadow-[#C9A24A]/30">
-            <Crown className="w-12 h-12 text-[#1a1612] drop-shadow-lg" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-8 h-8 bg-gradient-to-br from-[#E8C547] to-[#C9A24A] rounded-full flex items-center justify-center shadow-lg">
-            <Sparkles className="w-4 h-4 text-[#1a1612]" />
-          </div>
-          <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-gradient-to-br from-[#C9A24A] to-[#B8943F] rounded-full flex items-center justify-center shadow-lg">
-            <Star className="w-3 h-3 text-[#1a1612]" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function DesktopUserHome({
-  consultations,
+  consultations = [],
   publicSchedules,
   isMembership = false,
-  // Props diteruskan dari parent tapi tidak digunakan di sini
   session,
   complaints,
   progress,
 }: {
-  consultations: any[];
+  consultations?: any[];
   publicSchedules?: any[];
   isMembership?: boolean;
   session?: any;
   complaints?: any[];
   progress?: number;
 }) {
-  const userName = session?.name || "Robin S";
-  // Use variables to avoid unused warnings
+  const userName = session?.name || "Pengguna";
   void publicSchedules;
   void isMembership;
   void complaints;
   void progress;
 
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/public/posts`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) setPosts(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const latestConsultation = consultations && consultations.length > 0 ? consultations[0] : null;
+
   return (
-    <div className="space-y-5 w-full max-w-none">
+    <div className="space-y-6 w-full max-w-none">
       {/* Welcome Hero with Stats */}
       <WelcomeHero userName={userName} />
 
-      {/* Quick Actions with 3D Images */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Quick Actions Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Konsultasi Cepat */}
         <Link
           to="/dashboard/user?tab=konsultasi&view=quick"
@@ -282,6 +210,133 @@ export default function DesktopUserHome({
         </Link>
       </div>
 
+      {/* SECTION 1: Status Janji Temu / Kunjungan Terbaru (Backend API Data) */}
+      <div className="bg-white rounded-3xl p-6 border border-[#C9A24A]/10 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-[#5C4A32] text-base">Jadwal & Kunjungan Anda</h3>
+              <p className="text-xs text-[#8B7355]">Status reservasi dan riwayat pemeriksaan terdekat</p>
+            </div>
+          </div>
+          <Link
+            to="/dashboard/user?tab=reservasi"
+            className="text-xs font-semibold text-[#C9A24A] hover:text-[#b8923f] flex items-center gap-1"
+          >
+            <span>Lihat Semua</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {latestConsultation ? (
+          <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-200/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#C9A24A] text-white">
+                  {latestConsultation.status || "Aktif"}
+                </span>
+                <span className="text-xs font-semibold text-gray-500">
+                  {latestConsultation.date || "Terjadwal"}
+                </span>
+              </div>
+              <h4 className="font-bold text-gray-900 text-sm">
+                {latestConsultation.doctorName || "Dr. Aris S.Sp.KG - Spesialis Konservasi Gigi"}
+              </h4>
+              <p className="text-xs text-gray-600">
+                Layanan: {latestConsultation.service || "Pemeriksaan Kesehatan & Estetik Gigi"}
+              </p>
+            </div>
+
+            <Link
+              to="/dashboard/user?tab=reservasi"
+              className="px-4 py-2 bg-[#C9A24A] hover:bg-[#b8923f] text-white text-xs font-semibold rounded-xl transition-all shadow-sm shrink-0"
+            >
+              Detail Reservasi
+            </Link>
+          </div>
+        ) : (
+          <div className="bg-[#FDF8F0]/70 p-5 rounded-2xl border border-[#C9A24A]/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#C9A24A]/15 flex items-center justify-center text-[#C9A24A] shrink-0">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-bold text-[#5C4A32] text-sm">Belum Ada Janji Temu Mendatang</h4>
+                <p className="text-xs text-[#8B7355]">
+                  Jadwalkan pemeriksaan berkala setiap 6 bulan sekali untuk menjaga kesehatan dan kilau senyum Anda.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/dashboard/user?tab=reservasi"
+              className="px-5 py-2.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white text-xs font-semibold rounded-xl shadow-md transition-all shrink-0"
+            >
+              Jadwalkan Periksa
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* SECTION 2: Edukasi & Artikel Kesehatan Gigi (Live Backend API GET /api/public/posts) */}
+      {posts.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-[#5C4A32] text-base">Edukasi & Tips Senyum Sehat</h3>
+                <p className="text-xs text-[#8B7355]">Panduan perawatan gigi harian dari tim dokter spesialis kami</p>
+              </div>
+            </div>
+            <Link
+              to="/dashboard/user?tab=blog"
+              className="text-xs font-semibold text-[#C9A24A] hover:text-[#b8923f] flex items-center gap-1"
+            >
+              <span>Lihat Semua</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {posts.slice(0, 3).map((art) => (
+              <div
+                key={art.id}
+                className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] text-gray-500">
+                    <span className="px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200/60 rounded-full font-semibold">
+                      {art.category || "Edukasi"}
+                    </span>
+                    <span>{art.reading_time_minutes ? `${art.reading_time_minutes} mnt baca` : "3 mnt baca"}</span>
+                  </div>
+
+                  <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">
+                    {art.title}
+                  </h4>
+                  <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                    {art.excerpt || art.description}
+                  </p>
+                </div>
+
+                <Link
+                  to={`/dashboard/user?tab=blog-detail&slug=${art.slug}`}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#C9A24A] hover:text-[#b8923f] pt-2"
+                >
+                  <span>Baca Selengkapnya</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

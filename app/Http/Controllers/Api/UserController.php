@@ -444,6 +444,7 @@ class UserController extends Controller
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'whatsapp' => 'nullable|string|max:20|unique:users,whatsapp,' . $user->id,
+            'avatar' => 'nullable|string',
             'birthDate' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',
             'bloodType' => 'nullable|string|max:5',
@@ -485,6 +486,7 @@ class UserController extends Controller
         if (array_key_exists('name', $data)) $user->name = $data['name'];
         if (array_key_exists('email', $data)) $user->email = $data['email'];
         if (array_key_exists('whatsapp', $data)) $user->whatsapp = $data['whatsapp'];
+        if (array_key_exists('avatar', $data)) $user->avatar = $data['avatar'];
         if (array_key_exists('birthDate', $data)) $user->birth_date = $data['birthDate'];
         if (array_key_exists('gender', $data)) $user->gender = $data['gender'];
         if (array_key_exists('bloodType', $data)) $user->blood_type = $data['bloodType'];
@@ -635,6 +637,9 @@ class UserController extends Controller
             'phone' => $user->whatsapp,
             'domicile' => $domicile,
             'membership_status' => $user->membership_status ?? 'active',
+            'membership_level' => $user->membership_level ?? 'bronze',
+            'membership_points' => (int) ($user->membership_points ?? 0),
+            'avatar' => $user->avatar ? ((str_starts_with($user->avatar, 'http') || str_starts_with($user->avatar, 'data:image')) ? $user->avatar : asset('storage/' . $user->avatar)) : null,
             'role' => $user->role,
             'created_at' => optional($user->created_at)->toISOString(),
             'birthDate' => optional($user->birth_date)->format('Y-m-d'),

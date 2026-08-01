@@ -1,0 +1,20 @@
+[
+    {
+        "id": "act-124",
+        "date": "2026-08-01",
+        "time": "16:25",
+        "category": "Frontend",
+        "type": "Refactor",
+        "feature": "Header Navbar Button Redesign",
+        "description": "Mengganti tombol icon lingkaran di samping Book Now menjadi tombol teks \"Login\" / \"Dashboard\" untuk UX yang lebih jelas.",
+        "notes": "Memperbarui Header.tsx di frontend-web agar menampilkan tombol teks bertuliskan Login (atau Dashboard jika sudah masuk) untuk keterbacaan yang lebih baik.",
+        "reason": "Permintaan perbaikan UX pada navbar publik.",
+        "files": [
+            "frontend-web/src/components/layout/Header.tsx"
+        ],
+        "before_progress": 98,
+        "after_progress": 98,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    }
+]
