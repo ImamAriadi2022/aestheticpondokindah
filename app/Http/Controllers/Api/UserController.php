@@ -108,6 +108,7 @@ class UserController extends Controller
                     'domicile' => $domicile,
                     'membership_status' => $u->membership_status ?? 'active',
                     'role' => $u->role,
+                    'avatar' => $this->formatMediaUrl($u->avatar),
                     'created_at' => optional($u->created_at)->toISOString(),
                     'birthDate' => optional($u->birth_date)->format('Y-m-d'),
                     'gender' => $u->gender,
@@ -252,6 +253,9 @@ class UserController extends Controller
             if (array_key_exists('name', $data)) $user->name = $data['name'];
             if (array_key_exists('email', $data)) $user->email = $data['email'];
             if (array_key_exists('whatsapp', $data)) $user->whatsapp = $data['whatsapp'];
+            if (array_key_exists('avatar', $data) && !empty($data['avatar'])) {
+                $user->avatar = $this->processAvatarUpload($user, $data['avatar']);
+            }
             if (array_key_exists('birthDate', $data)) $user->birth_date = $data['birthDate'];
             if (array_key_exists('gender', $data)) $user->gender = $data['gender'];
             if (array_key_exists('bloodType', $data)) $user->blood_type = $data['bloodType'];
@@ -486,7 +490,9 @@ class UserController extends Controller
         if (array_key_exists('name', $data)) $user->name = $data['name'];
         if (array_key_exists('email', $data)) $user->email = $data['email'];
         if (array_key_exists('whatsapp', $data)) $user->whatsapp = $data['whatsapp'];
-        if (array_key_exists('avatar', $data)) $user->avatar = $data['avatar'];
+        if (array_key_exists('avatar', $data) && !empty($data['avatar'])) {
+            $user->avatar = $this->processAvatarUpload($user, $data['avatar']);
+        }
         if (array_key_exists('birthDate', $data)) $user->birth_date = $data['birthDate'];
         if (array_key_exists('gender', $data)) $user->gender = $data['gender'];
         if (array_key_exists('bloodType', $data)) $user->blood_type = $data['bloodType'];
@@ -639,7 +645,7 @@ class UserController extends Controller
             'membership_status' => $user->membership_status ?? 'active',
             'membership_level' => $user->membership_level ?? 'bronze',
             'membership_points' => (int) ($user->membership_points ?? 0),
-            'avatar' => $user->avatar ? ((str_starts_with($user->avatar, 'http') || str_starts_with($user->avatar, 'data:image')) ? $user->avatar : asset('storage/' . $user->avatar)) : null,
+            'avatar' => $this->formatMediaUrl($user->avatar),
             'role' => $user->role,
             'created_at' => optional($user->created_at)->toISOString(),
             'birthDate' => optional($user->birth_date)->format('Y-m-d'),
@@ -664,5 +670,78 @@ class UserController extends Controller
             'treatmentGoals' => $profile?->treatment_goals ?? [],
             'preferredCommunicationChannels' => $profile?->preferred_communication_channels ?? [],
         ];
+    }
+
+    private function formatMediaUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        $path = trim($path);
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:image')) {
+            return $path;
+        }
+
+        $cleanPath = ltrim($path, '/');
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, 8);
+        }
+
+        if (file_exists(base_path('public_html/' . $cleanPath)) || file_exists(public_path($cleanPath))) {
+            return asset($cleanPath);
+        }
+
+        if (file_exists(storage_path('app/public/' . $cleanPath)) || file_exists(base_path('public_html/storage/' . $cleanPath)) || file_exists(public_path('storage/' . $cleanPath))) {
+            return asset('storage/' . $cleanPath);
+        }
+
+        return asset($cleanPath);
+    }
+
+    private function processAvatarUpload(User $user, ?string $avatarInput): ?string
+    {
+        if (!$avatarInput) {
+            return null;
+        }
+
+        if (str_starts_with($avatarInput, 'data:image')) {
+            try {
+                @[$type, $fileData] = explode(';', $avatarInput);
+                @[, $fileData] = explode(',', $fileData);
+
+                if ($fileData) {
+                    $ext = 'png';
+                    if (str_contains($type, 'jpeg') || str_contains($type, 'jpg')) {
+                        $ext = 'jpg';
+                    } elseif (str_contains($type, 'webp')) {
+                        $ext = 'webp';
+                    }
+
+                    $decodedData = base64_decode($fileData);
+                    $filename = 'avatar_' . $user->id . '_' . time() . '.' . $ext;
+                    $relativePath = 'avatars/' . $filename;
+
+                    $targetDirs = [
+                        storage_path('app/public/avatars'),
+                        public_path('storage/avatars'),
+                        base_path('public_html/storage/avatars'),
+                    ];
+
+                    foreach ($targetDirs as $dir) {
+                        if (!file_exists($dir)) {
+                            @mkdir($dir, 0777, true);
+                        }
+                        @file_put_contents($dir . '/' . $filename, $decodedData);
+                    }
+
+                    return $relativePath;
+                }
+            } catch (\Throwable $e) {
+                // Fallback to raw string if processing fails
+            }
+        }
+
+        return $avatarInput;
     }
 }

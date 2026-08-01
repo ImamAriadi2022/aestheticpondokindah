@@ -3,29 +3,69 @@
 namespace App\Http\Controllers\Api\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\DoctorSchedule;
 use App\Models\Reservation;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:40'],
-            'complaint' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'birth_date' => ['nullable', 'date'],
+            'gender' => ['nullable', 'string', 'max:20'],
+            'treatment_interest' => ['nullable', 'string', 'max:255'],
+            'doctor_id' => ['nullable', 'integer', 'exists:users,id'],
+            'doctor_schedule_id' => ['nullable', 'integer', 'exists:doctor_schedules,id'],
             'date' => ['nullable', 'date'],
+            'preferred_time' => ['nullable', 'string', 'max:20'],
+            'complaint' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $reservation = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+        $scheduleId = $validated['doctor_schedule_id'] ?? null;
+        $doctorId = $validated['doctor_id'] ?? null;
+        $date = $validated['date'] ?? null;
+
+        // Auto-match doctor schedule if not explicitly passed
+        if (!$scheduleId && $doctorId && $date) {
+            $matchedSchedule = DoctorSchedule::where('user_id', $doctorId)
+                ->whereDate('date', $date)
+                ->first();
+            if ($matchedSchedule) {
+                $scheduleId = $matchedSchedule->id;
+            }
+        } elseif ($scheduleId && !$doctorId) {
+            $schedule = DoctorSchedule::find($scheduleId);
+            if ($schedule) {
+                $doctorId = $schedule->user_id;
+                $date = $date ?? $schedule->date->format('Y-m-d');
+            }
+        }
+
+        $reservation = DB::transaction(function () use ($validated, $doctorId, $scheduleId, $date) {
             return Reservation::create([
+                'user_id' => null,
                 'name' => $validated['name'],
                 'phone' => $validated['phone'],
-                'complaint' => $validated['complaint'],
-                'date' => $validated['date'] ?? null,
-                'source' => $validated['source'] ?? null,
+                'email' => $validated['email'] ?? null,
+                'birth_date' => $validated['birth_date'] ?? null,
+                'gender' => $validated['gender'] ?? null,
+                'treatment_interest' => $validated['treatment_interest'] ?? null,
+                'doctor_id' => $doctorId,
+                'doctor_schedule_id' => $scheduleId,
+                'date' => $date,
+                'preferred_time' => $validated['preferred_time'] ?? null,
+                'complaint' => $validated['complaint'] ?? ($validated['treatment_interest'] ?? 'Permintaan Reservasi Guest'),
+                'branch_name' => 'Aesthetic Pondok Indah Main Branch',
+                'source' => $validated['source'] ?? 'guest_web',
                 'status' => 'Baru',
+                'payment_status' => 'Belum Bayar',
             ]);
         });
 
@@ -36,10 +76,25 @@ class ReservationController extends Controller
             'code' => $code,
             'name' => $reservation->name,
             'phone' => $reservation->phone,
-            'complaint' => $reservation->complaint,
+            'email' => $reservation->email,
+            'treatment_interest' => $reservation->treatment_interest,
+            'doctor_id' => $reservation->doctor_id ? (string) $reservation->doctor_id : null,
+            'doctor_schedule_id' => $reservation->doctor_schedule_id ? (string) $reservation->doctor_schedule_id : null,
             'date' => optional($reservation->date)->format('Y-m-d'),
+            'preferred_time' => $reservation->preferred_time,
+            'complaint' => $reservation->complaint,
             'status' => $reservation->status,
-            'message' => 'Reservasi berhasil dibuat.',
+            'source' => $reservation->source,
+            'message' => 'Reservasi Guest berhasil dibuat dan tersinkronisasi dengan jadwal dokter.',
+            'registration_encouragement' => [
+                'title' => 'Bergabunglah Menjadi Member Aesthetic Pondok Indah!',
+                'benefits' => [
+                    'Lacak status reservasi dan riwayat rekam medis digital secara real-time',
+                    'Dapatkan poin membership tiap perawatan untuk ditukar promo menarik',
+                    'Prioritas booking jadwal periksa dengan dokter spesialis',
+                ],
+                'register_link' => '/login?mode=register',
+            ]
         ], 201);
     }
 }

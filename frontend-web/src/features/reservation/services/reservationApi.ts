@@ -1,11 +1,17 @@
-import { API_BASE } from "@/lib/apiConfig";
-import { logger } from "@/lib/logger";
+import { API_BASE } from "@/shared/lib/apiConfig";
+import { logger } from "@/shared/lib/logger";
 
 export interface ReservationData {
   name: string;
   phone: string;
-  complaint: string;
+  email?: string;
+  birth_date?: string;
+  gender?: string;
+  treatment_interest?: string;
+  doctor_id?: string | number | null;
+  complaint?: string;
   date?: string;
+  preferred_time?: string;
   source?: string;
 }
 
@@ -23,9 +29,15 @@ export const submitPublicReservation = async (data: ReservationData) => {
       body: JSON.stringify({
         name: data.name,
         phone: data.phone,
-        complaint: data.complaint,
+        email: data.email || null,
+        birth_date: data.birth_date || null,
+        gender: data.gender || null,
+        treatment_interest: data.treatment_interest || null,
+        doctor_id: data.doctor_id ? Number(data.doctor_id) : null,
+        complaint: data.complaint || data.treatment_interest || "Booking Guest",
         date: data.date || null,
-        source: data.source || "booking_new_page",
+        preferred_time: data.preferred_time || "10:00",
+        source: data.source || "guest_web",
       }),
     });
 

@@ -14,6 +14,35 @@ use Illuminate\Http\Request;
 
 class ContentController extends Controller
 {
+    private function formatMediaUrl(?string $path): ?string
+    {
+        if (!$path) {
+            return null;
+        }
+
+        $path = trim($path);
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, 'data:image')) {
+            return $path;
+        }
+
+        $cleanPath = ltrim($path, '/');
+        if (str_starts_with($cleanPath, 'storage/')) {
+            $cleanPath = substr($cleanPath, 8);
+        }
+
+        // Direct check in public_html or public root
+        if (file_exists(base_path('public_html/' . $cleanPath)) || file_exists(public_path($cleanPath))) {
+            return asset($cleanPath);
+        }
+
+        // Check in storage
+        if (file_exists(storage_path('app/public/' . $cleanPath)) || file_exists(base_path('public_html/storage/' . $cleanPath)) || file_exists(public_path('storage/' . $cleanPath))) {
+            return asset('storage/' . $cleanPath);
+        }
+
+        return asset($cleanPath);
+    }
+
     public function posts(Request $request): JsonResponse
     {
         $posts = Post::query()
@@ -27,7 +56,7 @@ class ContentController extends Controller
                 'slug' => $p->slug,
                 'category' => $p->category,
                 'tags' => $p->tags ?? [],
-                'cover_image_url' => $p->cover_image_path ? asset('storage/' . $p->cover_image_path) : null,
+                'cover_image_url' => $this->formatMediaUrl($p->cover_image_path),
                 'excerpt' => $p->excerpt,
                 'published_at' => optional($p->published_at)->toISOString(),
                 'reading_time_minutes' => $p->reading_time_minutes,
@@ -55,7 +84,7 @@ class ContentController extends Controller
             'slug' => $p->slug,
             'category' => $p->category,
             'tags' => $p->tags ?? [],
-            'cover_image_url' => $p->cover_image_path ? asset('storage/' . $p->cover_image_path) : null,
+            'cover_image_url' => $this->formatMediaUrl($p->cover_image_path),
             'content_html' => $p->content_html,
             'excerpt' => $p->excerpt,
             'published_at' => optional($p->published_at)->toISOString(),
@@ -92,7 +121,7 @@ class ContentController extends Controller
             'message' => $popup->message,
             'button_label' => $popup->button_label,
             'button_url' => $popup->button_url,
-            'image_url' => $popup->image_path ? asset('storage/' . $popup->image_path) : null,
+            'image_url' => $this->formatMediaUrl($popup->image_path),
             'enabled' => (bool) $popup->enabled,
         ]);
     }
@@ -109,7 +138,7 @@ class ContentController extends Controller
                 'title' => $g->title,
                 'category' => $g->category,
                 'description' => $g->description,
-                'image_url' => asset('storage/' . $g->image_path),
+                'image_url' => $this->formatMediaUrl($g->image_path),
             ])
             ->values();
 
@@ -129,7 +158,7 @@ class ContentController extends Controller
                 'source' => $t->source,
                 'rating' => (int) $t->rating,
                 'quote' => $t->quote,
-                'photo_url' => $t->photo_path ? asset('storage/' . $t->photo_path) : null,
+                'photo_url' => $this->formatMediaUrl($t->photo_path),
             ])
             ->values();
 
@@ -156,7 +185,7 @@ class ContentController extends Controller
                 'slug' => $p->slug,
                 'description' => $p->description,
                 'category' => $p->category,
-                'image_url' => $p->image_path ? asset('storage/' . $p->image_path) : null,
+                'image_url' => $this->formatMediaUrl($p->image_path),
                 'button_label' => $p->button_label,
                 'contact_whatsapp' => $p->contact_whatsapp,
                 'starts_at' => optional($p->starts_at)->toISOString(),
@@ -180,7 +209,7 @@ class ContentController extends Controller
                 'description' => $a->description,
                 'version' => $a->version,
                 'platform' => $a->platform,
-                'apk_url' => $a->apk_path ? asset('storage/' . $a->apk_path) : null,
+                'apk_url' => $this->formatMediaUrl($a->apk_path),
                 'download_link' => $a->download_link,
                 'file_size' => (int) $a->file_size,
                 'file_size_formatted' => $a->file_size ? $this->formatBytes($a->file_size) : null,
@@ -216,7 +245,7 @@ class ContentController extends Controller
             'description' => $p->description,
             'content_html' => $p->content_html,
             'category' => $p->category,
-            'image_url' => $p->image_path ? asset('storage/' . $p->image_path) : null,
+            'image_url' => $this->formatMediaUrl($p->image_path),
             'button_label' => $p->button_label,
             'contact_whatsapp' => $p->contact_whatsapp,
             'starts_at' => optional($p->starts_at)->toISOString(),

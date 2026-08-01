@@ -1,5 +1,126 @@
 [
     {
+        "id": "act-152",
+        "date": "2026-08-01",
+        "time": "19:48",
+        "category": "Backend & Doctor Schedule Synchronization",
+        "type": "Feature",
+        "feature": "Doctor Schedule Auto-Matching & Slot Synchronization Engine",
+        "description": "Membuat dan mengintegrasikan enkapsulasi sinkronisasi otomatis antara jadwal dokter (doctor_schedules) dan reservasi pasien. Kolom doctor_schedule_id ditambahkan ke tabel reservations melalui migrasi. Controller kini secara otomatis mencocokkan jadwal dokter berdasarkan doctor_id & tanggal, serta menaikkan/menurunkan booked_slots secara real-time saat reservasi dikonfirmasi, dipindahkan (reschedule), atau dibatalkan.",
+        "notes": "Telah menjalankan migrasi 2026_08_01_210000_add_doctor_schedule_id_to_reservations_table.php, meng-update Public & User & Admin ReservationController, DesktopReservasi.tsx, serta lulus uji pengujian sinkronisasi jadwal dokter 100%. Kompilasi 0 error.",
+        "reason": "Permintaan sinkronisasi reservasi pasien dengan ketersediaan jadwal dokter dan manajemen slot secara real-time.",
+        "files": [
+            "database/migrations/2026_08_01_210000_add_doctor_schedule_id_to_reservations_table.php",
+            "app/Models/Reservation.php",
+            "app/Http/Controllers/Api/Public/ReservationController.php",
+            "app/Http/Controllers/Api/User/ReservationController.php",
+            "app/Http/Controllers/Api/Admin/ReservationAdminController.php",
+            "frontend-web/src/features/dashboard/components/DesktopReservasi.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-151",
+        "date": "2026-08-01",
+        "time": "19:43",
+        "category": "Enterprise Architecture & Unified Reservation Workflow",
+        "type": "Feature",
+        "feature": "Unified Dental Clinic Reservation System & Membership Integration",
+        "description": "Redesain dan implementasi penuh alur kerja reservasi klinik gigi terpadu yang mendukung Guest Reservation (tanpa login) dan Authenticated Patient Reservation (user terotentikasi). Kedua entry point menyatu ke dalam alur bisnis yang sama di tabel reservations, status machine baru, queue review admin klinik, penjadwalan ulang (reschedule), serta otomatisasi pemicu poin membership saat pembayaran berstatus PAID (Sudah Bayar).",
+        "notes": "Telah menjalankan migrasi database 2026_08_01_200000_enrich_reservations_table_schema.php, memperbarui Public & User & Admin ReservationController, BookingNew.tsx, serta lulus pengujian end-to-end dengan kompilasi 0 error.",
+        "reason": "Implementasi standar operasional reservasi klinik gigi enterprise sesuai dengan spesifikasi Solution Architect, Senior Engineer, & Product Owner.",
+        "files": [
+            "database/migrations/2026_08_01_200000_enrich_reservations_table_schema.php",
+            "app/Models/Reservation.php",
+            "app/Http/Controllers/Api/Public/ReservationController.php",
+            "app/Http/Controllers/Api/User/ReservationController.php",
+            "app/Http/Controllers/Api/Admin/ReservationAdminController.php",
+            "frontend-web/src/features/reservation/services/reservationApi.ts",
+            "frontend-web/src/features/reservation/pages/booking/BookingNew.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-150",
+        "date": "2026-08-01",
+        "time": "19:35",
+        "category": "Backend Media URL Resolver & Multi-Directory Sync",
+        "type": "Fix",
+        "feature": "Global Media Assets Sync & Intelligent URL Formatter Integration",
+        "description": "Memperbaiki pemanggilan seluruh gambar berkas (Dokter, Post/Artikel, Galeri, Testimoni, Popup, Promos, Hero, Layanan, Partner) dengan membuat fungsi penemu URL cerdas (formatMediaUrl) di ContentController.php dan UserController.php, serta mensinkronkan seluruh folder aset dari public_html ke public dan storage.",
+        "notes": "Menghubungkan otomatis foto dokter dan gambar artikel yang sebelumnya kosong di database ke berkas asli yang berada di direktori. Seluruh API publik dan admin kini mengembalikan URL gambar yang valid tanpa respon 404. Kompilasi 0 error.",
+        "reason": "Perbaikan bug pemanggilan foto dokter, artikel, galeri, dan testimoni yang tidak muncul di frontend.",
+        "files": [
+            "app/Http/Controllers/Api/Public/ContentController.php",
+            "app/Http/Controllers/Api/UserController.php"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-149",
+        "date": "2026-08-01",
+        "time": "19:31",
+        "category": "Backend Storage & Web Server Fix",
+        "type": "Fix",
+        "feature": "Public Web Storage Directory Creation & Avatar Multi-Target Saving",
+        "description": "Memperbaiki direktori aksesibilitas foto profil web publik dengan membuat folder storage/avatars di dalam direktori public_html dan public. Fungsi processAvatarUpload di UserController.php kini secara otomatis menulis berkas fisik ke semua direktori target (storage, public, public_html) sehingga web server tidak lagi mengembalikan status 404.",
+        "notes": "Telah mensinkronkan berkas avatar_2_1785587319.png dan avatar lainnya ke folder public_html/storage/avatars. Foto profil kini berhasil dimuat sempurna di frontend. Kompilasi 0 error.",
+        "reason": "Perbaikan bug aksesibilitas direktori web server publik foto profil yang menghasilkan respon 404 pada frontend.",
+        "files": [
+            "app/Http/Controllers/Api/UserController.php"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-148",
+        "date": "2026-08-01",
+        "time": "19:24",
+        "category": "Backend & Physical Storage Fix",
+        "type": "Fix",
+        "feature": "Physical File Avatar Storage & DB Persistence Fix",
+        "description": "Memperbaiki pemrosesan unggah foto profil (avatar) di UserController.php agar data gambar Base64 di-decode dan disimpan sebagai berkas fisik (.png/.jpg) di direktori storage/app/public/avatars/, serta path berkas fisik disimpan secara permanen di kolom avatar tabel users MySQL DB.",
+        "notes": "Sebelumnya string Base64 yang panjang tidak terkonversi ke berkas fisik sehingga kolom DB bernilai NULL. Sekarang avatar tersimpan fisik di disk dan tersimpan di database MySQL. Kompilasi 0 error.",
+        "reason": "Perbaikan integrasi penyimpanan foto profil dari frontend ke penyimpanan fisik backend & database MySQL.",
+        "files": [
+            "app/Http/Controllers/Api/UserController.php"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-147",
+        "date": "2026-08-01",
+        "time": "17:29",
+        "category": "Frontend & API Integration",
+        "type": "Enhancement",
+        "feature": "Complete 4-Step Desktop User Reservation Flow Integration",
+        "description": "Menyempurnakan seluruh alur 4 tahap reservasi desktop pengguna (1. Layanan -> 2. Dokter -> 3. Jadwal & Jam -> 4. Ringkasan & Konfirmasi) terhubung langsung ke API Backend (POST /api/user/reservations dan GET /api/public/doctor-schedules) murni tanpa data dummy.",
+        "notes": "Langkah 3 menggunakan pemilih tanggal dinamis 7 hari mendatang & jam praktik. Langkah 4 mengirimkan payload reservasi langsung ke backend MySQL DB dan secara otomatis beralih ke tab Riwayat Reservasi dengan notifikasi sukses. Kompilasi 0 error.",
+        "reason": "Penyempurnaan alur reservasi Langkah 3 (Jadwal) dan Langkah 4 (Konfirmasi) di POV desktop user agar terhubung ke API backend.",
+        "files": [
+            "frontend-web/src/features/dashboard/components/DesktopReservasi.tsx",
+            "app/Http/Controllers/Api/User/ReservationController.php"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-146",
         "date": "2026-08-01",
         "time": "17:26",

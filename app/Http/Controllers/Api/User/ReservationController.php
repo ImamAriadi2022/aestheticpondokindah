@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\DoctorSchedule;
 use App\Models\Reservation;
+use App\Models\ReservationAudit;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,12 +14,16 @@ class ReservationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $query = Reservation::query()->where('user_id', $user->id)->latest();
+        $query = Reservation::query()
+            ->with(['doctor', 'doctorSchedule'])
+            ->where('user_id', $user->id)
+            ->latest();
 
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('complaint', 'like', "%{$search}%")
+                  ->orWhere('treatment_interest', 'like', "%{$search}%")
                   ->orWhere('id', 'like', "%{$search}%");
             });
         }
@@ -45,7 +51,7 @@ class ReservationController extends Controller
     public function show(Request $request, int|string $id): JsonResponse
     {
         $user = $request->user();
-        $reservation = Reservation::find($id);
+        $reservation = Reservation::with(['doctor', 'doctorSchedule'])->find($id);
 
         if (!$reservation) {
             return response()->json(['message' => 'Reservasi tidak ditemukan.'], 404);
@@ -62,21 +68,59 @@ class ReservationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'complaint' => ['required', 'string', 'max:255'],
-            'date' => ['nullable', 'date', 'after_or_equal:today'],
-        ]);
-        $user = $request->user();
-        $reservation = Reservation::create([
-            'user_id' => $user->id,
-            'name' => $user->name,
-            'phone' => $user->whatsapp ?? $user->phone,
-            'complaint' => $validated['complaint'],
-            'date' => $validated['date'] ?? null,
-            'source' => 'android_native',
-            'status' => 'Baru',
+            'doctor_id' => ['nullable', 'integer', 'exists:users,id'],
+            'doctor_schedule_id' => ['nullable', 'integer', 'exists:doctor_schedules,id'],
+            'date' => ['nullable', 'date'],
+            'preferred_time' => ['nullable', 'string', 'max:20'],
+            'treatment_interest' => ['nullable', 'string', 'max:255'],
+            'complaint' => ['nullable', 'string', 'max:500'],
+            'source' => ['nullable', 'string', 'max:50'],
         ]);
 
-        return response()->json(['message' => 'Permintaan booking berhasil dikirim.', 'reservation' => $this->toMobileDto($reservation)], 201);
+        $user = $request->user();
+        $scheduleId = $validated['doctor_schedule_id'] ?? null;
+        $doctorId = $validated['doctor_id'] ?? null;
+        $date = $validated['date'] ?? null;
+
+        // Auto-match doctor schedule if not explicitly passed
+        if (!$scheduleId && $doctorId && $date) {
+            $matchedSchedule = DoctorSchedule::where('user_id', $doctorId)
+                ->whereDate('date', $date)
+                ->first();
+            if ($matchedSchedule) {
+                $scheduleId = $matchedSchedule->id;
+            }
+        } elseif ($scheduleId && !$doctorId) {
+            $schedule = DoctorSchedule::find($scheduleId);
+            if ($schedule) {
+                $doctorId = $schedule->user_id;
+                $date = $date ?? $schedule->date->format('Y-m-d');
+            }
+        }
+
+        $reservation = Reservation::create([
+            'user_id' => $user->id,
+            'doctor_id' => $doctorId,
+            'doctor_schedule_id' => $scheduleId,
+            'name' => $user->name,
+            'phone' => $user->whatsapp ?? $user->phone,
+            'email' => $user->email,
+            'gender' => $user->gender,
+            'birth_date' => $user->birth_date,
+            'treatment_interest' => $validated['treatment_interest'] ?? null,
+            'complaint' => $validated['complaint'] ?? ($validated['treatment_interest'] ?? 'Permintaan Reservasi Pasien'),
+            'date' => $date,
+            'preferred_time' => $validated['preferred_time'] ?? '10:00',
+            'branch_name' => 'Aesthetic Pondok Indah Main Branch',
+            'source' => $validated['source'] ?? 'user_dashboard',
+            'status' => 'Baru',
+            'payment_status' => 'Belum Bayar',
+        ]);
+
+        return response()->json([
+            'message' => 'Permintaan reservasi berhasil dikirim dan tersinkronisasi dengan jadwal dokter.',
+            'reservation' => $this->toMobileDto($reservation->fresh(['doctor', 'doctorSchedule']))
+        ], 201);
     }
 
     public function cancel(Request $request, int|string $id): JsonResponse
@@ -109,8 +153,16 @@ class ReservationController extends Controller
         $reservation->status = 'Dibatalkan';
         $reservation->save();
 
+        // Decrement doctor schedule booked slots if previously confirmed
+        if ($oldStatus === 'Dikonfirmasi' && $reservation->doctor_schedule_id) {
+            $schedule = DoctorSchedule::find($reservation->doctor_schedule_id);
+            if ($schedule && $schedule->booked_slots > 0) {
+                $schedule->decrement('booked_slots');
+            }
+        }
+
         // Audit Trail
-        \App\Models\ReservationAudit::create([
+        ReservationAudit::create([
             'reservation_id' => $reservation->id,
             'user_id' => $user->id,
             'action' => 'user_cancel',
@@ -121,7 +173,7 @@ class ReservationController extends Controller
 
         return response()->json([
             'message' => 'Reservasi berhasil dibatalkan.',
-            'reservation' => $this->toMobileDto($reservation->fresh()),
+            'reservation' => $this->toMobileDto($reservation->fresh(['doctor', 'doctorSchedule'])),
         ]);
     }
 
@@ -134,20 +186,30 @@ class ReservationController extends Controller
             'Ditolak' => 'rejected',
             default => 'pending',
         };
+
         return [
             'id' => (string) $reservation->id,
             'code' => 'RSV-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT),
-            'user_id' => (string) $reservation->user_id,
+            'user_id' => $reservation->user_id ? (string) $reservation->user_id : null,
             'patient_name' => $reservation->name,
             'phone' => $reservation->phone,
-            'service_name' => 'Permintaan Konsultasi',
-            'doctor_name' => null,
+            'email' => $reservation->email,
+            'gender' => $reservation->gender,
+            'birth_date' => optional($reservation->birth_date)->format('Y-m-d'),
+            'service_name' => $reservation->treatment_interest ?? $reservation->complaint,
+            'treatment_interest' => $reservation->treatment_interest,
+            'doctor_id' => $reservation->doctor_id ? (string) $reservation->doctor_id : null,
+            'doctor_schedule_id' => $reservation->doctor_schedule_id ? (string) $reservation->doctor_schedule_id : null,
+            'doctor_name' => $reservation->doctor?->name ?? 'Dokter Spesialis',
             'scheduled_date' => $reservation->date?->format('Y-m-d'),
-            'scheduled_time' => null,
+            'scheduled_time' => $reservation->preferred_time ?? ($reservation->doctorSchedule?->time_range ?? '10:00'),
+            'branch_name' => $reservation->branch_name,
             'status' => $status,
             'raw_status' => $reservation->status,
+            'payment_status' => $reservation->payment_status ?? 'Belum Bayar',
             'notes' => $reservation->complaint,
-            'price' => null,
+            'admin_notes' => $reservation->admin_notes,
+            'rescheduled_at' => optional($reservation->rescheduled_at)->toISOString(),
             'created_at' => optional($reservation->created_at)->toISOString(),
             'updated_at' => optional($reservation->updated_at)->toISOString(),
         ];
