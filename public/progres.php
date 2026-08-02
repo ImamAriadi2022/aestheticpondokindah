@@ -140,11 +140,11 @@ $categoryBreakdown = [
             'Hosting Plesk CloudNow (`aestheticpondokindah.web.id`) berstatus Live',
             'SSL Let\'s Encrypt HTTPS aktif & terverifikasi',
             'Script deploy.sh terotomasi (copy webroot, composer install, migrate, seed, symlink storage, set permissions, clear & optimize cache)',
-            'Symlink `storage` terkonfigurasi (public_html/storage -> backend/storage/app/public)',
+            'Symlink `storage` terkonfigurasi (public_html/storage -> <root>/storage/app/public)',
             'Webroot `public_html` & SPA `.htaccess` rewrite rules aktif'
         ],
         'missing' => [
-            'Penyiapan link unduh file APK Android langsung di portal mobile'
+            'Penyiapan link unduh file APK Android langsung di portal mobile (file operasional sudah disinkronkan otomatis ke public_html via postbuild)'
         ]
     ],
     'documentation' => [

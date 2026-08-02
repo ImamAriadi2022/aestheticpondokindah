@@ -2,9 +2,6 @@
   RewriteEngine On
   RewriteBase /
 
-  # Jangan rewrite request ke backend/ ke index.html
-  RewriteRule ^backend/ - [L]
-
   RewriteRule ^index\.html$ - [L]
 
   RewriteCond %{REQUEST_FILENAME} -f [OR]
