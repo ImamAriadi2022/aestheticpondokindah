@@ -29,33 +29,9 @@ fi
 
 echo "Using PHP CLI: $($PHP_BIN -r 'echo PHP_VERSION;')"
 
-# 1. Publish the React build while preserving the root .htaccess.
-#
-# The root .htaccess owns the /api -> Laravel rewrite.  `public_html/.htaccess`
-# is only for hosts whose document root is public_html, so it must never replace
-# the root rule during Plesk Git deployment.  Do not use `cp -n` here: it leaves
-# old images/assets on the server and makes a successful deploy appear stale.
-if [ -d public_html ]; then
-    for source in public_html/*; do
-        [ -e "$source" ] || continue
-        name="$(basename "$source")"
-
-        # `backend` belongs to the retired shared-hosting layout. On some
-        # Plesk installations it is a link to ./backend, so copying it aborts
-        # the entire deploy with "are the same file".
-        case "$name" in
-            .htaccess|backend|storage) continue ;;
-        esac
-
-        # public_html may itself be a link to this deployment root. Do not
-        # copy a file/directory onto the exact same inode in that situation.
-        if [ -e "./$name" ] && [ "$source" -ef "./$name" ]; then
-            continue
-        fi
-
-        cp -a "$source" .
-    done
-fi
+# 1. The React production build is committed to Laravel's public/ directory.
+# Plesk must use httpdocs/public as its document root; do not copy the legacy
+# public_html/ tree into the Laravel root during deployment.
 
 # 2. Laravel is now the repository root. Reconcile dependencies and caches.
 COMPOSER_BIN="$(command -v composer || true)"

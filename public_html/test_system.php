@@ -154,16 +154,6 @@ curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 DiagnosticTester');
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Accept: application/json', 'X-Requested-With: XMLHttpRequest']);
-$responseHeaders = [];
-curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
-    $length = strlen($header);
-    $parts = explode(':', $header, 2);
-    if (count($parts) === 2) {
-        $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
-    }
-    return $length;
-});
 $apiBody = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
@@ -176,10 +166,7 @@ if ($httpCode === 200 && str_contains(strtolower($contentType ?? ''), 'json')) {
     $apiPassed = false;
     $apiMsg = 'API Endpoint merespons HTTP ' . $httpCode . ' (' . ($contentType ?: 'Format HTML/Teks') . ').' ;
 }
-$apiMeta = 'URL: ' . $apiTestUrl
-    . ' | Server: ' . ($responseHeaders['server'] ?? '-')
-    . ' | Content-Type: ' . ($contentType ?: '-')
-    . ' | Snippet: ' . substr(strip_tags($apiBody ?? ''), 0, 75);
+$apiMeta = 'URL: ' . $apiTestUrl . ' | Snippet: ' . substr(strip_tags($apiBody ?? ''), 0, 75);
 
 addTestResult(
     $results['backend'],

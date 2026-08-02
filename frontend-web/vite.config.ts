@@ -15,9 +15,10 @@ export default defineConfig({
 	    allowedHosts: true,
 	  },
   build: {
-    // `deploy.sh` continues publishing the repository-level webroot.
-    outDir: "../public_html",
-    emptyOutDir: true,
+    // Plesk's document root must be Laravel's standard public/ directory.
+    // Keep Laravel's index.php, .htaccess, storage link and existing uploads.
+    outDir: "../public",
+    emptyOutDir: false,
     chunkSizeWarningLimit: 5000,
   },
   resolve: {
