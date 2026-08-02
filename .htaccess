@@ -5,8 +5,10 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Laravel is now at repository root; serve its API front controller.
-    RewriteRule ^api(?:/.*)?$ public/index.php [L,QSA]
+    # Serve the Laravel API through a root front controller. Keeping the
+    # target in httpdocs avoids Plesk rejecting an internal /public/index.php
+    # rewrite with HTTP 400.
+    RewriteRule ^api(?:/.*)?$ api.php [END,QSA]
 
     # Expose only Laravel's public uploads. The root storage/ directory is
     # private application data and remains blocked by the rule below.
