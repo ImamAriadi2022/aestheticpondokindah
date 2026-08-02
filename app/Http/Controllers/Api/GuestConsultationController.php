@@ -52,7 +52,7 @@ class GuestConsultationController extends Controller
 
     public function show(Request $request, string $token): JsonResponse
     {
-        $consultation = Consultation::with(['user', 'doctorSchedule.user'])->where('access_token', $token)->first();
+        $consultation = Consultation::with(['user', 'doctorSchedule.user', 'messages.sender', 'meetings'])->where('access_token', $token)->first();
 
         if (!$consultation || !$consultation->isGuestAccessible($token)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);

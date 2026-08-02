@@ -6,7 +6,7 @@ import {
   type GuestConsultationDetail,
 } from "@/features/guest/consultation/services/guestConsultationApi";
 
-const DEFAULT_POLL_INTERVAL_MS = 20000;
+const DEFAULT_POLL_INTERVAL_MS = 10000;
 
 export function useGuestConsultation(
   token: string,

@@ -17,7 +17,7 @@ class ConsultationMessageController extends Controller
     public function index(Request $request, int|string $id): JsonResponse
     {
         $user = $request->user();
-        $consultation = Consultation::find($id);
+        $consultation = Consultation::with('messages.sender')->find($id);
 
         if (!$consultation || !$consultation->isParticipant($user)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);

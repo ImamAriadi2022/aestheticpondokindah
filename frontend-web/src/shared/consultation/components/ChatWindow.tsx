@@ -13,6 +13,8 @@ interface ChatWindowProps {
   currentRole?: string;
   onSend: (body: string) => Promise<void> | void;
   quickReplies?: string[];
+  title?: string;
+  subtitle?: string;
   emptyStateTitle?: string;
   emptyStateDescription?: string;
 }
@@ -24,6 +26,8 @@ export function ChatWindow({
   currentRole = "doctor",
   onSend,
   quickReplies = [],
+  title = "Ruang Chat Konsultasi",
+  subtitle = "Pesan tersimpan di percakapan konsultasi ini",
   emptyStateTitle = "Belum ada pesan",
   emptyStateDescription = "Mulai percakapan dengan pasien di ruang chat ini.",
 }: ChatWindowProps) {
@@ -53,9 +57,9 @@ export function ChatWindow({
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-bold text-[#4A3F35]">Ruang Chat Konsultasi</h3>
+            <h3 className="text-sm font-bold text-[#4A3F35]">{title}</h3>
             <p className="text-xs text-[#8A7B6B] truncate">
-              Pesan terkirim secara langsung ke tim klinik
+              {subtitle}
             </p>
           </div>
         </div>

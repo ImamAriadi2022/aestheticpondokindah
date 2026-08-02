@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router";
-import { ArrowLeft, Loader2, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
 import { ChatWindow } from "@/features/doctor/consultation/shared/components/ChatWindow";
@@ -105,24 +105,27 @@ export default function ConsultationChatPage() {
         </div>
       </div>
 
-      {/* Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Chat */}
-        <div className="lg:col-span-2 h-[calc(100vh-220px)] min-h-[480px]">
-          <ChatWindow
-            messages={chat.messages}
-            loading={chat.loading}
-            disabled={isDone}
-            currentRole="doctor"
-            onSend={chat.send}
-            quickReplies={isDone ? [] : QUICK_REPLIES}
-            emptyStateTitle="Ruang chat siap digunakan"
-            emptyStateDescription="Mulai percakapan atau bagikan link meeting untuk konsultasi video."
-          />
-        </div>
+      <div className="h-[calc(100vh-230px)] min-h-[500px]">
+        <ChatWindow
+          messages={chat.messages}
+          loading={chat.loading}
+          disabled={isDone}
+          currentRole="doctor"
+          onSend={chat.send}
+          quickReplies={isDone ? [] : QUICK_REPLIES}
+          title={`Percakapan dengan ${consultation.user?.name || "pasien"}`}
+          subtitle="Pesan dari pasien, admin, dan dokter tampil dalam satu percakapan."
+          emptyStateTitle="Ruang chat siap digunakan"
+          emptyStateDescription="Mulai percakapan atau bagikan link meeting untuk konsultasi video."
+        />
+      </div>
 
-        {/* Sidebar */}
-        <div className="space-y-5">
+      <details className="group bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
+        <summary className="list-none cursor-pointer px-5 py-4 flex items-center justify-between text-sm font-bold text-[#4A3F35] hover:bg-[#FDF8F0]">
+          Detail pasien dan meeting
+          <ChevronDown className="w-4 h-4 text-[#8A7B6B] transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 px-5 pb-5 border-t border-[#F0E6D3] pt-5">
           <MeetingLinkPanel
             meetings={meeting.meetings}
             loading={meeting.loading}
@@ -134,7 +137,7 @@ export default function ConsultationChatPage() {
           />
           <PatientSummaryPanel summary={summary} loading={loadingSummary} />
         </div>
-      </div>
+      </details>
     </div>
   );
 }

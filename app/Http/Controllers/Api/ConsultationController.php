@@ -35,7 +35,7 @@ class ConsultationController extends Controller
     public function show(Request $request, int|string $id): JsonResponse
     {
         $patient = $request->user();
-        $consultation = Consultation::with(['user', 'doctorSchedule.user'])->find($id);
+        $consultation = Consultation::with(['user', 'doctorSchedule.user', 'messages.sender', 'meetings'])->find($id);
 
         if (!$consultation) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);

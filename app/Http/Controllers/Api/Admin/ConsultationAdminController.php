@@ -86,7 +86,7 @@ class ConsultationAdminController extends Controller
     public function show(Request $request, int|string $id): JsonResponse
     {
         $admin = $request->user();
-        $consultation = Consultation::with(['user', 'doctorSchedule.user', 'doctor', 'admin'])->find($id);
+        $consultation = Consultation::with(['user', 'doctorSchedule.user', 'doctor', 'admin', 'messages.sender', 'meetings'])->find($id);
 
         if (!$consultation || !$consultation->isParticipant($admin)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
@@ -235,13 +235,14 @@ class ConsultationAdminController extends Controller
     }
 
     /**
-     * Doctor availability for transfer: doctors with upcoming schedules.
+     * Doctors available for transfer. A doctor must remain selectable even
+     * without an upcoming schedule because instant consultations are not tied
+     * to a doctor's schedule.
      */
     public function doctorsAvailability(Request $request): JsonResponse
     {
         $items = User::query()
             ->where('role', 'doctor')
-            ->where('status', 'active')
             ->orderBy('name')
             ->get()
             ->map(function (User $doctor) {
@@ -263,6 +264,7 @@ class ConsultationAdminController extends Controller
                 return [
                     'id' => (string) $doctor->id,
                     'name' => $doctor->name,
+                    'status' => $doctor->status,
                     'specialization' => $doctor->specialization,
                     'primary_branch' => $doctor->primary_branch,
                     'schedules' => $schedules,

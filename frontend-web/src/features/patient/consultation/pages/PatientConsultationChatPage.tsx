@@ -13,7 +13,7 @@ import {
   sendMyConsultationMessage,
 } from "@/features/patient/consultation/services/consultationApi";
 
-const POLL_INTERVAL_MS = 20000;
+const POLL_INTERVAL_MS = 10000;
 
 export default function PatientConsultationChatPage() {
   const { id = "" } = useParams();

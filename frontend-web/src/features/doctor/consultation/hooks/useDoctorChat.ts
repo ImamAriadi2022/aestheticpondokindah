@@ -6,7 +6,7 @@ import {
 } from "@/features/doctor/consultation/services/chat.service";
 import type { ConsultationMessage } from "@/features/doctor/consultation/types/consultation";
 
-const DEFAULT_POLL_INTERVAL_MS = 20000;
+const DEFAULT_POLL_INTERVAL_MS = 10000;
 
 export function useDoctorChat(
   consultationId: string,

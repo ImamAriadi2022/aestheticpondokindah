@@ -1378,9 +1378,29 @@ export default function ClinicDashboardPage() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [doctorsAvailability, setDoctorsAvailability] = useState<DoctorAvailabilityItem[]>([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [doctorsError, setDoctorsError] = useState("");
 
-  const loadConsultationDetail = async (id: string) => {
-    setDetailLoading(true);
+  const openTransferDialog = async () => {
+    setTransferDoctorId("");
+    setDoctorsError("");
+    setTransferOpen(true);
+    setDoctorsLoading(true);
+    try {
+      // Always refetch: doctors can be added or activated while the admin
+      // dashboard is already open.
+      setDoctorsAvailability(await getDoctorsAvailability());
+    } catch (err: any) {
+      logger.error("Gagal memuat dokter", err);
+      setDoctorsAvailability([]);
+      setDoctorsError(err?.message || "Daftar dokter tidak dapat dimuat.");
+    } finally {
+      setDoctorsLoading(false);
+    }
+  };
+
+  const loadConsultationDetail = async (id: string, silent = false) => {
+    if (!silent) setDetailLoading(true);
     try {
       const detail = await getConsultationDetail(id);
       setConsultationDetail(detail);
@@ -1394,7 +1414,7 @@ export default function ClinicDashboardPage() {
     } catch (err) {
       logger.error("Gagal memuat detail konsultasi", err);
     } finally {
-      setDetailLoading(false);
+      if (!silent) setDetailLoading(false);
     }
   };
 
@@ -1406,6 +1426,16 @@ export default function ClinicDashboardPage() {
       return;
     }
     loadConsultationDetail(selectedConsultationId);
+  }, [selectedConsultationId]);
+
+  // The admin sees the same message thread as the patient, guest, and doctor.
+  // Refresh only the open detail so the rest of this large dashboard stays stable.
+  useEffect(() => {
+    if (!selectedConsultationId) return;
+    const timer = window.setInterval(() => {
+      loadConsultationDetail(selectedConsultationId, true);
+    }, 10000);
+    return () => window.clearInterval(timer);
   }, [selectedConsultationId]);
 
   useEffect(() => {
@@ -1603,16 +1633,7 @@ export default function ClinicDashboardPage() {
                         size="sm"
                         variant="outline"
                         disabled={actionBusy}
-                        onClick={async () => {
-                          if (doctorsAvailability.length === 0) {
-                            try {
-                              setDoctorsAvailability(await getDoctorsAvailability());
-                            } catch (err) {
-                              logger.error("Gagal memuat dokter", err);
-                            }
-                          }
-                          setTransferOpen(true);
-                        }}
+                        onClick={openTransferDialog}
                         className="rounded-sm border-gray-200"
                       >
                         <Users className="w-4 h-4" />
@@ -1907,15 +1928,29 @@ export default function ClinicDashboardPage() {
                     <select
                       value={transferDoctorId}
                       onChange={(e) => setTransferDoctorId(e.target.value)}
+                      disabled={doctorsLoading || doctorsAvailability.length === 0}
                       className="w-full rounded-sm border border-gray-200 px-3 py-2 text-sm focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] outline-none bg-white"
                     >
-                      <option value="">Pilih dokter...</option>
+                      <option value="">{doctorsLoading ? "Memuat dokter..." : "Pilih dokter..."}</option>
                       {doctorsAvailability.map((d) => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
+                        <option key={d.id} value={d.id}>
+                          {d.name}{d.specialization ? ` — ${d.specialization}` : ""}
+                        </option>
                       ))}
                     </select>
-                    {doctorsAvailability.length === 0 && (
+                    {doctorsLoading && (
                       <p className="text-xs text-gray-400 mt-2">Memuat daftar dokter...</p>
+                    )}
+                    {doctorsError && (
+                      <p className="text-xs text-red-600 mt-2">{doctorsError}</p>
+                    )}
+                    {!doctorsLoading && !doctorsError && doctorsAvailability.length === 0 && (
+                      <p className="text-xs text-amber-700 mt-2">Belum ada akun dokter yang dapat dipilih.</p>
+                    )}
+                    {transferDoctorId && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        Konsultasi akan langsung diteruskan ke dokter terpilih dan muncul di daftar konsultasinya.
+                      </p>
                     )}
                     <div className="flex justify-end gap-2 mt-5">
                       <Button variant="outline" size="sm" onClick={() => setTransferOpen(false)} className="rounded-sm border-gray-200">
@@ -1929,6 +1964,7 @@ export default function ClinicDashboardPage() {
                           try {
                             const updated = await transferConsultation(selectedConsultation.id, transferDoctorId);
                             setConsultations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+                            setConsultationDetail((prev) => prev ? { ...prev, ...updated } : updated);
                             setTransferOpen(false);
                             setTransferDoctorId("");
                             toast({ title: "Berhasil", message: "Konsultasi diteruskan ke dokter", variant: "success" });
