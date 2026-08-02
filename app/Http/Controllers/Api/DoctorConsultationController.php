@@ -30,8 +30,7 @@ class DoctorConsultationController extends Controller
                     ->orWhereHas('doctorSchedule', function ($sq) use ($user) {
                         $sq->where('user_id', $user->id);
                     })
-                    ->orWhere('doctor_name', 'like', '%' . $user->name . '%')
-                    ->orWhere('type', 'quick');
+                    ->orWhere('doctor_name', 'like', '%' . $user->name . '%');
             });
 
         $type = trim((string) $request->query('type', ''));
@@ -62,8 +61,7 @@ class DoctorConsultationController extends Controller
                 ->orWhereHas('doctorSchedule', function ($sq) use ($user) {
                     $sq->where('user_id', $user->id);
                 })
-                ->orWhere('doctor_name', 'like', '%' . $user->name . '%')
-                ->orWhere('type', 'quick');
+                ->orWhere('doctor_name', 'like', '%' . $user->name . '%');
         };
 
         $query = Consultation::query()->with(['user', 'doctorSchedule.user'])->where($scope);
@@ -78,10 +76,7 @@ class DoctorConsultationController extends Controller
             ->count();
 
         $current = Consultation::query()->where($scope)
-            ->whereIn('status', ['Dibuka', 'Dijadwalkan'])
-            ->where(function ($q) use ($user) {
-                $q->where('doctor_id', $user->id);
-            })
+            ->where('status', 'Dibuka')
             ->count();
 
         $completed = Consultation::query()->where($scope)

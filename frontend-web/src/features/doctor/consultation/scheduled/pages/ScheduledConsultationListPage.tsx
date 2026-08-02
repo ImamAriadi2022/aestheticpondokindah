@@ -7,14 +7,12 @@ import { ConsultationSummaryCards } from "@/features/doctor/consultation/dashboa
 import { StatusBadge } from "@/features/doctor/consultation/shared/components/StatusBadge";
 import { TYPE_META } from "@/features/doctor/consultation/constants/consultation";
 import {
-  useConsultationDashboard,
   useScheduledConsultations,
 } from "@/features/doctor/consultation/hooks/useScheduledConsultations";
 
 export default function ScheduledConsultationListPage() {
   const navigate = useNavigate();
   const { consultations, loading, reload } = useScheduledConsultations();
-  const { dashboard } = useConsultationDashboard();
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -59,7 +57,11 @@ export default function ScheduledConsultationListPage() {
       </div>
 
       {/* Summary cards */}
-      <ConsultationSummaryCards summary={dashboard?.summary ?? null} loading={!dashboard} />
+      <ConsultationSummaryCards consultations={consultations} loading={loading} />
+
+      <div className="rounded-xl border border-[#F0E6D3] bg-[#FDF8F0] px-4 py-3 text-xs text-[#6B5A4E] leading-relaxed">
+        <span className="font-bold">Arti status:</span> Menunggu = permintaan belum diproses; Terjadwal = dokter dan waktu sudah ditentukan, tetapi sesi belum dimulai; Sedang Berjalan = ruang chat/sesi sudah dibuka; Selesai = konsultasi ditutup.
+      </div>
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">

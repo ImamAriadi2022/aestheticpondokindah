@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { getSession, clearSession } from "@/core/auth/services/session";
 import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
 import { getMyConsultations } from "@/features/patient/consultation/services/consultationApi";
@@ -10,6 +10,7 @@ import { logger } from "@/core/utils/logger";
 import DesktopUserHome from "@/features/patient/dashboard/components/DesktopUserHome";
 import DesktopReservasi from "@/features/patient/reservation/components/DesktopReservasi";
 import DesktopKonsultasi from "@/features/patient/consultation/components/DesktopKonsultasi";
+import PatientConsultationList from "@/features/patient/consultation/components/PatientConsultationList";
 import DesktopPengaduan from "@/features/patient/complaint/components/DesktopPengaduan";
 import DesktopUserPromo from "@/features/patient/dashboard/components/DesktopUserPromo";
 import DesktopUserBlog from "@/features/patient/dashboard/components/DesktopUserBlog";
@@ -40,7 +41,9 @@ function useIsMobile() {
 export default function UserDashboardPage() {
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const activeTab = searchParams.get("tab") || "dashboard";
+  const consultationView = searchParams.get("view") === "list" ? "list" : "create";
 
   // Ambil session
   const session = getSession();
@@ -114,7 +117,26 @@ export default function UserDashboardPage() {
       case "riwayat":
         return <DesktopReservasi key="riwayat" initialView="history" />;
       case "konsultasi":
-        return <DesktopKonsultasi consultations={consultations} />;
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col gap-3 rounded-2xl border border-[#F0E6D3] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Konsultasi</h1>
+                <p className="text-sm text-gray-500">Pilih halaman konsultasi yang ingin Anda buka.</p>
+              </div>
+              <select
+                aria-label="Pilih halaman konsultasi"
+                value={consultationView}
+                onChange={(event) => navigate(`/dashboard/user?tab=konsultasi&view=${event.target.value}`)}
+                className="h-10 w-full rounded-xl border border-[#DCC799] bg-white px-3 text-sm font-semibold text-[#6B521C] outline-none focus:ring-2 focus:ring-[#C9A24A]/30 sm:w-56"
+              >
+                <option value="create">Buat Konsultasi</option>
+                <option value="list">Daftar Konsultasi</option>
+              </select>
+            </div>
+            {consultationView === "list" ? <PatientConsultationList consultations={consultations} /> : <DesktopKonsultasi />}
+          </div>
+        );
       case "pengaduan":
         return <DesktopPengaduan />;
       case "promo":

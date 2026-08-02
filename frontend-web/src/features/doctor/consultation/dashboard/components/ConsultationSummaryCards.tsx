@@ -1,15 +1,15 @@
 import { CalendarDays, Users, Activity, CheckCircle2, Loader2 } from "lucide-react";
-import type { ConsultationSummary } from "@/features/doctor/consultation/types/consultation";
+import type { DoctorConsultation } from "@/features/doctor/consultation/types/consultation";
 
 interface ConsultationSummaryCardsProps {
-  summary: ConsultationSummary | null;
+  consultations: DoctorConsultation[];
   loading?: boolean;
 }
 
 const CARDS = [
   {
-    key: "today" as const,
-    label: "Konsultasi Hari Ini",
+    key: "total" as const,
+    label: "Total Konsultasi",
     icon: CalendarDays,
     className: "from-[#C9A24A] to-[#B8943F]",
   },
@@ -18,6 +18,12 @@ const CARDS = [
     label: "Menunggu",
     icon: Users,
     className: "from-amber-500 to-amber-600",
+  },
+  {
+    key: "scheduled" as const,
+    label: "Terjadwal",
+    icon: CalendarDays,
+    className: "from-violet-500 to-violet-600",
   },
   {
     key: "current" as const,
@@ -33,11 +39,11 @@ const CARDS = [
   },
 ];
 
-export function ConsultationSummaryCards({ summary, loading = false }: ConsultationSummaryCardsProps) {
-  if (loading && !summary) {
+export function ConsultationSummaryCards({ consultations, loading = false }: ConsultationSummaryCardsProps) {
+  if (loading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[0, 1, 2, 3].map((i) => (
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+        {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="h-28 rounded-2xl bg-[#FDF8F0] border border-[#F0E6D3] flex items-center justify-center">
             <Loader2 className="w-5 h-5 text-[#C9A24A] animate-spin" />
           </div>
@@ -46,8 +52,16 @@ export function ConsultationSummaryCards({ summary, loading = false }: Consultat
     );
   }
 
+  const values = {
+    total: consultations.length,
+    waiting: consultations.filter((item) => item.status === "Menunggu").length,
+    scheduled: consultations.filter((item) => item.status === "Dijadwalkan").length,
+    current: consultations.filter((item) => item.status === "Dibuka").length,
+    completed: consultations.filter((item) => item.status === "Selesai").length,
+  };
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
       {CARDS.map(({ key, label, icon: Icon, className }) => (
         <div
           key={key}
@@ -60,7 +74,7 @@ export function ConsultationSummaryCards({ summary, loading = false }: Consultat
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold text-[#4A3F35]">
-            {summary ? summary[key] : "-"}
+            {values[key]}
           </p>
         </div>
       ))}
