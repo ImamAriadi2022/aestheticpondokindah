@@ -170,6 +170,12 @@ class ConsultationAdminController extends Controller
             return response()->json(['message' => 'Konsultasi ini sudah ditutup.'], 422);
         }
 
+        if ($consultation->type === 'quick') {
+            return response()->json([
+                'message' => 'Konsultasi instan ditangani sampai selesai oleh admin dan tidak dapat diteruskan ke dokter.',
+            ], 422);
+        }
+
         $consultation = $this->consultationService->transferToDoctor($consultation, $doctor);
 
         return response()->json(['message' => 'Konsultasi diteruskan ke dokter.', 'consultation' => ConsultationService::dto($consultation->load(['user', 'doctorSchedule.user']))]);

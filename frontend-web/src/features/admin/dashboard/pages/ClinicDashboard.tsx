@@ -1629,16 +1629,18 @@ export default function ClinicDashboardPage() {
                           Terima
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={actionBusy}
-                        onClick={openTransferDialog}
-                        className="rounded-sm border-gray-200"
-                      >
-                        <Users className="w-4 h-4" />
-                        Teruskan ke Dokter
-                      </Button>
+                      {selectedConsultation.type !== "quick" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={actionBusy}
+                          onClick={openTransferDialog}
+                          className="rounded-sm border-gray-200"
+                        >
+                          <Users className="w-4 h-4" />
+                          Teruskan ke Dokter
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
@@ -1914,7 +1916,7 @@ export default function ClinicDashboardPage() {
 
               {/* Transfer modal */}
               {transferOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 pt-20 sm:pt-24 overflow-y-auto">
                   <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-bold text-gray-900">Teruskan ke Dokter</h3>
