@@ -1,6 +1,12 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /
+
+  # Preserve bearer-token authentication for Laravel API requests.
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # Laravel API front controller (Laravel lives one level above this webroot).
+  RewriteRule ^api(?:/.*)?$ ../public/index.php [L,QSA]
 
   RewriteRule ^index\.html$ - [L]
 
