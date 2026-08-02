@@ -9,11 +9,16 @@ use App\Models\Diagnosis;
 use App\Models\MedicalRecord;
 use App\Models\SoapNote;
 use App\Models\Visit;
+use App\Services\ConsultationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DoctorConsultationController extends Controller
 {
+    public function __construct(private readonly ConsultationService $consultationService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -42,9 +47,7 @@ class DoctorConsultationController extends Controller
         $items = $query->orderByDesc('created_at')
             ->limit(200)
             ->get()
-            ->map(function (Consultation $c) {
-                return $this->toDto($c);
-            })
+            ->map(fn (Consultation $c) => ConsultationService::dto($c))
             ->values();
 
         return response()->json($items);
@@ -75,7 +78,7 @@ class DoctorConsultationController extends Controller
             ->count();
 
         $current = Consultation::query()->where($scope)
-            ->where('status', 'Menunggu')
+            ->whereIn('status', ['Dibuka', 'Dijadwalkan'])
             ->where(function ($q) use ($user) {
                 $q->where('doctor_id', $user->id);
             })
@@ -89,9 +92,7 @@ class DoctorConsultationController extends Controller
             ->orderByDesc('created_at')
             ->limit(10)
             ->get()
-            ->map(function (Consultation $c) {
-                return $this->toDto($c);
-            })
+            ->map(fn (Consultation $c) => ConsultationService::dto($c))
             ->values();
 
         return response()->json([
@@ -110,15 +111,16 @@ class DoctorConsultationController extends Controller
         $doctor = $request->user();
         $consultation = Consultation::with(['user', 'doctorSchedule.user'])->find($id);
 
-        if (!$consultation) {
+        if (!$consultation || !$consultation->isManagedBy($doctor)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
         }
 
-        if (!$consultation->isManagedBy($doctor)) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
-        }
+        $dto = ConsultationService::dto($consultation);
+        $dto['messages'] = $consultation->messages->map(fn ($m) => ConsultationService::messageDto($m))->values();
+        $dto['meetings'] = $consultation->meetings->map(fn ($m) => ConsultationService::meetingDto($m))->values();
+        $dto['medicalRecord'] = $this->medicalRecordDto($consultation);
 
-        return response()->json(['consultation' => $this->detailDto($consultation)]);
+        return response()->json(['consultation' => $dto]);
     }
 
     public function assign(Request $request, int|string $id): JsonResponse
@@ -134,50 +136,74 @@ class DoctorConsultationController extends Controller
             return response()->json(['message' => 'Hanya konsultasi cepat yang dapat diambil oleh dokter.'], 422);
         }
 
-        if ($consultation->status === 'Selesai') {
-            return response()->json(['message' => 'Konsultasi ini sudah selesai.'], 422);
+        if ($consultation->status === 'Selesai' || $consultation->status === 'Ditolak') {
+            return response()->json(['message' => 'Konsultasi ini sudah ditutup.'], 422);
         }
 
         if ($consultation->doctor_id && (int) $consultation->doctor_id !== (int) $doctor->id) {
             return response()->json(['message' => 'Konsultasi ini sudah ditangani dokter lain.'], 409);
         }
 
-        $consultation->doctor_id = $doctor->id;
-        $consultation->doctor_name = $doctor->name;
-        $consultation->save();
+        $consultation = $this->consultationService->transferToDoctor($consultation, $doctor);
 
-        $consultation->load(['user', 'doctorSchedule.user']);
+        return response()->json(['message' => 'Konsultasi berhasil diambil.', 'consultation' => ConsultationService::dto($consultation->load(['user', 'doctorSchedule.user']))]);
+    }
 
-        return response()->json(['message' => 'Konsultasi berhasil diambil.', 'consultation' => $this->detailDto($consultation)]);
+    public function start(Request $request, int|string $id): JsonResponse
+    {
+        $doctor = $request->user();
+        $consultation = Consultation::with(['user', 'doctorSchedule.user', 'reservation'])->find($id);
+
+        if (!$consultation || !$consultation->isManagedBy($doctor)) {
+            return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
+        }
+
+        $consultation = $this->consultationService->start($consultation, $doctor);
+
+        $dto = ConsultationService::dto($consultation);
+        $dto['medicalRecord'] = $this->medicalRecordDto($consultation);
+
+        return response()->json(['message' => 'Konsultasi dimulai.', 'consultation' => $dto]);
+    }
+
+    public function complete(Request $request, int|string $id): JsonResponse
+    {
+        $doctor = $request->user();
+        $consultation = Consultation::with(['user', 'doctorSchedule.user'])->find($id);
+
+        if (!$consultation || !$consultation->isManagedBy($doctor)) {
+            return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
+        }
+
+        $consultation = $this->consultationService->complete($consultation);
+
+        $dto = ConsultationService::dto($consultation);
+        $dto['medicalRecord'] = $this->medicalRecordDto($consultation);
+
+        return response()->json(['message' => 'Konsultasi diselesaikan.', 'consultation' => $dto]);
     }
 
     public function updateStatus(Request $request, int|string $id): JsonResponse
     {
         $doctor = $request->user();
         $validated = $request->validate([
-            'status' => ['required', 'in:Menunggu,Dijadwalkan,Selesai'],
+            'status' => ['required', 'in:Menunggu,Dijadwalkan,Dibuka,Selesai'],
         ]);
 
-        $consultation = Consultation::find($id);
+        $consultation = Consultation::with(['user', 'doctorSchedule.user'])->find($id);
 
-        if (!$consultation) {
+        if (!$consultation || !$consultation->isManagedBy($doctor)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
         }
 
-        if (!$consultation->isManagedBy($doctor)) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
-        }
-
-        $consultation->status = $validated['status'];
-
         if ($validated['status'] === 'Selesai') {
-            $consultation->messages()->whereNull('read_at')->update(['read_at' => now()]);
+            $consultation = $this->consultationService->complete($consultation);
+        } else {
+            $consultation->status = $validated['status'];
+            $consultation->save();
         }
 
-        $consultation->save();
-        $consultation->load(['user', 'doctorSchedule.user']);
-
-        return response()->json(['message' => 'Status konsultasi diperbarui.', 'consultation' => $this->detailDto($consultation)]);
+        return response()->json(['message' => 'Status konsultasi diperbarui.', 'consultation' => ConsultationService::dto($consultation->load(['user', 'doctorSchedule.user']))]);
     }
 
     public function patientSummary(Request $request, int|string $id): JsonResponse
@@ -185,12 +211,8 @@ class DoctorConsultationController extends Controller
         $doctor = $request->user();
         $consultation = Consultation::with(['user'])->find($id);
 
-        if (!$consultation) {
+        if (!$consultation || !$consultation->isManagedBy($doctor)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
-        }
-
-        if (!$consultation->isManagedBy($doctor)) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
         }
 
         $patient = $consultation->user;
@@ -245,9 +267,7 @@ class DoctorConsultationController extends Controller
             ->orderByDesc('created_at')
             ->limit(20)
             ->get()
-            ->map(function (Consultation $c) {
-                return $this->toDto($c);
-            })
+            ->map(fn (Consultation $c) => ConsultationService::dto($c))
             ->values();
 
         return response()->json([
@@ -269,88 +289,25 @@ class DoctorConsultationController extends Controller
         ]);
     }
 
-    private function toDto(Consultation $c): array
+    private function medicalRecordDto(Consultation $consultation): ?array
     {
-        $dateStr = '-';
-        if ($c->type === 'scheduled' && $c->schedule_date) {
-            $dateStr = $c->schedule_date->format('j F Y');
-            if ($c->schedule_time) {
-                $dateStr .= ' • ' . $c->schedule_time;
-            }
-        } else {
-            $dateStr = optional($c->created_at)->format('j F Y') ?? '-';
+        $visit = $consultation->visit;
+        if (!$visit) {
+            return null;
         }
 
-        $doctorId = $c->doctor_id
-            ? (string) $c->doctor_id
-            : ($c->doctorSchedule?->user_id ? (string) $c->doctorSchedule->user_id : null);
-
-        $unreadCount = $c->messages()
-            ->where('sender_role', '!=', 'doctor')
-            ->whereNull('read_at')
-            ->count();
+        $record = MedicalRecord::query()->where('visit_id', $visit->id)->first();
+        if (!$record) {
+            return null;
+        }
 
         return [
-            'id' => (string) $c->id,
-            'userId' => (string) $c->user_id,
-            'user' => $c->user ? [
-                'id' => (string) $c->user->id,
-                'name' => $c->user->name,
-                'email' => $c->user->email,
-            ] : null,
-            'doctorId' => $doctorId,
-            'type' => $c->type,
-            'status' => $c->status,
-            'topic' => $c->topic ?: ($c->category ?: 'Konsultasi'),
-            'category' => $c->category,
-            'doctorName' => $c->doctorSchedule?->user?->name ?: ($c->doctor_name ?: 'Dokter Jaga'),
-            'date' => $dateStr,
-            'chiefComplaint' => $c->chief_complaint,
-            'duration' => $c->duration,
-            'painScale' => $c->pain_scale,
-            'allergies' => $c->allergies,
-            'medications' => $c->medications,
-            'priorTreatment' => $c->prior_treatment,
-            'preferredContact' => $c->preferred_contact,
-            'contactNumber' => $c->contact_number,
-            'expectations' => $c->expectations,
-            'notes' => $c->notes,
-            'scheduleDate' => optional($c->schedule_date)?->format('Y-m-d'),
-            'scheduleTime' => $c->schedule_time,
-            'location' => $c->location,
-            'attachments' => $c->attachments ?? [],
-            'unreadCount' => $unreadCount,
-            'createdAt' => optional($c->created_at)->toISOString(),
+            'id' => (string) $record->id,
+            'recordNumber' => $record->record_number,
+            'status' => $record->status,
+            'summaryNotes' => $record->summary_notes,
+            'visitId' => (string) $visit->id,
+            'finalizedAt' => optional($record->finalized_at)->toISOString(),
         ];
-    }
-
-    private function detailDto(Consultation $c): array
-    {
-        $base = $this->toDto($c);
-
-        $base['messages'] = $c->messages->map(function ($m) {
-            return [
-                'id' => (string) $m->id,
-                'senderId' => (string) $m->sender_id,
-                'senderRole' => $m->sender_role,
-                'body' => $m->body,
-                'attachments' => $m->attachments ?? [],
-                'readAt' => optional($m->read_at)->toISOString(),
-                'createdAt' => optional($m->created_at)->toISOString(),
-            ];
-        })->values();
-
-        $base['meetings'] = $c->meetings->map(function ($m) {
-            return [
-                'id' => (string) $m->id,
-                'provider' => $m->provider,
-                'title' => $m->title,
-                'url' => $m->url,
-                'startsAt' => optional($m->starts_at)->toISOString(),
-                'createdAt' => optional($m->created_at)->toISOString(),
-            ];
-        })->values();
-
-        return $base;
     }
 }

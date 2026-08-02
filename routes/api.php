@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Public\ReservationController;
 use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\PromoClaimController;
 use App\Http\Controllers\Api\ConsultationController;
+use App\Http\Controllers\Api\GuestConsultationController;
 use App\Http\Controllers\Api\ConsultationMessageController;
 use App\Http\Controllers\Api\ConsultationMeetingController;
 use App\Http\Controllers\Api\DoctorConsultationController;
@@ -111,6 +112,14 @@ Route::prefix('admin')->group(function () {
         Route::delete('/media/{media}', [MediaAdminController::class, 'destroy']);
 
         Route::get('/consultations', [ConsultationAdminController::class, 'index']);
+        Route::get('/consultations/queue', [ConsultationAdminController::class, 'queue']);
+        Route::get('/doctors-availability', [ConsultationAdminController::class, 'doctorsAvailability']);
+        Route::post('/consultations/{consultation}/accept', [ConsultationAdminController::class, 'accept']);
+        Route::post('/consultations/{consultation}/reject', [ConsultationAdminController::class, 'reject']);
+        Route::post('/consultations/{consultation}/transfer', [ConsultationAdminController::class, 'transfer']);
+        Route::post('/consultations/{consultation}/close', [ConsultationAdminController::class, 'close']);
+        Route::post('/consultations/{consultation}/messages', [ConsultationAdminController::class, 'sendMessage']);
+        Route::post('/consultations/{consultation}/read', [ConsultationAdminController::class, 'markRead']);
         Route::get('/consultations/{consultation}', [ConsultationAdminController::class, 'show']);
         Route::put('/consultations/{consultation}', [ConsultationAdminController::class, 'update']);
 
@@ -157,6 +166,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
     Route::get('/user/consultations', [ConsultationController::class, 'index']);
     Route::post('/user/consultations', [ConsultationController::class, 'store']);
+    Route::get('/user/consultations/{id}', [ConsultationController::class, 'show']);
+    Route::post('/user/consultations/{id}/messages', [ConsultationController::class, 'sendMessage']);
+    Route::post('/user/consultations/{id}/read', [ConsultationController::class, 'markRead']);
+    Route::get('/user/consultations/{id}/meetings', [ConsultationController::class, 'meetings']);
     Route::get('/user/reservations', [UserReservationController::class, 'index']);
     Route::post('/user/reservations', [UserReservationController::class, 'store']);
     Route::get('/user/reservations/{id}', [UserReservationController::class, 'show']);
@@ -225,6 +238,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/doctor/consultations/dashboard', [DoctorConsultationController::class, 'dashboard']);
         Route::get('/doctor/consultations/{id}', [DoctorConsultationController::class, 'show']);
         Route::post('/doctor/consultations/{id}/assign', [DoctorConsultationController::class, 'assign']);
+        Route::post('/doctor/consultations/{id}/start', [DoctorConsultationController::class, 'start']);
+        Route::post('/doctor/consultations/{id}/complete', [DoctorConsultationController::class, 'complete']);
         Route::put('/doctor/consultations/{id}/status', [DoctorConsultationController::class, 'updateStatus']);
         Route::get('/doctor/consultations/{id}/patient-summary', [DoctorConsultationController::class, 'patientSummary']);
         Route::get('/doctor/consultations/{id}/messages', [ConsultationMessageController::class, 'index']);
@@ -277,6 +292,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::prefix('public')->group(function () {
     Route::post('/analytics/visit', [AnalyticsVisitController::class, 'store']);
+    Route::post('/consultations', [GuestConsultationController::class, 'store']);
+    Route::get('/consultations/{token}', [GuestConsultationController::class, 'show']);
+    Route::post('/consultations/{token}/messages', [GuestConsultationController::class, 'sendMessage']);
+    Route::post('/consultations/{token}/read', [GuestConsultationController::class, 'markRead']);
     Route::get('/posts', [ContentController::class, 'posts']);
     Route::get('/posts/{slug}', [ContentController::class, 'postBySlug']);
     Route::get('/popup/active', [ContentController::class, 'activePopup']);

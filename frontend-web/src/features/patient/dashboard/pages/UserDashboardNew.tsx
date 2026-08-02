@@ -146,7 +146,7 @@ export default function UserDashboardPage() {
       case "booking":
         return <DesktopReservasi />;
       case "konsultasi":
-        return <DesktopKonsultasi />;
+        return <DesktopKonsultasi consultations={consultations} />;
       case "pengaduan":
         return <DesktopPengaduan />;
       case "promo":

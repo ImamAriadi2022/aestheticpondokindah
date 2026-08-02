@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
+import { StatusBadge } from "@/shared/consultation/components/StatusBadge";
+import { createConsultation, type ConsultationItem } from "@/features/patient/consultation/services/consultationApi";
 import { 
   ChevronRight,
   MessageSquareText,
@@ -17,7 +19,7 @@ import {
   Check,
   Zap,
   Calendar,
-  FileText
+  MessageCircle
 } from "lucide-react";
 
 const symptoms = [
@@ -38,7 +40,11 @@ const consultationTypes = [
   { id: "scheduled", label: "Konsultasi Terjadwal", icon: Calendar, description: "Pilih tanggal & dokter untuk sesi konsultasi tatap muka", color: "bg-[#a8843a]" },
 ];
 
-export default function DesktopKonsultasi() {
+export default function DesktopKonsultasi({
+  consultations = [],
+}: {
+  consultations?: ConsultationItem[];
+}) {
   const navigate = useNavigate();
   const [step, setStep] = useState<"type" | "symptoms" | "pain" | "details" | "success">("type");
   const [selectedType, setSelectedType] = useState<string>("quick");
@@ -47,6 +53,10 @@ export default function DesktopKonsultasi() {
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const activeConsultations = consultations.filter((c) =>
+    ["Menunggu", "Dijadwalkan", "Dibuka"].includes(c.status)
+  );
 
   const toggleSymptom = (id: string) => {
     setSelectedSymptoms(prev => 
@@ -78,9 +88,29 @@ export default function DesktopKonsultasi() {
     }
 
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    setStep("success");
+    try {
+      const symptomLabels = selectedSymptoms
+        .map((id) => symptoms.find((s) => s.id === id)?.label)
+        .filter(Boolean)
+        .join(", ");
+      const consultation = await createConsultation({
+        type: "quick",
+        topic: symptomLabels || "Konsultasi",
+        chiefComplaint: description.trim() || symptomLabels || "Keluhan gigi",
+        painScale: painLevel ?? undefined,
+        preferredContact: "whatsapp",
+        attachments: attachments.map((file) => ({ name: file.name, size: file.size, type: file.type })),
+      });
+      toast({ title: "Berhasil", message: "Konsultasi Anda telah dikirim", variant: "success" });
+      navigate(`/dashboard/user/consultation/${consultation.id}`);
+    } catch (err) {
+      toast({
+        title: "Gagal",
+        message: (err as Error)?.message || "Tidak bisa mengirim konsultasi. Coba lagi.",
+        variant: "error",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   const getStepNumber = () => {
@@ -144,6 +174,44 @@ export default function DesktopKonsultasi() {
 
   return (
     <div className="space-y-6">
+      {/* Active Consultations */}
+      {activeConsultations.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-[#c9a24a]/10 flex items-center justify-center">
+              <MessageCircle className="w-4 h-4 text-[#c9a24a]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Konsultasi Aktif</h3>
+              <p className="text-xs text-gray-500">{activeConsultations.length} percakapan sedang berjalan</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {activeConsultations.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => navigate(`/dashboard/user/consultation/${c.id}`)}
+                className="bg-white rounded-2xl p-4 border border-[#F0E6D3] text-left hover:border-[#C9A24A] hover:shadow-md transition-all"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-gray-900 truncate">
+                        {c.participantName || "Konsultasi Saya"}
+                      </p>
+                      <StatusBadge status={c.status} />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1 truncate">{c.topic}</p>
+                    <p className="text-[11px] text-gray-400 mt-1">{c.date}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-[#C9A24A] shrink-0" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center gap-4">
         {step !== "type" && (

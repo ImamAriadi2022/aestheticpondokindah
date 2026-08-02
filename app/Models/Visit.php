@@ -44,6 +44,11 @@ class Visit extends Model
         return $this->belongsTo(Reservation::class);
     }
 
+    public function medicalRecord(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(MedicalRecord::class);
+    }
+
     public function isTerminal(): bool
     {
         return in_array($this->status, ['completed', 'cancelled'], true);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\ConsultationMeeting;
+use App\Services\ConsultationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -12,27 +13,26 @@ class ConsultationMeetingController extends Controller
 {
     public function index(Request $request, int|string $id): JsonResponse
     {
-        $doctor = $request->user();
+        $user = $request->user();
         $consultation = Consultation::find($id);
 
-        if (!$consultation) {
+        if (!$consultation || !$consultation->isParticipant($user)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
         }
 
-        if (!$consultation->isManagedBy($doctor)) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
-        }
-
-        $meetings = $consultation->meetings()->get()->map(function (ConsultationMeeting $m) {
-            return $this->toDto($m);
-        })->values();
+        $meetings = $consultation->meetings->map(fn ($m) => ConsultationService::meetingDto($m))->values();
 
         return response()->json(['meetings' => $meetings]);
     }
 
     public function store(Request $request, int|string $id): JsonResponse
     {
-        $doctor = $request->user();
+        $user = $request->user();
+
+        if ($user->role === 'patient') {
+            return response()->json(['message' => 'Pasien tidak dapat membuat link meeting.'], 403);
+        }
+
         $validated = $request->validate([
             'provider' => ['required', 'in:zoom,google_meet,microsoft_teams,custom'],
             'title' => ['nullable', 'string', 'max:255'],
@@ -42,12 +42,8 @@ class ConsultationMeetingController extends Controller
 
         $consultation = Consultation::find($id);
 
-        if (!$consultation) {
+        if (!$consultation || !$consultation->isParticipant($user)) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
-        }
-
-        if (!$consultation->isManagedBy($doctor)) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
         }
 
         $meeting = $consultation->meetings()->create([
@@ -55,23 +51,24 @@ class ConsultationMeetingController extends Controller
             'title' => $validated['title'] ?? null,
             'url' => $validated['url'],
             'starts_at' => $validated['startsAt'] ?? null,
-            'created_by' => $doctor->id,
+            'created_by' => $user->id,
         ]);
 
-        return response()->json(['meeting' => $this->toDto($meeting)], 201);
+        return response()->json(['meeting' => ConsultationService::meetingDto($meeting)], 201);
     }
 
     public function update(Request $request, int|string $id): JsonResponse
     {
-        $doctor = $request->user();
-        $meeting = ConsultationMeeting::with('consultation')->find($id);
+        $user = $request->user();
 
-        if (!$meeting) {
-            return response()->json(['message' => 'Link meeting tidak ditemukan.'], 404);
+        if ($user->role === 'patient') {
+            return response()->json(['message' => 'Pasien tidak dapat mengubah link meeting.'], 403);
         }
 
-        if (!$meeting->consultation->isManagedBy($doctor)) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke meeting ini.'], 403);
+        $meeting = ConsultationMeeting::with('consultation')->find($id);
+
+        if (!$meeting || !$meeting->consultation->isParticipant($user)) {
+            return response()->json(['message' => 'Link meeting tidak ditemukan.'], 404);
         }
 
         $validated = $request->validate([
@@ -96,37 +93,25 @@ class ConsultationMeetingController extends Controller
 
         $meeting->save();
 
-        return response()->json(['meeting' => $this->toDto($meeting->fresh())]);
+        return response()->json(['meeting' => ConsultationService::meetingDto($meeting->fresh())]);
     }
 
     public function destroy(Request $request, int|string $id): JsonResponse
     {
-        $doctor = $request->user();
-        $meeting = ConsultationMeeting::with('consultation')->find($id);
+        $user = $request->user();
 
-        if (!$meeting) {
-            return response()->json(['message' => 'Link meeting tidak ditemukan.'], 404);
+        if ($user->role === 'patient') {
+            return response()->json(['message' => 'Pasien tidak dapat menghapus link meeting.'], 403);
         }
 
-        if (!$meeting->consultation->isManagedBy($doctor)) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke meeting ini.'], 403);
+        $meeting = ConsultationMeeting::with('consultation')->find($id);
+
+        if (!$meeting || !$meeting->consultation->isParticipant($user)) {
+            return response()->json(['message' => 'Link meeting tidak ditemukan.'], 404);
         }
 
         $meeting->delete();
 
         return response()->json(['message' => 'Link meeting dihapus.']);
-    }
-
-    private function toDto(ConsultationMeeting $m): array
-    {
-        return [
-            'id' => (string) $m->id,
-            'consultationId' => (string) $m->consultation_id,
-            'provider' => $m->provider,
-            'title' => $m->title,
-            'url' => $m->url,
-            'startsAt' => optional($m->starts_at)->toISOString(),
-            'createdAt' => optional($m->created_at)->toISOString(),
-        ];
     }
 }

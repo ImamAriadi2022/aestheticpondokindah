@@ -36,4 +36,17 @@ class ConsultationMessage extends Model
     {
         return $this->belongsTo(User::class, 'sender_id');
     }
+
+    public function getSenderNameAttribute(): string
+    {
+        if ($this->sender_role === 'admin') {
+            return 'Admin';
+        }
+
+        if ($this->sender_role === 'doctor') {
+            return $this->sender?->name ?? 'Dokter';
+        }
+
+        return $this->consultation?->participant_name ?? 'Pasien';
+    }
 }

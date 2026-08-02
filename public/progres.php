@@ -10,13 +10,13 @@ header('Content-Type: text/html; charset=utf-8');
 
 // Metric Data Progress Utama (Hasil Audit Nyata Source Code)
 $metrics = [
-    'overall'       => 98,
+    'overall'       => 99,
     'backend'       => 98,
-    'website'       => 98,
+    'website'       => 99,
     'mobile'        => 85,
     'database'      => 100,
     'api'           => 100,
-    'testing'       => 98,
+    'testing'       => 99,
     'deployment'    => 98,
     'documentation' => 98,
 ];
@@ -51,15 +51,16 @@ $categoryBreakdown = [
     ],
     'website' => [
         'title' => 'Website React JS (SPA Frontend)',
-        'progress' => 98,
-        'status' => '🟢 Complete (98%)',
+        'progress' => 99,
+        'status' => '🟢 Complete (99%)',
         'completed' => [
             '25+ Halaman SPA Responsive (Landing Page, Patient Portal, Clinic Admin, Doctor Dashboard, Medical Record Viewer)',
             'Sistem Booking Janji Temu Online & Cek Status Reservasi',
             'Sistem Membership Card Digital & Upgrade Level Tier',
             'Toast Notification System (deduplication & variants), Error Boundary, & Sanitized Logger',
             'Global API Client dengan auto-retry GET & handle 401 auto logout',
-            'Komponen UI Klinis Terintegrasi (SOAP, Diagnosis, Odontogram Tooth Chart, Procedure List)'
+            'Komponen UI Klinis Terintegrasi (SOAP, Diagnosis, Odontogram Tooth Chart, Procedure List)',
+            'Konsultasi Online End-to-End (Guest via token publik, Pasien room chat, Admin antrian Terima/Tolak/Teruskan/Tutup + chat + link meeting, Dokter room chat + meeting link + patient summary)'
         ],
         'missing' => [
             'Refactoring beberapa tipe data `any` pada ClinicDashboard.tsx',
@@ -114,13 +115,14 @@ $categoryBreakdown = [
     ],
     'testing' => [
         'title' => 'QA Testing & Diagnostic',
-        'progress' => 98,
-        'status' => '🟢 Complete (98%)',
+        'progress' => 99,
+        'status' => '🟢 Complete (99%)',
         'completed' => [
             '55/55 Unit & Integration Regression Test Scripts PASS (2007ms)',
             '200+ Skenario UAT & Business Workflow di skenario-test.md (4723 baris)',
             'Audit Sertifikasi Release Candidate Sprint 5 (Skor 97/100)',
             'Pengujian IDOR Security, Form Validation, & Read-only State Enforcement',
+            'Smoke Test End-to-End Konsultasi Online (guest -> admin terima/balas -> pasien -> dokter mulai/selesai) semua lulus',
             '0 Critical Bugs, 0 Failing Tests'
         ],
         'missing' => [
@@ -222,7 +224,7 @@ $websiteDetails = [
     ['feature' => 'Form Validation', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'Zod validation & Laravel Validator di AuthController & RegistrationController', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'Error Handling & Toast', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'toast.tsx (deduplication, variants, promise, accessibility), logger.ts, ErrorBoundary.tsx', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'API Integration', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts (interceptors, timeout, retries, 401 auto logout), apiError.ts, apiConfig.ts', 'missing' => 'Sudah 100% Selesai'],
-    ['feature' => 'Konsultasi Online Dokter', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'features/doctor/consultation/{dashboard,instant,scheduled,shared}, ChatWindow.tsx, MeetingLinkPanel.tsx, PatientSummaryPanel.tsx, ConsultationChatPage.tsx, DoctorConsultationController.php, ConsultationMessageController.php, ConsultationMeetingController.php, OnlineConsultationSeeder.php', 'missing' => 'Sudah 100% Selesai (Konsultasi Terjadwal: daftar + room chat + meeting link Zoom/Google Meet/Teams/Custom + patient summary + quick actions)'],
+    ['feature' => 'Konsultasi Online Dokter', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'src/shared/consultation/{types,constants,utils,components}, features/guest/consultation, features/patient/consultation, ClinicDashboard.tsx, DoctorConsultationController.php, ConsultationAdminController.php, GuestConsultationController.php, OnlineConsultationSeeder.php', 'missing' => 'Sudah 100% Selesai (Guest tanpa login via token, Pasien room chat, Admin antrian + chat + meeting link, Dokter room chat + patient summary + quick actions)'],
 ];
 
 // 3. Detail Mobile Components
@@ -265,7 +267,8 @@ $apiEndpoints = [
     ['method' => 'GET/POST/PUT/DELETE', 'uri' => '/api/admin/testimonials/*', 'controller' => 'TestimonialAdminController', 'val' => 'Role Admin', 'res' => 'JSON Items', 'fe' => 'ClinicDashboard.tsx', 'status' => '🟢 Complete'],
     ['method' => 'GET/POST/PUT/DELETE', 'uri' => '/api/admin/promos/*', 'controller' => 'PromoAdminController', 'val' => 'Role Admin', 'res' => 'JSON Promos', 'fe' => 'ClinicDashboard.tsx', 'status' => '🟢 Complete'],
     ['method' => 'GET/POST/DELETE', 'uri' => '/api/admin/media/*', 'controller' => 'MediaAdminController', 'val' => 'Role Admin', 'res' => 'JSON Media', 'fe' => 'UploadController.ts', 'status' => '🟢 Complete'],
-    ['method' => 'GET/PUT', 'uri' => '/api/admin/consultations/*', 'controller' => 'ConsultationAdminController', 'val' => 'Role Admin', 'res' => 'JSON Data', 'fe' => 'ClinicDashboard.tsx', 'status' => '🟢 Complete'],
+    ['method' => 'GET/POST', 'uri' => '/api/admin/consultations', 'controller' => 'ConsultationAdminController', 'val' => 'Role Admin', 'res' => 'JSON Data', 'fe' => 'ClinicDashboard.tsx', 'status' => '🟢 Complete'],
+    ['method' => 'GET/POST/PUT/DELETE', 'uri' => '/api/admin/consultations/{id}/*', 'controller' => 'ConsultationAdminController', 'val' => 'Role Admin', 'res' => 'JSON Data', 'fe' => 'ClinicDashboard.tsx', 'status' => '🟢 Complete'],
     ['method' => 'GET/PUT/DELETE', 'uri' => '/api/admin/complaints/*', 'controller' => 'ComplaintAdminController', 'val' => 'Role Admin', 'res' => 'JSON Data', 'fe' => 'ClinicDashboard.tsx', 'status' => '🟢 Complete'],
     ['method' => 'GET/PATCH/DELETE', 'uri' => '/api/admin/membership/*', 'controller' => 'MembershipAdminController', 'val' => 'Role Admin', 'res' => 'JSON Data', 'fe' => 'membershipApi.ts', 'status' => '🟢 Complete'],
     ['method' => 'POST', 'uri' => '/api/upload', 'controller' => 'UploadController@store', 'val' => 'Sanctum', 'res' => 'JSON URL', 'fe' => 'uploadApi.ts', 'status' => '🟢 Complete'],
@@ -291,6 +294,10 @@ $apiEndpoints = [
     ['method' => 'GET', 'uri' => '/api/public/testimonials', 'controller' => 'ContentController@testimonials', 'val' => 'Public', 'res' => 'JSON Array', 'fe' => 'Cerita.tsx', 'status' => '🟢 Complete'],
     ['method' => 'GET', 'uri' => '/api/public/promos', 'controller' => 'ContentController@promos', 'val' => 'Public', 'res' => 'JSON Array', 'fe' => 'Promo.tsx', 'status' => '🟢 Complete'],
     ['method' => 'GET', 'uri' => '/api/public/doctor-schedules', 'controller' => 'DoctorScheduleController@publicIndex', 'val' => 'Public', 'res' => 'JSON Array', 'fe' => 'publicDoctorScheduleApi.ts', 'status' => '🟢 Complete'],
+    ['method' => 'POST', 'uri' => '/api/public/consultations', 'controller' => 'GuestConsultationController@store', 'val' => 'Public', 'res' => 'JSON Object + Token', 'fe' => 'guestConsultationApi.ts', 'status' => '🟢 Complete'],
+    ['method' => 'GET', 'uri' => '/api/public/consultations/{token}', 'controller' => 'GuestConsultationController@show', 'val' => 'Public Token', 'res' => 'JSON Detail', 'fe' => 'GuestConsultationChatPage.tsx', 'status' => '🟢 Complete'],
+    ['method' => 'GET/POST', 'uri' => '/api/public/consultations/{token}/messages', 'controller' => 'GuestConsultationController', 'val' => 'Public Token', 'res' => 'JSON Messages', 'fe' => 'GuestConsultationChatPage.tsx', 'status' => '🟢 Complete'],
+    ['method' => 'POST', 'uri' => '/api/public/consultations/{token}/read', 'controller' => 'GuestConsultationController', 'val' => 'Public Token', 'res' => 'JSON Read', 'fe' => 'GuestConsultationChatPage.tsx', 'status' => '🟢 Complete'],
     ['method' => 'POST', 'uri' => '/api/public/reservations', 'controller' => 'ReservationController@store', 'val' => 'Throttle 5/m', 'res' => 'JSON Object', 'fe' => 'reservationApi.ts', 'status' => '🟢 Complete'],
 ];
 

@@ -7,10 +7,17 @@ import { canActivate, getRedirectPath, normalizeRole, ROLES, type AppRole } from
 type Props = {
   children: ReactNode;
   allow?: AppRole[];
+  /** When true, the route is reachable without a session (e.g. guest consultation by token). */
+  guestAccessible?: boolean;
 };
 
-export default function ProtectedRoute({ children, allow }: Props) {
+export default function ProtectedRoute({ children, allow, guestAccessible }: Props) {
   const location = useLocation();
+
+  // Guest-accessible routes (e.g. resume consultation via token) are public.
+  if (guestAccessible) {
+    return <>{children}</>;
+  }
 
   if (isSessionExpired()) {
     clearSessionStorage();
@@ -26,7 +33,7 @@ export default function ProtectedRoute({ children, allow }: Props) {
 
   touchSessionLastActive();
 
-  const normalizedRole = normalizeRole((session as any)?.role);
+  const normalizedRole = normalizeRole((session as { role?: unknown })?.role as string);
 
   if (normalizedRole === ROLES.GUEST) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;

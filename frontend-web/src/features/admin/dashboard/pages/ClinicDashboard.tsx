@@ -17,7 +17,9 @@ import {
   PROVINCES,
 } from "@/core/constants/regionData";
 import { demoVisitorAnalytics, getSummaryForRole } from "@/features/admin/dashboard/services/demoData";
-import { getAllConsultations, updateConsultationStatus, type ConsultationItem } from "@/features/patient/consultation/services/consultationApi";
+import { getAllConsultations, updateConsultationStatus, type ConsultationItem, getConsultationDetail, acceptConsultation, rejectConsultation, transferConsultation, closeConsultation, sendAdminConsultationMessage, markAdminConsultationRead, getDoctorsAvailability } from "@/features/patient/consultation/services/consultationApi";
+import { ChatWindow } from "@/shared/consultation/components/ChatWindow";
+import type { Consultation, ConsultationMeeting, ConsultationMessage, DoctorAvailabilityItem } from "@/shared/consultation/types/consultation";
 import { getAdminDoctorSchedules, type AdminDoctorScheduleItem } from "@/features/admin/doctors/services/adminDoctorScheduleApi";
 import {
   getAllComplaints,
@@ -92,6 +94,8 @@ import {
   Stethoscope,
   RefreshCw,
   Download,
+  X,
+  Video,
 } from "lucide-react";
 
 type PostStatus = "Draft" | "Published";
@@ -1361,7 +1365,48 @@ export default function ClinicDashboardPage() {
   const [adminResponseText, setAdminResponseText] = useState("");
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
 
-  const [pendingConsultationStatus, setPendingConsultationStatus] = useState<"Selesai" | "Menunggu" | "Dijadwalkan" | null>(null);
+  const [pendingConsultationStatus, setPendingConsultationStatus] = useState<"Selesai" | "Menunggu" | "Dijadwalkan" | "Dibuka" | "Ditolak" | null>(null);
+
+  // Consultation detail chat state
+  const [consultationDetail, setConsultationDetail] = useState<Consultation | null>(null);
+  const [consultationMessages, setConsultationMessages] = useState<ConsultationMessage[]>([]);
+  const [consultationMeetings, setConsultationMeetings] = useState<ConsultationMeeting[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferDoctorId, setTransferDoctorId] = useState("");
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [doctorsAvailability, setDoctorsAvailability] = useState<DoctorAvailabilityItem[]>([]);
+
+  const loadConsultationDetail = async (id: string) => {
+    setDetailLoading(true);
+    try {
+      const detail = await getConsultationDetail(id);
+      setConsultationDetail(detail);
+      setConsultationMessages(detail.messages ?? []);
+      setConsultationMeetings(detail.meetings ?? []);
+      const unread = (detail.messages ?? []).filter((m) => m.senderRole === "patient" && !m.readAt);
+      if (unread.length > 0) {
+        markAdminConsultationRead(id).catch(() => {});
+      }
+      setPendingConsultationStatus(detail.status);
+    } catch (err) {
+      logger.error("Gagal memuat detail konsultasi", err);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedConsultationId) {
+      setConsultationDetail(null);
+      setConsultationMessages([]);
+      setConsultationMeetings([]);
+      return;
+    }
+    loadConsultationDetail(selectedConsultationId);
+  }, [selectedConsultationId]);
 
   useEffect(() => {
     if (activeTab === "konsultasi" || activeTab === "dashboard") {
@@ -1455,14 +1500,16 @@ export default function ClinicDashboardPage() {
           .filter((c) => {
             const matchesStatus = consultationStatus === "Semua" || c.status === consultationStatus;
             const q = consultationSearch.trim().toLowerCase();
-            const userName = (c.user?.name || userNameById(c.userId)).toLowerCase();
+            const userName = (c.user?.name || c.participantName || userNameById(c.userId)).toLowerCase();
             const matchesSearch =
               q === "" ||
               c.topic?.toLowerCase().includes(q) ||
               c.doctorName?.toLowerCase().includes(q) ||
               c.userId?.toLowerCase().includes(q) ||
               userName.includes(q) ||
-              c.chiefComplaint?.toLowerCase().includes(q);
+              c.chiefComplaint?.toLowerCase().includes(q) ||
+              c.participantName?.toLowerCase().includes(q) ||
+              c.guestPhone?.toLowerCase().includes(q);
             return matchesStatus && matchesSearch;
           })
           .sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
@@ -1476,19 +1523,23 @@ export default function ClinicDashboardPage() {
               acc[c.status] = (acc[c.status] || 0) + 1;
               return acc;
             },
-            {} as Record<"Selesai" | "Menunggu" | "Dijadwalkan", number>
+            {} as Record<string, number>
           );
 
         const quickCounts = countByStatus(quickList);
         const scheduledCounts = countByStatus(scheduledList);
         const totalCounts = countByStatus(consultations);
 
-        const getStatusColor = (status: "Selesai" | "Menunggu" | "Dijadwalkan") => {
+        const getStatusColor = (status: "Selesai" | "Menunggu" | "Dijadwalkan" | "Dibuka" | "Ditolak") => {
           switch (status) {
             case "Selesai":
               return "bg-emerald-100 text-emerald-700 border border-emerald-200";
             case "Dijadwalkan":
               return "bg-[#e8d4a2]/30 text-[#8a6b2b] border border-[#e8d4a2]/40";
+            case "Dibuka":
+              return "bg-violet-100 text-violet-700 border border-violet-200";
+            case "Ditolak":
+              return "bg-red-100 text-red-600 border border-red-200";
             case "Menunggu":
             default:
               return "bg-amber-100 text-amber-700 border border-amber-200";
@@ -1524,7 +1575,84 @@ export default function ClinicDashboardPage() {
                       <CardTitle className="text-lg sm:text-xl font-bold text-gray-900">Detail Konsultasi</CardTitle>
                       <p className="text-sm text-gray-500 mt-1">ID: {selectedConsultation.id}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {selectedConsultation.type === "quick" && selectedConsultation.status === "Menunggu" && (
+                        <Button
+                          size="sm"
+                          onClick={async () => {
+                            setActionBusy(true);
+                            try {
+                              const updated = await acceptConsultation(selectedConsultation.id);
+                              setConsultations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+                              setSelectedConsultationId(null);
+                              toast({ title: "Berhasil", message: "Konsultasi diterima dan sedang ditangani", variant: "success" });
+                            } catch (err: any) {
+                              toast({ title: "Gagal", message: err?.message || "Tidak bisa menerima konsultasi", variant: "error" });
+                            } finally {
+                              setActionBusy(false);
+                            }
+                          }}
+                          disabled={actionBusy}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          Terima
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionBusy}
+                        onClick={async () => {
+                          if (doctorsAvailability.length === 0) {
+                            try {
+                              setDoctorsAvailability(await getDoctorsAvailability());
+                            } catch (err) {
+                              logger.error("Gagal memuat dokter", err);
+                            }
+                          }
+                          setTransferOpen(true);
+                        }}
+                        className="rounded-sm border-gray-200"
+                      >
+                        <Users className="w-4 h-4" />
+                        Teruskan ke Dokter
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={actionBusy}
+                        onClick={async () => {
+                          setRejectOpen(true);
+                        }}
+                        className="rounded-sm border-red-200 text-red-600 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                        Tolak
+                      </Button>
+                      {!["Selesai", "Ditolak"].includes(selectedConsultation.status) && (
+                        <Button
+                          size="sm"
+                          disabled={actionBusy}
+                          onClick={async () => {
+                            setActionBusy(true);
+                            try {
+                              const updated = await closeConsultation(selectedConsultation.id);
+                              setConsultations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+                              setSelectedConsultationId(null);
+                              toast({ title: "Berhasil", message: "Konsultasi ditutup", variant: "success" });
+                            } catch (err: any) {
+                              toast({ title: "Gagal", message: err?.message || "Tidak bisa menutup konsultasi", variant: "error" });
+                            } finally {
+                              setActionBusy(false);
+                            }
+                          }}
+                          className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white rounded-sm"
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                          Tutup Konsultasi
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -1534,12 +1662,14 @@ export default function ClinicDashboardPage() {
                       <p className="text-xs text-gray-500">Ubah Status Konsultasi</p>
                       <select
                         value={pendingConsultationStatus || selectedConsultation.status}
-                        onChange={(e) => setPendingConsultationStatus(e.target.value as "Selesai" | "Menunggu" | "Dijadwalkan")}
+                        onChange={(e) => setPendingConsultationStatus(e.target.value as "Selesai" | "Menunggu" | "Dijadwalkan" | "Dibuka" | "Ditolak")}
                         className="mt-2 w-full rounded-sm border border-gray-200 px-3 py-2 text-sm focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] outline-none bg-white"
                       >
                         <option value="Menunggu">Menunggu</option>
                         <option value="Dijadwalkan">Dijadwalkan</option>
+                        <option value="Dibuka">Sedang Ditangani</option>
                         <option value="Selesai">Selesai</option>
+                        <option value="Ditolak">Ditolak</option>
                       </select>
                       <div className="flex items-center justify-between gap-3 mt-3">
                         <Button
@@ -1579,7 +1709,16 @@ export default function ClinicDashboardPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-gray-50 rounded-sm p-4">
                       <p className="text-xs text-gray-500">Pengguna</p>
-                      <p className="text-sm font-semibold text-gray-900 mt-1">{selectedConsultation.user?.name || userNameById(selectedConsultation.userId)}</p>
+                      <p className="text-sm font-semibold text-gray-900 mt-1">
+                        {selectedConsultation.user?.name || selectedConsultation.participantName || userNameById(selectedConsultation.userId)}
+                      </p>
+                      {selectedConsultation.isGuest ? (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Tamu • {(selectedConsultation as any).guestPhone || "-"}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gray-500 mt-1">{selectedConsultation.user?.email}</p>
+                      )}
                     </div>
 
                     <div className="bg-gray-50 rounded-sm p-4">
@@ -1697,8 +1836,164 @@ export default function ClinicDashboardPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Chat panel */}
+                  <div className="border-t border-gray-100 pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-[#a8843a]" />
+                        <h3 className="text-sm font-bold text-gray-900">Ruang Chat Konsultasi</h3>
+                      </div>
+                      {consultationDetail?.status && (
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-semibold ${getStatusColor(consultationDetail.status)}`}>
+                          {consultationDetail.status}
+                        </span>
+                      )}
+                    </div>
+                    <div className="h-[460px]">
+                      <ChatWindow
+                        messages={consultationMessages}
+                        loading={detailLoading}
+                        disabled={["Selesai", "Ditolak"].includes(consultationDetail?.status || "")}
+                        currentRole="admin"
+                        onSend={async (body) => {
+                          try {
+                            const message = await sendAdminConsultationMessage(selectedConsultation.id, body);
+                            setConsultationMessages((prev) => [...prev, message]);
+                          } catch (err: any) {
+                            toast({ title: "Gagal", message: err?.message || "Tidak bisa mengirim pesan", variant: "error" });
+                          }
+                        }}
+                        emptyStateTitle="Ruang chat siap digunakan"
+                        emptyStateDescription="Balas pertanyaan pasien atau tamu melalui ruang chat ini."
+                      />
+                    </div>
+                        {consultationMeetings.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs font-semibold text-gray-500 mb-2">Link Meeting Terlampir:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {consultationMeetings.map((m) => (
+                            <a
+                              key={m.id}
+                              href={m.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm bg-[#c9a24a]/10 text-[#8a6b2b] text-xs font-semibold border border-[#c9a24a]/20 hover:bg-[#c9a24a]/20"
+                            >
+                              <Video className="w-3.5 h-3.5" />
+                              {m.title || m.provider}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
+
+              {/* Transfer modal */}
+              {transferOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                  <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-gray-900">Teruskan ke Dokter</h3>
+                      <button onClick={() => setTransferOpen(false)} className="text-gray-400 hover:text-gray-600">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Pilih dokter yang akan menangani konsultasi ini.
+                    </p>
+                    <select
+                      value={transferDoctorId}
+                      onChange={(e) => setTransferDoctorId(e.target.value)}
+                      className="w-full rounded-sm border border-gray-200 px-3 py-2 text-sm focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] outline-none bg-white"
+                    >
+                      <option value="">Pilih dokter...</option>
+                      {doctorsAvailability.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </select>
+                    {doctorsAvailability.length === 0 && (
+                      <p className="text-xs text-gray-400 mt-2">Memuat daftar dokter...</p>
+                    )}
+                    <div className="flex justify-end gap-2 mt-5">
+                      <Button variant="outline" size="sm" onClick={() => setTransferOpen(false)} className="rounded-sm border-gray-200">
+                        Batal
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={!transferDoctorId || actionBusy}
+                        onClick={async () => {
+                          setActionBusy(true);
+                          try {
+                            const updated = await transferConsultation(selectedConsultation.id, transferDoctorId);
+                            setConsultations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+                            setTransferOpen(false);
+                            setTransferDoctorId("");
+                            toast({ title: "Berhasil", message: "Konsultasi diteruskan ke dokter", variant: "success" });
+                          } catch (err: any) {
+                            toast({ title: "Gagal", message: err?.message || "Tidak bisa meneruskan konsultasi", variant: "error" });
+                          } finally {
+                            setActionBusy(false);
+                          }
+                        }}
+                        className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white rounded-sm"
+                      >
+                        Teruskan
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Reject modal */}
+              {rejectOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                  <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-gray-900">Tolak Konsultasi</h3>
+                      <button onClick={() => setRejectOpen(false)} className="text-gray-400 hover:text-gray-600">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-3">Alasan penolakan (opsional).</p>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Contoh: Jadwal klinik penuh..."
+                      className="w-full min-h-[100px] rounded-sm border border-gray-200 px-3 py-2 text-sm focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a] outline-none bg-white"
+                    />
+                    <div className="flex justify-end gap-2 mt-5">
+                      <Button variant="outline" size="sm" onClick={() => setRejectOpen(false)} className="rounded-sm border-gray-200">
+                        Batal
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={actionBusy}
+                        onClick={async () => {
+                          setActionBusy(true);
+                          try {
+                            const updated = await rejectConsultation(selectedConsultation.id, rejectReason || undefined);
+                            setConsultations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+                            setRejectOpen(false);
+                            setRejectReason("");
+                            setSelectedConsultationId(null);
+                            toast({ title: "Berhasil", message: "Konsultasi ditolak", variant: "success" });
+                          } catch (err: any) {
+                            toast({ title: "Gagal", message: err?.message || "Tidak bisa menolak konsultasi", variant: "error" });
+                          } finally {
+                            setActionBusy(false);
+                          }
+                        }}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-sm"
+                      >
+                        Tolak
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
@@ -1737,7 +2032,10 @@ export default function ClinicDashboardPage() {
                     props.items.map((c) => (
                       <TableRow key={c.id} className="hover:bg-gray-50/50">
                         <TableCell className="font-medium text-sm sm:text-base">{c.date}</TableCell>
-                        <TableCell className="whitespace-normal text-gray-600 text-sm sm:text-base hidden sm:table-cell">{c.user?.name || userNameById(c.userId)}</TableCell>
+                        <TableCell className="whitespace-normal text-gray-600 text-sm sm:text-base hidden sm:table-cell">
+                          {c.user?.name || c.participantName || userNameById(c.userId)}
+                          {c.isGuest && <span className="block text-[11px] text-gray-400">{c.guestPhone || "Tamu"}</span>}
+                        </TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-sm text-xs font-semibold ${getStatusColor(c.status)}`}>
                             {c.status}

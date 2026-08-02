@@ -5,26 +5,57 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\DoctorSchedule;
-use Illuminate\Http\Request;
+use App\Models\MedicalRecord;
+use App\Services\ConsultationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ConsultationController extends Controller
 {
+    public function __construct(private readonly ConsultationService $consultationService)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
 
         $items = Consultation::query()
+            ->with(['user', 'doctorSchedule.user'])
             ->where('user_id', $user->id)
             ->orderByDesc('created_at')
             ->get()
-            ->map(function (Consultation $c) {
-                return $this->transform($c);
-            })
+            ->map(fn (Consultation $c) => ConsultationService::dto($c))
             ->values();
 
         return response()->json($items);
+    }
+
+    public function show(Request $request, int|string $id): JsonResponse
+    {
+        $patient = $request->user();
+        $consultation = Consultation::with(['user', 'doctorSchedule.user'])->find($id);
+
+        if (!$consultation) {
+            return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
+        }
+
+        if (!$consultation->isParticipant($patient)) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
+        }
+
+        $consultation->messages()
+            ->where('sender_role', '!=', 'patient')
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        $dto = ConsultationService::dto($consultation);
+        $dto['messages'] = $consultation->messages->map(fn ($m) => ConsultationService::messageDto($m))->values();
+        $dto['meetings'] = $consultation->meetings->map(fn ($m) => ConsultationService::meetingDto($m))->values();
+        $dto['medicalRecord'] = $this->medicalRecordDto($consultation);
+
+        return response()->json(['consultation' => $dto]);
     }
 
     public function store(Request $request): JsonResponse
@@ -49,39 +80,41 @@ class ConsultationController extends Controller
             'location' => ['nullable', 'string', 'max:255'],
             'attachments' => ['nullable', 'array'],
             'doctorScheduleId' => ['nullable', 'integer', 'exists:doctor_schedules,id'],
+            'reservationId' => ['nullable', 'integer', 'exists:reservations,id'],
         ]);
 
-        if ($validated['type'] === 'scheduled' && empty($validated['doctorScheduleId'])) {
+        if ($validated['type'] === 'quick') {
+            $consultation = $this->consultationService->createQuick($validated, $request->user());
+
+            return response()->json(ConsultationService::dto($consultation->load(['user'])), 201);
+        }
+
+        if (empty($validated['doctorScheduleId'])) {
             return response()->json(['message' => 'Jadwal dokter wajib dipilih'], 422);
         }
 
         $consultation = DB::transaction(function () use ($request, $validated) {
-            $doctorScheduleId = $validated['doctorScheduleId'] ?? null;
-            $schedule = null;
+            $schedule = DoctorSchedule::query()
+                ->with('user')
+                ->lockForUpdate()
+                ->find($validated['doctorScheduleId']);
 
-            if ($validated['type'] === 'scheduled' && $doctorScheduleId) {
-                $schedule = DoctorSchedule::query()
-                    ->with('user')
-                    ->lockForUpdate()
-                    ->find($doctorScheduleId);
-
-                if (!$schedule) {
-                    return response()->json(['message' => 'Jadwal dokter tidak ditemukan'], 404);
-                }
-
-                if ($schedule->is_full) {
-                    return response()->json(['message' => 'Slot jadwal dokter sudah penuh'], 422);
-                }
-
-                $schedule->booked_slots += 1;
-                $schedule->save();
+            if (!$schedule) {
+                return response()->json(['message' => 'Jadwal dokter tidak ditemukan'], 404);
             }
 
-            $created = Consultation::create([
+            if ($schedule->is_full) {
+                return response()->json(['message' => 'Slot jadwal dokter sudah penuh'], 422);
+            }
+
+            $schedule->booked_slots += 1;
+            $schedule->save();
+
+            return Consultation::create([
                 'user_id' => $request->user()->id,
-                'doctor_id' => $schedule ? ($schedule->user_id ?? null) : null,
-                'type' => $validated['type'],
-                'status' => $validated['type'] === 'scheduled' ? 'Dijadwalkan' : 'Menunggu',
+                'doctor_id' => $schedule->user_id ?? null,
+                'type' => 'scheduled',
+                'status' => 'Dijadwalkan',
                 'topic' => $validated['topic'] ?? null,
                 'category' => $validated['category'] ?? null,
                 'chief_complaint' => $validated['chiefComplaint'],
@@ -94,61 +127,102 @@ class ConsultationController extends Controller
                 'contact_number' => $validated['contactNumber'] ?? null,
                 'expectations' => $validated['expectations'] ?? null,
                 'notes' => $validated['notes'] ?? null,
-                'doctor_name' => $schedule ? ($schedule->user?->name ?? null) : ($validated['doctorName'] ?? null),
-                'schedule_date' => $schedule ? $schedule->date : ($validated['scheduleDate'] ?? null),
-                'schedule_time' => $schedule ? $schedule->time_range : ($validated['scheduleTime'] ?? null),
-                'location' => $schedule ? $schedule->location : ($validated['location'] ?? null),
+                'doctor_name' => $schedule->user?->name ?? ($validated['doctorName'] ?? null),
+                'schedule_date' => $schedule->date,
+                'schedule_time' => $schedule->time_range,
+                'location' => $schedule->location,
                 'attachments' => $validated['attachments'] ?? null,
-                'doctor_schedule_id' => $doctorScheduleId,
+                'doctor_schedule_id' => $validated['doctorScheduleId'],
+                'reservation_id' => $validated['reservationId'] ?? null,
             ]);
-
-            return $created;
         });
 
         if ($consultation instanceof JsonResponse) {
             return $consultation;
         }
 
-        return response()->json($this->transform($consultation), 201);
+        return response()->json(ConsultationService::dto($consultation->load(['user'])), 201);
     }
 
-    private function transform(Consultation $c): array
+    public function sendMessage(Request $request, int|string $id): JsonResponse
     {
-        $dateStr = '-';
-        if ($c->type === 'scheduled' && $c->schedule_date) {
-            $dateStr = $c->schedule_date->format('j F Y');
-            if ($c->schedule_time) {
-                $dateStr .= ' • ' . $c->schedule_time;
-            }
-        } else {
-            $dateStr = optional($c->created_at)->format('j F Y') ?? '-';
+        $patient = $request->user();
+        $consultation = Consultation::find($id);
+
+        if (!$consultation || !$consultation->isParticipant($patient)) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
+        }
+
+        if ($consultation->status === 'Selesai' || $consultation->status === 'Ditolak') {
+            return response()->json(['message' => 'Konsultasi sudah ditutup, tidak dapat mengirim pesan lagi.'], 422);
+        }
+
+        $validated = $request->validate([
+            'body' => ['required', 'string'],
+            'attachments' => ['nullable', 'array'],
+        ]);
+
+        $message = $this->consultationService->sendMessage(
+            $consultation,
+            $patient,
+            'patient',
+            $validated['body'],
+            $validated['attachments'] ?? null
+        );
+
+        return response()->json(['message' => ConsultationService::messageDto($message)], 201);
+    }
+
+    public function markRead(Request $request, int|string $id): JsonResponse
+    {
+        $patient = $request->user();
+        $consultation = Consultation::find($id);
+
+        if (!$consultation || !$consultation->isParticipant($patient)) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
+        }
+
+        $count = $consultation->messages()
+            ->where('sender_role', '!=', 'patient')
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return response()->json(['read' => (int) $count]);
+    }
+
+    public function meetings(Request $request, int|string $id): JsonResponse
+    {
+        $patient = $request->user();
+        $consultation = Consultation::find($id);
+
+        if (!$consultation || !$consultation->isParticipant($patient)) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
+        }
+
+        $meetings = $consultation->meetings->map(fn ($m) => ConsultationService::meetingDto($m))->values();
+
+        return response()->json(['meetings' => $meetings]);
+    }
+
+    private function medicalRecordDto(Consultation $consultation): ?array
+    {
+        $visit = $consultation->visit;
+        if (!$visit) {
+            return null;
+        }
+
+        $record = MedicalRecord::query()->where('visit_id', $visit->id)->first();
+        if (!$record) {
+            return null;
         }
 
         return [
-            'id' => (string) $c->id,
-            'userId' => (string) $c->user_id,
-            'type' => $c->type,
-            'status' => $c->status,
-            'topic' => $c->topic ?: ($c->category ?: 'Konsultasi'),
-            'category' => $c->category,
-            'doctorName' => $c->doctor_name ?: 'Dokter Jaga',
-            'date' => $dateStr,
-            'chiefComplaint' => $c->chief_complaint,
-            'duration' => $c->duration,
-            'painScale' => $c->pain_scale,
-            'allergies' => $c->allergies,
-            'medications' => $c->medications,
-            'priorTreatment' => $c->prior_treatment,
-            'preferredContact' => $c->preferred_contact,
-            'contactNumber' => $c->contact_number,
-            'expectations' => $c->expectations,
-            'notes' => $c->notes,
-            'scheduleDate' => optional($c->schedule_date)?->format('Y-m-d'),
-            'scheduleTime' => $c->schedule_time,
-            'location' => $c->location,
-            'attachments' => $c->attachments ?? [],
-            'createdAt' => optional($c->created_at)->toISOString(),
-            'user' => $c->user ? ['id' => (string) $c->user->id, 'name' => $c->user->name, 'email' => $c->user->email] : null,
+            'id' => (string) $record->id,
+            'recordNumber' => $record->record_number,
+            'status' => $record->status,
+            'summaryNotes' => $record->summary_notes,
+            'visitId' => (string) $visit->id,
+            'finalizedAt' => optional($record->finalized_at)->toISOString(),
         ];
     }
 }

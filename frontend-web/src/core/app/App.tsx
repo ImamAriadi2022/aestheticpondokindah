@@ -8,6 +8,7 @@ import ChatBot from "@/features/guest/chatbot/components/ChatBot";
 import { ToastViewport } from "@/shared/ui/toast";
 import { trackVisit } from "@/core/api/analyticsApi";
 import { PwaManager } from "@/core/providers/PwaManager";
+import { GuestSessionProvider } from "@/features/guest/consultation/context/GuestSessionContext";
 import NotFoundPage from "@/shared/pages/NotFoundPage";
 import ForbiddenPage from "@/shared/pages/ForbiddenPage";
 import { getSession } from "@/core/auth/services/session";
@@ -54,6 +55,11 @@ const AdminMembershipPage = lazy(() => import("@/features/admin/membership/pages
 const SecurityPage = lazy(() => import("@/features/patient/profile/pages/Security"));
 const HelpPage = lazy(() => import("@/features/guest/help/pages/Help"));
 
+const GuestKonsultasiPage = lazy(() => import("@/features/guest/consultation/pages/GuestKonsultasiPage"));
+const GuestConsultationChatPage = lazy(() => import("@/features/guest/consultation/pages/GuestConsultationChatPage"));
+const GuestHistoryPage = lazy(() => import("@/features/guest/consultation/pages/GuestHistoryPage"));
+const PatientConsultationChatPage = lazy(() => import("@/features/patient/consultation/pages/PatientConsultationChatPage"));
+
 const DoctorProfileDetailPage = lazy(() => import("@/features/doctor/profile/pages/ProfileDetail"));
 const DoctorProfileEditPage = lazy(() => import("@/features/doctor/profile/pages/ProfileEdit"));
 const DoctorSettingsPage = lazy(() => import("@/features/doctor/settings/pages/Settings"));
@@ -88,8 +94,9 @@ function ChatBotWrapper() {
   const isSecurity = location.pathname === "/security";
   const isHelp = location.pathname === "/help";
   const isOnboarding = location.pathname === "/onboarding" || location.pathname === "/mobile-login";
+  const isGuestKonsultasi = location.pathname.startsWith("/konsultasi");
 
-  if (isDashboard || isSettings || isProfile || isMembership || isSecurity || isHelp || isOnboarding) return null;
+  if (isDashboard || isSettings || isProfile || isMembership || isSecurity || isHelp || isOnboarding || isGuestKonsultasi) return null;
   return <ChatBot />;
 }
 
@@ -145,7 +152,8 @@ function VisitTracker() {
 
 export default function App() {
   return (
-    <Router>
+    <GuestSessionProvider>
+      <Router>
       <VisitTracker />
       <ScrollToTop />
       <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-gray-500">Loading...</div>}>
@@ -304,6 +312,28 @@ export default function App() {
               />
               <Route path="/help" element={<HelpPage />} />
 
+              {/* Guest Online Consultation (public) */}
+              <Route path="/konsultasi" element={<GuestKonsultasiPage />} />
+              <Route path="/konsultasi/lanjut" element={<GuestHistoryPage />} />
+              <Route
+                path="/konsultasi/guest/:token"
+                element={
+                  <ProtectedRoute guestAccessible>
+                    <GuestConsultationChatPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Patient consultation chat */}
+              <Route
+                path="/dashboard/user/consultation/:id"
+                element={
+                  <ProtectedRoute allow={["user"]}>
+                    <PatientConsultationChatPage />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Shared pages */}
               <Route path="/403" element={<ForbiddenPage />} />
               <Route path="*" element={<NotFoundPage />} />
@@ -348,6 +378,7 @@ export default function App() {
       <ChatBotWrapper />
       <ToastViewport />
       <PwaManager />
-    </Router>
+      </Router>
+    </GuestSessionProvider>
   );
 }

@@ -6,6 +6,7 @@ use App\Models\Consultation;
 use App\Models\ConsultationMeeting;
 use App\Models\ConsultationMessage;
 use App\Models\DoctorSchedule;
+use App\Models\Reservation;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -36,7 +37,44 @@ class OnlineConsultationSeeder extends Seeder
 
         $schedule = DoctorSchedule::query()->where('user_id', $doctor->id)->first();
 
+        $admin = User::query()->where('role', 'clinic_admin')->orderBy('id')->first();
+
         $createdAt = now()->subMinutes(45);
+
+        // 0. Guest instant consultation (no registered user account)
+        $guestConsultation = Consultation::query()->updateOrCreate(
+            [
+                'type' => 'quick',
+                'guest_phone' => '+6281234567890',
+                'chief_complaint' => 'Anak saya sering menggosok giginya karena gatal. Apakah perlu periksa ke dokter gigi?',
+            ],
+            [
+                'user_id' => null,
+                'status' => 'Menunggu',
+                'topic' => 'Kesehatan gigi anak',
+                'category' => 'Perawatan Gigi',
+                'guest_name' => 'Budi Santoso',
+                'guest_phone' => '+6281234567890',
+                'guest_email' => 'budi.santoso@example.com',
+                'access_token' => 'guest-demo-' . str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT),
+                'doctor_name' => $doctor->name,
+                'created_at' => $createdAt->copy()->addMinutes(2),
+                'updated_at' => $createdAt->copy()->addMinutes(2),
+            ]
+        );
+
+        ConsultationMessage::query()->updateOrCreate(
+            [
+                'consultation_id' => $guestConsultation->id,
+                'body' => 'Halo, saya mau bertanya tentang kebiasaan anak saya yang suka menggosok gigi karena gatal.',
+            ],
+            [
+                'sender_id' => null,
+                'sender_role' => 'patient',
+                'created_at' => $createdAt->copy()->addMinutes(2),
+                'updated_at' => $createdAt->copy()->addMinutes(2),
+            ]
+        );
 
         // 1. Instant (quick) consultations waiting in the queue (not yet assigned)
         $waiting = [
@@ -76,14 +114,43 @@ class OnlineConsultationSeeder extends Seeder
             );
         }
 
-        // 2. Instant consultation already claimed by the doctor with an active chat
+        // 2. Instant consultation handled by admin (accepted, admin chats with patient)
+        if ($admin && ($patients[1] ?? null)) {
+            $adminActive = Consultation::query()->updateOrCreate(
+                [
+                    'user_id' => $patients[1]->id,
+                    'type' => 'quick',
+                    'status' => 'Dibuka',
+                ],
+                [
+                    'admin_id' => $admin->id,
+                    'doctor_name' => $doctor->name,
+                    'topic' => 'Konsultasi pemutihan gigi',
+                    'category' => 'Bleaching',
+                    'chief_complaint' => 'Ingin bertanya dulu tentang biaya dan proses bleaching gigi.',
+                    'created_at' => $createdAt->copy()->addMinutes(10),
+                    'updated_at' => $createdAt->copy()->addMinutes(10),
+                ]
+            );
+
+            $this->seedChat($adminActive, $doctor, $patients[1], [
+                'Halo, saya tertarik melakukan bleaching gigi. Bagaimana prosedurnya?',
+                'Selamat siang. Untuk bleaching, kami akan lakukan pemeriksaan dulu oleh dokter, lalu lanjut pemutihan 1-2 sesi.',
+                'Apakah aman untuk gigi sensitif?',
+                'Aman, dokter akan menggunakan bahan yang sesuai dan memberi perawatan tambahan untuk gigi sensitif.',
+            ], $createdAt->copy()->addMinutes(10));
+
+            $this->seedAdminMessage($adminActive, $admin, $doctor, 'Baik, akan saya teruskan ke dokter untuk jadwal konsultasi.', $createdAt->copy()->addMinutes(25));
+        }
+
+        // 3. Instant consultation already claimed by the doctor with an active chat
         $activePatient = $patients[2] ?? $patients->first();
         if ($activePatient) {
             $active = Consultation::query()->updateOrCreate(
                 [
                     'user_id' => $activePatient->id,
                     'type' => 'quick',
-                    'status' => 'Menunggu',
+                    'status' => 'Dibuka',
                 ],
                 [
                     'doctor_id' => $doctor->id,
@@ -104,11 +171,14 @@ class OnlineConsultationSeeder extends Seeder
             ], $createdAt);
         }
 
-        // 3. Scheduled consultations (connected to doctor schedule) with meeting links
+        // 4. Scheduled consultations (connected to doctor schedule) with meeting links
         if ($schedule) {
+            $scheduledPatient = $patients->first();
+            $reservation = Reservation::query()->where('user_id', $scheduledPatient->id)->first();
+
             $scheduled = Consultation::query()->updateOrCreate(
                 [
-                    'user_id' => $patients->first()->id,
+                    'user_id' => $scheduledPatient->id,
                     'type' => 'scheduled',
                     'doctor_schedule_id' => $schedule->id,
                 ],
@@ -122,12 +192,13 @@ class OnlineConsultationSeeder extends Seeder
                     'schedule_time' => $schedule->time_range,
                     'location' => $schedule->location,
                     'doctor_name' => $doctor->name,
+                    'reservation_id' => $reservation?->id,
                     'created_at' => $createdAt->copy()->subDays(1),
                     'updated_at' => $createdAt->copy()->subDays(1),
                 ]
             );
 
-            $this->seedChat($scheduled, $doctor, $patients->first(), [
+            $this->seedChat($scheduled, $doctor, $scheduledPatient, [
                 'Selamat pagi dok, saya sudah membuat janji untuk konsultasi veneer besok.',
                 'Pagi. Baik, mohon siapkan foto senyum dan daftar obat yang sedang dikonsumsi.',
                 'Siap dok. Apakah nanti link meeting akan dikirim di sini?',
@@ -212,5 +283,27 @@ class OnlineConsultationSeeder extends Seeder
                 ]
             );
         }
+    }
+
+    private function seedAdminMessage(
+        Consultation $consultation,
+        User $admin,
+        User $doctor,
+        string $line,
+        Carbon $base
+    ): void {
+        ConsultationMessage::query()->updateOrCreate(
+            [
+                'consultation_id' => $consultation->id,
+                'body' => $line,
+            ],
+            [
+                'sender_id' => $admin->id,
+                'sender_role' => 'admin',
+                'read_at' => null,
+                'created_at' => $base,
+                'updated_at' => $base,
+            ]
+        );
     }
 }
