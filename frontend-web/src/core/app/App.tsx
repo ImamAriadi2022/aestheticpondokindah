@@ -71,18 +71,9 @@ const BookingStatusPage = lazy(() => import("@/features/guest/reservation/pages/
 const BookingProposalPage = lazy(() => import("@/features/guest/reservation/pages/BookingProposal"));
 const BookingRequestDetailPage = lazy(() => import("@/features/guest/reservation/pages/BookingRequestDetail"));
 
-// New Mobile Pages
+// Onboarding & Mobile PWA Entry
 const OnboardingPage = lazy(() => import("@/features/guest/onboarding/pages/Onboarding"));
 const MobileLoginPage = lazy(() => import("@/core/auth/pages/MobileLogin"));
-const MobileHomePage = lazy(() => import("@/features/patient/mobile/pages/MobileHome"));
-const MobileBookingPage = lazy(() => import("@/features/patient/mobile/pages/MobileBooking"));
-const MobileBookingDoctorPage = lazy(() => import("@/features/patient/mobile/pages/MobileBookingDoctor"));
-const MobileBookingSchedulePage = lazy(() => import("@/features/patient/mobile/pages/MobileBookingSchedule"));
-const MobileBookingConfirmPage = lazy(() => import("@/features/patient/mobile/pages/MobileBookingConfirm"));
-const MobileBookingSuccessPage = lazy(() => import("@/features/patient/mobile/pages/MobileBookingSuccess"));
-const MobileKonsultasiPage = lazy(() => import("@/features/patient/mobile/pages/MobileKonsultasi"));
-const MobileRiwayatPage = lazy(() => import("@/features/patient/mobile/pages/MobileRiwayat"));
-const MobileAkunPage = lazy(() => import("@/features/patient/mobile/pages/MobileAkun"));
 
 // Wrapper component to conditionally show ChatBot
 function ChatBotWrapper() {
@@ -341,36 +332,6 @@ export default function App() {
               {/* Onboarding & Mobile PWA Routes */}
               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/mobile-login" element={<MobileLoginPage />} />
-              <Route path="/mobile" element={<MobileHomePage />} />
-              <Route path="/mobile/booking" element={<MobileBookingPage />} />
-              <Route path="/mobile/booking/doctor" element={<MobileBookingDoctorPage />} />
-              <Route path="/mobile/booking/schedule" element={<MobileBookingSchedulePage />} />
-              <Route path="/mobile/booking/confirm" element={<MobileBookingConfirmPage />} />
-              <Route path="/mobile/booking/success" element={<MobileBookingSuccessPage />} />
-              <Route
-                path="/mobile/konsultasi"
-                element={
-                  <ProtectedRoute allow={["user"]}>
-                    <MobileKonsultasiPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/mobile/riwayat"
-                element={
-                  <ProtectedRoute allow={["user"]}>
-                    <MobileRiwayatPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/mobile/akun"
-                element={
-                  <ProtectedRoute allow={["user"]}>
-                    <MobileAkunPage />
-                  </ProtectedRoute>
-                }
-              />
             </Routes>
           </RouteTransition>
         </ErrorBoundary>

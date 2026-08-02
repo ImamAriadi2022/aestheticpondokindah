@@ -60,7 +60,8 @@ $categoryBreakdown = [
             'Toast Notification System (deduplication & variants), Error Boundary, & Sanitized Logger',
             'Global API Client dengan auto-retry GET & handle 401 auto logout',
             'Komponen UI Klinis Terintegrasi (SOAP, Diagnosis, Odontogram Tooth Chart, Procedure List)',
-            'Konsultasi Online End-to-End (Guest via token publik, Pasien room chat, Admin antrian Terima/Tolak/Teruskan/Tutup + chat + link meeting, Dokter room chat + meeting link + patient summary)'
+            'Konsultasi Online End-to-End (Guest via token publik, Pasien room chat, Admin antrian Terima/Tolak/Teruskan/Tutup + chat + link meeting, Dokter room chat + meeting link + patient summary)',
+            'PWA mobile terkonsolidasi ke website SPA: fitur mobile (booking, konsultasi, riwayat, akun) dirender dari komponen website yang sama via NewMobileDashboardLayout bottom-nav (folder features/patient/mobile dihapus)'
         ],
         'missing' => [
             'Refactoring beberapa tipe data `any` pada ClinicDashboard.tsx',
@@ -76,7 +77,8 @@ $categoryBreakdown = [
             '11 Screens lengkap (Login, Home, Booking List, Membership Card, Upgrade, Notifikasi, Profil, Article Detail)',
             'SecureStore token & AsyncStorage TTL Cache untuk Offline Mode',
             'Theme System & Color Palette identik dengan Design System Web',
-            'Mobile PWA terpisah (sw.js, manifest.json, offline.html, PullToRefresh, Skeleton)'
+            'Mobile PWA terkonsolidasi ke satu website SPA: bottom-nav NewMobileDashboardLayout (Beranda, Booking, Konsultasi, Riwayat, Akun) me-reuse seluruh fitur website (Desktop*) tanpa folder fitur mobile terpisah',
+            'sw.js, manifest.json, offline.html, PullToRefresh, Skeleton sebagai infrastruktur PWA'
         ],
         'missing' => [
             'Integrasi `google-services.json` untuk Firebase Cloud Messaging (Push Notification Native Device)',
@@ -230,14 +232,14 @@ $websiteDetails = [
 // 3. Detail Mobile Components
 $mobileDetails = [
     ['feature' => 'Mobile Authentication', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobile-native/app/(auth)/login.tsx, MobileLogin.tsx', 'missing' => 'Sudah 100% Selesai'],
-    ['feature' => 'Mobile Home View', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobile-native/app/(tabs)/index.tsx, MobileHome.tsx', 'missing' => 'Sudah 100% Selesai'],
-    ['feature' => 'Mobile Appointment Booking', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobile-native/app/(tabs)/booking.tsx, MobileBookingConfirm.tsx', 'missing' => 'Sudah 100% Selesai'],
-    ['feature' => 'Mobile Membership & Card', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobile-native/app/(tabs)/membership.tsx, MobileAkun.tsx', 'missing' => 'Sudah 100% Selesai'],
+    ['feature' => 'Mobile Home View', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'NewMobileDashboardLayout.tsx + DesktopUserHome.tsx (beranda tab)', 'missing' => 'Sudah 100% Selesai'],
+    ['feature' => 'Mobile Appointment Booking', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'DesktopReservasi.tsx (tab booking & riwayat, initialView prop)', 'missing' => 'Sudah 100% Selesai'],
+    ['feature' => 'Mobile Membership & Card', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'DesktopUserAkun.tsx, Membership.tsx', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'Mobile Notification', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobile-native/app/(tabs)/notifications.tsx, notificationService.ts', 'missing' => 'Sudah 100% Selesai'],
-    ['feature' => 'Mobile Profile Management', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobile-native/app/(tabs)/profile.tsx, MobileAkun.tsx', 'missing' => 'Sudah 100% Selesai'],
+    ['feature' => 'Mobile Profile Management', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'DesktopUserAkun.tsx (tab akun/profile)', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'Mobile REST API Client', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobile-native/services/apiClient.ts, apiConfig.ts', 'missing' => 'Sudah 100% Selesai'],
-    ['feature' => 'Offline Support / PWA Cache', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'public/sw.js, manifest.json, cacheStorage.ts (AsyncStorage TTL)', 'missing' => 'Sudah 100% Selesai'],
-    ['feature' => 'Data Synchronization', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'mobileSyncManager.ts, PullToRefresh.tsx, Skeleton.tsx', 'missing' => 'Sudah 100% Selesai'],
+    ['feature' => 'Offline Support / PWA Cache', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'public/sw.js, manifest.json, offline.html, cacheStorage.ts (AsyncStorage TTL)', 'missing' => 'Sudah 100% Selesai'],
+    ['feature' => 'Data Synchronization', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'Satu sumber data via REST API Laravel (desktop & mobile reuse komponen yang sama)', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'Mobile Error Handling', 'status' => '🟢 Complete', 'progress' => 100, 'evidence' => 'apiClient.ts global handler, apiError.ts, toast variants, ErrorBoundary.tsx', 'missing' => 'Sudah 100% Selesai'],
     ['feature' => 'Native Android Application (APK)', 'status' => '🟡 In Progress', 'progress' => 85, 'evidence' => 'mobile-native/ (Expo Router, SecureStore, AsyncStorage, 11 screens, eas.json)', 'missing' => 'Kurang: Firebase Cloud Messaging google-services.json & publikasi link download .apk'],
 ];

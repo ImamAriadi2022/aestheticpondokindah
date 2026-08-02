@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { clearSession, getSession } from "@/core/auth/services/session";
 import { clearSessionStorage, touchSessionLastActive } from "@/core/auth/services/sessionTtl";
 import AccountSidebar from "@/core/layouts/AccountSidebar";
-import MobileDashboardLayout from "@/core/layouts/MobileDashboardLayout";
+import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
 import DoctorSidebar from "@/features/doctor/layouts/DoctorSidebar";
 import { getMenuItems, CONTENT_SUBMENU, type MenuItem } from "@/core/permissions/index";
@@ -187,7 +187,7 @@ export default function DashboardLayout({
 
   const isMobile = useIsMobile();
   if (isMobile) {
-    return <MobileDashboardLayout role={role}>{children}</MobileDashboardLayout>;
+    return <NewMobileDashboardLayout role={role}>{children}</NewMobileDashboardLayout>;
   }
 
   return (

@@ -136,20 +136,54 @@ export default function NewMobileDashboardLayout({
 
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === "/m/dashboard") return "Beranda";
-    if (path === "/m/booking") return "Booking";
-    if (path === "/m/konsultasi") return "Konsultasi";
-    if (path === "/m/riwayat") return "Riwayat";
-    if (path === "/m/akun") return "Profil Saya";
-    if (path.startsWith("/m/booking/")) return "Pilih Layanan";
+    const tab = new URLSearchParams(location.search).get("tab") || "dashboard";
+    if (path === "/dashboard/user") {
+      if (tab === "booking") return "Booking";
+      if (tab === "reservasi") return "Reservasi";
+      if (tab === "riwayat") return "Riwayat";
+      if (tab === "konsultasi") return "Konsultasi";
+      if (tab === "pengaduan") return "Pengaduan";
+      if (tab === "promo") return "Promo";
+      if (tab === "blog" || tab === "blog-detail") return "Artikel";
+      if (tab === "download") return "Download";
+      if (tab === "akun" || tab === "profile") return "Profil Saya";
+      return "Beranda";
+    }
+    if (path === "/dashboard/clinic") {
+      if (tab === "reservasi") return "Reservasi";
+      if (tab === "konsultasi") return "Konsultasi";
+      if (tab === "doctors") return "Dokter";
+      if (tab === "users") return "Pengguna";
+      if (tab === "membership") return "Membership";
+      if (tab.startsWith("content")) return "Konten";
+      return "Dashboard Klinik";
+    }
+    if (path === "/dashboard/doctor") {
+      if (tab === "jadwal") return "Jadwal";
+      if (tab === "reservasi") return "Reservasi";
+      if (tab === "konsultasi") return "Konsultasi";
+      return "Dashboard Dokter";
+    }
+    if (path.startsWith("/dashboard/user/consultation/")) return "Konsultasi";
+    if (path === "/profile") return "Detail Profil";
+    if (path === "/profile/edit") return "Edit Profil";
+    if (path === "/settings") return "Pengaturan";
+    if (path === "/membership") return "Membership";
+    if (path === "/security") return "Keamanan";
+    if (path === "/help") return "Bantuan";
+    if (path === "/download") return "Download";
     return "";
   };
 
-  const showBackButton = location.pathname !== "/m/dashboard" && 
-                         location.pathname !== "/m/booking" && 
-                         location.pathname !== "/m/konsultasi" && 
-                         location.pathname !== "/m/riwayat" && 
-                         location.pathname !== "/m/akun";
+  const isRootPage = () => {
+    const path = location.pathname;
+    if (path === "/dashboard/user") return true;
+    if (path === "/dashboard/clinic") return true;
+    if (path === "/dashboard/doctor") return true;
+    return false;
+  };
+
+  const showBackButton = !isRootPage();
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col max-w-lg mx-auto relative shadow-2xl">
@@ -214,7 +248,7 @@ export default function NewMobileDashboardLayout({
                       <p className="text-xs text-gray-500">{(session as any)?.membership_level === 'gold' ? "Gold Member" : (session as any)?.membership_level === 'platinum' ? "Platinum Member" : "Bronze Member"}</p>
                     </div>
                     <Link
-                      to="/m/akun"
+                      to="/dashboard/user?tab=akun"
                       onClick={() => setProfileMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
                     >

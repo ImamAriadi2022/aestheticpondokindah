@@ -79,11 +79,15 @@ const statusConfig: Record<string, { label: string; color: string; icon: typeof 
   cancelled: { label: "Dibatalkan", color: "bg-red-100 text-red-700 border-red-200", icon: AlertCircle },
 };
 
-export default function DesktopReservasi() {
+export default function DesktopReservasi({
+  initialView = "services",
+}: {
+  initialView?: "services" | "history";
+}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [view, setView] = useState<"services" | "history">("services");
+  const [view, setView] = useState<"services" | "history">(initialView);
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");

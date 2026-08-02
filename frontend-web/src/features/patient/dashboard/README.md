@@ -21,7 +21,7 @@ Role-based home dashboards and management panels.
 ## Components
 
 - `DashboardLayout` - desktop sidebar layout (menu from `src/authorization/menu.ts`)
-- `MobileDashboardLayout` / `NewMobileDashboardLayout` - mobile layouts
+- `NewMobileDashboardLayout` - mobile layout with bottom nav
 - `AccountSidebar`, `DashboardRightPanel`, `DashboardStats`, `AnalyticsDashboard`
 - `DesktopUserHome`, `DesktopDoctorHome`, `DesktopClinicHome`
 - `DesktopReservasi`, `DesktopKonsultasi`, `DesktopPengaduan`

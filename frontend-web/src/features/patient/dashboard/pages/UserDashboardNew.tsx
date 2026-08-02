@@ -15,19 +15,10 @@ import DesktopUserPromo from "@/features/patient/dashboard/components/DesktopUse
 import DesktopUserBlog from "@/features/patient/dashboard/components/DesktopUserBlog";
 import DesktopUserBlogDetail from "@/features/patient/dashboard/components/DesktopUserBlogDetail";
 import DesktopUserDownload from "@/features/patient/dashboard/components/DesktopUserDownload";
+import DesktopUserAkun from "@/features/patient/dashboard/components/DesktopUserAkun";
 import AccountSidebar from "@/core/layouts/AccountSidebar";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
-
-// Import mobile pages
-import MobileHome from "@/features/patient/mobile/pages/MobileHome";
-import MobileBookingPage from "@/features/patient/mobile/pages/MobileBooking";
-import MobileBookingDoctorPage from "@/features/patient/mobile/pages/MobileBookingDoctor";
-import MobileBookingSchedulePage from "@/features/patient/mobile/pages/MobileBookingSchedule";
-import MobileBookingConfirmPage from "@/features/patient/mobile/pages/MobileBookingConfirm";
-import MobileBookingSuccessPage from "@/features/patient/mobile/pages/MobileBookingSuccess";
-import MobileKonsultasiPage from "@/features/patient/mobile/pages/MobileKonsultasi";
-import MobileRiwayatPage from "@/features/patient/mobile/pages/MobileRiwayat";
-import MobileAkunPage from "@/features/patient/mobile/pages/MobileAkun";
+import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
 
 // Hook untuk detect mobile
 function useIsMobile() {
@@ -114,37 +105,14 @@ export default function UserDashboardPage() {
   };
   const progress = calculateProgress();
 
-  // MOBILE VIEW
-  if (isMobile) {
-    // Render berdasarkan tab
-    if (activeTab === "booking") {
-      const step = searchParams.get("step") || "layanan";
-      if (step === "dokter") return <MobileBookingDoctorPage />;
-      if (step === "jadwal") return <MobileBookingSchedulePage />;
-      if (step === "konfirmasi") return <MobileBookingConfirmPage />;
-      if (step === "sukses") return <MobileBookingSuccessPage />;
-      return <MobileBookingPage />;
-    }
-    if (activeTab === "konsultasi") {
-      return <MobileKonsultasiPage />;
-    }
-    if (activeTab === "riwayat") {
-      return <MobileRiwayatPage />;
-    }
-    if (activeTab === "akun" || activeTab === "profile") {
-      return <MobileAkunPage />;
-    }
-
-    // Default: Dashboard Home
-    return <MobileHome />;
-  }
-
-  // Helper function to render desktop content based on active tab
-  const renderDesktopContent = () => {
+  // Helper function to render content based on active tab (shared desktop & mobile)
+  const renderContent = () => {
     switch (activeTab) {
       case "reservasi":
       case "booking":
-        return <DesktopReservasi />;
+        return <DesktopReservasi key={`reservasi-${activeTab}`} />;
+      case "riwayat":
+        return <DesktopReservasi key="riwayat" initialView="history" />;
       case "konsultasi":
         return <DesktopKonsultasi consultations={consultations} />;
       case "pengaduan":
@@ -157,6 +125,9 @@ export default function UserDashboardPage() {
         return <DesktopUserBlogDetail />;
       case "download":
         return <DesktopUserDownload />;
+      case "akun":
+      case "profile":
+        return <DesktopUserAkun />;
       case "dashboard":
       default:
         return (
@@ -172,7 +143,16 @@ export default function UserDashboardPage() {
     }
   };
 
-  const shouldShowRightPanel = !["reservasi", "booking", "konsultasi"].includes(activeTab);
+  const shouldShowRightPanel = !["reservasi", "booking", "konsultasi", "riwayat", "akun"].includes(activeTab);
+
+  // MOBILE VIEW - reuse the same website features, wrapped in bottom-nav layout
+  if (isMobile) {
+    return (
+      <NewMobileDashboardLayout role="user">
+        <div className="px-4 py-4">{renderContent()}</div>
+      </NewMobileDashboardLayout>
+    );
+  }
 
   // DESKTOP VIEW - With Sidebar Layout
   return (
@@ -184,7 +164,7 @@ export default function UserDashboardPage() {
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex-1 flex min-h-0 bg-gray-50/50">
           <main className="flex-1 min-w-0 pt-4 pb-6 px-4 sm:pt-5 sm:px-5 lg:pt-6 lg:px-6 overflow-y-auto">
-            {renderDesktopContent()}
+            {renderContent()}
           </main>
           {/* Right Panel - Hide for certain tabs or adjust based on content */}
           {shouldShowRightPanel && (
