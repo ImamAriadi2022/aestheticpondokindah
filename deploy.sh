@@ -44,7 +44,7 @@ if [ -d public_html ]; then
         # Plesk installations it is a link to ./backend, so copying it aborts
         # the entire deploy with "are the same file".
         case "$name" in
-            .htaccess|backend) continue ;;
+            .htaccess|backend|storage) continue ;;
         esac
 
         # public_html may itself be a link to this deployment root. Do not
@@ -88,6 +88,15 @@ fi
 
 "$PHP_BIN" artisan optimize:clear
 "$PHP_BIN" artisan migrate --force
+
+# Keep Laravel's private storage directory out of the webroot. Public uploads
+# are exposed only through public/storage, which Laravel creates as a link to
+# storage/app/public. This is also safe on hosts where public_html/storage is
+# an old/broken link from a previous deployment layout.
+if [ ! -e public/storage ] && [ ! -L public/storage ]; then
+    "$PHP_BIN" artisan storage:link || echo "WARNING: storage link belum dapat dibuat; cek izin symlink hosting."
+fi
+
 "$PHP_BIN" artisan config:cache
 "$PHP_BIN" artisan route:cache
 "$PHP_BIN" artisan view:cache
