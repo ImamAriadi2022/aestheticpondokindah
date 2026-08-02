@@ -12,6 +12,7 @@ class Consultation extends Model
 
     protected $fillable = [
         'user_id',
+        'doctor_id',
         'type',
         'status',
         'topic',
@@ -48,8 +49,40 @@ class Consultation extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function doctor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'doctor_id');
+    }
+
     public function doctorSchedule(): BelongsTo
     {
         return $this->belongsTo(DoctorSchedule::class);
+    }
+
+    public function messages(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ConsultationMessage::class)->orderBy('created_at');
+    }
+
+    public function meetings(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ConsultationMeeting::class)->orderByDesc('starts_at')->orderByDesc('created_at');
+    }
+
+    public function isManagedBy(User $doctor): bool
+    {
+        if ($this->type === 'quick' && !$this->doctor_id) {
+            return true;
+        }
+
+        if ($this->doctor_id && (int) $this->doctor_id === (int) $doctor->id) {
+            return true;
+        }
+
+        if ($this->doctorSchedule && (int) $this->doctorSchedule->user_id === (int) $doctor->id) {
+            return true;
+        }
+
+        return $this->doctor_name !== null && mb_stripos($this->doctor_name, $doctor->name) !== false;
     }
 }

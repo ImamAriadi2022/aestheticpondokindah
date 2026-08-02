@@ -67,5 +67,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ContentSeeder::class);
         $this->call(PromoSeeder::class);
         $this->call(NormalizeDoctorSchedulesAndReservationsSeeder::class);
+        $this->call(OnlineConsultationSeeder::class);
     }
 }

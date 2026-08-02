@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\Public\ReservationController;
 use App\Http\Controllers\Api\RegistrationController;
 use App\Http\Controllers\Api\PromoClaimController;
 use App\Http\Controllers\Api\ConsultationController;
+use App\Http\Controllers\Api\ConsultationMessageController;
+use App\Http\Controllers\Api\ConsultationMeetingController;
 use App\Http\Controllers\Api\DoctorConsultationController;
 use App\Http\Controllers\Api\Doctor\DoctorQueueController;
 use App\Http\Controllers\Api\DoctorScheduleController;
@@ -219,8 +221,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/doctor/schedules/{schedule}', [DoctorScheduleController::class, 'show']);
         Route::put('/doctor/schedules/{schedule}', [DoctorScheduleController::class, 'update']);
         Route::delete('/doctor/schedules/{schedule}', [DoctorScheduleController::class, 'destroy']);
-
         Route::get('/doctor/consultations', [DoctorConsultationController::class, 'index']);
+        Route::get('/doctor/consultations/dashboard', [DoctorConsultationController::class, 'dashboard']);
+        Route::get('/doctor/consultations/{id}', [DoctorConsultationController::class, 'show']);
+        Route::post('/doctor/consultations/{id}/assign', [DoctorConsultationController::class, 'assign']);
+        Route::put('/doctor/consultations/{id}/status', [DoctorConsultationController::class, 'updateStatus']);
+        Route::get('/doctor/consultations/{id}/patient-summary', [DoctorConsultationController::class, 'patientSummary']);
+        Route::get('/doctor/consultations/{id}/messages', [ConsultationMessageController::class, 'index']);
+        Route::post('/doctor/consultations/{id}/messages', [ConsultationMessageController::class, 'store']);
+        Route::post('/doctor/consultations/{id}/read', [ConsultationMessageController::class, 'markRead']);
+        Route::get('/doctor/consultations/{id}/meetings', [ConsultationMeetingController::class, 'index']);
+        Route::post('/doctor/consultations/{id}/meetings', [ConsultationMeetingController::class, 'store']);
+        Route::put('/doctor/consultation-meetings/{id}', [ConsultationMeetingController::class, 'update']);
+        Route::delete('/doctor/consultation-meetings/{id}', [ConsultationMeetingController::class, 'destroy']);
+
         Route::get('/doctor/queue', [DoctorQueueController::class, 'queue']);
         Route::get('/doctor/reservations/{id}', [DoctorQueueController::class, 'show']);
         Route::put('/doctor/reservations/{id}/start', [DoctorQueueController::class, 'start']);

@@ -217,7 +217,7 @@ export default function ProfileDetailPage() {
               {/* Progress & Membership Bar */}
               <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
                 {/* Completion */}
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10">
+                <div className={`bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 ${sessionRole === "doctor" ? "sm:col-span-2" : ""}`}>
                   <div className="flex justify-between items-center text-xs text-[#d4c5b0] mb-2">
                     <span>Kelengkapan Profil</span>
                     <span className="font-bold text-[#e8c547]">{completionPercent}%</span>
@@ -230,20 +230,22 @@ export default function ProfileDetailPage() {
                   </div>
                 </div>
 
-                {/* Membership Badge & Points */}
-                <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 flex items-center justify-between">
-                  <div>
-                    <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Tier Membership</p>
-                    <p className="text-sm font-bold text-[#e8c547]">{tier.label}</p>
+                {/* Membership Badge & Points (hidden for doctors) */}
+                {sessionRole !== "doctor" && (
+                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Tier Membership</p>
+                      <p className="text-sm font-bold text-[#e8c547]">{tier.label}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Total Poin</p>
+                      <p className="text-sm font-bold text-emerald-400 flex items-center gap-1 justify-end">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        {profile.membershipPoints.toLocaleString("id-ID")}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Total Poin</p>
-                    <p className="text-sm font-bold text-emerald-400 flex items-center gap-1 justify-end">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      {profile.membershipPoints.toLocaleString("id-ID")}
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

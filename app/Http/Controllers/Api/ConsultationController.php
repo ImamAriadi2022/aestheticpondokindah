@@ -79,6 +79,7 @@ class ConsultationController extends Controller
 
             $created = Consultation::create([
                 'user_id' => $request->user()->id,
+                'doctor_id' => $schedule ? ($schedule->user_id ?? null) : null,
                 'type' => $validated['type'],
                 'status' => $validated['type'] === 'scheduled' ? 'Dijadwalkan' : 'Menunggu',
                 'topic' => $validated['topic'] ?? null,

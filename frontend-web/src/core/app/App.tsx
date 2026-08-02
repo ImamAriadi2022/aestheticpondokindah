@@ -41,6 +41,7 @@ const BranchDetailPage = lazy(() => import("@/features/guest/branches/pages/Bran
 const DashboardPage = lazy(() => import("@/core/router/Dashboard"));
 const UserDashboardPage = lazy(() => import("@/features/patient/dashboard/pages/UserDashboardNew"));
 const DoctorDashboardPage = lazy(() => import("@/features/doctor/dashboard/pages/DoctorDashboard"));
+const DoctorConsultationChatPage = lazy(() => import("@/features/doctor/consultation/scheduled/pages/ConsultationChatPage"));
 const DoctorScheduleFormPage = lazy(() => import("@/features/doctor/schedule/pages/DoctorScheduleForm"));
 const ClinicDashboardPage = lazy(() => import("@/features/admin/dashboard/pages/ClinicDashboard"));
 const ClinicDoctorFormPage = lazy(() => import("@/features/admin/doctors/pages/ClinicDoctorForm"));
@@ -52,6 +53,12 @@ const MembershipUpgradePage = lazy(() => import("@/features/patient/membership/p
 const AdminMembershipPage = lazy(() => import("@/features/admin/membership/pages/AdminMembership"));
 const SecurityPage = lazy(() => import("@/features/patient/profile/pages/Security"));
 const HelpPage = lazy(() => import("@/features/guest/help/pages/Help"));
+
+const DoctorProfileDetailPage = lazy(() => import("@/features/doctor/profile/pages/ProfileDetail"));
+const DoctorProfileEditPage = lazy(() => import("@/features/doctor/profile/pages/ProfileEdit"));
+const DoctorSettingsPage = lazy(() => import("@/features/doctor/settings/pages/Settings"));
+const DoctorSecurityPage = lazy(() => import("@/features/doctor/settings/pages/Security"));
+const DoctorDownloadPage = lazy(() => import("@/features/doctor/download/pages/Download"));
 
 const BookingNewPage = lazy(() => import("@/features/guest/reservation/pages/BookingNew"));
 const BookingStatusPage = lazy(() => import("@/features/guest/reservation/pages/BookingStatus"));
@@ -84,6 +91,32 @@ function ChatBotWrapper() {
 
   if (isDashboard || isSettings || isProfile || isMembership || isSecurity || isHelp || isOnboarding) return null;
   return <ChatBot />;
+}
+
+// Role-aware wrappers: select doctor-specific pages when session role is doctor
+function isDoctorSession() {
+  const session = getSession();
+  return !!session && session.role === "doctor";
+}
+
+function RoleAwareProfileDetail() {
+  return isDoctorSession() ? <DoctorProfileDetailPage /> : <ProfileDetailPage />;
+}
+
+function RoleAwareProfileEdit() {
+  return isDoctorSession() ? <DoctorProfileEditPage /> : <ProfileEditPage />;
+}
+
+function RoleAwareSettings() {
+  return isDoctorSession() ? <DoctorSettingsPage /> : <SettingsPage />;
+}
+
+function RoleAwareSecurity() {
+  return isDoctorSession() ? <DoctorSecurityPage /> : <SecurityPage />;
+}
+
+function RoleAwareDownload() {
+  return isDoctorSession() ? <DoctorDownloadPage /> : <DownloadPage />;
 }
 
 function VisitTracker() {
@@ -131,7 +164,7 @@ export default function App() {
               <Route path="/branches" element={<BranchesPage />} />
               <Route path="/branches/:slug" element={<BranchDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
-              <Route path="/download" element={<DownloadPage />} />
+              <Route path="/download" element={<RoleAwareDownload />} />
               <Route path="/login" element={<PublicRouteRedirect><LoginPage /></PublicRouteRedirect>} />
               <Route path="/klinik" element={<PublicRouteRedirect><LoginPage /></PublicRouteRedirect>} />
               <Route path="/booking/new" element={<BookingNewPage />} />
@@ -162,6 +195,14 @@ export default function App() {
                 element={
                   <ProtectedRoute allow={["doctor"]}>
                     <DoctorDashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/doctor/consultation/:id"
+                element={
+                  <ProtectedRoute allow={["doctor"]}>
+                    <DoctorConsultationChatPage />
                   </ProtectedRoute>
                 }
               />
@@ -217,7 +258,7 @@ export default function App() {
                 path="/profile"
                 element={
                   <ProtectedRoute allow={["user", "doctor", "clinic"]}>
-                    <ProfileDetailPage />
+                    <RoleAwareProfileDetail />
                   </ProtectedRoute>
                 }
               />
@@ -225,7 +266,7 @@ export default function App() {
                 path="/profile/edit"
                 element={
                   <ProtectedRoute allow={["user", "doctor", "clinic"]}>
-                    <ProfileEditPage />
+                    <RoleAwareProfileEdit />
                   </ProtectedRoute>
                 }
               />
@@ -233,7 +274,7 @@ export default function App() {
                 path="/settings"
                 element={
                   <ProtectedRoute allow={["user", "doctor", "clinic"]}>
-                    <SettingsPage />
+                    <RoleAwareSettings />
                   </ProtectedRoute>
                 }
               />
@@ -257,7 +298,7 @@ export default function App() {
                 path="/security"
                 element={
                   <ProtectedRoute allow={["user", "doctor", "clinic"]}>
-                    <SecurityPage />
+                    <RoleAwareSecurity />
                   </ProtectedRoute>
                 }
               />

@@ -5,16 +5,9 @@ import { clearSessionStorage, touchSessionLastActive } from "@/core/auth/service
 import AccountSidebar from "@/core/layouts/AccountSidebar";
 import MobileDashboardLayout from "@/core/layouts/MobileDashboardLayout";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
+import DoctorSidebar from "@/features/doctor/layouts/DoctorSidebar";
 import { getMenuItems, CONTENT_SUBMENU, type MenuItem } from "@/core/permissions/index";
-import {
-  LogOut,
-  ChevronDown,
-  ChevronRight,
-  User,
-  Pencil,
-  Settings,
-  Download,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, LogOut } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -202,6 +195,8 @@ export default function DashboardLayout({
       {/* Left Sidebar */}
       {role === "user" ? (
         <AccountSidebar userName={session?.name || "User"} onLogout={handleLogout} />
+      ) : role === "doctor" ? (
+        <DoctorSidebar onLogout={handleLogout} />
       ) : (
         <div className="sticky top-4 left-0 h-[calc(100vh-32px)] self-start z-[100] pointer-events-auto ml-2 mr-2 flex-shrink-0">
           {/* Floating Glassmorphism Sidebar - Elegant Gold Theme */}
@@ -446,10 +441,10 @@ export default function DashboardLayout({
                   `}
                   >
                     <p className="text-sm font-semibold text-[#E8C547] whitespace-nowrap">
-                      {session?.name || (role === "doctor" ? "Dokter Klinik" : "Admin Klinik")}
+                      {session?.name || "Admin Klinik"}
                     </p>
                     <p className="text-xs text-[#A89F91] whitespace-nowrap">
-                      {role === "doctor" ? "Dokter Spesialis" : role === "clinic" ? "Admin Klinik" : "Pasien"}
+                      Admin Klinik
                     </p>
                   </div>
 
@@ -469,10 +464,8 @@ export default function DashboardLayout({
                       z-50
                     "
                     >
-                      <p className="font-semibold">{session?.name || (role === "doctor" ? "Dokter Klinik" : "Admin Klinik")}</p>
-                      <p className="text-xs text-[#A89F91]">
-                        {role === "doctor" ? "Dokter Spesialis" : role === "clinic" ? "Admin Klinik" : "Pasien"}
-                      </p>
+                      <p className="font-semibold">{session?.name || "Admin Klinik"}</p>
+                      <p className="text-xs text-[#A89F91]">Admin Klinik</p>
                       <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
                     </div>
                   )}
