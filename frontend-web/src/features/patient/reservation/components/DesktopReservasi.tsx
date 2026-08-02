@@ -1,0 +1,784 @@
+import { useMemo, useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { toast } from "@/shared/ui/toast";
+import {
+  Stethoscope,
+  Sparkles,
+  Crown,
+  Star,
+  Clock,
+  Check,
+  CalendarDays,
+  ChevronRight,
+  Search,
+  SlidersHorizontal,
+  CheckCircle2,
+  Clock4,
+  AlertCircle,
+  FileText,
+  ArrowRight,
+  User,
+  MapPin,
+  Send,
+  Loader2,
+  Calendar as CalendarIcon,
+} from "lucide-react";
+import { services as allServices } from "@/features/guest/services/pages/Services";
+import { getPublicDoctorSchedules } from "@/features/guest/doctors/services/publicDoctorScheduleApi";
+import { apiClient } from "@/core/api/apiClient";
+import { API_BASE } from "@/core/api/apiConfig";
+
+const iconMap: Record<string, any> = {
+  "Dental Whitening": Sparkles,
+  "Root Canal Treatments": Crown,
+  "Pediatric Dentistry": Star,
+  "Full Mouth Rehabilitations": Crown,
+  "Emergency Dental Services": AlertCircle,
+  "Dentures": Crown,
+  "Dental Implants": Crown,
+  "Dental Extraction and Wisdom Tooth Removal": Stethoscope,
+  "Oral Care": Stethoscope,
+  "Dental Bridges": Crown,
+  "Bone Grafting": Crown,
+  "Dental Spa": Sparkles,
+  "Veneers": Sparkles,
+  "Invisalign": Star,
+  "Orthodontics": Star,
+  "Dental Fillings, Inlays & Onlays": Crown,
+  "Gum Ablation": AlertCircle,
+  "Lip Repositioning": AlertCircle,
+  "Crown lengthening": Crown,
+  "Gummy Smile Correction": Sparkles,
+  "Frenectomy": AlertCircle,
+};
+
+const colorRing = [
+  "from-[#c9a24a] to-[#a8843a]",
+  "from-emerald-500 to-emerald-600",
+  "from-blue-500 to-blue-600",
+  "from-purple-500 to-purple-600",
+  "from-pink-500 to-rose-500",
+  "from-orange-500 to-amber-500",
+  "from-teal-500 to-cyan-500",
+];
+
+const tabs = [
+  { id: "all", label: "Semua" },
+  { id: "upcoming", label: "Mendatang" },
+  { id: "completed", label: "Selesai" },
+  { id: "cancelled", label: "Dibatalkan" },
+];
+
+const statusConfig: Record<string, { label: string; color: string; icon: typeof CheckCircle2 }> = {
+  pending: { label: "Menunggu Konfirmasi", color: "bg-amber-100 text-amber-700 border-amber-200", icon: Clock4 },
+  confirmed: { label: "Dikonfirmasi", color: "bg-blue-100 text-blue-700 border-blue-200", icon: Clock4 },
+  upcoming: { label: "Akan Datang", color: "bg-blue-100 text-blue-700 border-blue-200", icon: Clock4 },
+  completed: { label: "Selesai", color: "bg-green-100 text-green-700 border-green-200", icon: CheckCircle2 },
+  cancelled: { label: "Dibatalkan", color: "bg-red-100 text-red-700 border-red-200", icon: AlertCircle },
+};
+
+export default function DesktopReservasi() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const [view, setView] = useState<"services" | "history">("services");
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  const step = searchParams.get("step") || "layanan";
+  const serviceParam = searchParams.get("service") || "";
+  const scheduleId = searchParams.get("schedule") || "";
+  const dateParam = searchParams.get("date") || "";
+  const timeParam = searchParams.get("time") || "";
+
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [schedLoading, setSchedLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Generate next 7 days for date picker
+  const upcomingDates = useMemo(() => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const iso = d.toISOString().split("T")[0];
+      const dayName = d.toLocaleDateString("id-ID", { weekday: "short" });
+      const dayNum = d.getDate();
+      dates.push({ fullDate: iso, dayName, dayNum });
+    }
+    return dates;
+  }, []);
+
+  const [selectedDate, setSelectedDate] = useState<string>(
+    dateParam || upcomingDates[0]?.fullDate || new Date().toISOString().split("T")[0]
+  );
+  const [selectedTime, setSelectedTime] = useState<string | null>(timeParam || "10:00");
+  const [complaintNote, setComplaintNote] = useState("");
+
+  // Map services for selection
+  const bookingServices = useMemo(() => {
+    return allServices.map((s, idx) => {
+      const Icon = iconMap[s.title] || Stethoscope;
+      const gradient = colorRing[idx % colorRing.length];
+      return {
+        id: s.id,
+        label: s.title,
+        description: s.intro,
+        icon: Icon,
+        gradient,
+        image: s.image,
+      };
+    });
+  }, []);
+
+  // Selected Service details
+  const activeServiceObj = useMemo(() => {
+    return bookingServices.find((s) => s.id === serviceParam || s.id === selectedService) || bookingServices[0];
+  }, [serviceParam, selectedService, bookingServices]);
+
+  // Selected Schedule details
+  const activeScheduleObj = useMemo(() => {
+    return schedules.find((s) => (s.id || s._id) === scheduleId) || schedules[0] || null;
+  }, [scheduleId, schedules]);
+
+  // Load history reservations
+  useEffect(() => {
+    if (view === "history") {
+      setLoading(true);
+      apiClient
+        .get<{ reservations: any[] }>("/user/reservations")
+        .then((response) => setBookings(response.reservations || []))
+        .catch(() => setBookings([]))
+        .finally(() => setLoading(false));
+    }
+  }, [view, activeTab]);
+
+  // Load public doctor schedules for doctor selection
+  useEffect(() => {
+    if (step === "dokter" || step === "jadwal" || step === "konfirmasi") {
+      setSchedLoading(true);
+      getPublicDoctorSchedules()
+        .then((items) => setSchedules(items || []))
+        .catch(() => setSchedules([]))
+        .finally(() => setSchedLoading(false));
+    }
+  }, [step]);
+
+  const handleSelectService = (serviceId: string) => {
+    setSelectedService(serviceId);
+    setTimeout(() => {
+      navigate(`/dashboard/user?tab=booking&step=dokter&service=${serviceId}`);
+    }, 200);
+  };
+
+  const handleConfirmReservation = async () => {
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem("apident:token");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const payload = {
+        doctor_id: activeScheduleObj?.doctorId || activeScheduleObj?.user_id || null,
+        doctor_schedule_id: activeScheduleObj?.id || activeScheduleObj?._id || null,
+        treatment_interest: activeServiceObj.label,
+        preferred_time: selectedTime || "10:00",
+        complaint: complaintNote || `Konsultasi & Perawatan ${activeServiceObj.label}`,
+        date: selectedDate,
+        source: "user_dashboard",
+      };
+
+      const endpoint = token ? `${API_BASE}/user/reservations` : `${API_BASE}/public/reservations`;
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error("Gagal membuat reservasi");
+      }
+
+      const data = await res.json();
+      const code = data.reservation?.code || data.code || "RSV-SUCCESS";
+
+      toast({
+        title: "Reservasi Berhasil!",
+        message: `Reservasi ${code} telah dibuat. Menunggu konfirmasi klinik.`,
+        variant: "info",
+      });
+
+      // Switch to history view to display the newly created reservation
+      setView("history");
+      navigate("/dashboard/user?tab=reservasi");
+    } catch (err) {
+      toast({
+        title: "Gagal Membuat Reservasi",
+        message: "Terjadi kesalahan saat menghubungkan ke server.",
+        variant: "error",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const filteredBookings = bookings
+    .filter((booking) => {
+      if (activeTab === "all") return true;
+      return booking.status === activeTab;
+    })
+    .filter((booking) => {
+      if (!searchQuery) return true;
+      return (
+        (booking.service_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (booking.doctor_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (booking.notes || "").toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    });
+
+  return (
+    <div className="space-y-6">
+      {/* Header dengan Toggle View */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Reservasi Layanan Klinik</h2>
+          <p className="text-sm text-gray-500">Booking jadwal periksa atau lihat riwayat reservasi Anda</p>
+        </div>
+        <div className="flex bg-gray-100 rounded-xl p-1 shrink-0">
+          <button
+            onClick={() => {
+              setView("services");
+              navigate("/dashboard/user?tab=reservasi");
+            }}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              view === "services" && step === "layanan"
+                ? "bg-white text-[#c9a24a] shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Booking Baru
+          </button>
+          <button
+            onClick={() => setView("history")}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              view === "history"
+                ? "bg-white text-[#c9a24a] shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Riwayat Reservasi
+          </button>
+        </div>
+      </div>
+
+      {/* Progress Steps Header */}
+      {view === "services" && (
+        <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div className="flex items-center justify-center gap-2 sm:gap-6">
+            <div className={`flex items-center gap-2 ${step === "layanan" ? "text-[#c9a24a]" : "text-gray-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${step === "layanan" ? "bg-[#c9a24a] text-white" : "bg-gray-100 text-gray-500"}`}>
+                1
+              </div>
+              <span className="text-xs sm:text-sm font-semibold">Layanan</span>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-300 shrink-0" />
+            <div className={`flex items-center gap-2 ${step === "dokter" ? "text-[#c9a24a]" : "text-gray-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${step === "dokter" ? "bg-[#c9a24a] text-white" : "bg-gray-100 text-gray-500"}`}>
+                2
+              </div>
+              <span className="text-xs sm:text-sm font-semibold">Dokter</span>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-300 shrink-0" />
+            <div className={`flex items-center gap-2 ${step === "jadwal" ? "text-[#c9a24a]" : "text-gray-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${step === "jadwal" ? "bg-[#c9a24a] text-white" : "bg-gray-100 text-gray-500"}`}>
+                3
+              </div>
+              <span className="text-xs sm:text-sm font-semibold">Jadwal</span>
+            </div>
+            <ArrowRight className="w-4 h-4 text-gray-300 shrink-0" />
+            <div className={`flex items-center gap-2 ${step === "konfirmasi" ? "text-[#c9a24a]" : "text-gray-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${step === "konfirmasi" ? "bg-[#c9a24a] text-white" : "bg-gray-100 text-gray-500"}`}>
+                4
+              </div>
+              <span className="text-xs sm:text-sm font-semibold">Konfirmasi</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 1: PILIH LAYANAN */}
+      {view === "services" && step === "layanan" && (
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari layanan gigi (mis. Whitening, Scaling, Veneer, Ortho)..."
+              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a24a]/30"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {bookingServices
+              .filter((s) => !searchQuery || s.label.toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((service) => {
+                const isSelected = selectedService === service.id;
+                return (
+                  <div
+                    key={service.id}
+                    onClick={() => handleSelectService(service.id)}
+                    className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-md group flex flex-col justify-between ${
+                      isSelected ? "border-[#c9a24a] bg-amber-50/30 shadow-md" : "border-gray-100 bg-white hover:border-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-16 h-16 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0 overflow-hidden">
+                        <img src={service.image} alt={service.label} className="w-full h-full object-contain p-2" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base font-bold text-gray-900 mb-1 line-clamp-1">{service.label}</h3>
+                        <p className="text-xs text-gray-500 mb-3 line-clamp-2">{service.description}</p>
+                      </div>
+
+                      {isSelected && (
+                        <div className="w-6 h-6 bg-[#c9a24a] rounded-full flex items-center justify-center shrink-0">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between mt-3 text-xs">
+                      <span className="text-gray-400 font-medium">Spesialis & Perawatan</span>
+                      <span className="text-[#c9a24a] font-bold group-hover:underline flex items-center gap-1">
+                        Pilih Layanan <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* STEP 2: PILIH DOKTER */}
+      {view === "services" && step === "dokter" && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Pilih Dokter Spesialis</h3>
+              <p className="text-xs text-gray-500">
+                Layanan terpilih: <span className="font-bold text-[#c9a24a]">{activeServiceObj.label}</span>
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/dashboard/user?tab=reservasi")}
+              className="rounded-xl border-gray-200 text-xs text-gray-700"
+            >
+              Ubah Layanan
+            </Button>
+          </div>
+
+          {schedLoading ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+              <Loader2 className="w-8 h-8 text-[#c9a24a] animate-spin mx-auto mb-2" />
+              <p className="text-xs text-gray-500">Memuat daftar dokter & jadwal publik...</p>
+            </div>
+          ) : schedules.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 space-y-3 p-6">
+              <Stethoscope className="w-12 h-12 text-[#c9a24a] mx-auto opacity-70" />
+              <h4 className="font-bold text-gray-900">Dokter Siap Melayani</h4>
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
+                Silakan lanjutkan untuk memilih tanggal dan waktu periksa yang sesuai dengan kebutuhan Anda.
+              </p>
+              <Button
+                onClick={() => navigate(`/dashboard/user?tab=booking&step=jadwal&service=${serviceParam}`)}
+                className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white rounded-xl text-xs font-semibold px-6 h-10"
+              >
+                Lanjut Ke Pemilihan Jadwal
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {schedules.map((s: any) => (
+                <div key={s.id || s._id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0">
+                      <Stethoscope className="w-6 h-6 text-[#c9a24a]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-base font-bold text-gray-900 leading-tight">{s.doctorName || "Dr. Aris S.Sp.KG"}</h4>
+                      <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-[#c9a24a]" />
+                        {s.location || "Aesthetic Pondok Indah Main Branch"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 space-y-1.5 text-xs text-gray-600">
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-gray-500">
+                        <CalendarIcon className="w-3.5 h-3.5 text-[#c9a24a]" />
+                        Hari & Tanggal:
+                      </span>
+                      <span className="font-semibold text-gray-900">{s.date || "Setiap Hari"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-gray-500">
+                        <Clock className="w-3.5 h-3.5 text-[#c9a24a]" />
+                        Jam Praktik:
+                      </span>
+                      <span className="font-semibold text-gray-900">{s.timeRange || "09:00 - 17:00"}</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => navigate(`/dashboard/user?tab=booking&step=jadwal&service=${serviceParam}&schedule=${s.id || s._id}`)}
+                    className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white rounded-xl text-xs font-semibold h-10 shadow-sm"
+                  >
+                    Pilih Dokter Ini & Lanjut Jadwal
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* STEP 3: PILIH JADWAL & WAKTU */}
+      {view === "services" && step === "jadwal" && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Pilih Tanggal & Jam Periksa</h3>
+              <p className="text-xs text-gray-500">
+                Layanan: <span className="font-bold text-[#c9a24a]">{activeServiceObj.label}</span>
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/dashboard/user?tab=booking&step=dokter&service=${serviceParam}`)}
+              className="rounded-xl border-gray-200 text-xs text-gray-700"
+            >
+              Kembali Ke Dokter
+            </Button>
+          </div>
+
+          {/* Date Picker (Upcoming 7 Days) */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+              <CalendarIcon className="w-4 h-4 text-[#c9a24a]" />
+              Pilih Tanggal Periksa
+            </h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+              {upcomingDates.map((d) => {
+                const isSelected = selectedDate === d.fullDate;
+                return (
+                  <button
+                    key={d.fullDate}
+                    type="button"
+                    onClick={() => setSelectedDate(d.fullDate)}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
+                      isSelected
+                        ? "bg-[#c9a24a] text-white border-[#c9a24a] shadow-md scale-105"
+                        : "bg-white border-gray-200 text-gray-800 hover:border-[#c9a24a]"
+                    }`}
+                  >
+                    <span className={`text-[11px] font-semibold ${isSelected ? "text-white/90" : "text-gray-500"}`}>
+                      {d.dayName}
+                    </span>
+                    <span className="text-lg font-extrabold mt-0.5">{d.dayNum}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Time Slots Picker */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[#c9a24a]" />
+              Pilih Jam Praktik
+            </h4>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+              {[
+                "09:00", "09:30", "10:00", "10:30", "11:00", "13:00",
+                "13:30", "14:00", "14:30", "15:00", "15:30", "16:00"
+              ].map((time) => {
+                const isSelected = selectedTime === time;
+                return (
+                  <button
+                    key={time}
+                    type="button"
+                    onClick={() => setSelectedTime(time)}
+                    className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all ${
+                      isSelected
+                        ? "bg-[#c9a24a] text-white border-[#c9a24a] shadow-md"
+                        : "bg-white border-gray-200 text-gray-800 hover:border-[#c9a24a]"
+                    }`}
+                  >
+                    {time} WIB
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              onClick={() =>
+                navigate(
+                  `/dashboard/user?tab=booking&step=konfirmasi&service=${serviceParam}&schedule=${scheduleId}&date=${selectedDate}&time=${selectedTime || "10:00"}`
+                )
+              }
+              className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold rounded-xl px-8 h-11 text-xs shadow-md transition-all flex items-center gap-2"
+            >
+              <span>Lanjut Ke Konfirmasi</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 4: KONFIRMASI & KIRIM RESERVASI (API POST /api/user/reservations) */}
+      {view === "services" && step === "konfirmasi" && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Konfirmasi Reservasi</h3>
+              <p className="text-xs text-gray-500">Periksa ringkasan janji temu Anda sebelum dikirimkan ke klinik</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                navigate(`/dashboard/user?tab=booking&step=jadwal&service=${serviceParam}&schedule=${scheduleId}`)
+              }
+              className="rounded-xl border-gray-200 text-xs text-gray-700"
+            >
+              Ubah Tanggal / Jam
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Summary Card */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+              <h4 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#c9a24a]" />
+                Ringkasan Janji Temu
+              </h4>
+
+              <div className="space-y-3 text-xs">
+                <div className="flex justify-between py-2 border-b border-gray-50">
+                  <span className="text-gray-500">Layanan Terpilih</span>
+                  <span className="font-bold text-gray-900 text-right">{activeServiceObj.label}</span>
+                </div>
+
+                <div className="flex justify-between py-2 border-b border-gray-50">
+                  <span className="text-gray-500">Dokter Spesialis</span>
+                  <span className="font-bold text-gray-900 text-right">
+                    {activeScheduleObj?.doctorName || "Dr. Aris S.Sp.KG (Spesialis Konservasi Gigi)"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-2 border-b border-gray-50">
+                  <span className="text-gray-500">Tanggal Periksa</span>
+                  <span className="font-bold text-gray-900 text-right">
+                    {selectedDate
+                      ? new Date(selectedDate).toLocaleDateString("id-ID", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "2026-08-02"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-2 border-b border-gray-50">
+                  <span className="text-gray-500">Jam Praktik</span>
+                  <span className="font-bold text-[#c9a24a] text-right">{selectedTime || "10:00"} WIB</span>
+                </div>
+
+                <div className="flex justify-between py-2 border-b border-gray-50">
+                  <span className="text-gray-500">Lokasi Klinik</span>
+                  <span className="font-bold text-gray-900 text-right">Aesthetic Pondok Indah Clinic</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Form Input Catatan & Konfirmasi */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+              <h4 className="text-sm font-bold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+                <User className="w-4 h-4 text-[#c9a24a]" />
+                Catatan & Keluhan Pasien
+              </h4>
+
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-700">Keluhan Gigi / Catatan Tambahan (Opsional)</label>
+                  <textarea
+                    rows={4}
+                    value={complaintNote}
+                    onChange={(e) => setComplaintNote(e.target.value)}
+                    placeholder="Tuliskan keluhan yang Anda rasakan, misal: gigi geraham belakang terasa ngilu saat minum dingin..."
+                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#c9a24a] text-gray-900"
+                  />
+                </div>
+
+                <div className="bg-amber-50/60 p-3.5 rounded-xl border border-amber-200/60 text-[11px] text-amber-900 leading-relaxed">
+                  <span className="font-bold">Info:</span> Data reservasi akan langsung tersimpan di sistem klinik. Staf admin kami akan mengonfirmasi kedatangan Anda.
+                </div>
+
+                <Button
+                  onClick={handleConfirmReservation}
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold rounded-xl h-11 text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Memproses Reservasi...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Konfirmasi & Kirim Reservasi</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW RIWAYAT RESERVASI */}
+      {view === "history" && (
+        <div className="space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari kode atau riwayat reservasi..."
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#c9a24a]/30"
+              />
+            </div>
+            <button className="w-11 h-11 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-50">
+              <SlidersHorizontal className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex gap-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all ${
+                  activeTab === tab.id
+                    ? "bg-[#c9a24a] text-white shadow-sm"
+                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {loading ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+                <Loader2 className="w-8 h-8 text-[#c9a24a] animate-spin mx-auto mb-2" />
+                <p className="text-xs text-gray-500">Memuat riwayat reservasi...</p>
+              </div>
+            ) : filteredBookings.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+                <FileText className="w-12 h-12 text-[#c9a24a] mx-auto opacity-70" />
+                <h4 className="font-bold text-gray-900 text-sm">Belum Ada Riwayat Reservasi</h4>
+                <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                  Riwayat booking jadwal Anda akan tampil di sini setelah reservasi dikirimkan.
+                </p>
+                <Button
+                  onClick={() => {
+                    setView("services");
+                    navigate("/dashboard/user?tab=reservasi");
+                  }}
+                  className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white rounded-xl text-xs font-semibold px-6 h-10"
+                >
+                  Booking Sekarang
+                </Button>
+              </div>
+            ) : (
+              filteredBookings.map((booking) => {
+                const status = statusConfig[booking.status] || statusConfig.pending;
+                const StatusIcon = status.icon;
+
+                return (
+                  <div
+                    key={booking.id}
+                    className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all space-y-3"
+                  >
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${status.color}`}>
+                        <StatusIcon className="w-3.5 h-3.5" />
+                        {status.label}
+                      </span>
+                      <span className="text-xs font-mono font-bold text-gray-400">{booking.code || `RSV-${booking.id}`}</span>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 bg-amber-50 border border-amber-200/60 rounded-xl flex items-center justify-center shrink-0">
+                        <Stethoscope className="w-6 h-6 text-[#c9a24a]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-base font-bold text-gray-900 mb-1">
+                          {booking.service_name || "Reservasi Periksa Gigi"}
+                        </h4>
+                        <p className="text-xs text-gray-500 mb-2">{booking.notes || "Pemeriksaan Kesehatan & Estetik Gigi"}</p>
+
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
+                          <div className="flex items-center gap-1.5">
+                            <CalendarDays className="w-3.5 h-3.5 text-[#c9a24a]" />
+                            <span>
+                              {booking.scheduled_date
+                                ? new Intl.DateTimeFormat("id-ID", { dateStyle: "medium" }).format(new Date(booking.scheduled_date))
+                                : "Menunggu jadwal"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-[#c9a24a]" />
+                            <span>{booking.scheduled_time || "10:00 WIB"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

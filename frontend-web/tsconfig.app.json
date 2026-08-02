@@ -9,15 +9,8 @@
 
     "paths": {
       "@/*": ["./src/*"],
-      "@/components/dashboard/*": ["./src/features/dashboard/components/*"],
-      "@/components/home/*": ["./src/features/home/components/*"],
-      "@/components/chatbot/*": ["./src/features/consultation/components/*"],
-      "@/components/DoctorCard": ["./src/features/doctors/DoctorCard.tsx"],
-      "@/lib/*": ["./src/shared/lib/*"],
-      "@/pages/booking/*": ["./src/features/reservation/pages/booking/*"],
-      "@/pages/dashboard/*": ["./src/features/dashboard/pages/dashboard/*"],
-      "@/pages/mobile/*": ["./src/features/mobile/pages/mobile/*"],
-      "@/pages/*": ["./src/features/marketing/pages/*"]
+      "@core/*": ["./src/core/*"],
+      "@shared/*": ["./src/shared/*"]
     },
 
     /* Bundler mode */
