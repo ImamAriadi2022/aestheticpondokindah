@@ -20,6 +20,11 @@ import {
   Stethoscope,
   Phone,
   Clock,
+  Calendar,
+  Building,
+  User,
+  Pencil,
+  Download,
 } from "lucide-react";
 
 interface MobileDashboardLayoutProps {
@@ -94,7 +99,8 @@ export default function MobileDashboardLayout({ children, role }: MobileDashboar
         return [
           { label: "Beranda", icon: Home, href: "/dashboard/doctor" },
           { label: "Jadwal", icon: CalendarDays, href: "/dashboard/doctor?tab=jadwal" },
-          { label: "Klien", icon: MessageSquareText, href: "/dashboard/doctor?tab=klien" },
+          { label: "Reservasi", icon: Calendar, href: "/dashboard/doctor?tab=reservasi" },
+          { label: "Konsultasi", icon: MessageSquareText, href: "/dashboard/doctor?tab=konsultasi" },
           { label: "Profil", icon: UserCircle, href: "/settings" },
         ];
       default:
@@ -164,36 +170,36 @@ export default function MobileDashboardLayout({ children, role }: MobileDashboar
                     <p className="text-xs text-gray-500">{getNavbarLabel()}</p>
                   </div>
                   <Link
+                    to="/profile"
+                    onClick={() => setProfileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-gray-500" />
+                    Detail Profil
+                  </Link>
+                  <Link
+                    to="/profile/edit"
+                    onClick={() => setProfileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
+                  >
+                    <Pencil className="w-4 h-4 text-gray-500" />
+                    Edit Profil (Foto)
+                  </Link>
+                  <Link
                     to="/settings"
                     onClick={() => setProfileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
                   >
                     <Settings className="w-4 h-4 text-gray-500" />
-                    Profil
+                    Pengaturan
                   </Link>
                   <Link
-                    to="/membership"
+                    to="/download"
                     onClick={() => setProfileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
                   >
-                    <CreditCard className="w-4 h-4 text-gray-500" />
-                    Membership
-                  </Link>
-                  <Link
-                    to="/security"
-                    onClick={() => setProfileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
-                  >
-                    <Shield className="w-4 h-4 text-gray-500" />
-                    Keamanan
-                  </Link>
-                  <Link
-                    to="/help"
-                    onClick={() => setProfileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
-                  >
-                    <HelpCircle className="w-4 h-4 text-gray-500" />
-                    Bantuan
+                    <Download className="w-4 h-4 text-gray-500" />
+                    Download Aplikasi
                   </Link>
                   <div className="border-t border-gray-100 my-2 mx-3"></div>
                   <button
@@ -204,7 +210,7 @@ export default function MobileDashboardLayout({ children, role }: MobileDashboar
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl mx-1 transition-colors w-full"
                   >
                     <LogOut className="w-4 h-4" />
-                    Keluar
+                    Keluar Sesi
                   </button>
                 </div>
               )}

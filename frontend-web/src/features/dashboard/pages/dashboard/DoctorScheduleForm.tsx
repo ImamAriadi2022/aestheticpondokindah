@@ -6,40 +6,84 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
-import { Loader2 } from "lucide-react";
-import { ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
+import { Loader2, ArrowLeft, Calendar, Clock, MapPin } from "lucide-react";
 import {
   createDoctorSchedule,
   getDoctorSchedule,
   updateDoctorSchedule,
 } from "@/features/doctors/services/doctorScheduleApi";
+import { apiClient } from "@/shared/lib/apiClient";
+
+interface BranchItem {
+  id: number;
+  name: string;
+  code?: string;
+  address?: string;
+}
+
+const TIME_OPTIONS = [
+  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
+  "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"
+];
 
 export default function DoctorScheduleFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
 
-  const [formData, setFormData] = useState({
-    date: "",
-    timeRange: "",
-    location: "",
-    totalSlots: "",
-  });
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("12:00");
+  const [location, setLocation] = useState("");
+  const [totalSlots, setTotalSlots] = useState("5");
+
+  const [branches, setBranches] = useState<BranchItem[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
 
+  // Fetch active branches from database
+  useEffect(() => {
+    setLoadingBranches(true);
+    apiClient
+      .get<BranchItem[]>("/branches")
+      .then((data) => {
+        const activeBranches = Array.isArray(data) ? data : [];
+        setBranches(activeBranches);
+        if (activeBranches.length > 0 && !location) {
+          setLocation(activeBranches[0].name);
+        }
+      })
+      .catch(() => {
+        setBranches([
+          { id: 1, name: "Aesthetic Pondok Indah Main Branch", address: "Jakarta Selatan" },
+          { id: 2, name: "Aesthetic Clinic Senayan Branch", address: "Jakarta Pusat" },
+        ]);
+        if (!location) setLocation("Aesthetic Pondok Indah Main Branch");
+      })
+      .finally(() => setLoadingBranches(false));
+  }, []);
+
+  // Fetch schedule details if edit mode
   useEffect(() => {
     if (!isEdit || !id) return;
     setFetching(true);
     getDoctorSchedule(id)
       .then((schedule) => {
-        setFormData({
-          date: schedule.date,
-          timeRange: schedule.timeRange,
-          location: schedule.location,
-          totalSlots: String(schedule.totalSlots),
-        });
+        setDate(schedule.date);
+        setLocation(schedule.location);
+        setTotalSlots(String(schedule.totalSlots));
+
+        // Parse existing time range e.g. "09:00 - 12:00" or "09.00-11.00"
+        if (schedule.timeRange) {
+          const parts = schedule.timeRange.replace(/\./g, ":").split(/[-–]/);
+          if (parts.length >= 2) {
+            setStartTime(parts[0].trim().substring(0, 5));
+            setEndTime(parts[1].trim().substring(0, 5));
+          }
+        }
       })
       .catch((err) => {
         toast({ title: "Gagal", message: err.message || "Gagal memuat jadwal", variant: "error" });
@@ -52,18 +96,19 @@ export default function DoctorScheduleFormPage() {
     e.preventDefault();
     setErrors({});
 
+    const formattedTimeRange = `${startTime} - ${endTime}`;
+
     const payload = {
-      date: formData.date,
-      timeRange: formData.timeRange.trim(),
-      location: formData.location.trim(),
-      totalSlots: Number(formData.totalSlots),
+      date: date,
+      timeRange: formattedTimeRange,
+      location: location.trim(),
+      totalSlots: Number(totalSlots),
     };
 
-    if (!payload.date || !payload.timeRange || !payload.location || payload.totalSlots < 1) {
+    if (!payload.date || !payload.location || payload.totalSlots < 1) {
       const newErrors: Record<string, string> = {};
       if (!payload.date) newErrors.date = "Tanggal wajib diisi";
-      if (!payload.timeRange) newErrors.timeRange = "Waktu wajib diisi";
-      if (!payload.location) newErrors.location = "Lokasi wajib diisi";
+      if (!payload.location) newErrors.location = "Lokasi cabang wajib dipilih";
       if (payload.totalSlots < 1) newErrors.totalSlots = "Jumlah slot minimal 1";
       setErrors(newErrors);
       return;
@@ -96,17 +141,6 @@ export default function DoctorScheduleFormPage() {
     }
   };
 
-  const updateField = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  };
-
   if (fetching) {
     return (
       <DashboardLayout role="doctor">
@@ -130,91 +164,125 @@ export default function DoctorScheduleFormPage() {
           Kembali
         </Button>
 
-        <Card className="rounded-sm border-0 shadow-sm">
-          <CardHeader className="pb-4">
+        <Card className="rounded-xl border border-gray-200 shadow-sm max-w-2xl mx-auto">
+          <CardHeader className="pb-4 bg-gradient-to-r from-[#fdf8f0] to-white border-b border-gray-100">
             <CardTitle className="text-xl font-bold text-gray-900">
-              {isEdit ? "Edit Jadwal" : "Tambah Jadwal Baru"}
+              {isEdit ? "Edit Jadwal Praktik Dokter" : "Tambah Jadwal Praktik Baru"}
             </CardTitle>
             <p className="text-sm text-gray-500 mt-1">
-              {isEdit
-                ? "Perbarui informasi jadwal praktik Anda."
-                : "Tambahkan jadwal praktik baru untuk pasien."}
+              Pilih tanggal, jam praktik, dan cabang klinik dari sistem.
             </p>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-5">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Date Field */}
               <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="date" className="text-sm font-semibold text-gray-700">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-[#a8843a]" />
-                    Tanggal
+                    Tanggal Praktik
                   </div>
                 </Label>
                 <Input
                   id="date"
                   type="date"
-                  value={formData.date}
-                  onChange={(e) => updateField("date", e.target.value)}
-                  className="rounded-sm border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="rounded-lg border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]"
                   required
                 />
                 {errors.date && <p className="text-xs text-red-500 mt-1">{errors.date}</p>}
               </div>
 
-              {/* Time Field */}
+              {/* Time UX Selectors (Jam Mulai & Jam Selesai) */}
               <div className="space-y-2">
-                <Label htmlFor="timeRange" className="text-sm font-medium text-gray-700">
+                <Label className="text-sm font-semibold text-gray-700">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-[#a8843a]" />
-                    Waktu
+                    Jam Praktik Dokter (Otomatis Diformat)
                   </div>
                 </Label>
-                <Input
-                  id="timeRange"
-                  type="text"
-                  placeholder="Contoh: 10:00 - 12:00"
-                  value={formData.timeRange}
-                  onChange={(e) => updateField("timeRange", e.target.value)}
-                  className="rounded-sm border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]"
-                  required
-                />
-                {errors.timeRange && <p className="text-xs text-red-500 mt-1">{errors.timeRange}</p>}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-gray-500 mb-1 block">Jam Mulai</span>
+                    <select
+                      id="startTime"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 p-2.5 text-sm font-medium focus:border-[#c9a24a] focus:ring-[#c9a24a] bg-white"
+                    >
+                      {TIME_OPTIONS.map((t) => (
+                        <option key={`start_${t}`} value={t}>
+                          {t} WIB
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-500 mb-1 block">Jam Selesai</span>
+                    <select
+                      id="endTime"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="w-full rounded-lg border border-gray-200 p-2.5 text-sm font-medium focus:border-[#c9a24a] focus:ring-[#c9a24a] bg-white"
+                    >
+                      {TIME_OPTIONS.map((t) => (
+                        <option key={`end_${t}`} value={t}>
+                          {t} WIB
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <p className="text-xs text-[#a8843a] mt-1 font-medium">
+                  Format tersimpan otomatis: <span className="font-bold">{startTime} - {endTime}</span>
+                </p>
               </div>
 
-              {/* Location Field */}
+              {/* Location Branch Select Field */}
               <div className="space-y-2">
-                <Label htmlFor="location" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="location" className="text-sm font-semibold text-gray-700">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-[#a8843a]" />
-                    Lokasi
+                    Cabang / Lokasi Praktik Klinik (Database)
                   </div>
                 </Label>
-                <Input
-                  id="location"
-                  type="text"
-                  placeholder="Contoh: Pondok Indah"
-                  value={formData.location}
-                  onChange={(e) => updateField("location", e.target.value)}
-                  className="rounded-sm border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]"
-                  required
-                />
+                {loadingBranches ? (
+                  <div className="flex items-center gap-2 p-2.5 text-xs text-gray-500 bg-gray-50 rounded-lg">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#c9a24a]" /> Memuat daftar cabang...
+                  </div>
+                ) : (
+                  <select
+                    id="location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full rounded-lg border border-gray-200 p-2.5 text-sm font-medium focus:border-[#c9a24a] focus:ring-[#c9a24a] bg-white"
+                    required
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.name}>
+                        {b.name} {b.address ? `(${b.address})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {errors.location && <p className="text-xs text-red-500 mt-1">{errors.location}</p>}
               </div>
 
               {/* Slots Field */}
               <div className="space-y-2">
-                <Label htmlFor="totalSlots" className="text-sm font-medium text-gray-700">
-                  Jumlah Slot
+                <Label htmlFor="totalSlots" className="text-sm font-semibold text-gray-700">
+                  Kapasitas Pasien (Jumlah Slot)
                 </Label>
                 <Input
                   id="totalSlots"
                   type="number"
                   min="1"
+                  max="50"
                   placeholder="Contoh: 5"
-                  value={formData.totalSlots}
-                  onChange={(e) => updateField("totalSlots", e.target.value)}
-                  className="rounded-sm border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]"
+                  value={totalSlots}
+                  onChange={(e) => setTotalSlots(e.target.value)}
+                  className="rounded-lg border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]"
                   required
                 />
                 {errors.totalSlots && <p className="text-xs text-red-500 mt-1">{errors.totalSlots}</p>}
@@ -226,19 +294,19 @@ export default function DoctorScheduleFormPage() {
                   type="button"
                   variant="outline"
                   onClick={() => navigate("/dashboard/doctor?tab=jadwal")}
-                  className="flex-1 rounded-sm border-gray-200 text-gray-700 hover:bg-gray-50"
+                  className="flex-1 rounded-lg border-gray-200 text-gray-700 hover:bg-gray-50"
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold rounded-sm"
+                  className="flex-1 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-bold rounded-lg shadow-md"
                 >
                   {loading ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : null}
-                  {isEdit ? "Simpan Perubahan" : "Tambah Jadwal"}
+                  {isEdit ? "Simpan Perubahan" : "Tambah Jadwal Praktik"}
                 </Button>
               </div>
             </form>

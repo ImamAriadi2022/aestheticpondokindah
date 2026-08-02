@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DoctorSchedule;
 use App\Models\Reservation;
 use App\Models\ReservationAudit;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,8 @@ class ReservationController extends Controller
         $query = Reservation::query()
             ->with(['doctor', 'doctorSchedule'])
             ->where('user_id', $user->id)
-            ->latest();
+            ->orderByDesc('date')
+            ->orderByDesc('created_at');
 
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
@@ -82,20 +84,40 @@ class ReservationController extends Controller
         $doctorId = $validated['doctor_id'] ?? null;
         $date = $validated['date'] ?? null;
 
-        // Auto-match doctor schedule if not explicitly passed
-        if (!$scheduleId && $doctorId && $date) {
-            $matchedSchedule = DoctorSchedule::where('user_id', $doctorId)
+        // Strict Doctor Schedule Validation
+        if ($scheduleId) {
+            $schedule = DoctorSchedule::with('user')->find($scheduleId);
+            if (!$schedule) {
+                return response()->json(['message' => 'Jadwal praktik dokter tidak ditemukan.'], 422);
+            }
+            if ($schedule->is_full) {
+                return response()->json(['message' => 'Jadwal praktik dokter pada tanggal dan jam ini sudah penuh. Silakan pilih jadwal lain.'], 422);
+            }
+            $doctorId = $schedule->user_id;
+            $date = $schedule->date->format('Y-m-d');
+            $preferredTime = $validated['preferred_time'] ?? $schedule->time_range;
+        } elseif ($doctorId && $date) {
+            $schedule = DoctorSchedule::with('user')
+                ->where('user_id', $doctorId)
                 ->whereDate('date', $date)
                 ->first();
-            if ($matchedSchedule) {
-                $scheduleId = $matchedSchedule->id;
+
+            if (!$schedule) {
+                $doc = User::find($doctorId);
+                $docName = $doc ? $doc->name : 'Dokter';
+                return response()->json([
+                    'message' => "Dokter {$docName} tidak memiliki jadwal praktik pada tanggal {$date}. Silakan pilih tanggal yang memiliki jadwal praktik aktif."
+                ], 422);
             }
-        } elseif ($scheduleId && !$doctorId) {
-            $schedule = DoctorSchedule::find($scheduleId);
-            if ($schedule) {
-                $doctorId = $schedule->user_id;
-                $date = $date ?? $schedule->date->format('Y-m-d');
+
+            if ($schedule->is_full) {
+                return response()->json(['message' => 'Jadwal praktik dokter pada tanggal dan jam ini sudah penuh. Silakan pilih jadwal lain.'], 422);
             }
+
+            $scheduleId = $schedule->id;
+            $preferredTime = $validated['preferred_time'] ?? $schedule->time_range;
+        } else {
+            return response()->json(['message' => 'Silakan pilih dokter dan tanggal jadwal praktik yang tersedia.'], 422);
         }
 
         $reservation = Reservation::create([
@@ -110,7 +132,7 @@ class ReservationController extends Controller
             'treatment_interest' => $validated['treatment_interest'] ?? null,
             'complaint' => $validated['complaint'] ?? ($validated['treatment_interest'] ?? 'Permintaan Reservasi Pasien'),
             'date' => $date,
-            'preferred_time' => $validated['preferred_time'] ?? '10:00',
+            'preferred_time' => $preferredTime,
             'branch_name' => 'Aesthetic Pondok Indah Main Branch',
             'source' => $validated['source'] ?? 'user_dashboard',
             'status' => 'Baru',

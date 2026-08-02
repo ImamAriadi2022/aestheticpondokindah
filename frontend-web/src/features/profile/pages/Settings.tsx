@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { toast } from "@/components/ui/toast";
-import { clearSession } from "@/features/auth/services/session";
+import { clearSession, getSession } from "@/features/auth/services/session";
 import { clearSessionStorage } from "@/features/auth/services/sessionTtl";
 import {
   Settings,
@@ -42,13 +42,14 @@ export default function SettingsPage() {
       if (perm === "granted") {
         toast({
           title: "Notifikasi Browser Diizinkan",
-          description: "Anda akan menerima notifikasi otomatis dari sistem klinik.",
+          message: "Anda akan menerima notifikasi otomatis dari sistem klinik.",
+          variant: "info",
         });
       } else {
         toast({
           title: "Notifikasi Ditolak",
-          description: "Izin notifikasi ditolak oleh browser Anda.",
-          variant: "destructive",
+          message: "Izin notifikasi ditolak oleh browser Anda.",
+          variant: "error",
         });
       }
     }
@@ -71,14 +72,15 @@ export default function SettingsPage() {
     if (newPassword !== confirmPassword) {
       toast({
         title: "Gagal",
-        description: "Password baru dan konfirmasi password tidak cocok.",
-        variant: "destructive",
+        message: "Password baru dan konfirmasi password tidak cocok.",
+        variant: "error",
       });
       return;
     }
     toast({
       title: "Password Berhasil Diubah",
-      description: "Gunakan password baru Anda untuk login berikutnya.",
+      message: "Gunakan password baru Anda untuk login berikutnya.",
+      variant: "info",
     });
     setChangePasswordOpen(false);
     setOldPassword("");
@@ -91,7 +93,8 @@ export default function SettingsPage() {
     if (!newEmail) return;
     toast({
       title: "Permintaan Ganti Email Dikirim",
-      description: `Link verifikasi telah dikirimkan ke ${newEmail}.`,
+      message: `Link verifikasi telah dikirimkan ke ${newEmail}.`,
+      variant: "info",
     });
     setChangeEmailOpen(false);
     setNewEmail("");
@@ -102,7 +105,8 @@ export default function SettingsPage() {
     clearSessionStorage();
     toast({
       title: "Logout Berhasil",
-      description: "Sesi Anda pada semua perangkat telah diakhiri.",
+      message: "Sesi Anda pada semua perangkat telah diakhiri.",
+      variant: "info",
     });
     navigate("/login");
   };
@@ -111,8 +115,8 @@ export default function SettingsPage() {
     if (deleteConfirmText !== "HAPUS") {
       toast({
         title: "Konfirmasi Gagal",
-        description: 'Ketik "HAPUS" untuk mengonfirmasi penghapusan akun.',
-        variant: "destructive",
+        message: 'Ketik "HAPUS" untuk mengonfirmasi penghapusan akun.',
+        variant: "error",
       });
       return;
     }
@@ -120,14 +124,17 @@ export default function SettingsPage() {
     clearSessionStorage();
     toast({
       title: "Akun Dihapus",
-      description: "Akun Anda telah dinonaktifkan.",
-      variant: "destructive",
+      message: "Akun Anda telah dinonaktifkan.",
+      variant: "error",
     });
     navigate("/");
   };
 
+  const session = getSession();
+  const sessionRole = (session?.role as any) || "user";
+
   return (
-    <DashboardLayout role="user">
+    <DashboardLayout role={sessionRole}>
       <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">

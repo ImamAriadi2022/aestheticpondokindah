@@ -22,7 +22,13 @@ class ReservationAdminController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Reservation::query()->with(['doctor', 'user', 'doctorSchedule'])->orderByDesc('created_at');
+        $query = Reservation::query()
+            ->with(['doctor', 'user', 'doctorSchedule'])
+            ->where(function ($q) {
+                $q->whereNull('source')
+                  ->orWhereNotIn('source', ['online_consultation', 'consultation_chat', 'telehealth_chat']);
+            })
+            ->orderByDesc('created_at');
 
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
@@ -59,7 +65,10 @@ class ReservationAdminController extends Controller
                 'treatment_interest' => $r->treatment_interest,
                 'complaint' => $r->complaint,
                 'source' => $r->source ?? 'guest_web',
-                'status' => $r->status,
+                'status' => match ($r->status) {
+                    'Dalam Konsultasi' => 'Dikonfirmasi',
+                    default => $r->status,
+                },
                 'paymentStatus' => $r->payment_status ?? 'Belum Bayar',
                 'admin_notes' => $r->admin_notes,
                 'rescheduled_at' => optional($r->rescheduled_at)->toISOString(),

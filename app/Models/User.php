@@ -48,6 +48,15 @@ class User extends Authenticatable
         'source_info',
         'insurance_provider',
         'last_paid_level',
+        'avatar',
+        'str_number',
+        'sip_number',
+        'specialization',
+        'education',
+        'experience_years',
+        'bio',
+        'primary_branch',
+        'consultation_fee',
     ];
 
     /**

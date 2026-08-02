@@ -101,7 +101,15 @@ class DoctorScheduleController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $data = $request->all();
+        if (!isset($data['timeRange']) && isset($data['time_range'])) {
+            $data['timeRange'] = $data['time_range'];
+        }
+        if (!isset($data['totalSlots']) && isset($data['total_slots'])) {
+            $data['totalSlots'] = $data['total_slots'];
+        }
+
+        $validator = Validator::make($data, [
             'date' => 'required|date',
             'timeRange' => 'required|string|max:100',
             'location' => 'required|string|max:255',
@@ -114,10 +122,10 @@ class DoctorScheduleController extends Controller
 
         $schedule = DoctorSchedule::create([
             'user_id' => $request->user()->id,
-            'date' => $request->date,
-            'time_range' => $request->timeRange,
-            'location' => $request->location,
-            'total_slots' => $request->totalSlots,
+            'date' => $data['date'],
+            'time_range' => $data['timeRange'],
+            'location' => $data['location'],
+            'total_slots' => $data['totalSlots'],
             'booked_slots' => 0,
         ]);
 

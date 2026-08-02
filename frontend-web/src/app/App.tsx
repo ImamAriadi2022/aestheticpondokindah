@@ -15,7 +15,7 @@ import { getDefaultDashboardPath } from "@/authorization";
 
 function PublicRouteRedirect({ children }: { children: React.ReactNode }) {
   const session = getSession();
-  if (session && session.role && session.role !== "guest") {
+  if (session && session.role && (session.role as string) !== "guest") {
     const targetPath = getDefaultDashboardPath(session.role);
     return <Navigate to={targetPath} replace />;
   }
@@ -216,7 +216,7 @@ export default function App() {
               <Route
                 path="/profile"
                 element={
-                  <ProtectedRoute allow={["user"]}>
+                  <ProtectedRoute allow={["user", "doctor", "clinic"]}>
                     <ProfileDetailPage />
                   </ProtectedRoute>
                 }
@@ -224,7 +224,7 @@ export default function App() {
               <Route
                 path="/profile/edit"
                 element={
-                  <ProtectedRoute allow={["user"]}>
+                  <ProtectedRoute allow={["user", "doctor", "clinic"]}>
                     <ProfileEditPage />
                   </ProtectedRoute>
                 }

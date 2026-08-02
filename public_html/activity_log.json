@@ -1,5 +1,170 @@
 [
     {
+        "id": "act-160",
+        "date": "2026-08-02",
+        "time": "08:24",
+        "category": "Branch Location Management & Doctor Schedule UX",
+        "type": "Enhancement",
+        "feature": "Dropdown Lokasi Cabang Database & Time Picker UX Tanpa Manual Strip",
+        "description": "Membuat skema database branches, model Branch.php, seeder BranchSeeder.php, dan controller BranchController.php (beserta API endpoint public & admin). Mengganti input manual strip waktu pada form jadwal dokter dengan selector Jam Mulai & Jam Selesai yang otomatis diformat ke HH:mm - HH:mm. Mengganti input text lokasi pada form jadwal dokter dengan dropdown cabang klinik resmi dari database. Menyediakan tab Kelola Cabang & Lokasi Klinik di dashboard admin.",
+        "notes": "Telah diuji dengan test_branches_and_schedule_ux.php. Pembuatan jadwal dokter dengan dropdown lokasi database dan waktu otomatis sukses 100%. Kompilasi 0 error.",
+        "reason": "Permintaan perbaikan UX input waktu jadwal dokter tanpa manual strip dan pengolahan lokasi cabang klinik berbasis database.",
+        "files": [
+            "database/migrations/2026_08_02_000000_create_branches_table.php",
+            "app/Models/Branch.php",
+            "database/seeders/BranchSeeder.php",
+            "app/Http/Controllers/Api/BranchController.php",
+            "app/Http/Controllers/Api/DoctorScheduleController.php",
+            "routes/api.php",
+            "frontend-web/src/features/dashboard/pages/dashboard/DoctorScheduleForm.tsx",
+            "frontend-web/src/features/dashboard/pages/dashboard/ClinicDashboard.tsx",
+            "frontend-web/src/authorization/menu.ts"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-159",
+        "date": "2026-08-02",
+        "time": "08:14",
+        "category": "Backend Validation & Database Normalization",
+        "type": "Enhancement",
+        "feature": "Strict Doctor Schedule Validation & Database Seeder Normalization",
+        "description": "Mengimplementasikan validasi ketat pada backend (Public & User Reservation Controllers) sehingga pengguna tidak dapat membuat reservasi pada tanggal/jam yang tidak diinputkan dokter atau yang sudah penuh. Membuat dan menjalankan NormalizeDoctorSchedulesAndReservationsSeeder untuk menormalisasi seluruh data reservasi di database agar terhubung dengan jadwal dokter aktif pada Agustus 2026.",
+        "notes": "Telah diuji dengan test_strict_schedule_validation_and_seeder.php. Percobaan booking pada tanggal tanpa jadwal dokter (seperti September) ditolak 100% dengan status 422. Database 100% ternormalisasi. Kompilasi 0 error.",
+        "reason": "Permintaan pengetatan validasi jadwal praktik dokter pada backend dan normalisasi data reservasi via seeder.",
+        "files": [
+            "app/Http/Controllers/Api/Public/ReservationController.php",
+            "app/Http/Controllers/Api/User/ReservationController.php",
+            "database/seeders/NormalizeDoctorSchedulesAndReservationsSeeder.php",
+            "database/seeders/DatabaseSeeder.php"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-158",
+        "date": "2026-08-02",
+        "time": "08:10",
+        "category": "Doctor Dashboard Data Sorting",
+        "type": "Enhancement",
+        "feature": "Doctor Reservations Descending Date & Time Sorting (Newest to Oldest)",
+        "description": "Mengurutkan daftar reservasi pasien dokter berdasarkan tanggal periksa dari waktu paling terbaru ke waktu paling terlama. Controller DoctorQueueController.php di-update dengan urutan query orderByDesc(\"date\")->orderByDesc(\"created_at\"), serta DoctorDashboard.tsx di-update dengan pemrosesan sorting useMemo berdasarkan timestamp tanggal reservasi.",
+        "notes": "Telah diuji dengan test_doctor_reservation_sorting.php. Reservasi teratas diawali dari tanggal paling terbaru (misal: 2026-09-20) hingga tanggal terlama (misal: 2026-08-01). Kompilasi 0 error.",
+        "reason": "Permintaan pengurutan kronologis reservasi pasien dokter dari waktu terbaru ke terlama.",
+        "files": [
+            "app/Http/Controllers/Api/Doctor/DoctorQueueController.php",
+            "frontend-web/src/features/dashboard/pages/dashboard/DoctorDashboard.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-157",
+        "date": "2026-08-02",
+        "time": "08:04",
+        "category": "Doctor Navigation & Domain Feature Separation",
+        "type": "Feature",
+        "feature": "Dedicated Doctor Feature Separation for Reservasi Pasien and Konsultasi Online",
+        "description": "Memisahkan fitur Reservasi Pasien dan Konsultasi Online menjadi 2 fitur utama mandiri pada sidebar navigasi Doctor Dashboard. menu.ts, MobileDashboardLayout.tsx, NewMobileDashboardLayout.tsx, dan DoctorDashboard.tsx di-update sehingga \"Reservasi Pasien\" (tab=reservasi) dan \"Konsultasi Online\" (tab=konsultasi) memiliki halaman terpisah dengan tabel dan kontrol aksi tersendiri.",
+        "notes": "Telah diuji dengan test_separated_doctor_features.php. Dokter kini dapat mengakses menu \"Reservasi Pasien\" dan \"Konsultasi Online\" secara terpisah pada navigasi desktop maupun mobile. Kompilasi 0 error.",
+        "reason": "Permintaan pemisahan menu utama untuk Reservasi Pasien dan Konsultasi Online pada akun Dokter.",
+        "files": [
+            "frontend-web/src/authorization/menu.ts",
+            "frontend-web/src/features/dashboard/components/MobileDashboardLayout.tsx",
+            "frontend-web/src/features/dashboard/components/NewMobileDashboardLayout.tsx",
+            "frontend-web/src/features/dashboard/pages/dashboard/DoctorDashboard.tsx",
+            "frontend-web/src/features/dashboard/components/DesktopDoctorHome.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-156",
+        "date": "2026-08-02",
+        "time": "07:56",
+        "category": "Doctor POV & Real-Time Feedback Integration",
+        "type": "Feature",
+        "feature": "Doctor Dashboard Integration for Assigned Patient Reservations & Consultations",
+        "description": "Menghubungkan alur reservasi pasien dan konsultasi secara real-time ke antarmuka Dokter. Controller DoctorQueueController.php dan DoctorConsultationController.php di-update untuk mengambil seluruh reservasi tindakan periksa medis pasien (Invisalign, Scaling, Bleaching, Veneer, dll) dan konsultasi yang menugaskan dokter yang bersangkutan. UI DoctorDashboard.tsx menyajikan tabel antrean reservasi pasien dokter lengkap dengan tombol \"Mulai Periksa\" dan \"Selesaikan Perawatan\".",
+        "notes": "Telah diuji dengan test_doctor_feedback_system.php. Dokter dapat melihat 17 antrean reservasi periksa dan 2 konsultasi online secara langsung di Doctor Dashboard. Kompilasi 0 error.",
+        "reason": "Pengembangan feedback sistem dan pengintegrasian tampilan Reservasi & Konsultasi pada Doctor Dashboard.",
+        "files": [
+            "app/Http/Controllers/Api/Doctor/DoctorQueueController.php",
+            "app/Http/Controllers/Api/DoctorConsultationController.php",
+            "frontend-web/src/features/dashboard/pages/dashboard/DoctorDashboard.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-155",
+        "date": "2026-08-01",
+        "time": "20:03",
+        "category": "Backend & Database Status Sanitization",
+        "type": "Fix",
+        "feature": "Clinic Reservation Status Sanitization & Legacy Status Mapping",
+        "description": "Membersihkan dan meng-update seluruh nilai status pada tabel reservations di database. Status legacy \"Dalam Konsultasi\" yang berasal dari data uji coba sebelumnya telah diubah secara menyeluruh di database menjadi \"Dikonfirmasi\" (Confirmed). Controller ReservationAdminController.php juga dilengkapi sanitizer otomatis sehingga tidak ada lagi badge status \"Dalam Konsultasi\" pada fitur Kelola Reservasi Admin.",
+        "notes": "Telah diuji dengan test_status_sanitization.php. Seluruh 21 baris reservasi pada halaman Kelola Reservasi Admin kini memiliki status standar resmi (Baru, Dikonfirmasi, Selesai, Dibatalkan, Ditolak) tanpa ada status \"Dalam Konsultasi\". Kompilasi 0 error.",
+        "reason": "Perbaikan bug tampilan badge status \"Dalam Konsultasi\" pada halaman Kelola Reservasi Perawatan Klinik.",
+        "files": [
+            "app/Http/Controllers/Api/Admin/ReservationAdminController.php"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-154",
+        "date": "2026-08-01",
+        "time": "20:00",
+        "category": "Backend & Domain Data Separation Fix",
+        "type": "Fix",
+        "feature": "Complete Domain Separation & Data Seeding for Reservations vs Consultations",
+        "description": "Memisahkan secara sempurna domain data antara Reservasi Perawatan Klinik dan Konsultasi Chat/Online pada dashboard admin. Mengisi entri konsultasi (tipe quick & scheduled) ke dalam tabel consultations untuk tab Kelola Konsultasi, serta menyegarkan keluhan data reservasi pada tabel reservations agar murni mewakili tindakan medis perawatan fisik klinik (Scaling, Invisalign, Veneer, Bleaching, dll).",
+        "notes": "Telah diuji dengan test_admin_separated_tabs.php. Halaman Kelola Reservasi kini murni berisi 21 reservasi tindakan medis, dan Halaman Daftar Konsultasi kini berisi 3 konsultasi (Cepat & Terjadwal). Kompilasi 0 error.",
+        "reason": "Perbaikan bug klasifikasi dan ketersediaan data pada tab Kelola Reservasi dan Daftar Konsultasi Admin Dashboard.",
+        "files": [
+            "app/Http/Controllers/Api/Admin/ReservationAdminController.php",
+            "app/Http/Controllers/Api/Admin/ConsultationAdminController.php",
+            "frontend-web/src/features/dashboard/pages/dashboard/ClinicDashboard.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-153",
+        "date": "2026-08-01",
+        "time": "19:56",
+        "category": "Backend & UI Domain Separation",
+        "type": "Fix",
+        "feature": "Strict Separation of Clinic Appointment Reservations vs Online Chat Consultations",
+        "description": "Memisahkan secara ketat entri Reservasi Perawatan Klinik dari Konsultasi Chat Online pada dashboard admin. Controller ReservationAdminController.php kini memfilter query secara ketat untuk mengecualikan entri berkategori online_consultation, consultation_chat, dan telehealth_chat. UI ClinicDashboard.tsx di-update dengan judul \"Kelola Reservasi Perawatan Klinik\" dan pesan WhatsApp resmi khusus tindakan medis periksa klinik.",
+        "notes": "Telah diuji dengan test_reservation_vs_consultation_separation.php di mana entri konsultasi online otomatis terisolasi dan tidak muncul di fitur Kelola Reservasi Admin. Kompilasi 0 error.",
+        "reason": "Permintaan pemisahan domain dan antarmuka kelola reservasi klinik dengan konsultasi tanya-jawab online.",
+        "files": [
+            "app/Http/Controllers/Api/Admin/ReservationAdminController.php",
+            "frontend-web/src/features/dashboard/pages/dashboard/ClinicDashboard.tsx"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-152",
         "date": "2026-08-01",
         "time": "19:48",

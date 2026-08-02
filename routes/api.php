@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Admin\Content\TestimonialAdminController;
 use App\Http\Controllers\Api\Admin\DownloadAppAdminController;
 use App\Http\Controllers\Api\Admin\AnalyticsAdminController;
 use App\Http\Controllers\Api\Admin\ReservationAdminController;
+use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\Admin\ConsultationAdminController;
 use App\Http\Controllers\Api\Admin\MembershipAdminController;
 use App\Http\Controllers\Api\Public\ContentController;
@@ -66,6 +67,11 @@ Route::prefix('admin')->group(function () {
         Route::post('/doctors/{user}/reset-password', [UserController::class, 'resetPassword']);
 
         Route::get('/doctor-schedules', [DoctorScheduleController::class, 'adminIndex']);
+
+        Route::get('/branches', [BranchController::class, 'adminIndex']);
+        Route::post('/branches', [BranchController::class, 'store']);
+        Route::put('/branches/{branch}', [BranchController::class, 'update']);
+        Route::delete('/branches/{branch}', [BranchController::class, 'destroy']);
 
         Route::get('/reservations', [ReservationAdminController::class, 'index']);
         Route::put('/reservations/{reservation}', [ReservationAdminController::class, 'update']);
@@ -265,6 +271,7 @@ Route::prefix('public')->group(function () {
     Route::get('/promos', [ContentController::class, 'promos']);
     Route::get('/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
+    Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/membership/tiers', [MembershipController::class, 'tiers']);
     Route::get('/download-apps', [ContentController::class, 'downloadApps']);
     Route::middleware('throttle:5,1')->post('/reservations', [ReservationController::class, 'store']);

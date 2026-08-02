@@ -77,8 +77,8 @@ export default function DesktopUserPromo() {
     setCopiedCode(code);
     toast({
       title: "Kode Promo Disalin!",
-      description: `Kode "${code}" berhasil disalin ke clipboard.`,
-      variant: "default",
+      message: `Kode "${code}" berhasil disalin ke clipboard.`,
+      variant: "info",
     });
     setTimeout(() => setCopiedCode(null), 3000);
   };

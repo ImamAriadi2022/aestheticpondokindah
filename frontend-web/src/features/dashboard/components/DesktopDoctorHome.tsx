@@ -8,6 +8,7 @@ import {
   TrendingUp,
   FileText,
   Eye,
+  MessageSquare,
 } from "lucide-react";
 import Sparkline from "./Sparkline";
 
@@ -91,10 +92,16 @@ export default function DesktopDoctorHome({
                 <Plus className="w-4 h-4" /> Tambah Jadwal
               </button>
               <Link
-                to="/dashboard/doctor?tab=klien"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#8A6B2B] rounded-xl text-sm font-semibold border border-[#E8D4A2]/60 hover:bg-[#FDF8F0] transition-all shadow-sm"
+                to="/dashboard/doctor?tab=reservasi"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-[#8A6B2B] rounded-xl text-sm font-semibold border border-[#E8D4A2]/60 hover:bg-[#FDF8F0] transition-all shadow-sm"
               >
-                <Users className="w-4 h-4" /> Lihat Klien
+                <Users className="w-4 h-4" /> Reservasi Pasien
+              </Link>
+              <Link
+                to="/dashboard/doctor?tab=konsultasi"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-[#8A6B2B] rounded-xl text-sm font-semibold border border-[#E8D4A2]/60 hover:bg-[#FDF8F0] transition-all shadow-sm"
+              >
+                <MessageSquare className="w-4 h-4" /> Konsultasi Online
               </Link>
             </div>
           </div>

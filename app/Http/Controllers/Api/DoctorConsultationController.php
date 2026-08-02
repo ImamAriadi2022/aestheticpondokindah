@@ -15,10 +15,12 @@ class DoctorConsultationController extends Controller
 
         $items = Consultation::query()
             ->with(['user', 'doctorSchedule.user'])
-            ->where('type', 'scheduled')
-            ->whereNotNull('doctor_schedule_id')
-            ->whereHas('doctorSchedule', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+            ->where(function ($q) use ($user) {
+                $q->whereHas('doctorSchedule', function ($sq) use ($user) {
+                    $sq->where('user_id', $user->id);
+                })
+                ->orWhere('doctor_name', 'like', '%' . $user->name . '%')
+                ->orWhere('type', 'quick');
             })
             ->orderByDesc('created_at')
             ->limit(200)

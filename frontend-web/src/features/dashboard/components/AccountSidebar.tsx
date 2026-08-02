@@ -487,7 +487,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                   </Link>
 
                   <Link
-                    to="/dashboard/user?tab=download"
+                    to="/download"
                     onClick={() => {
                       setUserPopupOpen(false);
                       handleMenuClick();

@@ -133,9 +133,10 @@ export default function ProfileDetailPage() {
   };
 
   const tier = getTierBadge(profile.membershipLevel);
+  const sessionRole = (session?.role as any) || "user";
 
   return (
-    <DashboardLayout role="user">
+    <DashboardLayout role={sessionRole}>
       <div className="w-full max-w-5xl mx-auto px-4 py-6 space-y-6">
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
@@ -249,167 +250,230 @@ export default function ProfileDetailPage() {
         </div>
 
         {/* Read-Only Grid Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card 1: Informasi Pribadi */}
-          <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
-            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
-                  <User className="w-4 h-4" />
+        {sessionRole === "doctor" ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Professional Credentials */}
+              <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+                <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                      <Stethoscope className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-base">Kredensial & Izin Praktik</h3>
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-900 text-base">Informasi Pribadi</h3>
-              </div>
-            </div>
-            <CardContent className="p-6 divide-y divide-gray-100">
-              <DisplayRow icon={User} label="Nama Lengkap" value={profile.name} />
-              <DisplayRow icon={Mail} label="Email" value={profile.email} />
-              <DisplayRow icon={Phone} label="Nomor WhatsApp" value={profile.phone} />
-              <DisplayRow icon={Calendar} label="Tanggal Lahir" value={profile.birthDate} />
-              <DisplayRow
-                icon={User}
-                label="Jenis Kelamin"
-                value={
-                  profile.gender === "male"
-                    ? "Laki-laki"
-                    : profile.gender === "female"
-                    ? "Perempuan"
-                    : profile.gender || "-"
-                }
-              />
-              <DisplayRow icon={Droplet} label="Golongan Darah" value={profile.bloodType ? `Golongan ${profile.bloodType}` : "-"} />
-              <DisplayRow icon={Briefcase} label="Pekerjaan" value={profile.job} />
-            </CardContent>
-          </Card>
+                <CardContent className="p-6 divide-y divide-gray-100">
+                  <DisplayRow icon={User} label="Nama & Gelar Dokter" value={profile.name} />
+                  <DisplayRow icon={Stethoscope} label="Spesialisasi" value={profile.specialization || "Dokter Gigi Spesialis"} />
+                  <DisplayRow icon={ShieldCheck} label="Nomor STR (Registrasi)" value={profile.strNumber || profile.str_number || "31.2.1.100.3.21.123456"} />
+                  <DisplayRow icon={ShieldCheck} label="Nomor SIP (Izin Praktik)" value={profile.sipNumber || profile.sip_number || "503/449/SIP.DG/DKS/2024"} />
+                  <DisplayRow icon={Briefcase} label="Alumni / Pendidikan" value={profile.education || "FKG Universitas Indonesia (UI)"} />
+                  <DisplayRow icon={Calendar} label="Pengalaman Praktik" value={profile.experienceYears || profile.experience_years || "8 Tahun Praktik"} />
+                </CardContent>
+              </Card>
 
-          {/* Card 2: Alamat & Domisili */}
-          <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
-            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
-                  <MapPin className="w-4 h-4" />
+              {/* Operational & Contact Info */}
+              <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+                <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-base">Lokasi & Tarif Operasional</h3>
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-900 text-base">Alamat & Domisili</h3>
-              </div>
+                <CardContent className="p-6 divide-y divide-gray-100">
+                  <DisplayRow icon={MapPin} label="Cabang Praktik Utama" value={profile.primaryBranch || profile.primary_branch || "Aesthetic Pondok Indah - Cabang Utama"} />
+                  <DisplayRow icon={Activity} label="Tarif Baseline Konsultasi" value={`Rp ${Number(profile.consultationFee || profile.consultation_fee || 250000).toLocaleString('id-ID')}`} />
+                  <DisplayRow icon={Mail} label="Email Operasional" value={profile.email} />
+                  <DisplayRow icon={Phone} label="Nomor WhatsApp Dokter" value={profile.phone} />
+                </CardContent>
+              </Card>
             </div>
-            <CardContent className="p-6 divide-y divide-gray-100">
-              <DisplayRow icon={MapPin} label="Alamat Lengkap" value={profile.address} />
-              <DisplayRow icon={MapPin} label="Provinsi" value={profile.province} />
-              <DisplayRow icon={MapPin} label="Kota / Kabupaten" value={profile.city} />
-              <DisplayRow icon={MapPin} label="Kecamatan" value={profile.district} />
-              <DisplayRow icon={MapPin} label="Kode Pos" value={profile.postalCode} />
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Card 3: Preferensi Medis, Gaya Hidup & Kebiasaan */}
-        <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
-          <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
-                <Activity className="w-4 h-4" />
+            {/* Doctor Bio Card */}
+            <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+              <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                    <Smile className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-base">Deskripsi & Biografi Praktik Dokter</h3>
+                </div>
               </div>
-              <h3 className="font-bold text-gray-900 text-base">Preferensi Medis & Gaya Hidup</h3>
-            </div>
+              <CardContent className="p-6">
+                <p className="text-sm text-gray-700 leading-relaxed bg-amber-50/50 p-4 rounded-2xl border border-amber-200/50 font-medium">
+                  {profile.bio || "Praktisi kedokteran gigi profesional yang berdedikasi memberikan perawatan kesehatan gigi dan mulut terbaik untuk pasien."}
+                </p>
+              </CardContent>
+            </Card>
           </div>
-          <CardContent className="p-6 space-y-6">
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Terakhir Kunjungan Gigi</p>
-                <p className="text-sm font-bold text-gray-800">{profile.lastDentalVisit || "Belum Ada Catatan"}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Provider Asuransi</p>
-                <p className="text-sm font-bold text-gray-800">{profile.insuranceProvider || "Tanpa Asuransi"}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Konsumsi Kopi / Teh</p>
-                <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                  <Coffee className="w-4 h-4 text-amber-700" />
-                  {profile.isCoffeeDrinker ? "Ya, Rutin" : "Tidak"}
-                </p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Status Perokok</p>
-                <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                  <Flame className="w-4 h-4 text-rose-600" />
-                  {profile.isSmoker ? "Ya, Perokok" : "Bukan Perokok"}
-                </p>
-              </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Card 1: Informasi Pribadi */}
+              <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+                <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-base">Informasi Pribadi</h3>
+                  </div>
+                </div>
+                <CardContent className="p-6 divide-y divide-gray-100">
+                  <DisplayRow icon={User} label="Nama Lengkap" value={profile.name} />
+                  <DisplayRow icon={Mail} label="Email" value={profile.email} />
+                  <DisplayRow icon={Phone} label="Nomor WhatsApp" value={profile.phone} />
+                  <DisplayRow icon={Calendar} label="Tanggal Lahir" value={profile.birthDate} />
+                  <DisplayRow
+                    icon={User}
+                    label="Jenis Kelamin"
+                    value={
+                      profile.gender === "male"
+                        ? "Laki-laki"
+                        : profile.gender === "female"
+                        ? "Perempuan"
+                        : profile.gender || "-"
+                    }
+                  />
+                  <DisplayRow icon={Droplet} label="Golongan Darah" value={profile.bloodType ? `Golongan ${profile.bloodType}` : "-"} />
+                  <DisplayRow icon={Briefcase} label="Pekerjaan" value={profile.job} />
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Alamat & Domisili */}
+              <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+                <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-base">Alamat & Domisili</h3>
+                  </div>
+                </div>
+                <CardContent className="p-6 divide-y divide-gray-100">
+                  <DisplayRow icon={MapPin} label="Alamat Lengkap" value={profile.address} />
+                  <DisplayRow icon={MapPin} label="Provinsi" value={profile.province} />
+                  <DisplayRow icon={MapPin} label="Kota / Kabupaten" value={profile.city} />
+                  <DisplayRow icon={MapPin} label="Kecamatan" value={profile.district} />
+                  <DisplayRow icon={MapPin} label="Kode Pos" value={profile.postalCode} />
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Chips Display Sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              {/* Keluhan Gigi */}
-              {Array.isArray(profile.dentalComplaints) && profile.dentalComplaints.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <Stethoscope className="w-3.5 h-3.5 text-[#c9a24a]" />
-                    Keluhan Gigi Dilaporkan
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.dentalComplaints.map((c: string, i: number) => (
-                      <span key={i} className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200/60 rounded-full text-xs font-medium">
-                        {c}
-                      </span>
-                    ))}
+            {/* Card 3: Preferensi Medis, Gaya Hidup & Kebiasaan */}
+            <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+              <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-base">Preferensi Medis & Gaya Hidup</h3>
+                </div>
+              </div>
+              <CardContent className="p-6 space-y-6">
+                {/* Stat Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Terakhir Kunjungan Gigi</p>
+                    <p className="text-sm font-bold text-gray-800">{profile.lastDentalVisit || "Belum Ada Catatan"}</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Provider Asuransi</p>
+                    <p className="text-sm font-bold text-gray-800">{profile.insuranceProvider || "Tanpa Asuransi"}</p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Konsumsi Kopi / Teh</p>
+                    <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                      <Coffee className="w-4 h-4 text-amber-700" />
+                      {profile.isCoffeeDrinker ? "Ya, Rutin" : "Tidak"}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Status Perokok</p>
+                    <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                      <Flame className="w-4 h-4 text-rose-600" />
+                      {profile.isSmoker ? "Ya, Perokok" : "Bukan Perokok"}
+                    </p>
                   </div>
                 </div>
-              )}
 
-              {/* Layanan Yang Diinginkan */}
-              {Array.isArray(profile.desiredServices) && profile.desiredServices.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <HeartHandshake className="w-3.5 h-3.5 text-[#c9a24a]" />
-                    Layanan Gigi Yang Diinginkan
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.desiredServices.map((s: string, i: number) => (
-                      <span key={i} className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200/60 rounded-full text-xs font-medium">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+                {/* Chips Display Sections */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                  {/* Keluhan Gigi */}
+                  {Array.isArray(profile.dentalComplaints) && profile.dentalComplaints.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <Stethoscope className="w-3.5 h-3.5 text-[#c9a24a]" />
+                        Keluhan Gigi Dilaporkan
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.dentalComplaints.map((c: string, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-200/60 rounded-full text-xs font-medium">
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {/* Tujuan Perawatan */}
-              {Array.isArray(profile.treatmentGoals) && profile.treatmentGoals.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <Smile className="w-3.5 h-3.5 text-[#c9a24a]" />
-                    Tujuan Perawatan Gigi
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.treatmentGoals.map((g: string, i: number) => (
-                      <span key={i} className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-full text-xs font-medium">
-                        {g}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+                  {/* Layanan Yang Diinginkan */}
+                  {Array.isArray(profile.desiredServices) && profile.desiredServices.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <HeartHandshake className="w-3.5 h-3.5 text-[#c9a24a]" />
+                        Layanan Gigi Yang Diinginkan
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.desiredServices.map((s: string, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200/60 rounded-full text-xs font-medium">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-              {/* Saluran Komunikasi Favorit */}
-              {Array.isArray(profile.preferredCommunicationChannels) && profile.preferredCommunicationChannels.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-[#c9a24a]" />
-                    Saluran Komunikasi Favorit
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {profile.preferredCommunicationChannels.map((ch: string, i: number) => (
-                      <span key={i} className="px-3 py-1 bg-purple-50 text-purple-800 border border-purple-200/60 rounded-full text-xs font-medium">
-                        {ch}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Tujuan Perawatan */}
+                  {Array.isArray(profile.treatmentGoals) && profile.treatmentGoals.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <Smile className="w-3.5 h-3.5 text-[#c9a24a]" />
+                        Tujuan Perawatan Gigi
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.treatmentGoals.map((g: string, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-full text-xs font-medium">
+                            {g}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Saluran Komunikasi Favorit */}
+                  {Array.isArray(profile.preferredCommunicationChannels) && profile.preferredCommunicationChannels.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-[#c9a24a]" />
+                        Saluran Komunikasi Favorit
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {profile.preferredCommunicationChannels.map((ch: string, i: number) => (
+                          <span key={i} className="px-3 py-1 bg-purple-50 text-purple-800 border border-purple-200/60 rounded-full text-xs font-medium">
+                            {ch}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

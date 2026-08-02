@@ -29,6 +29,7 @@ import {
 import { toast } from "@/components/ui/toast";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE, getStorageUrl } from "@/lib/apiConfig";
+import { apiClient } from "@/shared/lib/apiClient";
 import { logger } from "@/lib/logger";
 import BlogEditorPanel from "@/components/dashboard/BlogEditorPanel";
 import WpEditor from "@/components/dashboard/WpEditor";
@@ -382,6 +383,259 @@ function tierOf(user: any): string {
   return user?.membership_level && TIER_PRESENTATION[user.membership_level] ? user.membership_level : "bronze";
 }
 
+function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, setSearchParams }: any) {
+  const isNew = !editorId;
+
+  const [editor, setEditor] = useState({
+    title: current?.title || "",
+    description: current?.description || "",
+    version: current?.version || "",
+    platform: current?.platform || "android",
+    downloadLink: current?.download_link || "",
+    isActive: current?.is_active ?? true,
+    isDevelopment: current?.is_development ?? true,
+    sortOrder: current?.sort_order ?? 0,
+    apkUrl: current?.apk_url || "",
+    apkFile: null as File | null,
+  });
+
+  const updateSaved = (next: Partial<typeof editor>) => {
+    setEditor((prev) => ({ ...prev, ...next }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("title", editor.title);
+      formData.append("description", editor.description || "");
+      formData.append("version", editor.version || "");
+      formData.append("platform", editor.platform || "android");
+      formData.append("download_link", editor.downloadLink || "");
+      formData.append("is_active", editor.isActive ? "1" : "0");
+      formData.append("is_development", editor.isDevelopment ? "1" : "0");
+      formData.append("sort_order", String(editor.sortOrder || 0));
+
+      if (editor.apkFile) {
+        formData.append("apk_file", editor.apkFile);
+      }
+
+      const url = isNew ? `${API_BASE}/admin/download-apps` : `${API_BASE}/admin/download-apps/${editorId}`;
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        logger.error("Gagal simpan aplikasi", await res.text());
+        return;
+      }
+
+      toast({ title: "Berhasil", message: isNew ? "Aplikasi berhasil ditambahkan" : "Aplikasi diperbarui", variant: "success" });
+      await fetchApiDownloadApps();
+      setSearchParams((prev: any) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", "content-download");
+        next.set("view", "list");
+        next.delete("id");
+        return next;
+      });
+    } catch (e) {
+      logger.error("Gagal simpan aplikasi", e);
+    }
+  };
+
+  const saved = editor;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="rounded-sm border-gray-200"
+            onClick={() => {
+              setSearchParams((prev: any) => {
+                const next = new URLSearchParams(prev);
+                next.set("tab", "content-download");
+                next.set("view", "list");
+                next.delete("id");
+                return next;
+              });
+            }}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Kembali
+          </Button>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Tambah / Edit Aplikasi Download</h2>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold rounded-sm"
+            onClick={handleSave}
+            disabled={!saved.title.trim()}
+          >
+            Simpan
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="rounded-sm border-0 shadow-sm lg:col-span-2">
+          <CardContent className="p-4 space-y-3">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-gray-500">Judul Aplikasi</p>
+              <Input
+                value={saved.title}
+                onChange={(e) => updateSaved({ title: e.target.value })}
+                className="rounded-sm border-gray-200"
+                placeholder="Judul aplikasi"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-gray-500">Versi</p>
+                <Input
+                  value={saved.version}
+                  onChange={(e) => updateSaved({ version: e.target.value })}
+                  className="rounded-sm border-gray-200"
+                  placeholder="v1.0.0"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-gray-500">Platform</p>
+                <select
+                  value={saved.platform}
+                  onChange={(e) => updateSaved({ platform: e.target.value })}
+                  className="w-full rounded-sm border border-gray-200 px-3 py-2 text-sm focus:border-[#c9a24a] outline-none bg-white"
+                >
+                  <option value="android">Android</option>
+                  <option value="ios">iOS</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-gray-500">Link Download Eksternal (Opsional)</p>
+              <Input
+                value={saved.downloadLink}
+                onChange={(e) => updateSaved({ downloadLink: e.target.value })}
+                className="rounded-sm border-gray-200"
+                placeholder="https://play.google.com/store/apps/details?id=..."
+              />
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-gray-500">Deskripsi</p>
+              <textarea
+                value={saved.description}
+                onChange={(e) => updateSaved({ description: e.target.value })}
+                className="w-full h-24 p-3 rounded-sm border border-gray-200 text-sm outline-none focus:border-[#c9a24a] resize-none"
+                placeholder="Deskripsi singkat aplikasi..."
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <Card className="rounded-sm border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-bold text-gray-900">File APK / ZIP</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <label className="group block w-full cursor-pointer">
+                <input
+                  type="file"
+                  accept=".apk,.zip"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    updateSaved({ apkUrl: URL.createObjectURL(file), apkFile: file });
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <div className="w-full aspect-[4/3] rounded-sm border border-dashed border-emerald-300 bg-emerald-50/40 overflow-hidden flex items-center justify-center relative">
+                  {saved.apkUrl ? (
+                    <div className="text-center px-4">
+                      <div className="mx-auto w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mb-2">
+                        <FileText className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <p className="text-xs font-semibold text-emerald-700 truncate max-w-[160px]">
+                        {saved.apkFile ? saved.apkFile.name : saved.apkUrl.split("/").pop()}
+                      </p>
+                      {saved.apkFile && (
+                        <p className="text-xs text-emerald-600">{(saved.apkFile.size / 1048576).toFixed(1)} MB</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center px-4">
+                      <div className="mx-auto w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <Upload className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <p className="mt-2 text-xs font-semibold text-emerald-700">Klik untuk upload APK</p>
+                      <p className="text-xs text-emerald-700/70">APK atau ZIP (Maks. 100MB)</p>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                </div>
+              </label>
+              {saved.apkUrl && !saved.apkFile && (
+                <div className="text-xs text-gray-500 text-center">
+                  File: {saved.apkUrl.split("/").pop()}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-sm border-0 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-bold text-gray-900">Pengaturan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-gray-700">Aktif</label>
+                <input
+                  type="checkbox"
+                  checked={saved.isActive}
+                  onChange={(e) => updateSaved({ isActive: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-gray-700">Versi Pengembangan (Dev)</label>
+                <input
+                  type="checkbox"
+                  checked={saved.isDevelopment}
+                  onChange={(e) => updateSaved({ isDevelopment: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700">Urutan (Sort Order)</label>
+                <Input
+                  type="number"
+                  value={saved.sortOrder}
+                  onChange={(e) => updateSaved({ sortOrder: Number(e.target.value) })}
+                  className="rounded-sm border-gray-200"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClinicDashboardPage() {
   const session = getSession()!;
   const navigate = useNavigate();
@@ -404,7 +658,7 @@ export default function ClinicDashboardPage() {
   const editorId = searchParams.get("id");
 
   const summary = useMemo(
-    () => getSummaryForRole(((session?.role ?? "clinic") as any) ?? "clinic"),
+    () => getSummaryForRole((session?.role || "clinic") as any),
     [session?.role]
   );
   const [users, setUsers] = useState<any[]>([]);
@@ -650,6 +904,9 @@ export default function ClinicDashboardPage() {
     if (activeTab === "content-download") {
       fetchApiDownloadApps();
     }
+    if (activeTab === "branches") {
+      fetchBranches();
+    }
     if (activeTab === "reservasi") {
       void fetchReservations();
     }
@@ -835,6 +1092,53 @@ export default function ClinicDashboardPage() {
       setDoctorSchedules(items);
     } catch (error) {
       logger.error("Gagal mengambil jadwal dokter", error);
+    }
+  };
+
+  const [branches, setBranches] = useState<any[]>([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<any | null>(null);
+  const [showBranchModal, setShowBranchModal] = useState(false);
+
+  const fetchBranches = async () => {
+    setLoadingBranches(true);
+    try {
+      const res = await apiClient.get<any[]>("/admin/branches");
+      setBranches(res || []);
+    } catch (error) {
+      logger.error("Gagal mengambil data cabang klinik", error);
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
+  const handleSaveBranch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBranch) return;
+    try {
+      if (editingBranch.id) {
+        await apiClient.put(`/admin/branches/${editingBranch.id}`, editingBranch);
+        toast({ title: "Berhasil", message: "Cabang klinik diperbarui", variant: "success" });
+      } else {
+        await apiClient.post("/admin/branches", editingBranch);
+        toast({ title: "Berhasil", message: "Cabang klinik baru ditambahkan", variant: "success" });
+      }
+      setShowBranchModal(false);
+      setEditingBranch(null);
+      fetchBranches();
+    } catch (err: any) {
+      toast({ title: "Gagal", message: err?.message || "Gagal menyimpan cabang klinik", variant: "error" });
+    }
+  };
+
+  const handleDeleteBranch = async (id: number) => {
+    if (!window.confirm("Yakin ingin menghapus cabang klinik ini?")) return;
+    try {
+      await apiClient.delete(`/admin/branches/${id}`);
+      toast({ title: "Berhasil", message: "Cabang klinik dihapus", variant: "success" });
+      fetchBranches();
+    } catch (err: any) {
+      toast({ title: "Gagal", message: err?.message || "Gagal menghapus cabang klinik", variant: "error" });
     }
   };
 
@@ -1817,7 +2121,7 @@ export default function ClinicDashboardPage() {
               const ok = await updateReservationStatus("Dikonfirmasi");
               if (!ok) return;
               openWa(
-                `Halo ${selectedReservation.name},\n\nBooking konsultasi Anda untuk *${selectedReservation.complaint}* pada tanggal *${selectedReservation.date}* telah *DIKONFIRMASI*.\n\nMohon datang tepat waktu ya. Terima kasih telah memilih Aesthetic Pondok Indah Dental Clinic.`
+                `Halo ${selectedReservation.name},\n\nReservasi jadwal perawatan klinik Anda untuk *${(selectedReservation as any).treatment_interest || selectedReservation.complaint}* pada tanggal *${selectedReservation.date}* telah *DIKONFIRMASI*.\n\nMohon datang tepat waktu di klinik. Terima kasih telah memilih Aesthetic Pondok Indah Dental Clinic.`
               );
             })();
           };
@@ -1827,7 +2131,7 @@ export default function ClinicDashboardPage() {
               const ok = await updateReservationStatus("Selesai");
               if (!ok) return;
               openWa(
-                `Halo ${selectedReservation.name},\n\nTerima kasih telah berkunjung ke Aesthetic Pondok Indah Dental Clinic.\n\nJika ada keluhan setelah perawatan atau ingin melakukan follow-up, silakan hubungi kami kapan saja. Senang bisa melayani Anda!`
+                `Halo ${selectedReservation.name},\n\nTerima kasih telah melakukan perawatan di Aesthetic Pondok Indah Dental Clinic.\n\nJika ada keluhan pasca tindakan medis atau ingin periksa ulang, silakan hubungi kami kapan saja. Senang bisa melayani Anda!`
               );
             })();
           };
@@ -1837,7 +2141,7 @@ export default function ClinicDashboardPage() {
               const ok = await updateReservationStatus("Dibatalkan");
               if (!ok) return;
               openWa(
-                `Halo ${selectedReservation.name},\n\nMohon maaf, booking konsultasi Anda untuk *${selectedReservation.complaint}* pada tanggal *${selectedReservation.date}* *DIBATALKAN*.\n\nSilakan hubungi kami untuk reschedule atau informasi lebih lanjut. Terima kasih atas pengertiannya.`
+                `Halo ${selectedReservation.name},\n\nMohon maaf, reservasi jadwal perawatan klinik Anda untuk *${(selectedReservation as any).treatment_interest || selectedReservation.complaint}* pada tanggal *${selectedReservation.date}* *DIBATALKAN*.\n\nSilakan hubungi kami untuk reschedule jadwal periksa atau informasi lebih lanjut. Terima kasih atas pengertiannya.`
               );
             })();
           };
@@ -2038,8 +2342,8 @@ export default function ClinicDashboardPage() {
             {/* Modern Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Reservasi</h2>
-                <p className="text-sm text-[#8A7B6B] mt-1">Kelola reservasi konsultasi dari pengguna</p>
+                <h2 className="text-xl font-bold text-[#4A3F35]">Kelola Reservasi Perawatan Klinik</h2>
+                <p className="text-sm text-[#8A7B6B] mt-1">Kelola reservasi jadwal periksa & tindakan medis pasien di lokasi klinik</p>
               </div>
             </div>
 
@@ -2231,6 +2535,177 @@ export default function ClinicDashboardPage() {
                 )}
               </div>
             </div>
+          </div>
+        );
+      }
+
+      case "branches": {
+        return (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#F0E6D3] pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-[#4A3F35]">Kelola Cabang & Lokasi Praktik Klinik</h2>
+                <p className="text-sm text-[#8A7B6B] mt-1">Daftar cabang resmi tempat praktik yang digunakan dokter & sistem reservasi</p>
+              </div>
+              <Button
+                onClick={() => {
+                  setEditingBranch({ name: "", code: "", address: "", phone: "", status: "active" });
+                  setShowBranchModal(true);
+                }}
+                className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white font-bold rounded-xl shadow-md"
+              >
+                <Plus className="w-4 h-4 mr-1" /> Tambah Cabang Klinik
+              </Button>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                {loadingBranches ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 text-[#C9A24A] animate-spin mx-auto mb-2" />
+                    <p className="text-xs text-[#8A7B6B]">Memuat daftar cabang klinik...</p>
+                  </div>
+                ) : branches.length === 0 ? (
+                  <div className="text-center py-12 text-[#B8A99A]">
+                    <MapPin className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm font-medium">Belum Ada Cabang Klinik</p>
+                  </div>
+                ) : (
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b border-[#F0E6D3] bg-[#FDF8F0]/60 font-bold text-[#8A7B6B] uppercase tracking-wider">
+                        <th className="py-3.5 px-4">Nama Cabang</th>
+                        <th className="py-3.5 px-4">Kode</th>
+                        <th className="py-3.5 px-4">Alamat Lengkap</th>
+                        <th className="py-3.5 px-4">Telepon</th>
+                        <th className="py-3.5 px-4">Status</th>
+                        <th className="py-3.5 px-4 text-right">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F5F0E8] text-[#4A3F35]">
+                      {branches.map((b) => (
+                        <tr key={b.id} className="hover:bg-[#FDF8F0]/40 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-gray-900">{b.name}</td>
+                          <td className="py-3.5 px-4 font-mono text-gray-500">{b.code || "-"}</td>
+                          <td className="py-3.5 px-4 max-w-xs">{b.address || "-"}</td>
+                          <td className="py-3.5 px-4">{b.phone || "-"}</td>
+                          <td className="py-3.5 px-4">
+                            <span className={`px-2.5 py-0.5 rounded-full font-semibold text-[11px] ${b.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
+                              {b.status === "active" ? "Aktif" : "Non-Aktif"}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingBranch(b);
+                                  setShowBranchModal(true);
+                                }}
+                                className="w-8 h-8 p-0 rounded-full text-[#B8943F] hover:bg-[#F5E6C8]"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteBranch(b.id)}
+                                className="w-8 h-8 p-0 rounded-full text-red-500 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Add/Edit Branch */}
+            {showBranchModal && editingBranch && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#4A3F35]/50 backdrop-blur-xs animate-in fade-in">
+                <Card className="w-full max-w-md bg-white shadow-2xl rounded-2xl overflow-hidden border-0">
+                  <CardHeader className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white p-4">
+                    <CardTitle className="text-base font-bold">
+                      {editingBranch.id ? "Edit Cabang Klinik" : "Tambah Cabang Klinik Baru"}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-5 space-y-4">
+                    <form onSubmit={handleSaveBranch} className="space-y-4">
+                      <div>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">Nama Cabang Klinik</label>
+                        <input
+                          className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:ring-1 focus:ring-[#C9A24A]"
+                          placeholder="Contoh: Aesthetic Clinic Senayan Branch"
+                          value={editingBranch.name}
+                          onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">Kode Cabang (Opsional)</label>
+                        <input
+                          className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:ring-1 focus:ring-[#C9A24A]"
+                          placeholder="Contoh: API-SN"
+                          value={editingBranch.code || ""}
+                          onChange={(e) => setEditingBranch({ ...editingBranch, code: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">Alamat Lengkap</label>
+                        <textarea
+                          className="w-full h-20 p-3 rounded-lg border border-gray-200 text-sm outline-none focus:ring-1 focus:ring-[#C9A24A] resize-none"
+                          placeholder="Alamat lengkap cabang..."
+                          value={editingBranch.address || ""}
+                          onChange={(e) => setEditingBranch({ ...editingBranch, address: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">No. Telepon / Kontak</label>
+                        <input
+                          className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:ring-1 focus:ring-[#C9A24A]"
+                          placeholder="Contoh: 021-5725000"
+                          value={editingBranch.phone || ""}
+                          onChange={(e) => setEditingBranch({ ...editingBranch, phone: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-700 block mb-1">Status Cabang</label>
+                        <select
+                          className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:ring-1 focus:ring-[#C9A24A] bg-white"
+                          value={editingBranch.status}
+                          onChange={(e) => setEditingBranch({ ...editingBranch, status: e.target.value })}
+                        >
+                          <option value="active">Aktif</option>
+                          <option value="inactive">Non-Aktif</option>
+                        </select>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowBranchModal(false)}
+                          className="rounded-lg h-9 text-xs"
+                        >
+                          Batal
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white rounded-lg h-9 text-xs font-bold"
+                        >
+                          Simpan
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         );
       }

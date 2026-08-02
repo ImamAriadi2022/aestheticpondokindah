@@ -22,6 +22,7 @@ import {
   Stethoscope,
   Search,
   SlidersHorizontal,
+  Calendar,
 } from "lucide-react";
 
 interface NewMobileDashboardLayoutProps {
@@ -104,7 +105,8 @@ export default function NewMobileDashboardLayout({
         return [
           { label: "Beranda", icon: Home, href: "/dashboard/doctor" },
           { label: "Jadwal", icon: CalendarDays, href: "/dashboard/doctor?tab=jadwal" },
-          { label: "Klien", icon: MessageSquareText, href: "/dashboard/doctor?tab=klien" },
+          { label: "Reservasi", icon: Calendar, href: "/dashboard/doctor?tab=reservasi" },
+          { label: "Konsultasi", icon: MessageSquareText, href: "/dashboard/doctor?tab=konsultasi" },
           { label: "Profil", icon: UserCircle, href: "/settings" },
         ];
       default:

@@ -479,6 +479,14 @@ class UserController extends Controller
             'treatmentGoals.*' => 'string|max:100',
             'preferredCommunicationChannels' => 'nullable|array',
             'preferredCommunicationChannels.*' => 'string|max:50',
+            'strNumber' => 'nullable|string|max:255',
+            'sipNumber' => 'nullable|string|max:255',
+            'specialization' => 'nullable|string|max:255',
+            'education' => 'nullable|string|max:255',
+            'experienceYears' => 'nullable|string|max:100',
+            'bio' => 'nullable|string',
+            'primaryBranch' => 'nullable|string|max:255',
+            'consultationFee' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -507,6 +515,14 @@ class UserController extends Controller
         if (array_key_exists('isSmoker', $data)) $user->is_smoker = $data['isSmoker'];
         if (array_key_exists('sourceInfo', $data)) $user->source_info = $data['sourceInfo'];
         if (array_key_exists('insuranceProvider', $data)) $user->insurance_provider = $data['insuranceProvider'];
+        if (array_key_exists('strNumber', $data)) $user->str_number = $data['strNumber'];
+        if (array_key_exists('sipNumber', $data)) $user->sip_number = $data['sipNumber'];
+        if (array_key_exists('specialization', $data)) $user->specialization = $data['specialization'];
+        if (array_key_exists('education', $data)) $user->education = $data['education'];
+        if (array_key_exists('experienceYears', $data)) $user->experience_years = $data['experienceYears'];
+        if (array_key_exists('bio', $data)) $user->bio = $data['bio'];
+        if (array_key_exists('primaryBranch', $data)) $user->primary_branch = $data['primaryBranch'];
+        if (array_key_exists('consultationFee', $data)) $user->consultation_fee = $data['consultationFee'];
 
         $user->save();
 
@@ -626,6 +642,28 @@ class UserController extends Controller
 
     private function serialize(User $user): array
     {
+        if ($user->role === 'doctor') {
+            return [
+                'id' => (string) $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->whatsapp,
+                'whatsapp' => $user->whatsapp,
+                'avatar' => $this->formatMediaUrl($user->avatar),
+                'role' => $user->role,
+                'status' => $user->status ?? 'active',
+                'strNumber' => $user->str_number ?? '',
+                'sipNumber' => $user->sip_number ?? '',
+                'specialization' => $user->specialization ?? 'Dokter Gigi Spesialis',
+                'education' => $user->education ?? '',
+                'experienceYears' => $user->experience_years ?? '',
+                'bio' => $user->bio ?? '',
+                'primaryBranch' => $user->primary_branch ?? 'Aesthetic Pondok Indah',
+                'consultationFee' => (float) ($user->consultation_fee ?? 250000),
+                'created_at' => optional($user->created_at)->toISOString(),
+            ];
+        }
+
         $user->loadMissing('profile');
 
         $domicile = $user->city;

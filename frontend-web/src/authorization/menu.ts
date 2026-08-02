@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Stethoscope,
   Crown,
+  MapPin,
 } from "lucide-react";
 import { ROLES, type AppRole } from "./roles";
 
@@ -53,11 +54,13 @@ export const MENU: AppMenu = {
       { label: "Pengguna", icon: Users, href: "/dashboard/clinic?tab=users" },
       { label: "Membership", icon: Crown, href: "/dashboard/clinic/membership" },
       { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
+      { label: "Cabang Klinik", icon: MapPin, href: "/dashboard/clinic?tab=branches" },
     ],
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },
-      { label: "Jadwal", icon: Calendar, href: "/dashboard/doctor?tab=jadwal" },
-      { label: "Klien", icon: Users, href: "/dashboard/doctor?tab=klien", badge: 3 },
+      { label: "Jadwal Praktik", icon: Calendar, href: "/dashboard/doctor?tab=jadwal" },
+      { label: "Reservasi Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi" },
+      { label: "Konsultasi Online", icon: MessageSquare, href: "/dashboard/doctor?tab=konsultasi" },
     ],
   },
 };

@@ -102,8 +102,10 @@ export default function SecurityPage() {
     }
   };
 
+  const sessionRole = (session?.role as any) || "user";
+
   return (
-    <DashboardLayout role="user">
+    <DashboardLayout role={sessionRole}>
       <div className="w-full px-2 sm:px-4">
         <div className="mb-4 flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#c9a24a] to-[#a8843a] flex items-center justify-center text-white shadow-md">

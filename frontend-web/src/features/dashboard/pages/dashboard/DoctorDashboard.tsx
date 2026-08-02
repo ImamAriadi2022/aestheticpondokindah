@@ -1,15 +1,12 @@
 import { Navigate, useSearchParams, useNavigate } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import DashboardStats from "@/components/dashboard/DashboardStats";
 import DesktopDoctorHome from "@/components/dashboard/DesktopDoctorHome";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getSession } from "@/features/auth/services/session";
 import {
-  Calendar, Users, ChevronRight, Clock, PlayCircle, Plus, Pencil, Trash2, Eye, ArrowLeft, Loader2,
-  Phone, History, Heart, Image, Stethoscope, MessageSquare, FileText, Lightbulb, AlertCircle, User,
+  Calendar, Users, Plus, Pencil, Trash2, Loader2,
+  Stethoscope, MessageSquare, Play, CheckCircle2,
 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 import { getDoctorScheduledConsultations, type ConsultationItem } from "@/features/consultation/services/consultationApi";
@@ -18,19 +15,24 @@ import {
   deleteDoctorSchedule,
   type DoctorScheduleItem,
 } from "@/features/doctors/services/doctorScheduleApi";
+import { apiClient } from "@/shared/lib/apiClient";
 
 export default function DoctorDashboardPage() {
   const session = getSession()!;
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const activeTab = searchParams.get("tab") || "dashboard";
-  const [selectedResultId, setSelectedResultId] = useState<string | null>(null);
+
   const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
   const [loadingConsultations, setLoadingConsultations] = useState(false);
+
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [loadingReservations, setLoadingReservations] = useState(false);
 
   const [schedules, setSchedules] = useState<DoctorScheduleItem[]>([]);
   const [loadingSchedules, setLoadingSchedules] = useState(true);
   const [deletingScheduleId, setDeletingScheduleId] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeTab === "jadwal" || activeTab === "dashboard") {
@@ -45,60 +47,70 @@ export default function DoctorDashboardPage() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "klien" || activeTab === "dashboard") {
+    if (activeTab === "konsultasi" || activeTab === "dashboard") {
       setLoadingConsultations(true);
       getDoctorScheduledConsultations()
         .then((data) => setConsultations(data))
-        .catch(() => {
-          toast({ title: "Gagal", message: "Tidak bisa memuat konsultasi terjadwal", variant: "error" });
-        })
+        .catch(() => {})
         .finally(() => setLoadingConsultations(false));
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    if (activeTab === "reservasi" || activeTab === "klien" || activeTab === "dashboard") {
+      setLoadingReservations(true);
+      apiClient
+        .get<{ queue: any[] }>("/doctor/queue")
+        .then((res) => setReservations(res.queue || []))
+        .catch(() => setReservations([]))
+        .finally(() => setLoadingReservations(false));
+    }
+  }, [activeTab]);
+
+  const handleStartConsultation = async (resId: string) => {
+    setActionLoadingId(resId);
+    try {
+      await apiClient.put(`/doctor/reservations/${resId}/start`);
+      toast({ title: "Berhasil", message: "Perawatan/Konsultasi telah dimulai.", variant: "success" });
+      const updatedQueue = await apiClient.get<{ queue: any[] }>("/doctor/queue");
+      setReservations(updatedQueue.queue || []);
+    } catch (e: any) {
+      toast({ title: "Gagal", message: e.message || "Gagal memulai perawatan", variant: "error" });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleCompleteConsultation = async (resId: string) => {
+    setActionLoadingId(resId);
+    try {
+      await apiClient.put(`/doctor/reservations/${resId}/complete`);
+      toast({ title: "Berhasil", message: "Perawatan/Konsultasi telah diselesaikan.", variant: "success" });
+      const updatedQueue = await apiClient.get<{ queue: any[] }>("/doctor/queue");
+      setReservations(updatedQueue.queue || []);
+    } catch (e: any) {
+      toast({ title: "Gagal", message: e.message || "Gagal menyelesaikan perawatan", variant: "error" });
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const mySchedules = schedules;
   const myClients = consultations;
-  const myClientResults = useMemo(() => [], []);
-  const completedConsultations = useMemo(
-    () => myClients.filter((c) => c.status === "Selesai").length,
-    [myClients]
-  );
 
-  const stats = [
-    {
-      title: "Jadwal Saya",
-      value: mySchedules.length,
-      subtitle: "Jadwal aktif",
-      trend: "up" as const,
-      trendValue: "Bulan ini",
-      icon: Calendar,
-      variant: "green" as const,
-    },
-    {
-      title: "Klien",
-      value: myClients.length,
-      subtitle: "Menunggu konsultasi",
-      trend: "neutral" as const,
-      trendValue: "Aktif",
-      icon: Users,
-    },
-    {
-      title: "Konsultasi Selesai",
-      value: completedConsultations,
-      subtitle: "Berhasil ditangani",
-      trend: "up" as const,
-      trendValue: "Selama ini",
-      icon: Eye,
-    },
-    {
-      title: "Hasil Konsultasi",
-      value: myClientResults.length,
-      subtitle: "Dari klien",
-      trend: "neutral" as const,
-      trendValue: "-",
-      icon: Eye,
-    },
-  ];
+  const myReservations = useMemo(() => {
+    return [...reservations].sort((a, b) => {
+      const timeA = a.date ? new Date(a.date).getTime() : 0;
+      const timeB = b.date ? new Date(b.date).getTime() : 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return Number(b.id || 0) - Number(a.id || 0);
+    });
+  }, [reservations]);
+
+  const completedCount = useMemo(
+    () => myReservations.filter((r) => r.status === "Selesai").length + myClients.filter((c) => c.status === "Selesai").length,
+    [myReservations, myClients]
+  );
 
   const renderContent = () => {
     switch (activeTab) {
@@ -108,8 +120,8 @@ export default function DoctorDashboardPage() {
             {/* Modern Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Jadwal</h2>
-                <p className="text-sm text-[#8A7B6B] mt-1">Kelola jadwal praktik Anda</p>
+                <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Jadwal Praktik Dokter</h2>
+                <p className="text-sm text-[#8A7B6B] mt-1">Kelola waktu dan slot tempat praktik Anda</p>
               </div>
               <Button
                 onClick={() => navigate("/dashboard/doctor/schedule/new")}
@@ -129,7 +141,6 @@ export default function DoctorDashboardPage() {
                       <Calendar className="w-7 h-7 text-[#C9A24A] animate-pulse" />
                     </div>
                     <p className="text-[#4A3F35] font-medium">Memuat jadwal...</p>
-                    <p className="text-sm text-[#B8A99A] mt-1">Mohon tunggu sebentar</p>
                   </div>
                 ) : mySchedules.length === 0 ? (
                   <div className="text-center py-12">
@@ -144,37 +155,21 @@ export default function DoctorDashboardPage() {
                     <thead>
                       <tr className="border-b border-[#F0E6D3]">
                         <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Tanggal</th>
-                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Waktu</th>
-                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Lokasi</th>
-                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Slot</th>
+                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Jam Praktik</th>
+                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Lokasi / Cabang</th>
+                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Slot Terisi</th>
                         <th className="text-right py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
                       {mySchedules.map((s) => (
                         <tr key={s.id} className="border-b border-[#F5F0E8] hover:bg-[#FDF8F0]/50 transition-colors">
+                          <td className="py-4 px-5 font-semibold text-[#4A3F35]">{s.displayDate || s.date}</td>
+                          <td className="py-4 px-5 text-[#4A3F35] font-medium">{s.timeRange}</td>
+                          <td className="py-4 px-5 text-[#8A7B6B]">{s.location}</td>
                           <td className="py-4 px-5">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-3.5 h-3.5 text-[#B8A99A]" />
-                              <span className="text-sm font-semibold text-[#4A3F35]">{s.displayDate || s.date}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-5">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-3.5 h-3.5 text-[#B8A99A]" />
-                              <span className="text-sm text-[#4A3F35]">{s.timeRange}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-5">
-                            <span className="text-sm text-[#4A3F35]">{s.location}</span>
-                          </td>
-                          <td className="py-4 px-5">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                              s.isFull
-                                ? "bg-red-50 text-red-600 border border-red-200"
-                                : "bg-[#F5E6C8] text-[#8A6B2B] border border-[#E8D4A2]/40"
-                            }`}>
-                              {s.bookedSlots} / {s.totalSlots}
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${s.isFull ? "bg-red-50 text-red-700 border border-red-200" : "bg-emerald-50 text-emerald-700 border border-emerald-200"}`}>
+                              {s.bookedSlots}/{s.totalSlots} Terisi
                             </span>
                           </td>
                           <td className="py-4 px-5 text-right">
@@ -183,7 +178,7 @@ export default function DoctorDashboardPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => navigate(`/dashboard/doctor/schedule/edit/${s.id}`)}
-                                className="w-8 h-8 p-0 rounded-full text-[#B8943F] hover:text-[#8A6B2B] hover:bg-[#F5E6C8] transition-colors"
+                                className="w-8 h-8 p-0 rounded-full text-[#B8943F] hover:text-[#8A6B2B] hover:bg-[#F5E6C8]"
                               >
                                 <Pencil className="w-4 h-4" />
                               </Button>
@@ -205,13 +200,9 @@ export default function DoctorDashboardPage() {
                                     }
                                   }
                                 }}
-                                className="w-8 h-8 p-0 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                                className="w-8 h-8 p-0 rounded-full text-red-500 hover:text-red-700 hover:bg-red-50"
                               >
-                                {deletingScheduleId === s.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="w-4 h-4" />
-                                )}
+                                {deletingScheduleId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                               </Button>
                             </div>
                           </td>
@@ -225,331 +216,158 @@ export default function DoctorDashboardPage() {
           </div>
         );
 
+      // Fitur Terpisah 1: Reservasi Pasien Dokter (Tindakan Periksa Medis)
+      case "reservasi":
       case "klien": {
-        const selectedResult = myClients.find((r) => r.id === selectedResultId) || null;
-
-        if (selectedResult) {
-          const r = selectedResult;
-          return (
-            <div className="space-y-6">
-              {/* Back Button */}
-              <Button
-                variant="ghost"
-                onClick={() => setSelectedResultId(null)}
-                className="text-[#8A7B6B] hover:text-[#4A3F35] hover:bg-[#FDF8F0] rounded-xl transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4 mr-1" />
-                Kembali
-              </Button>
-
-              {/* Header */}
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-bold text-[#4A3F35]">Detail Konsultasi</h2>
-                  <p className="text-sm text-[#8A7B6B] mt-1">ID: {r.id}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {/* Status Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Stethoscope className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Status Konsultasi</p>
-                    </div>
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200 mt-1">
-                      Dijadwalkan
-                    </span>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Calendar className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Tipe Konsultasi</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">Konsultasi Terjadwal</p>
-                  </div>
-                </div>
-
-                {/* Main Info Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <User className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Pengguna</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.user?.name || "-"}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Stethoscope className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Dokter</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.doctorName}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Calendar className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Tanggal</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.date}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <MessageSquare className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Topik</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.topic}</p>
-                  </div>
-                </div>
-
-                {/* Contact & Category */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Phone className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Kontak</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.preferredContact || "-"}</p>
-                    <p className="text-xs text-[#8A7B6B] mt-1">{r.contactNumber || "-"}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Kategori</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.category || "-"}</p>
-                  </div>
-                </div>
-
-                {/* Duration & Pain Scale */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Clock className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Durasi Keluhan</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.duration || "-"}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Heart className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Skala Nyeri</p>
-                    </div>
-                    <p className="text-sm font-semibold text-[#4A3F35] mt-1">{r.painScale != null ? `${r.painScale} / 10` : "-"}</p>
-                  </div>
-                </div>
-
-                {/* Chief Complaint */}
-                <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                      <MessageSquare className="w-4 h-4 text-[#B8943F]" />
-                    </div>
-                    <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Keluhan Utama</p>
-                  </div>
-                  <p className="text-sm text-[#4A3F35] whitespace-pre-wrap">{r.chiefComplaint || "-"}</p>
-                </div>
-
-                {/* Allergies & Medications */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <AlertCircle className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Alergi</p>
-                    </div>
-                    <p className="text-sm text-[#4A3F35] whitespace-pre-wrap">{r.allergies || "-"}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Obat yang Dikonsumsi</p>
-                    </div>
-                    <p className="text-sm text-[#4A3F35] whitespace-pre-wrap">{r.medications || "-"}</p>
-                  </div>
-                </div>
-
-                {/* Prior Treatment & Expectations */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <History className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Perawatan Sebelumnya</p>
-                    </div>
-                    <p className="text-sm text-[#4A3F35] whitespace-pre-wrap">{r.priorTreatment || "-"}</p>
-                  </div>
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <Lightbulb className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Harapan</p>
-                    </div>
-                    <p className="text-sm text-[#4A3F35] whitespace-pre-wrap">{r.expectations || "-"}</p>
-                  </div>
-                </div>
-
-                {r.notes && (
-                  <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-[#B8943F]" />
-                      </div>
-                      <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Catatan Tambahan</p>
-                    </div>
-                    <p className="text-sm text-[#4A3F35] whitespace-pre-wrap">{r.notes}</p>
-                  </div>
-                )}
-
-                {/* Attachments */}
-                <div className="bg-[#FDF8F0] border border-[#E8D4A2]/40 rounded-2xl p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-xl bg-white flex items-center justify-center">
-                      <Image className="w-4 h-4 text-[#B8943F]" />
-                    </div>
-                    <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Lampiran</p>
-                  </div>
-                  {!r.attachments || r.attachments.length === 0 ? (
-                    <p className="text-sm text-[#8A7B6B]">-</p>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {r.attachments.map((a: any, idx: number) => {
-                        const url = typeof a === "string" ? a : a?.url || a?.path || "";
-                        const name = typeof a === "string" ? `Lampiran ${idx + 1}` : a?.name || `Lampiran ${idx + 1}`;
-                        const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg|ico|heic|heif)$/i.test(url);
-                        return (
-                          <div key={`${name}_${idx}`} className="rounded-xl border border-[#F0E6D3] bg-white p-2 shadow-sm">
-                            {isImage ? (
-                              <a href={url} target="_blank" rel="noopener noreferrer" download>
-                                <img
-                                  src={url}
-                                  alt={name}
-                                  className="w-full h-24 object-cover rounded-xl"
-                                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                                />
-                              </a>
-                            ) : (
-                              <div className="w-full h-24 flex items-center justify-center bg-[#FDF8F0] rounded-xl text-xs text-[#8A7B6B]">
-                                <FileText className="w-6 h-6 text-[#B8A99A]" />
-                              </div>
-                            )}
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              download
-                              className="block mt-2 text-xs text-[#B8943F] hover:underline truncate"
-                              title={name}
-                            >
-                              {name}
-                            </a>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        }
-
         return (
           <div className="space-y-6">
-            {/* Modern Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#F0E6D3] pb-3">
               <div>
-                <h2 className="text-xl font-bold text-[#4A3F35]">Klien Konsultasi</h2>
-                <p className="text-sm text-[#8A7B6B] mt-1">Daftar pasien yang melakukan konsultasi dengan Anda</p>
+                <h2 className="text-xl font-bold text-[#4A3F35]">Reservasi Perawatan Pasien Saya</h2>
+                <p className="text-xs text-[#8A7B6B]">Daftar pasien yang memilih Anda sebagai dokter periksa & tindakan medis di klinik</p>
               </div>
+              <span className="px-3 py-1 bg-[#F5E6C8] text-[#8A6B2B] text-xs font-bold rounded-full border border-[#E8D4A2]">
+                Total: {myReservations.length} Pasien
+              </span>
             </div>
 
-            {/* Modern Table */}
             <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                {loadingConsultations ? (
+                {loadingReservations ? (
                   <div className="text-center py-12">
-                    <div className="w-14 h-14 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-7 h-7 text-[#C9A24A] animate-pulse" />
-                    </div>
-                    <p className="text-[#4A3F35] font-medium">Memuat klien...</p>
-                    <p className="text-sm text-[#B8A99A] mt-1">Mohon tunggu sebentar</p>
+                    <Loader2 className="w-8 h-8 text-[#C9A24A] animate-spin mx-auto mb-2" />
+                    <p className="text-xs text-[#8A7B6B]">Memuat reservasi pasien dokter...</p>
                   </div>
-                ) : myClients.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-14 h-14 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-7 h-7 text-[#B8A99A]" />
-                    </div>
-                    <p className="text-[#4A3F35] font-medium">Belum ada klien</p>
-                    <p className="text-sm text-[#B8A99A] mt-1">Pasien yang melakukan konsultasi akan muncul di sini</p>
+                ) : myReservations.length === 0 ? (
+                  <div className="text-center py-12 text-[#B8A99A]">
+                    <Stethoscope className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm font-medium">Belum Ada Reservasi Pasien</p>
+                    <p className="text-xs mt-1">Pasien yang memilih Anda untuk tindakan periksa akan muncul di sini</p>
                   </div>
                 ) : (
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-[#F0E6D3]">
-                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Nama</th>
-                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider hidden sm:table-cell">Topik</th>
-                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Tanggal</th>
-                        <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Status</th>
+                      <tr className="border-b border-[#F0E6D3] bg-[#FDF8F0]/60 text-left text-xs font-bold text-[#8A7B6B] uppercase tracking-wider">
+                        <th className="py-3.5 px-4">Pasien</th>
+                        <th className="py-3.5 px-4">Kontak</th>
+                        <th className="py-3.5 px-4">Jadwal Periksa</th>
+                        <th className="py-3.5 px-4">Perawatan / Keluhan</th>
+                        <th className="py-3.5 px-4">Status</th>
+                        <th className="py-3.5 px-4 text-right">Aksi Praktik</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y divide-[#F5F0E8] text-xs text-[#4A3F35]">
+                      {myReservations.map((r) => (
+                        <tr key={r.id} className="hover:bg-[#FDF8F0]/40 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-gray-900">
+                            <div>{r.patient_name}</div>
+                            <div className="text-[10px] text-gray-400 font-mono">#{r.code || r.id}</div>
+                          </td>
+                          <td className="py-3.5 px-4">{r.patient_phone}</td>
+                          <td className="py-3.5 px-4 font-medium text-[#c9a24a]">
+                            {r.date} &bull; {r.preferred_time}
+                          </td>
+                          <td className="py-3.5 px-4 max-w-xs truncate">
+                            <span className="font-semibold text-gray-800">{r.treatment_interest || "Pemeriksaan"}</span>
+                            <div className="text-[11px] text-gray-500 truncate">{r.complaint}</div>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                              r.status === "Selesai"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : r.status === "Dikonfirmasi"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}>
+                              {r.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            {r.status === "Dikonfirmasi" || r.status === "Baru" ? (
+                              <Button
+                                size="sm"
+                                disabled={actionLoadingId === r.id}
+                                onClick={() => handleStartConsultation(r.id)}
+                                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold h-8 text-[11px] rounded-lg shadow-sm"
+                              >
+                                {actionLoadingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 mr-1" />}
+                                Mulai Periksa
+                              </Button>
+                            ) : r.status === "Dalam Konsultasi" ? (
+                              <Button
+                                size="sm"
+                                disabled={actionLoadingId === r.id}
+                                onClick={() => handleCompleteConsultation(r.id)}
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold h-8 text-[11px] rounded-lg shadow-sm"
+                              >
+                                {actionLoadingId === r.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1" />}
+                                Selesaikan Perawatan
+                              </Button>
+                            ) : (
+                              <span className="text-[11px] text-emerald-600 font-semibold flex items-center justify-end gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Selesai
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // Fitur Terpisah 2: Konsultasi Online Dokter
+      case "konsultasi": {
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between border-b border-[#F0E6D3] pb-3">
+              <div>
+                <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Konsultasi Dokter</h2>
+                <p className="text-xs text-[#8A7B6B]">Daftar konsultasi tanya-jawab online dan sesi terprogram pasien Anda</p>
+              </div>
+              <span className="px-3 py-1 bg-[#F5E6C8] text-[#8A6B2B] text-xs font-bold rounded-full border border-[#E8D4A2]">
+                Total: {myClients.length} Konsultasi
+              </span>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                {loadingConsultations ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 text-[#C9A24A] animate-spin mx-auto mb-2" />
+                    <p className="text-xs text-[#8A7B6B]">Memuat konsultasi dokter...</p>
+                  </div>
+                ) : myClients.length === 0 ? (
+                  <div className="text-center py-12 text-[#B8A99A]">
+                    <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm font-medium">Belum Ada Konsultasi Online</p>
+                    <p className="text-xs mt-1">Permintaan konsultasi tanya-jawab pasien akan muncul di sini</p>
+                  </div>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#F0E6D3] bg-[#FDF8F0]/60 text-left text-xs font-bold text-[#8A7B6B] uppercase tracking-wider">
+                        <th className="py-3.5 px-4">Nama Pasien</th>
+                        <th className="py-3.5 px-4">Topik</th>
+                        <th className="py-3.5 px-4">Tipe</th>
+                        <th className="py-3.5 px-4">Tanggal</th>
+                        <th className="py-3.5 px-4">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F5F0E8] text-xs text-[#4A3F35]">
                       {myClients.map((c) => (
-                        <tr
-                          key={c.id}
-                          className="border-b border-[#F5F0E8] hover:bg-[#FDF8F0]/50 transition-colors cursor-pointer"
-                          onClick={() => setSelectedResultId(c.id)}
-                        >
-                          <td className="py-4 px-5">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-[#F5E6C8] flex items-center justify-center shrink-0">
-                                <User className="w-4 h-4 text-[#B8943F]" />
-                              </div>
-                              <span className="text-sm font-semibold text-[#4A3F35]">{c.user?.name || "-"}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-5 hidden sm:table-cell">
-                            <span className="text-sm text-[#4A3F35]">{c.topic}</span>
-                          </td>
-                          <td className="py-4 px-5">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-3.5 h-3.5 text-[#B8A99A]" />
-                              <span className="text-sm text-[#4A3F35]">{c.date}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-5">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                              c.status === "Selesai"
-                                ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                                : c.status === "Dijadwalkan"
-                                ? "bg-blue-50 text-blue-600 border border-blue-200"
-                                : "bg-amber-50 text-amber-700 border border-amber-200"
+                        <tr key={c.id} className="hover:bg-[#FDF8F0]/40 transition-colors">
+                          <td className="py-3.5 px-4 font-bold text-gray-900">{c.user?.name || "Klien"}</td>
+                          <td className="py-3.5 px-4">{c.topic}</td>
+                          <td className="py-3.5 px-4 capitalize">{c.type === "scheduled" ? "Konsultasi Terjadwal" : "Konsultasi Cepat"}</td>
+                          <td className="py-3.5 px-4">{c.date}</td>
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                              c.status === "Selesai" ? "bg-emerald-100 text-emerald-700" : "bg-blue-100 text-blue-700"
                             }`}>
                               {c.status}
                             </span>
@@ -571,7 +389,7 @@ export default function DoctorDashboardPage() {
             session={session}
             schedules={mySchedules}
             clients={myClients}
-            completedCount={completedConsultations}
+            completedCount={completedCount}
             onAddSchedule={() => navigate("/dashboard/doctor/schedule/new")}
           />
         );

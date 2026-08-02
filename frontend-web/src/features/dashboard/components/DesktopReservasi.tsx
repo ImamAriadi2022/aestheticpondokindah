@@ -216,8 +216,8 @@ export default function DesktopReservasi() {
 
       toast({
         title: "Reservasi Berhasil!",
-        description: `Reservasi ${code} telah dibuat. Menunggu konfirmasi klinik.`,
-        variant: "default",
+        message: `Reservasi ${code} telah dibuat. Menunggu konfirmasi klinik.`,
+        variant: "info",
       });
 
       // Switch to history view to display the newly created reservation
@@ -226,8 +226,8 @@ export default function DesktopReservasi() {
     } catch (err) {
       toast({
         title: "Gagal Membuat Reservasi",
-        description: "Terjadi kesalahan saat menghubungkan ke server.",
-        variant: "destructive",
+        message: "Terjadi kesalahan saat menghubungkan ke server.",
+        variant: "error",
       });
     } finally {
       setSubmitting(false);
