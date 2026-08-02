@@ -120,6 +120,17 @@ cd ~/backend
 php artisan key:generate
 ```
 
+`APP_KEY` harus tepat satu key Laravel yang valid. Jangan menempelkan dua
+nilai `base64:` pada satu baris. Jika API merespons 400 untuk seluruh endpoint
+padahal route sudah benar, periksa nilai ini terlebih dahulu, lalu bersihkan
+cache:
+
+```bash
+rm -f bootstrap/cache/config.php
+php artisan optimize:clear
+php artisan config:cache
+```
+
 ### 5. Setup Database
 
 1. Login ke phpMyAdmin di cPanel
@@ -191,6 +202,18 @@ cd ~/public_html/backend
 php artisan optimize
 composer install --optimize-autoloader --no-dev
 ```
+
+Jika shared hosting tidak menyediakan Composer, jalankan perintah berikut di
+komputer yang memakai versi PHP yang kompatibel dengan hosting, lalu unggah
+folder `vendor/` hasilnya ke root Laravel di server (sejajar dengan `artisan`):
+
+```bash
+composer install --no-dev --prefer-dist --optimize-autoloader
+```
+
+Skrip `deploy.sh` akan memakai `vendor/autoload.php` yang sudah diunggah bila
+Composer tidak tersedia. Deployment akan berhenti dengan pesan yang jelas bila
+keduanya tidak ada.
 
 ### 10. Proteksi Folder Backend
 

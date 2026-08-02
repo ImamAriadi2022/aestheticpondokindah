@@ -16,6 +16,10 @@
     RewriteRule artisan$ - [F,L]
     RewriteRule phpunit\.xml$ - [F,L]
 
+    # Deployment/diagnostic utilities can modify the database or filesystem;
+    # they must never be callable from the public production website.
+    RewriteRule ^(?:setup_backend|data_setup|test_system|create_storage_link|log_activity)\.php$ - [F,L,NC]
+
     # Blokir akses ke file hidden (dimulai dengan titik)
     RewriteRule ^\. - [F,L]
 
