@@ -76,12 +76,16 @@ rm -f bootstrap/cache/config.php
 # fresh key only when the existing one is invalid; a valid production key is
 # never changed. This also repairs the historical case where two base64 keys
 # were accidentally concatenated in .env.
-if ! "$PHP_BIN" -r '$env = parse_ini_file(".env", false, INI_SCANNER_RAW); $key = $env["APP_KEY"] ?? ""; $raw = str_starts_with($key, "base64:") ? base64_decode(substr($key, 7), true) : $key; exit(is_string($raw) && strlen($raw) === 32 ? 0 : 1);'; then
+# Do not use parse_ini_file() for Laravel .env files: it rejects legal dotenv
+# values such as passwords/comments containing parentheses. Read APP_KEY only.
+KEY_CHECK='$contents = @file_get_contents(".env"); preg_match("/^APP_KEY\\s*=\\s*(.*)$/m", (string) $contents, $match); $key = trim($match[1] ?? ""); $key = trim($key, "\\\" "); $raw = str_starts_with($key, "base64:") ? base64_decode(substr($key, 7), true) : $key; exit(is_string($raw) && strlen($raw) === 32 ? 0 : 1);'
+
+if ! "$PHP_BIN" -r "$KEY_CHECK"; then
     echo "APP_KEY tidak valid; membuat APP_KEY Laravel baru."
     "$PHP_BIN" artisan key:generate --force
 fi
 
-if ! "$PHP_BIN" -r '$env = parse_ini_file(".env", false, INI_SCANNER_RAW); $key = $env["APP_KEY"] ?? ""; $raw = str_starts_with($key, "base64:") ? base64_decode(substr($key, 7), true) : $key; exit(is_string($raw) && strlen($raw) === 32 ? 0 : 1);'; then
+if ! "$PHP_BIN" -r "$KEY_CHECK"; then
     echo "ERROR: APP_KEY tetap tidak valid. Pastikan file .env dapat ditulis oleh user deployment." >&2
     exit 1
 fi
