@@ -36,7 +36,25 @@ echo "Using PHP CLI: $($PHP_BIN -r 'echo PHP_VERSION;')"
 # the root rule during Plesk Git deployment.  Do not use `cp -n` here: it leaves
 # old images/assets on the server and makes a successful deploy appear stale.
 if [ -d public_html ]; then
-    find public_html -mindepth 1 -maxdepth 1 ! -name '.htaccess' -exec cp -a {} . \;
+    for source in public_html/*; do
+        [ -e "$source" ] || continue
+        name="$(basename "$source")"
+
+        # `backend` belongs to the retired shared-hosting layout. On some
+        # Plesk installations it is a link to ./backend, so copying it aborts
+        # the entire deploy with "are the same file".
+        case "$name" in
+            .htaccess|backend) continue ;;
+        esac
+
+        # public_html may itself be a link to this deployment root. Do not
+        # copy a file/directory onto the exact same inode in that situation.
+        if [ -e "./$name" ] && [ "$source" -ef "./$name" ]; then
+            continue
+        fi
+
+        cp -a "$source" .
+    done
 fi
 
 # 2. Laravel is now the repository root. Reconcile dependencies and caches.
@@ -50,17 +68,24 @@ else
     exit 1
 fi
 
-# A malformed APP_KEY causes every API request to fail before the controller is
-# reached (often surfaced by the browser as a generic 400). Fail deployment
-# early with an actionable error instead of caching a broken configuration.
-if ! "$PHP_BIN" -r '$env = parse_ini_file(".env", false, INI_SCANNER_RAW); $key = $env["APP_KEY"] ?? ""; $raw = str_starts_with($key, "base64:") ? base64_decode(substr($key, 7), true) : $key; exit(is_string($raw) && strlen($raw) === 32 ? 0 : 1);'; then
-    echo "ERROR: APP_KEY tidak valid. Jalankan php artisan key:generate --force sekali di root aplikasi, lalu deploy ulang." >&2
-    exit 1
-fi
-
 # A previous broken config cache can retain an invalid APP_KEY even after .env
 # has been corrected. Delete only this generated cache before Artisan boots.
 rm -f bootstrap/cache/config.php
+
+# A malformed key prevents every API endpoint from being served. Generate a
+# fresh key only when the existing one is invalid; a valid production key is
+# never changed. This also repairs the historical case where two base64 keys
+# were accidentally concatenated in .env.
+if ! "$PHP_BIN" -r '$env = parse_ini_file(".env", false, INI_SCANNER_RAW); $key = $env["APP_KEY"] ?? ""; $raw = str_starts_with($key, "base64:") ? base64_decode(substr($key, 7), true) : $key; exit(is_string($raw) && strlen($raw) === 32 ? 0 : 1);'; then
+    echo "APP_KEY tidak valid; membuat APP_KEY Laravel baru."
+    "$PHP_BIN" artisan key:generate --force
+fi
+
+if ! "$PHP_BIN" -r '$env = parse_ini_file(".env", false, INI_SCANNER_RAW); $key = $env["APP_KEY"] ?? ""; $raw = str_starts_with($key, "base64:") ? base64_decode(substr($key, 7), true) : $key; exit(is_string($raw) && strlen($raw) === 32 ? 0 : 1);'; then
+    echo "ERROR: APP_KEY tetap tidak valid. Pastikan file .env dapat ditulis oleh user deployment." >&2
+    exit 1
+fi
+
 "$PHP_BIN" artisan optimize:clear
 "$PHP_BIN" artisan migrate --force
 "$PHP_BIN" artisan config:cache

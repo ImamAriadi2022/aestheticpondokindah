@@ -121,7 +121,8 @@ php artisan key:generate
 ```
 
 `APP_KEY` harus tepat satu key Laravel yang valid. Jangan menempelkan dua
-nilai `base64:` pada satu baris. Jika API merespons 400 untuk seluruh endpoint
+nilai `base64:` pada satu baris. Skrip `deploy.sh` akan membuat key baru hanya
+bila nilainya kosong atau invalid. Jika API merespons 400 untuk seluruh endpoint
 padahal route sudah benar, periksa nilai ini terlebih dahulu, lalu bersihkan
 cache:
 
