@@ -3,7 +3,8 @@ import { submitPublicReservation } from "@/features/guest/reservation/services/r
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
-import { CalendarDays, Phone, User, MessageSquare } from "lucide-react";
+import { toast } from "@/shared/ui/toast";
+import { CalendarDays, Phone, User, MessageSquare, Loader2 } from "lucide-react";
 
 export default function HeroSection() {
   const [appointment, setAppointment] = useState({
@@ -14,6 +15,47 @@ export default function HeroSection() {
   });
 
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleHeroSubmit = async (e: React.FormEvent, source: string) => {
+    e.preventDefault();
+    if (submitting) return;
+
+    if (!appointment.fullName.trim() || !appointment.phone.trim()) {
+      toast({
+        title: "Form Belum Lengkap",
+        message: "Mohon isi Nama Lengkap dan Nomor WhatsApp Anda.",
+        variant: "warning",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    const res = await submitPublicReservation({
+      name: appointment.fullName.trim(),
+      phone: appointment.phone.trim(),
+      complaint: appointment.complaint,
+      date: appointment.time,
+      source,
+    });
+
+    if (res) {
+      toast({
+        title: "Reservasi Berhasil",
+        message: `Reservasi ${res.code || ""} berhasil dikirim! Tim kami akan segera menghubungi Anda.`,
+        variant: "success",
+      });
+      setAppointment({ fullName: "", phone: "", complaint: "", time: "" });
+      setMobileBookingOpen(false);
+    } else {
+      toast({
+        title: "Gagal Mengirim",
+        message: "Terjadi kendala saat mengirim reservasi. Silakan coba beberapa saat lagi.",
+        variant: "error",
+      });
+    }
+    setSubmitting(false);
+  };
 
   const complaints = [
     { value: "", label: "Pilih keluhan" },
@@ -145,17 +187,7 @@ export default function HeroSection() {
               <div className="rounded-2xl bg-background border border-border">
                 <form
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr_1.8fr_auto] gap-4 p-5"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-
-                    void submitPublicReservation({
-                      name: appointment.fullName,
-                      phone: appointment.phone,
-                      complaint: appointment.complaint,
-                      date: appointment.time,
-                      source: "hero_desktop",
-                    });
-                  }}
+                  onSubmit={(e) => handleHeroSubmit(e, "hero_desktop")}
                 >
                   <div>
                     <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
@@ -234,9 +266,10 @@ export default function HeroSection() {
                   <div className="flex items-end">
                     <Button
                       type="submit"
-                      className="h-11 rounded-xl bg-gradient-gold hover:opacity-90 text-white font-semibold shadow-lg shadow-brand-gold/20 font-body px-8"
+                      disabled={submitting}
+                      className="h-11 rounded-xl bg-gradient-gold hover:opacity-90 text-white font-semibold shadow-lg shadow-brand-gold/20 font-body px-8 min-w-[120px]"
                     >
-                      Book now
+                      {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Book now"}
                     </Button>
                   </div>
                 </form>
@@ -282,17 +315,7 @@ export default function HeroSection() {
               <div className="px-5 pb-5 max-h-[70vh] overflow-y-auto">
                 <form
                   className="grid grid-cols-1 gap-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-
-                    void submitPublicReservation({
-                      name: appointment.fullName,
-                      phone: appointment.phone,
-                      complaint: appointment.complaint,
-                      date: appointment.time,
-                      source: "hero_mobile",
-                    });
-                  }}
+                  onSubmit={(e) => handleHeroSubmit(e, "hero_mobile")}
                 >
                   <div>
                     <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
@@ -368,10 +391,10 @@ export default function HeroSection() {
 
                   <Button
                     type="submit"
+                    disabled={submitting}
                     className="h-11 rounded-xl bg-gradient-gold hover:opacity-90 text-white font-semibold shadow-lg shadow-brand-gold/20 font-body"
-                    onClick={() => setMobileBookingOpen(false)}
                   >
-                    Book now
+                    {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "Book now"}
                   </Button>
                 </form>
               </div>

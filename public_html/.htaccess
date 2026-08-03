@@ -1,12 +1,15 @@
 <IfModule mod_rewrite.c>
+  DirectoryIndex index.html
+
   RewriteEngine On
 
   # Preserve bearer-token authentication for Laravel API requests.
   RewriteCond %{HTTP:Authorization} .
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-  # Laravel API front controller (Laravel lives one level above this webroot).
-  RewriteRule ^api(?:/.*)?$ ../public/index.php [L,QSA]
+  # Laravel's standard front controller. With document root set to
+  # httpdocs/public, Nginx can forward /api without cross-directory rewrites.
+  RewriteRule ^api(?:/.*)?$ index.php [END,QSA]
 
   RewriteRule ^index\.html$ - [L]
 
@@ -14,8 +17,6 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Promo pages: serve with dynamic OG meta tags
-  RewriteRule ^promo(/.*)?$ /promo-meta.php [L]
-
-  RewriteRule . /index.html [L]
+  # React SPA fallback for every non-API route.
+  RewriteRule . index.html [L]
 </IfModule>

@@ -24,7 +24,7 @@ export default function PromoDetailPage() {
         setLoading(false);
 
         if (data) {
-          const imageUrl = getStorageUrl(data.image_url) || "https://aestheticpondokindah.web.id/logo/logo.png";
+          const imageUrl = getStorageUrl(data.image_url) || `${window.location.origin}/logo/logo.png`;
           updateMetaTags({
             title: `${data.title} | Aesthetic Pondok Indah`,
             description:

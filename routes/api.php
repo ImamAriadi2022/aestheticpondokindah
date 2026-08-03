@@ -307,7 +307,7 @@ Route::prefix('public')->group(function () {
     Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/membership/tiers', [MembershipController::class, 'tiers']);
     Route::get('/download-apps', [ContentController::class, 'downloadApps']);
-    Route::middleware('throttle:5,1')->post('/reservations', [ReservationController::class, 'store']);
+    Route::middleware('throttle:60,1')->post('/reservations', [ReservationController::class, 'store']);
 });
 
 // Midtrans sends this callback without an application session/token.

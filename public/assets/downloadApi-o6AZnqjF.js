@@ -1,0 +1,1 @@
+import{A as t}from"./index-Db_4XY18.js";async function n(){try{const a=await fetch(`${t}/public/download-apps`);if(!a.ok)return[];const r=await a.json();return Array.isArray(r)?r:[]}catch{return[]}}export{n as g};

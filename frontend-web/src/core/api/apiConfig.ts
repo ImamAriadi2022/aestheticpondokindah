@@ -4,12 +4,16 @@
 // Laravel lives at the repository root and is exposed through the webroot.
 
 const getApiBaseUrl = (): string => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+
   // Cek apakah di environment production
   if (import.meta.env.PROD) {
     if (typeof window !== "undefined" && window.location.origin) {
       return `${window.location.origin}/api`;
     }
-    return "https://aestheticpondokindah.com/api";
+    return "https://aestheticpondokindah.web.id/api";
   }
 
   // Untuk development, gunakan localhost

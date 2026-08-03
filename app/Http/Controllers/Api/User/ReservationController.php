@@ -83,8 +83,8 @@ class ReservationController extends Controller
         $scheduleId = $validated['doctor_schedule_id'] ?? null;
         $doctorId = $validated['doctor_id'] ?? null;
         $date = $validated['date'] ?? null;
+        $preferredTime = $validated['preferred_time'] ?? '10:00';
 
-        // Strict Doctor Schedule Validation
         if ($scheduleId) {
             $schedule = DoctorSchedule::with('user')->find($scheduleId);
             if (!$schedule) {
@@ -102,22 +102,17 @@ class ReservationController extends Controller
                 ->whereDate('date', $date)
                 ->first();
 
-            if (!$schedule) {
-                $doc = User::find($doctorId);
-                $docName = $doc ? $doc->name : 'Dokter';
-                return response()->json([
-                    'message' => "Dokter {$docName} tidak memiliki jadwal praktik pada tanggal {$date}. Silakan pilih tanggal yang memiliki jadwal praktik aktif."
-                ], 422);
+            if ($schedule) {
+                if ($schedule->is_full) {
+                    return response()->json(['message' => 'Jadwal praktik dokter pada tanggal dan jam ini sudah penuh. Silakan pilih jadwal lain.'], 422);
+                }
+                $scheduleId = $schedule->id;
+                $preferredTime = $validated['preferred_time'] ?? $schedule->time_range;
             }
+        }
 
-            if ($schedule->is_full) {
-                return response()->json(['message' => 'Jadwal praktik dokter pada tanggal dan jam ini sudah penuh. Silakan pilih jadwal lain.'], 422);
-            }
-
-            $scheduleId = $schedule->id;
-            $preferredTime = $validated['preferred_time'] ?? $schedule->time_range;
-        } else {
-            return response()->json(['message' => 'Silakan pilih dokter dan tanggal jadwal praktik yang tersedia.'], 422);
+        if (!$date) {
+            $date = now()->addDay()->format('Y-m-d');
         }
 
         $reservation = Reservation::create([

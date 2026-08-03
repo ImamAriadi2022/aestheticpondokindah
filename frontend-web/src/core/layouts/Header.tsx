@@ -6,6 +6,7 @@ import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+import { toast } from "@/shared/ui/toast";
 
 const navItems = [
   { name: "Beranda", path: "/" },
@@ -43,15 +44,30 @@ export default function Header() {
   });
   const location = useLocation();
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    void submitPublicReservation({
+    const res = await submitPublicReservation({
       name: formData.name,
       phone: formData.phone,
       complaint: formData.complaint,
       date: formData.time,
       source: "header_book_now",
     });
+
+    if (res) {
+      toast({
+        title: "Reservasi Berhasil",
+        message: `Reservasi ${res.code || ""} berhasil dibuat! Tim kami akan menghubungi Anda via WhatsApp.`,
+        variant: "success",
+      });
+    } else {
+      toast({
+        title: "Gagal",
+        message: "Tidak bisa membuat reservasi. Coba lagi.",
+        variant: "error",
+      });
+    }
+
     setBookingOpen(false);
     setFormData({ name: "", phone: "", complaint: "", time: "" });
   };

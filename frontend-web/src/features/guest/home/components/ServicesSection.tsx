@@ -456,7 +456,7 @@ export default function ServicesSection() {
     const fetchPromos = async () => {
       setLoadingPromos(true);
       try {
-        const res = await fetch(`${API_BASE}/admin/promos`, {
+        const res = await fetch(`${API_BASE}/public/promos`, {
           headers: { "Accept": "application/json" },
         });
         if (res.ok) {

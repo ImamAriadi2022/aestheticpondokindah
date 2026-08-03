@@ -12,6 +12,8 @@ const srcDir = path.join(repoRoot, "public");
 const outDir = path.join(repoRoot, "public_html");
 
 const OPERATIONAL_FILES = [
+  "index.php",
+  ".htaccess",
   "test_system.php",
   "setup_backend.php",
   "data_setup.php",

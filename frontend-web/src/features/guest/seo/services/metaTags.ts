@@ -74,8 +74,8 @@ export function resetMetaTags() {
   };
 
   const defaultDesc = "The solution to brighten your smile";
-  const defaultImage = "https://aestheticpondokindah.web.id/logo/logo.png";
-  const defaultUrl = "https://aestheticpondokindah.web.id/";
+  const defaultImage = typeof window !== "undefined" ? `${window.location.origin}/logo/logo.png` : "https://aestheticpondokindah.com/logo/logo.png";
+  const defaultUrl = typeof window !== "undefined" ? window.location.origin : "https://aestheticpondokindah.com/";
 
   setMeta("og:title", "Aesthetic Pondok Indah Dental Clinic");
   setMeta("og:description", defaultDesc);

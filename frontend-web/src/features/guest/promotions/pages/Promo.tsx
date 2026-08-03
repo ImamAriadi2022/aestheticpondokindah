@@ -23,7 +23,7 @@ export default function PromoPage() {
       title: "Promo Spesial Aesthetic Pondok Indah Dental Clinic",
       description:
         "Dapatkan penawaran menarik untuk perawatan gigi estetik. Jangan lewatkan kesempatan untuk senyum lebih percaya diri.",
-      image: "https://aestheticpondokindah.web.id/logo/logo.png",
+      image: `${window.location.origin}/logo/logo.png`,
       url: `${window.location.origin}/promo`,
     });
 
