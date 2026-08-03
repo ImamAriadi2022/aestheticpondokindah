@@ -61,7 +61,7 @@ class ConsultationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'type' => ['required', 'in:quick,scheduled'],
+            'type' => ['nullable', 'string', 'in:quick'],
             'topic' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:255'],
             'chiefComplaint' => ['required', 'string'],
@@ -74,72 +74,11 @@ class ConsultationController extends Controller
             'contactNumber' => ['nullable', 'string', 'max:50'],
             'expectations' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
-            'doctorName' => ['nullable', 'string', 'max:255'],
-            'scheduleDate' => ['nullable', 'date'],
-            'scheduleTime' => ['nullable', 'string', 'max:100'],
-            'location' => ['nullable', 'string', 'max:255'],
             'attachments' => ['nullable', 'array'],
-            'doctorScheduleId' => ['nullable', 'integer', 'exists:doctor_schedules,id'],
-            'reservationId' => ['nullable', 'integer', 'exists:reservations,id'],
         ]);
 
-        if ($validated['type'] === 'quick') {
-            $consultation = $this->consultationService->createQuick($validated, $request->user());
-
-            return response()->json(ConsultationService::dto($consultation->load(['user'])), 201);
-        }
-
-        if (empty($validated['doctorScheduleId'])) {
-            return response()->json(['message' => 'Jadwal dokter wajib dipilih'], 422);
-        }
-
-        $consultation = DB::transaction(function () use ($request, $validated) {
-            $schedule = DoctorSchedule::query()
-                ->with('user')
-                ->lockForUpdate()
-                ->find($validated['doctorScheduleId']);
-
-            if (!$schedule) {
-                return response()->json(['message' => 'Jadwal dokter tidak ditemukan'], 404);
-            }
-
-            if ($schedule->is_full) {
-                return response()->json(['message' => 'Slot jadwal dokter sudah penuh'], 422);
-            }
-
-            $schedule->booked_slots += 1;
-            $schedule->save();
-
-            return Consultation::create([
-                'user_id' => $request->user()->id,
-                'doctor_id' => $schedule->user_id ?? null,
-                'type' => 'scheduled',
-                'status' => 'Dijadwalkan',
-                'topic' => $validated['topic'] ?? null,
-                'category' => $validated['category'] ?? null,
-                'chief_complaint' => $validated['chiefComplaint'],
-                'duration' => $validated['duration'] ?? null,
-                'pain_scale' => $validated['painScale'] ?? null,
-                'allergies' => $validated['allergies'] ?? null,
-                'medications' => $validated['medications'] ?? null,
-                'prior_treatment' => $validated['priorTreatment'] ?? null,
-                'preferred_contact' => $validated['preferredContact'] ?? null,
-                'contact_number' => $validated['contactNumber'] ?? null,
-                'expectations' => $validated['expectations'] ?? null,
-                'notes' => $validated['notes'] ?? null,
-                'doctor_name' => $schedule->user?->name ?? ($validated['doctorName'] ?? null),
-                'schedule_date' => $schedule->date,
-                'schedule_time' => $schedule->time_range,
-                'location' => $schedule->location,
-                'attachments' => $validated['attachments'] ?? null,
-                'doctor_schedule_id' => $validated['doctorScheduleId'],
-                'reservation_id' => $validated['reservationId'] ?? null,
-            ]);
-        });
-
-        if ($consultation instanceof JsonResponse) {
-            return $consultation;
-        }
+        $validated['type'] = 'quick';
+        $consultation = $this->consultationService->createQuick($validated, $request->user());
 
         return response()->json(ConsultationService::dto($consultation->load(['user'])), 201);
     }

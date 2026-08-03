@@ -17,10 +17,10 @@ export function useScheduledConsultations() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getDoctorConsultations({ type: "scheduled" });
+      const data = await getDoctorConsultations();
       setConsultations(data);
     } catch {
-      setError("Gagal memuat daftar konsultasi terjadwal.");
+      setError("Gagal memuat daftar konsultasi.");
     } finally {
       setLoading(false);
     }

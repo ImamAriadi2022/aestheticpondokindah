@@ -33,15 +33,9 @@ const symptoms = [
 
 const painLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-const consultationTypes = [
-  { id: "quick", label: "Konsultasi Instan", icon: Zap, description: "Chat langsung dengan dokter untuk saran awal & penanganan cepat", color: "bg-[#c9a24a]" },
-  { id: "scheduled", label: "Konsultasi Terjadwal", icon: Calendar, description: "Pilih tanggal & dokter untuk sesi konsultasi tatap muka", color: "bg-[#a8843a]" },
-];
-
 export default function DesktopKonsultasi() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<"type" | "symptoms" | "pain" | "details" | "success">("type");
-  const [selectedType, setSelectedType] = useState<string>("quick");
+  const [step, setStep] = useState<"symptoms" | "pain" | "details" | "success">("symptoms");
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [painLevel, setPainLevel] = useState<number | null>(null);
   const [description, setDescription] = useState("");
@@ -105,15 +99,14 @@ export default function DesktopKonsultasi() {
 
   const getStepNumber = () => {
     switch (step) {
-      case "type": return 1;
-      case "symptoms": return 2;
-      case "pain": return 3;
-      case "details": return 4;
+      case "symptoms": return 1;
+      case "pain": return 2;
+      case "details": return 3;
       default: return 1;
     }
   };
 
-  const getTotalSteps = () => 4;
+  const getTotalSteps = () => 3;
 
   // Success Screen
   if (step === "success") {
@@ -166,11 +159,10 @@ export default function DesktopKonsultasi() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        {step !== "type" && (
+        {step !== "symptoms" && (
           <button
             onClick={() => {
-              if (step === "symptoms") setStep("type");
-              else if (step === "pain") setStep("symptoms");
+              if (step === "pain") setStep("symptoms");
               else if (step === "details") setStep("pain");
             }}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
@@ -179,9 +171,8 @@ export default function DesktopKonsultasi() {
           </button>
         )}
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Konsultasi</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Konsultasi Instan</h2>
           <p className="text-sm text-gray-500">
-            {step === "type" && "Pilih jenis konsultasi yang Anda butuhkan"}
             {step === "symptoms" && "Pilih gejala yang Anda rasakan"}
             {step === "pain" && "Seberapa parah rasa sakitnya?"}
             {step === "details" && "Ceritakan keluhan Anda"}
@@ -205,62 +196,6 @@ export default function DesktopKonsultasi() {
       </div>
 
       <div className="bg-white rounded-2xl p-6 border border-gray-100">
-        {/* Consultation Type Step */}
-        {step === "type" && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Pilih Jenis Konsultasi
-              </h3>
-              <p className="text-sm text-gray-500">
-                Pilih metode konsultasi yang paling nyaman untuk Anda
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {consultationTypes.map((type) => {
-                const Icon = type.icon;
-                const isSelected = selectedType === type.id;
-                
-                return (
-                  <button
-                    key={type.id}
-                    onClick={() => setSelectedType(type.id)}
-                    className={`p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all text-center ${
-                      isSelected
-                        ? "border-[#c9a24a] bg-[#c9a24a]/5 shadow-md shadow-[#c9a24a]/10"
-                        : "border-gray-100 bg-white hover:border-gray-200"
-                    }`}
-                  >
-                    <div className={`w-14 h-14 ${type.color} rounded-xl flex items-center justify-center`}>
-                      <Icon className="w-7 h-7 text-white" />
-                    </div>
-                    <div className="text-center">
-                      <span className={`text-base font-semibold block mb-1 ${isSelected ? "text-[#c9a24a]" : "text-gray-700"}`}>
-                        {type.label}
-                      </span>
-                      <span className="text-sm text-gray-500">{type.description}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <Button
-              onClick={() => {
-                if (selectedType === "scheduled") {
-                  navigate("/dashboard/user?tab=reservasi");
-                } else {
-                  setStep("symptoms");
-                }
-              }}
-              className="w-full max-w-2xl mx-auto flex h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl"
-            >
-              Selanjutnya
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
-        )}
 
         {/* Symptoms Step */}
         {step === "symptoms" && (

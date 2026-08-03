@@ -1544,9 +1544,6 @@ export default function ClinicDashboardPage() {
           })
           .sort((a: any, b: any) => (a.createdAt < b.createdAt ? 1 : -1));
 
-        const quickList = filtered.filter((c) => c.type === "quick");
-        const scheduledList = filtered.filter((c) => c.type === "scheduled");
-
         const countByStatus = (items: any[]) =>
           items.reduce(
             (acc, c) => {
@@ -1556,8 +1553,6 @@ export default function ClinicDashboardPage() {
             {} as Record<string, number>
           );
 
-        const quickCounts = countByStatus(quickList);
-        const scheduledCounts = countByStatus(scheduledList);
         const totalCounts = countByStatus(consultations);
 
         const getStatusColor = (status: "Selesai" | "Menunggu" | "Dijadwalkan" | "Dibuka" | "Ditolak") => {
@@ -1724,7 +1719,7 @@ export default function ClinicDashboardPage() {
                     <div className="bg-gray-50 rounded-sm p-4">
                       <p className="text-xs text-gray-500">Tipe Konsultasi</p>
                       <p className="text-sm font-semibold text-gray-900 mt-1">
-                        {selectedConsultation.type === "scheduled" ? "Konsultasi Terjadwal" : "Konsultasi Cepat"}
+                        Konsultasi Instan
                       </p>
                     </div>
                   </div>
@@ -2098,22 +2093,20 @@ export default function ClinicDashboardPage() {
           </Card>
         );
 
-        // Calculate counts for display
-        const quickWaiting = quickCounts.Menunggu || 0;
-        const quickDone = quickCounts.Selesai || 0;
-        const scheduledWaiting = scheduledCounts.Dijadwalkan || 0;
-        const scheduledDone = scheduledCounts.Selesai || 0;
+        const waitingCount = totalCounts.Menunggu || 0;
+        const activeCount = totalCounts.Dibuka || 0;
+        const completedCount = totalCounts.Selesai || 0;
 
         return (
           <div className="space-y-6">
             {/* Header */}
             <div>
-              <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Konsultasi</h2>
-              <p className="text-sm text-[#8A7B6B] mt-1">Pantau dan kelola konsultasi cepat serta terjadwal dari pengguna.</p>
+              <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Konsultasi Instan</h2>
+              <p className="text-sm text-[#8A7B6B] mt-1">Pantau dan kelola konsultasi instan dari pengguna.</p>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
@@ -2122,55 +2115,36 @@ export default function ClinicDashboardPage() {
                   <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Total Konsultasi</p>
                 </div>
                 <p className="text-3xl font-bold text-[#4A3F35]">{consultations.length}</p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">
-                    Menunggu: {totalCounts.Menunggu || 0}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-600">
-                    Dijadwalkan: {totalCounts.Dijadwalkan || 0}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600">
-                    Selesai: {totalCounts.Selesai || 0}
-                  </span>
-                </div>
               </div>
 
               <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center">
-                    <Zap className="w-5 h-5 text-[#B8943F]" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-amber-600" />
                   </div>
-                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Konsultasi Cepat</p>
+                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Menunggu</p>
                 </div>
-                <p className="text-3xl font-bold text-[#4A3F35]">{quickList.length}</p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">
-                    Menunggu: {quickWaiting}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600">
-                    Selesai: {quickDone}
-                  </span>
-                </div>
-                <p className="text-xs text-[#B8A99A] mt-2">Tanpa jadwal & dokter.</p>
+                <p className="text-3xl font-bold text-amber-600">{waitingCount}</p>
               </div>
 
-              <div className="bg-gradient-to-br from-[#FDF8F0] to-[#F5E9D8] rounded-2xl border border-[#E8D4A2]/40 p-5 shadow-sm hover:shadow-md transition-shadow">
+              <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-white/60 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-[#B8943F]" />
+                  <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-violet-600" />
                   </div>
-                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Konsultasi Terjadwal</p>
+                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Sedang Ditangani</p>
                 </div>
-                <p className="text-3xl font-bold text-[#4A3F35]">{scheduledList.length}</p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-600">
-                    Dijadwalkan: {scheduledWaiting}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600">
-                    Selesai: {scheduledDone}
-                  </span>
+                <p className="text-3xl font-bold text-violet-600">{activeCount}</p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <p className="text-xs font-medium text-[#8A7B6B] uppercase tracking-wide">Selesai</p>
                 </div>
-                <p className="text-xs text-[#8A7B6B] mt-2">Dengan jadwal & dokter.</p>
+                <p className="text-3xl font-bold text-emerald-600">{completedCount}</p>
               </div>
             </div>
 
@@ -2193,145 +2167,77 @@ export default function ClinicDashboardPage() {
                 >
                   <option value="Semua">Semua Status</option>
                   <option value="Menunggu">Menunggu</option>
-                  <option value="Dijadwalkan">Dijadwalkan</option>
+                  <option value="Dibuka">Sedang Ditangani</option>
                   <option value="Selesai">Selesai</option>
+                  <option value="Ditolak">Ditolak</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B8A99A] pointer-events-none" />
               </div>
             </div>
 
-            {/* Two Column Tables */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Quick Consultations Table */}
-              <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
-                <div className="p-5 border-b border-[#F0E6D3]">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-bold text-[#4A3F35]">Konsultasi Cepat</h3>
-                      <p className="text-sm text-[#8A7B6B] mt-1">Tanpa jadwal & dokter</p>
-                    </div>
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F5E6C8] text-[#8A6B2B]">
-                      {quickList.length}
-                    </span>
-                  </div>
+            {/* Single Consultation Table */}
+            <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[#F0E6D3] flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-[#4A3F35]">Daftar Konsultasi Instan</h3>
+                  <p className="text-sm text-[#8A7B6B] mt-1">Kelola sesi konsultasi chat pengguna</p>
                 </div>
-                <div className="overflow-x-auto">
-                  {quickList.length === 0 ? (
-                    <div className="text-center py-8">
-                      <div className="w-12 h-12 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mx-auto mb-3">
-                        <MessageSquare className="w-6 h-6 text-[#B8A99A]" />
-                      </div>
-                      <p className="text-[#4A3F35] font-medium text-sm">Tidak ada data</p>
-                    </div>
-                  ) : (
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-[#F0E6D3]">
-                          <th className="text-left py-3 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Pengguna</th>
-                          <th className="text-left py-3 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Status</th>
-                          <th className="text-right py-3 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {quickList.map((q) => (
-                          <tr key={q.id} className="border-b border-[#F5F0E8] hover:bg-[#FDF8F0]/50 transition-colors">
-                            <td className="py-3 px-5">
-                              <p className="text-sm font-semibold text-[#4A3F35]">{q.user?.name || userNameById(q.userId)}</p>
-                            </td>
-                            <td className="py-3 px-5">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                                q.status === "Selesai"
-                                  ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                                  : "bg-amber-50 text-amber-700 border border-amber-200"
-                              }`}>
-                                {q.status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-5 text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSelectedConsultationId(q.id)}
-                                className="text-[#B8943F] hover:text-[#9a7630] hover:bg-[#F5E6C8] h-8 w-8 p-0 rounded-lg"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F5E6C8] text-[#8A6B2B]">
+                  {filtered.length} Konsultasi
+                </span>
               </div>
-
-              {/* Scheduled Consultations Table */}
-              <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
-                <div className="p-5 border-b border-[#F0E6D3]">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-bold text-[#4A3F35]">Konsultasi Terjadwal</h3>
-                      <p className="text-sm text-[#8A7B6B] mt-1">Dengan jadwal & dokter</p>
+              <div className="overflow-x-auto">
+                {filtered.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-12 h-12 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mx-auto mb-3">
+                      <MessageSquare className="w-6 h-6 text-[#B8A99A]" />
                     </div>
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#F5E6C8] text-[#8A6B2B]">
-                      {scheduledList.length}
-                    </span>
+                    <p className="text-[#4A3F35] font-medium text-sm">Tidak ada data konsultasi</p>
                   </div>
-                </div>
-                <div className="overflow-x-auto">
-                  {scheduledList.length === 0 ? (
-                    <div className="text-center py-8">
-                      <div className="w-12 h-12 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mx-auto mb-3">
-                        <Calendar className="w-6 h-6 text-[#B8A99A]" />
-                      </div>
-                      <p className="text-[#4A3F35] font-medium text-sm">Tidak ada data</p>
-                    </div>
-                  ) : (
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-[#F0E6D3]">
-                          <th className="text-left py-3 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Pengguna</th>
-                          <th className="text-left py-3 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider hidden sm:table-cell">Dokter</th>
-                          <th className="text-left py-3 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Status</th>
-                          <th className="text-right py-3 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Aksi</th>
+                ) : (
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#F0E6D3] bg-[#FDF8F0]/60">
+                        <th className="text-left py-3.5 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Pengguna</th>
+                        <th className="text-left py-3.5 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Topik / Keluhan</th>
+                        <th className="text-left py-3.5 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider hidden sm:table-cell">Dokter</th>
+                        <th className="text-left py-3.5 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Status</th>
+                        <th className="text-right py-3.5 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F5F0E8] text-xs text-[#4A3F35]">
+                      {filtered.map((c: any) => (
+                        <tr key={c.id} className="hover:bg-[#FDF8F0]/50 transition-colors">
+                          <td className="py-3.5 px-5 font-semibold text-[#4A3F35]">
+                            {c.participantName || c.user?.name || userNameById(c.userId)}
+                          </td>
+                          <td className="py-3.5 px-5">
+                            <p className="font-semibold text-gray-900 truncate max-w-[200px]">{c.topic || "Konsultasi"}</p>
+                            <p className="text-[10px] text-[#B8A99A] truncate max-w-[200px]">{c.chiefComplaint}</p>
+                          </td>
+                          <td className="py-3.5 px-5 hidden sm:table-cell text-[#8A7B6B]">
+                            {c.doctorName || "-"}
+                          </td>
+                          <td className="py-3.5 px-5">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(c.status)}`}>
+                              {c.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-5 text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedConsultationId(c.id)}
+                              className="text-[#B8943F] hover:text-[#9a7630] hover:bg-[#F5E6C8] h-8 w-8 p-0 rounded-lg"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {scheduledList.map((s) => (
-                          <tr key={s.id} className="border-b border-[#F5F0E8] hover:bg-[#FDF8F0]/50 transition-colors">
-                            <td className="py-3 px-5">
-                              <p className="text-sm font-semibold text-[#4A3F35]">{s.user?.name || userNameById(s.userId)}</p>
-                            </td>
-                            <td className="py-3 px-5 hidden sm:table-cell">
-                              <p className="text-sm text-[#4A3F35]">{s.doctorName}</p>
-                            </td>
-                            <td className="py-3 px-5">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                                s.status === "Selesai"
-                                  ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
-                                  : s.status === "Dijadwalkan"
-                                  ? "bg-blue-50 text-blue-600 border border-blue-200"
-                                  : "bg-amber-50 text-amber-700 border border-amber-200"
-                              }`}>
-                                {s.status}
-                              </span>
-                            </td>
-                            <td className="py-3 px-5 text-right">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSelectedConsultationId(s.id)}
-                                className="text-[#B8943F] hover:text-[#9a7630] hover:bg-[#F5E6C8] h-8 w-8 p-0 rounded-lg"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
             </div>
           </div>

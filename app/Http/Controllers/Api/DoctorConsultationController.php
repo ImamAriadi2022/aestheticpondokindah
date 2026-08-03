@@ -71,7 +71,6 @@ class DoctorConsultationController extends Controller
             ->count();
 
         $waiting = Consultation::query()->where($scope)
-            ->where('type', 'quick')
             ->where('status', 'Menunggu')
             ->count();
 
@@ -125,10 +124,6 @@ class DoctorConsultationController extends Controller
 
         if (!$consultation) {
             return response()->json(['message' => 'Konsultasi tidak ditemukan.'], 404);
-        }
-
-        if ($consultation->type !== 'quick') {
-            return response()->json(['message' => 'Hanya konsultasi cepat yang dapat diambil oleh dokter.'], 422);
         }
 
         if ($consultation->status === 'Selesai' || $consultation->status === 'Ditolak') {

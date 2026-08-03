@@ -73,11 +73,11 @@ class ConsultationAdminController extends Controller
             ->values();
 
         $counts = [
-            'waiting' => Consultation::query()->where('type', 'quick')->where('status', 'Menunggu')->count(),
-            'active' => Consultation::query()->where('type', 'quick')->where('status', 'Dibuka')->count(),
-            'completed' => Consultation::query()->where('type', 'quick')->where('status', 'Selesai')->count(),
-            'rejected' => Consultation::query()->where('type', 'quick')->where('status', 'Ditolak')->count(),
-            'scheduled' => Consultation::query()->where('type', 'scheduled')->where('status', 'Dijadwalkan')->count(),
+            'waiting' => Consultation::query()->where('status', 'Menunggu')->count(),
+            'active' => Consultation::query()->where('status', 'Dibuka')->count(),
+            'completed' => Consultation::query()->where('status', 'Selesai')->count(),
+            'rejected' => Consultation::query()->where('status', 'Ditolak')->count(),
+            'scheduled' => 0,
         ];
 
         return response()->json(['queue' => $waiting, 'counts' => $counts]);

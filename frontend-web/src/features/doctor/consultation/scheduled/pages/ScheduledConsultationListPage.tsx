@@ -36,7 +36,7 @@ export default function ScheduledConsultationListPage() {
         <div>
           <h2 className="text-xl font-bold text-[#4A3F35]">Konsultasi Online Dokter</h2>
           <p className="text-xs text-[#8A7B6B] mt-1">
-            Konsultasi terjadwal pasien Anda — kelola meeting dan masuki ruang chat.
+            Daftar konsultasi pasien Anda — kelola meeting dan masuki ruang chat.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export default function ScheduledConsultationListPage() {
       <ConsultationSummaryCards consultations={consultations} loading={loading} />
 
       <div className="rounded-xl border border-[#F0E6D3] bg-[#FDF8F0] px-4 py-3 text-xs text-[#6B5A4E] leading-relaxed">
-        <span className="font-bold">Arti status:</span> Menunggu = permintaan belum diproses; Terjadwal = dokter dan waktu sudah ditentukan, tetapi sesi belum dimulai; Sedang Berjalan = ruang chat/sesi sudah dibuka; Selesai = konsultasi ditutup.
+        <span className="font-bold">Arti status:</span> Menunggu = permintaan belum diproses; Sedang Berjalan = ruang chat/sesi sudah dibuka; Selesai = konsultasi ditutup.
       </div>
 
       {/* Table */}
@@ -69,13 +69,13 @@ export default function ScheduledConsultationListPage() {
           {loading ? (
             <div className="text-center py-12">
               <Loader2 className="w-8 h-8 text-[#C9A24A] animate-spin mx-auto mb-2" />
-              <p className="text-xs text-[#8A7B6B]">Memuat konsultasi terjadwal...</p>
+              <p className="text-xs text-[#8A7B6B]">Memuat daftar konsultasi...</p>
             </div>
           ) : consultations.length === 0 ? (
             <div className="text-center py-12 text-[#B8A99A]">
               <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-40" />
-              <p className="text-sm font-medium">Belum Ada Konsultasi Terjadwal</p>
-              <p className="text-xs mt-1">Konsultasi terjadwal pasien akan muncul di sini</p>
+              <p className="text-sm font-medium">Belum Ada Konsultasi</p>
+              <p className="text-xs mt-1">Konsultasi pasien akan muncul di sini</p>
             </div>
           ) : (
             <table className="w-full">

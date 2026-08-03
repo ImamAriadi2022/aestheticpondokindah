@@ -20,12 +20,6 @@ const CARDS = [
     className: "from-amber-500 to-amber-600",
   },
   {
-    key: "scheduled" as const,
-    label: "Terjadwal",
-    icon: CalendarDays,
-    className: "from-violet-500 to-violet-600",
-  },
-  {
     key: "current" as const,
     label: "Sedang Berjalan",
     icon: Activity,
@@ -42,8 +36,8 @@ const CARDS = [
 export function ConsultationSummaryCards({ consultations, loading = false }: ConsultationSummaryCardsProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
-        {[0, 1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        {[0, 1, 2, 3].map((i) => (
           <div key={i} className="h-28 rounded-2xl bg-[#FDF8F0] border border-[#F0E6D3] flex items-center justify-center">
             <Loader2 className="w-5 h-5 text-[#C9A24A] animate-spin" />
           </div>
@@ -55,13 +49,12 @@ export function ConsultationSummaryCards({ consultations, loading = false }: Con
   const values = {
     total: consultations.length,
     waiting: consultations.filter((item) => item.status === "Menunggu").length,
-    scheduled: consultations.filter((item) => item.status === "Dijadwalkan").length,
     current: consultations.filter((item) => item.status === "Dibuka").length,
     completed: consultations.filter((item) => item.status === "Selesai").length,
   };
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
       {CARDS.map(({ key, label, icon: Icon, className }) => (
         <div
           key={key}

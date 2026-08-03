@@ -126,10 +126,6 @@ class ConsultationService
      */
     public function start(Consultation $consultation, User $doctor): Consultation
     {
-        if ($consultation->type !== 'scheduled') {
-            abort(422, 'Hanya konsultasi terjadwal yang dapat dimulai.');
-        }
-
         if (!$consultation->doctor_id) {
             $consultation->doctor_id = $doctor->id;
             $consultation->doctor_name = $doctor->name;
@@ -297,15 +293,7 @@ class ConsultationService
 
     public static function dto(Consultation $c): array
     {
-        $dateStr = '-';
-        if ($c->type === 'scheduled' && $c->schedule_date) {
-            $dateStr = $c->schedule_date->format('j F Y');
-            if ($c->schedule_time) {
-                $dateStr .= ' • ' . $c->schedule_time;
-            }
-        } else {
-            $dateStr = optional($c->created_at)->format('j F Y') ?? '-';
-        }
+        $dateStr = optional($c->created_at)->format('j F Y • H:i') ?? '-';
 
         $doctorId = $c->doctor_id
             ? (string) $c->doctor_id

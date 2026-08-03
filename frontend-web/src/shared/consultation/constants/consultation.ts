@@ -36,12 +36,12 @@ export const TYPE_META: Record<
   { label: string; badgeClassName: string }
 > = {
   quick: {
-    label: "Konsultasi Cepat",
+    label: "Konsultasi Instan",
     badgeClassName: "bg-violet-50 text-violet-700 border border-violet-200",
   },
   scheduled: {
-    label: "Konsultasi Terjadwal",
-    badgeClassName: "bg-[#C9A24A]/10 text-[#8A6B2B] border border-[#E8D4A2]",
+    label: "Konsultasi Instan",
+    badgeClassName: "bg-violet-50 text-violet-700 border border-violet-200",
   },
 };
 
