@@ -10,12 +10,12 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/shared/ui/input-group";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { getDefaultDashboardPath } from "@/core/auth/services/session";
 import { GENDER_OPTIONS, BLOOD_TYPE_OPTIONS, JOB_OPTIONS } from "@/core/constants/regionData";
-import { getDistricts, getProvinces, getRegencies } from "@/core/api/wilayahApi";
+import { getDistricts, getProvinces, getRegencies, type WilayahItem } from "@/core/api/wilayahApi";
 import { touchSessionLastActive } from "@/core/auth/services/sessionTtl";
 import { API_BASE } from "@/core/api/apiConfig";
 
@@ -57,9 +57,29 @@ export default function LoginPage() {
     district: "",
   });
 
-  const provinceOptions = getProvinces();
-  const regencyOptions = registerForm.provinceId ? getRegencies(registerForm.provinceId) : [];
-  const districtOptions = registerForm.cityId ? getDistricts(registerForm.cityId) : [];
+  const [provinceOptions, setProvinceOptions] = useState<WilayahItem[]>([]);
+  const [regencyOptions, setRegencyOptions] = useState<WilayahItem[]>([]);
+  const [districtOptions, setDistrictOptions] = useState<WilayahItem[]>([]);
+
+  useEffect(() => {
+    getProvinces().then((data) => setProvinceOptions(data));
+  }, []);
+
+  useEffect(() => {
+    if (registerForm.provinceId) {
+      getRegencies(registerForm.provinceId).then((data) => setRegencyOptions(data));
+    } else {
+      setRegencyOptions([]);
+    }
+  }, [registerForm.provinceId]);
+
+  useEffect(() => {
+    if (registerForm.cityId) {
+      getDistricts(registerForm.cityId).then((data) => setDistrictOptions(data));
+    } else {
+      setDistrictOptions([]);
+    }
+  }, [registerForm.cityId]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);

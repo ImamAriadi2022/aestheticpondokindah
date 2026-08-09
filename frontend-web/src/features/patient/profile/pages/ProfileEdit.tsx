@@ -116,12 +116,11 @@ export default function ProfileEditPage() {
 
   useEffect(() => {
     let mounted = true;
-    try {
-      const provList = getProvinces();
-      setProvinces(provList || []);
-    } catch (err) {
+    getProvinces().then((provList) => {
+      if (mounted) setProvinces(provList || []);
+    }).catch((err) => {
       logger.error("Failed to initialize region dropdowns:", err);
-    }
+    });
 
     const token = localStorage.getItem("apident:token");
     if (!token) return;
@@ -134,7 +133,7 @@ export default function ProfileEditPage() {
       },
     })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+      .then(async (data) => {
         if (!data || !mounted) return;
 
         const normGender = normalizeGenderValue(data.gender);
@@ -144,8 +143,10 @@ export default function ProfileEditPage() {
         const cityName = data.city || "Lampung Tengah";
         const distName = data.district || "Punggur";
 
-        // Match province, regency, district IDs from static wilayah data
-        const provList = getProvinces();
+        // Match province, regency, district IDs from wilayah API
+        const provList = await getProvinces();
+        if (mounted) setProvinces(provList || []);
+
         const foundProv = provList.find(
           (p) =>
             p.id === data.provinceId ||
@@ -155,8 +156,8 @@ export default function ProfileEditPage() {
         let regList: WilayahItem[] = [];
         let foundReg: WilayahItem | undefined;
         if (foundProv) {
-          regList = getRegencies(foundProv.id);
-          setRegencies(regList);
+          regList = await getRegencies(foundProv.id);
+          if (mounted) setRegencies(regList);
           foundReg = regList.find(
             (r) =>
               r.id === data.cityId ||
@@ -167,8 +168,8 @@ export default function ProfileEditPage() {
         let distList: WilayahItem[] = [];
         let foundDist: WilayahItem | undefined;
         if (foundReg) {
-          distList = getDistricts(foundReg.id);
-          setDistricts(distList);
+          distList = await getDistricts(foundReg.id);
+          if (mounted) setDistricts(distList);
           foundDist = distList.find(
             (d) =>
               d.id === data.districtId ||
@@ -241,7 +242,11 @@ export default function ProfileEditPage() {
       districtId: "",
       district: "",
     }));
-    setRegencies(provId ? getRegencies(provId) : []);
+    if (provId) {
+      getRegencies(provId).then((regList) => setRegencies(regList || []));
+    } else {
+      setRegencies([]);
+    }
     setDistricts([]);
   };
 
@@ -254,7 +259,11 @@ export default function ProfileEditPage() {
       districtId: "",
       district: "",
     }));
-    setDistricts(regId ? getDistricts(regId) : []);
+    if (regId) {
+      getDistricts(regId).then((distList) => setDistricts(distList || []));
+    } else {
+      setDistricts([]);
+    }
   };
 
   const handleDistrictChange = (distId: string) => {
