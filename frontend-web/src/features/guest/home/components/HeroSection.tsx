@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { submitPublicReservation } from "@/features/guest/reservation/services/reservationApi";
+import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
+import GuestBookingTermsDialog from "@/features/guest/reservation/components/GuestBookingTermsDialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
@@ -18,9 +20,14 @@ export default function HeroSection() {
 
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [bookingTerms, setBookingTerms] = useState<string>();
 
-  const handleHeroSubmit = async (e: React.FormEvent, source: string) => {
-    e.preventDefault();
+  useEffect(() => {
+    getPublicClinicSettings().then((settings) => setBookingTerms(settings.booking_terms)).catch(() => {});
+  }, []);
+
+  const submitHeroBooking = async (source: string) => {
     if (submitting) return;
 
     if (!appointment.fullName.trim() || !appointment.phone.trim()) {
@@ -58,6 +65,15 @@ export default function HeroSection() {
       });
     }
     setSubmitting(false);
+  };
+
+  const handleHeroSubmit = (e: React.FormEvent, source: string) => {
+    e.preventDefault();
+    if (!appointment.fullName.trim() || !appointment.phone.trim()) {
+      toast({ title: "Form Belum Lengkap", message: "Mohon isi Nama Lengkap dan Nomor WhatsApp Anda.", variant: "warning" });
+      return;
+    }
+    setTermsOpen(true);
   };
 
   const complaints = [
@@ -449,6 +465,12 @@ export default function HeroSection() {
               </div>
             </DialogContent>
           </Dialog>
+          <GuestBookingTermsDialog
+            open={termsOpen}
+            onOpenChange={setTermsOpen}
+            terms={bookingTerms}
+            onConfirm={() => void submitHeroBooking(mobileBookingOpen ? "hero_mobile" : "hero_desktop")}
+          />
         </div>
       </div>
     </section>

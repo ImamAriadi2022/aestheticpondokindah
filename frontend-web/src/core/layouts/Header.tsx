@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/di
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { toast } from "@/shared/ui/toast";
+import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
+import GuestBookingTermsDialog from "@/features/guest/reservation/components/GuestBookingTermsDialog";
 
 const navItems = [
   { name: "Beranda", path: "/" },
@@ -35,6 +37,8 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [bookingTerms, setBookingTerms] = useState<string>();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const todayStr = new Date().toISOString().split("T")[0];
   const [formData, setFormData] = useState({
@@ -46,8 +50,7 @@ export default function Header() {
   });
   const location = useLocation();
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitBooking = async () => {
     const res = await submitPublicReservation({
       name: formData.name,
       phone: formData.phone,
@@ -75,12 +78,21 @@ export default function Header() {
     setFormData({ name: "", phone: "", complaint: "", date: todayStr, time: "10:00" });
   };
 
+  const handleBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTermsOpen(true);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    getPublicClinicSettings().then((settings) => setBookingTerms(settings.booking_terms)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -395,6 +407,12 @@ export default function Header() {
           </form>
         </DialogContent>
       </Dialog>
+      <GuestBookingTermsDialog
+        open={termsOpen}
+        onOpenChange={setTermsOpen}
+        terms={bookingTerms}
+        onConfirm={() => void submitBooking()}
+      />
     </header>
   );
 }

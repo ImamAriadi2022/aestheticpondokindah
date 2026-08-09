@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Stethoscope,
   Crown,
+  Settings,
 } from "lucide-react";
 import { ROLES, type AppRole } from "@/core/permissions/roles";
 
@@ -53,6 +54,7 @@ export const MENU: AppMenu = {
       { label: "Pengguna", icon: Users, href: "/dashboard/clinic?tab=users" },
       { label: "Membership", icon: Crown, href: "/dashboard/clinic/membership" },
       { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
+      { label: "Pengaturan", icon: Settings, href: "/dashboard/clinic?tab=settings" },
     ],
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },
