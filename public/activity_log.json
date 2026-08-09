@@ -22,8 +22,7 @@
             "frontend-web/src/features/patient/profile/pages/ProfileEdit.tsx",
             "deploy.sh",
             ".agent/skills/deploy-sync/skill.md",
-            "public/activity_log.json",
-            "public_html/activity_log.json"
+            "public/activity_log.json"
         ],
         "before_progress": 99,
         "after_progress": 100,

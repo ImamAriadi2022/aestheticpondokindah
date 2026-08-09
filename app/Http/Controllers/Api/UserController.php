@@ -726,11 +726,11 @@ class UserController extends Controller
             $cleanPath = substr($cleanPath, 8);
         }
 
-        if (file_exists(base_path('public_html/' . $cleanPath)) || file_exists(public_path($cleanPath))) {
+        if (file_exists(public_path($cleanPath))) {
             return asset($cleanPath);
         }
 
-        if (file_exists(storage_path('app/public/' . $cleanPath)) || file_exists(base_path('public_html/storage/' . $cleanPath)) || file_exists(public_path('storage/' . $cleanPath))) {
+        if (file_exists(storage_path('app/public/' . $cleanPath)) || file_exists(public_path('storage/' . $cleanPath))) {
             return asset('storage/' . $cleanPath);
         }
 
@@ -763,7 +763,6 @@ class UserController extends Controller
                     $targetDirs = [
                         storage_path('app/public/avatars'),
                         public_path('storage/avatars'),
-                        base_path('public_html/storage/avatars'),
                     ];
 
                     foreach ($targetDirs as $dir) {

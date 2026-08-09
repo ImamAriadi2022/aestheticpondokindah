@@ -1,5 +1,6 @@
 #!/bin/bash
 # Script Eksekusi Otomatis untuk Deployment Production (Plesk / cPanel / Shared Hosting / VPS)
+# Note: Document Root server berada di direktori `public/` (Laravel Standard Webroot)
 
 set -eu
 
@@ -67,13 +68,7 @@ if ! "$PHP_BIN" -r "$WILAYAH_CHECK"; then
     "$PHP_BIN" artisan db:seed --class=WilayahSeeder --force
 fi
 
-# Public HTML Sync (If server root is public_html)
-if [ -d public_html ] && [ ! public_html -ef public ]; then
-    echo "Menyinkronkan aset public/ ke public_html/..."
-    cp -rn public/* public_html/ 2>/dev/null || cp -r public/* public_html/ 2>/dev/null || true
-fi
-
-# Storage Link
+# Storage Link (Webroot is public/)
 if [ ! -e public/storage ] && [ ! -L public/storage ]; then
     "$PHP_BIN" artisan storage:link || echo "WARNING: storage link belum dapat dibuat; cek izin symlink hosting."
 fi

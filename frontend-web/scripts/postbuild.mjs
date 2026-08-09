@@ -1,15 +1,12 @@
-// Post-build sync: restore operational PHP tooling & progress dashboard
-// from repo-root public/ into the vite output dir (public_html).
-// vite build uses emptyOutDir, which wipes outDir; without this step the
-// deployment loses the DB setup / health-check / seed tools on every build.
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+// Post-build verification script: Ensure all operational PHP tooling
+// and progress dashboard files remain intact in the webroot (public/).
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, "../..");
-const srcDir = path.join(repoRoot, "public");
-const outDir = path.join(repoRoot, "public_html");
+const webroot = path.join(repoRoot, "public");
 
 const OPERATIONAL_FILES = [
   "index.php",
@@ -25,20 +22,15 @@ const OPERATIONAL_FILES = [
   "favicon.ico",
 ];
 
-mkdirSync(outDir, { recursive: true });
-
-let copied = 0;
-let skipped = 0;
+let verified = 0;
+let missing = 0;
 for (const file of OPERATIONAL_FILES) {
-  const src = path.join(srcDir, file);
-  const dest = path.join(outDir, file);
-  if (existsSync(src)) {
-    copyFileSync(src, dest);
-    console.log(`[postbuild] copied ${file} -> public_html/`);
-    copied++;
+  const filePath = path.join(webroot, file);
+  if (existsSync(filePath)) {
+    verified++;
   } else {
-    console.warn(`[postbuild] SKIP (missing in public/): ${file}`);
-    skipped++;
+    console.warn(`[postbuild] WARNING (missing in public/): ${file}`);
+    missing++;
   }
 }
-console.log(`[postbuild] synced ${copied} file(s), skipped ${skipped}.`);
+console.log(`[postbuild] Verified webroot (public/): ${verified} file(s) present, ${missing} missing.`);

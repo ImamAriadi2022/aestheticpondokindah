@@ -30,13 +30,13 @@ class ContentController extends Controller
             $cleanPath = substr($cleanPath, 8);
         }
 
-        // Direct check in public_html or public root
-        if (file_exists(base_path('public_html/' . $cleanPath)) || file_exists(public_path($cleanPath))) {
+        // Direct check in public root
+        if (file_exists(public_path($cleanPath))) {
             return asset($cleanPath);
         }
 
         // Check in storage
-        if (file_exists(storage_path('app/public/' . $cleanPath)) || file_exists(base_path('public_html/storage/' . $cleanPath)) || file_exists(public_path('storage/' . $cleanPath))) {
+        if (file_exists(storage_path('app/public/' . $cleanPath)) || file_exists(public_path('storage/' . $cleanPath))) {
             return asset('storage/' . $cleanPath);
         }
 
