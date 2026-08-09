@@ -21,4 +21,9 @@ class WilayahController extends Controller
     {
         return response()->json(RegionData::districts($regencyId));
     }
+
+    public function villages($districtId)
+    {
+        return response()->json(RegionData::villages($districtId));
+    }
 }

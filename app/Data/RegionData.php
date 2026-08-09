@@ -2,6 +2,9 @@
 
 namespace App\Data;
 
+use App\Models\Wilayah;
+use Illuminate\Support\Facades\Schema;
+
 class RegionData
 {
     public static array $provinces = [
@@ -316,27 +319,88 @@ class RegionData
 
     public static function provinces(): array
     {
+        if (Schema::hasTable('wilayah') && Wilayah::query()->exists()) {
+            return Wilayah::provinces()
+                ->orderBy('nama')
+                ->get()
+                ->map(fn ($w) => ['id' => $w->kode, 'name' => $w->nama, 'kode' => $w->kode])
+                ->toArray();
+        }
+
         return array_map(
-            fn ($name) => ['id' => $name, 'name' => $name],
+            fn ($name) => ['id' => $name, 'name' => $name, 'kode' => ''],
             self::$provinces
         );
     }
 
-    public static function regencies(string $provinceName): array
+    public static function regencies(string $provinceParam): array
     {
-        $cities = self::$citiesByProvince[$provinceName] ?? [];
+        if (Schema::hasTable('wilayah') && Wilayah::query()->exists()) {
+            $provinceKode = $provinceParam;
+            if (!preg_match('/^\d{2}$/', $provinceParam)) {
+                $prov = Wilayah::provinces()->where('nama', $provinceParam)->first();
+                $provinceKode = $prov ? $prov->kode : null;
+            }
+
+            if ($provinceKode) {
+                return Wilayah::regencies($provinceKode)
+                    ->orderBy('nama')
+                    ->get()
+                    ->map(fn ($w) => ['id' => $w->kode, 'name' => $w->nama, 'kode' => $w->kode])
+                    ->toArray();
+            }
+        }
+
+        $cities = self::$citiesByProvince[$provinceParam] ?? [];
         return array_map(
-            fn ($name) => ['id' => $name, 'name' => $name],
+            fn ($name) => ['id' => $name, 'name' => $name, 'kode' => ''],
             $cities
         );
     }
 
-    public static function districts(string $cityName): array
+    public static function districts(string $cityParam): array
     {
-        $districts = self::$districtsByCity[$cityName] ?? self::$fallbackDistricts;
+        if (Schema::hasTable('wilayah') && Wilayah::query()->exists()) {
+            $regencyKode = $cityParam;
+            if (!preg_match('/^\d{2}\.\d{2}$/', $cityParam)) {
+                $reg = Wilayah::query()->whereRaw('CHAR_LENGTH(kode) = 5')->where('nama', $cityParam)->first();
+                $regencyKode = $reg ? $reg->kode : null;
+            }
+
+            if ($regencyKode) {
+                return Wilayah::districts($regencyKode)
+                    ->orderBy('nama')
+                    ->get()
+                    ->map(fn ($w) => ['id' => $w->kode, 'name' => $w->nama, 'kode' => $w->kode])
+                    ->toArray();
+            }
+        }
+
+        $districts = self::$districtsByCity[$cityParam] ?? self::$fallbackDistricts;
         return array_map(
-            fn ($name) => ['id' => $name, 'name' => $name],
+            fn ($name) => ['id' => $name, 'name' => $name, 'kode' => ''],
             $districts
         );
+    }
+
+    public static function villages(string $districtParam): array
+    {
+        if (Schema::hasTable('wilayah') && Wilayah::query()->exists()) {
+            $districtKode = $districtParam;
+            if (!preg_match('/^\d{2}\.\d{2}\.\d{2}$/', $districtParam)) {
+                $dist = Wilayah::query()->whereRaw('CHAR_LENGTH(kode) = 8')->where('nama', $districtParam)->first();
+                $districtKode = $dist ? $dist->kode : null;
+            }
+
+            if ($districtKode) {
+                return Wilayah::villages($districtKode)
+                    ->orderBy('nama')
+                    ->get()
+                    ->map(fn ($w) => ['id' => $w->kode, 'name' => $w->nama, 'kode' => $w->kode])
+                    ->toArray();
+            }
+        }
+
+        return [];
     }
 }

@@ -46,6 +46,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/wilayah/provinsi', [WilayahController::class, 'provinces']);
 Route::get('/wilayah/kabupaten/{provinceId}', [WilayahController::class, 'regencies']);
 Route::get('/wilayah/kecamatan/{regencyId}', [WilayahController::class, 'districts']);
+Route::get('/wilayah/kelurahan/{districtId}', [WilayahController::class, 'villages']);
 
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
