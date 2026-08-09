@@ -99,6 +99,7 @@ export default function NewMobileDashboardLayout({
           { label: "Beranda", icon: Home, href: "/dashboard/clinic" },
           { label: "Reservasi", icon: CalendarDays, href: "/dashboard/clinic?tab=reservasi" },
           { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
+          { label: "Pengaturan", icon: Settings, href: "/dashboard/clinic?tab=settings" },
           { label: "Profil", icon: UserCircle, href: "/settings" },
         ];
       case "doctor":
@@ -155,6 +156,7 @@ export default function NewMobileDashboardLayout({
       if (tab === "doctors") return "Dokter";
       if (tab === "users") return "Pengguna";
       if (tab === "membership") return "Membership";
+      if (tab === "settings") return "Pengaturan Klinik";
       if (tab.startsWith("content")) return "Konten";
       return "Dashboard Klinik";
     }

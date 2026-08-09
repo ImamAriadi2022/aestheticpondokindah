@@ -41,6 +41,8 @@ use App\Http\Controllers\Api\User\NotificationController;
 use App\Http\Controllers\Api\User\ReservationController as UserReservationController;
 use App\Http\Controllers\Api\WilayahController;
 use App\Http\Controllers\Api\Public\AnalyticsVisitController;
+use App\Http\Controllers\Api\Public\ClinicSettingPublicController;
+use App\Http\Controllers\Api\Admin\ClinicSettingAdminController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/wilayah/provinsi', [WilayahController::class, 'provinces']);
@@ -79,6 +81,11 @@ Route::prefix('admin')->group(function () {
 
         Route::get('/reservations', [ReservationAdminController::class, 'index']);
         Route::put('/reservations/{reservation}', [ReservationAdminController::class, 'update']);
+
+        // Clinic Settings (T&C, WA number, etc.)
+        Route::get('/clinic-settings', [ClinicSettingAdminController::class, 'index']);
+        Route::get('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'show']);
+        Route::put('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'update']);
 
         Route::get('/posts', [PostAdminController::class, 'index']);
         Route::post('/posts', [PostAdminController::class, 'store']);
@@ -309,6 +316,7 @@ Route::prefix('public')->group(function () {
     Route::get('/membership/tiers', [MembershipController::class, 'tiers']);
     Route::get('/download-apps', [ContentController::class, 'downloadApps']);
     Route::middleware('throttle:60,1')->post('/reservations', [ReservationController::class, 'store']);
+    Route::get('/settings', [ClinicSettingPublicController::class, 'index']);
 });
 
 // Midtrans sends this callback without an application session/token.

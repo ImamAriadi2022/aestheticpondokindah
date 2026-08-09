@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
 import { submitPublicReservation } from "@/features/guest/reservation/services/reservationApi";
+import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
 import { API_BASE } from "@/core/api/apiConfig";
 import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
 import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
@@ -28,6 +29,9 @@ import {
   ArrowRight,
   ShieldCheck,
   ChevronDown,
+  X,
+  MessageCircle,
+  ScrollText,
 } from "lucide-react";
 import { services as allServices } from "@/features/guest/services/pages/Services";
 
@@ -61,6 +65,26 @@ export default function BookingNewPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [successResult, setSuccessResult] = useState<any | null>(null);
+
+  // Terms & Conditions
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [clinicSettings, setClinicSettings] = useState<{ booking_terms?: string; booking_whatsapp_number?: string }>({});
+
+  useEffect(() => {
+    getPublicClinicSettings().then((s) => setClinicSettings(s)).catch(() => {});
+  }, []);
+
+  const waNumber = clinicSettings.booking_whatsapp_number || "6281990114949";
+
+  const buildWAMessage = (data: typeof form, res: any) => {
+    const name = res?.name || data.patientName.trim();
+    const phone = res?.phone || data.phone.trim();
+    const treatment = data.treatmentInterest || "Konsultasi Umum";
+    const date = data.preferredDate || "-";
+    const note = data.note ? `%0AKeluhan: ${encodeURIComponent(data.note)}` : `%0AKeluhan: ${encodeURIComponent(treatment)}`;
+    return `https://wa.me/${waNumber}?text=Halo%20Aesthetic%20Pondok%20Indah%2C%20saya%20ingin%20booking%20konsultasi.%0ANama%3A%20${encodeURIComponent(name)}%0ANo.%20HP%3A%20${encodeURIComponent(phone)}${note}%0AWaktu%3A%20${encodeURIComponent(date)}%0A*Dokter%20akan%20ditentukan%20oleh%20admin*`;
+  };
 
   useEffect(() => {
     fetch(`${API_BASE}/public/doctor-schedules`)
@@ -153,9 +177,105 @@ export default function BookingNewPage() {
     }
   };
 
+  const bookingTerms = clinicSettings.booking_terms ||
+    "1. Reservasi ini bersifat permintaan, bukan konfirmasi pasti.\n2. Harap datang 10 menit sebelum jadwal.\n3. Data Anda hanya digunakan untuk keperluan layanan medis.";
+
+  const termsList = bookingTerms.split("\n").filter((t) => t.trim());
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-between">
       <Header />
+
+      {/* Terms & Conditions Modal */}
+      {showTermsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#1a1612] via-[#2a2319] to-[#1a1612] p-5 rounded-t-3xl flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#c9a24a]/20 border border-[#c9a24a]/40 flex items-center justify-center">
+                  <ScrollText className="w-5 h-5 text-[#c9a24a]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Syarat & Ketentuan Reservasi</h3>
+                  <p className="text-[11px] text-[#d4c5b0]">Baca dan setujui sebelum melanjutkan</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTermsModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full text-white/60 hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* T&C Content */}
+            <div className="overflow-y-auto flex-1 p-5">
+              <ul className="space-y-3">
+                {termsList.map((term, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
+                    <span className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300/60 text-[#c9a24a] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      {idx + 1}
+                    </span>
+                    <span className="leading-relaxed">{term.replace(/^\d+\.\s*/, "")}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Accept Checkbox & Action */}
+            <div className="p-5 border-t border-gray-100 space-y-4 shrink-0">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="relative mt-0.5">
+                  <input
+                    type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="peer sr-only"
+                  />
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                    termsAccepted
+                      ? "bg-[#c9a24a] border-[#c9a24a]"
+                      : "border-gray-300 bg-white group-hover:border-[#c9a24a]/60"
+                  }`}>
+                    {termsAccepted && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                </div>
+                <span className="text-xs text-gray-700 leading-relaxed">
+                  Saya telah membaca dan <strong className="text-gray-900">menyetujui</strong> seluruh syarat dan ketentuan reservasi Aesthetic Pondok Indah Dental Clinic.
+                </span>
+              </label>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowTermsModal(false)}
+                  className="flex-1 h-11 rounded-xl text-xs"
+                >
+                  Batal
+                </Button>
+                <Button
+                  disabled={!termsAccepted}
+                  onClick={() => {
+                    setShowTermsModal(false);
+                    // Trigger actual form submission if terms accepted
+                    const formEl = document.getElementById("guest-booking-form") as HTMLFormElement | null;
+                    if (formEl) formEl.requestSubmit();
+                  }}
+                  className={`flex-1 h-11 rounded-xl text-xs font-bold transition-all ${
+                    termsAccepted
+                      ? "bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white shadow-md cursor-pointer"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Setuju & Lanjutkan
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="py-10 sm:py-14 container mx-auto px-4">
         <div className="max-w-3xl mx-auto space-y-6">
@@ -234,18 +354,33 @@ export default function BookingNewPage() {
                     </div>
                   </div>
 
-                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-                    <Link to="/login?mode=register" className="w-full sm:w-auto flex-1">
-                      <Button className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-bold rounded-xl h-11 text-xs shadow-md">
-                        Daftar Akun Sekarang <ArrowRight className="w-4 h-4 ml-1.5" />
+                  <div className="pt-2 flex flex-col gap-3">
+                    {/* WhatsApp CTA - shown after success */}
+                    <a
+                      href={buildWAMessage(form, successResult)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full"
+                    >
+                      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-11 text-xs shadow-md flex items-center justify-center gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        Konfirmasi via WhatsApp Admin
                       </Button>
-                    </Link>
+                    </a>
 
-                    <Link to="/" className="w-full sm:w-auto">
-                      <Button variant="outline" className="w-full rounded-xl h-11 text-xs border-white/20 text-white hover:bg-white/10">
-                        Kembali Ke Beranda
-                      </Button>
-                    </Link>
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                      <Link to="/login?mode=register" className="w-full sm:flex-1">
+                        <Button className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-bold rounded-xl h-11 text-xs shadow-md">
+                          Daftar Akun Sekarang <ArrowRight className="w-4 h-4 ml-1.5" />
+                        </Button>
+                      </Link>
+
+                      <Link to="/" className="w-full sm:w-auto">
+                        <Button variant="outline" className="w-full rounded-xl h-11 text-xs border-white/20 text-white hover:bg-white/10">
+                          Kembali Ke Beranda
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -273,7 +408,7 @@ export default function BookingNewPage() {
                   </div>
                 )}
 
-                <form onSubmit={onSubmit} className="space-y-6">
+                <form id="guest-booking-form" onSubmit={onSubmit} className="space-y-6">
                   {/* Section 1: Data Pasien Guest */}
                   <div className="space-y-4">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#c9a24a] border-b border-gray-100 pb-2 flex items-center gap-1.5">
@@ -482,9 +617,41 @@ export default function BookingNewPage() {
                     </div>
                   </div>
 
+                  {/* Terms & Conditions Notice */}
+                  <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50/60 border border-amber-200/60">
+                    <ScrollText className="w-4 h-4 text-[#c9a24a] shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-gray-600 leading-relaxed">
+                      Dengan melanjutkan, Anda wajib membaca dan menyetujui{" "}
+                      <button
+                        type="button"
+                        onClick={() => setShowTermsModal(true)}
+                        className="font-bold text-[#c9a24a] underline underline-offset-2 hover:text-[#a8843a] cursor-pointer"
+                      >
+                        Syarat & Ketentuan Reservasi
+                      </button>{" "}
+                      Aesthetic Pondok Indah Dental Clinic.
+                    </p>
+                  </div>
+
+                  {/* Submit Button - opens T&C modal first */}
                   <Button
-                    type="submit"
+                    type="button"
                     disabled={submitting || !scheduleStatus.available}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!scheduleStatus.available) return;
+                      // Validate form first before showing T&C
+                      const v = (() => {
+                        if (!form.patientName || form.patientName.trim().length < 2) return "Nama pasien minimal 2 karakter.";
+                        if (!form.phone || !/^[0-9+\-\s]{8,20}$/.test(form.phone.trim())) return "Format nomor WhatsApp/Telepon tidak valid.";
+                        if (!form.preferredDate) return "Tanggal reservasi wajib diisi.";
+                        return null;
+                      })();
+                      if (v) { setError(v); return; }
+                      setError(null);
+                      setTermsAccepted(false);
+                      setShowTermsModal(true);
+                    }}
                     className={`w-full font-bold rounded-xl h-12 text-sm transition-all ${
                       scheduleStatus.available
                         ? "bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white shadow-md cursor-pointer"
@@ -495,7 +662,7 @@ export default function BookingNewPage() {
                       ? "Memproses Reservasi Guest..."
                       : !scheduleStatus.available
                       ? "Pilih Tanggal/Jam Sesuai Jadwal Dokter"
-                      : "Kirim Permintaan Reservasi Guest"}
+                      : "Lanjutkan & Baca Syarat Ketentuan"}
                   </Button>
                 </form>
               </CardContent>

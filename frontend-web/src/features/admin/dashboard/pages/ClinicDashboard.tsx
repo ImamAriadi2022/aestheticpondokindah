@@ -96,6 +96,8 @@ import {
   Download,
   X,
   Video,
+  ScrollText,
+  Settings,
 } from "lucide-react";
 
 type PostStatus = "Draft" | "Published";
@@ -823,6 +825,54 @@ export default function ClinicDashboardPage() {
   const [editingPaymentStatus, setEditingPaymentStatus] = useState<PaymentStatus | "">("");
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // Clinic Settings state
+  interface ClinicSettingItem { id: number; key: string; value: string | null; type: string; label: string | null; description: string | null; }
+  const [clinicSettings, setClinicSettings] = useState<ClinicSettingItem[]>([]);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [savingSettingKey, setSavingSettingKey] = useState<string | null>(null);
+  const [settingsDirty, setSettingsDirty] = useState<Record<string, string>>({});
+
+  const fetchClinicSettings = async () => {
+    setLoadingSettings(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/clinic-settings`, {
+        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setClinicSettings(data.settings || []);
+      }
+    } catch (e) {
+      logger.error("Gagal fetch clinic settings", e);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const saveClinicSetting = async (key: string) => {
+    const newValue = settingsDirty[key];
+    if (newValue === undefined) return;
+    setSavingSettingKey(key);
+    try {
+      const res = await fetch(`${API_BASE}/admin/clinic-settings/${key}`, {
+        method: "PUT",
+        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ value: newValue }),
+      });
+      if (res.ok) {
+        toast.success("Setting berhasil disimpan!");
+        setClinicSettings((prev) => prev.map((s) => s.key === key ? { ...s, value: newValue } : s));
+        setSettingsDirty((prev) => { const next = { ...prev }; delete next[key]; return next; });
+      } else {
+        toast.error("Gagal menyimpan setting.");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan saat menyimpan.");
+    } finally {
+      setSavingSettingKey(null);
+    }
+  };
+
   const getEffectivePaymentStatus = (reservation: Reservation): PaymentStatus => {
     if (reservation.status !== "Selesai") return "Belum Bayar";
     return reservation.paymentStatus || "Belum Bayar";
@@ -916,6 +966,9 @@ export default function ClinicDashboardPage() {
     }
     if (activeTab === "pengaduan") {
       fetchComplaints();
+    }
+    if (activeTab === "settings") {
+      void fetchClinicSettings();
     }
   }, [activeTab]);
 
@@ -6540,6 +6593,101 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                 )}
               </CardContent>
             </Card>
+          </div>
+        );
+      }
+
+      case "settings": {
+        const settingLabels: Record<string, { label: string; desc: string; type: string }> = {
+          booking_terms: {
+            label: "Syarat & Ketentuan Reservasi Tamu",
+            desc: "Teks ini akan ditampilkan kepada tamu sebelum mereka dapat mengirim permintaan reservasi. Setiap baris menjadi satu poin syarat.",
+            type: "textarea",
+          },
+          booking_whatsapp_number: {
+            label: "Nomor WhatsApp Klinik (Booking)",
+            desc: "Nomor WhatsApp yang menerima pesan booking dari tamu. Format: 62xxx tanpa tanda + atau spasi.",
+            type: "text",
+          },
+        };
+
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 pb-2 border-b border-gray-100">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200/60 flex items-center justify-center">
+                <Settings className="w-5 h-5 text-[#c9a24a]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Pengaturan Klinik</h2>
+                <p className="text-xs text-gray-500">Kelola konfigurasi sistem klinik yang dapat diubah secara dinamis.</p>
+              </div>
+            </div>
+
+            {loadingSettings ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-[#c9a24a]" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {clinicSettings.map((setting) => {
+                  const meta = settingLabels[setting.key] || { label: setting.label || setting.key, desc: setting.description || "", type: setting.type || "text" };
+                  const currentVal = settingsDirty[setting.key] !== undefined ? settingsDirty[setting.key] : (setting.value || "");
+                  const isDirty = settingsDirty[setting.key] !== undefined;
+
+                  return (
+                    <Card key={setting.key} className="rounded-2xl border-gray-100 shadow-sm">
+                      <CardContent className="p-5 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-2">
+                            <ScrollText className="w-4 h-4 text-[#c9a24a] shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">{meta.label}</p>
+                              <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{meta.desc}</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded shrink-0">{setting.key}</span>
+                        </div>
+
+                        {meta.type === "textarea" ? (
+                          <textarea
+                            rows={8}
+                            value={currentVal}
+                            onChange={(e) => setSettingsDirty((prev) => ({ ...prev, [setting.key]: e.target.value }))}
+                            placeholder="Masukkan teks syarat dan ketentuan..."
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#c9a24a] font-mono resize-y leading-relaxed text-gray-900"
+                          />
+                        ) : (
+                          <Input
+                            value={currentVal}
+                            onChange={(e) => setSettingsDirty((prev) => ({ ...prev, [setting.key]: e.target.value }))}
+                            placeholder={`Masukkan ${meta.label.toLowerCase()}...`}
+                            className="h-11 rounded-xl text-xs"
+                          />
+                        )}
+
+                        <div className="flex justify-end">
+                          <Button
+                            disabled={!isDirty || savingSettingKey === setting.key}
+                            onClick={() => saveClinicSetting(setting.key)}
+                            className={`h-9 px-5 rounded-xl text-xs font-bold transition-all ${
+                              isDirty
+                                ? "bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white shadow-md"
+                                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            }`}
+                          >
+                            {savingSettingKey === setting.key ? (
+                              <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Menyimpan...</>
+                            ) : (
+                              <><Save className="w-3.5 h-3.5 mr-1.5" /> Simpan Perubahan</>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       }
