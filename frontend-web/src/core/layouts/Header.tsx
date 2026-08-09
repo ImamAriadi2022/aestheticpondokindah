@@ -36,11 +36,13 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const todayStr = new Date().toISOString().split("T")[0];
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
     complaint: "",
-    time: "",
+    date: todayStr,
+    time: "10:00",
   });
   const location = useLocation();
 
@@ -50,7 +52,8 @@ export default function Header() {
       name: formData.name,
       phone: formData.phone,
       complaint: formData.complaint,
-      date: formData.time,
+      date: formData.date,
+      preferred_time: formData.time,
       source: "header_book_now",
     });
 
@@ -69,7 +72,7 @@ export default function Header() {
     }
 
     setBookingOpen(false);
-    setFormData({ name: "", phone: "", complaint: "", time: "" });
+    setFormData({ name: "", phone: "", complaint: "", date: todayStr, time: "10:00" });
   };
 
   useEffect(() => {
@@ -337,20 +340,45 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* Pilih Waktu */}
+              {/* Pilih Tanggal */}
               <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="time" className="text-xs sm:text-sm font-medium text-brand-charcoal">
-                  Pilih Waktu <span className="font-normal text-brand-warm-gray/60">(opsional)</span>
+                <Label htmlFor="date" className="text-xs sm:text-sm font-medium text-brand-charcoal">
+                  Pilih Tanggal
                 </Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-gold/60" />
                   <Input
-                    id="time"
+                    id="date"
                     type="date"
+                    min={todayStr}
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm border-border/50 focus:border-brand-gold focus:ring-brand-gold/20"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Pilih Jam */}
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="time" className="text-xs sm:text-sm font-medium text-brand-charcoal">
+                  Pilih Jam
+                </Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-gold/60 pointer-events-none" />
+                  <select
+                    id="time"
                     value={formData.time}
                     onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm border-border/50 focus:border-brand-gold focus:ring-brand-gold/20"
-                  />
+                    className="bg-background border border-border h-10 sm:h-12 rounded-xl px-3 py-2 text-sm transition-colors w-full min-w-0 outline-none font-body pl-9 sm:pl-10 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/20"
+                    required
+                  >
+                    {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"].map((t) => (
+                      <option key={t} value={t}>
+                        {t} WIB
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

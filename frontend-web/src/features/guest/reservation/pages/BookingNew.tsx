@@ -27,6 +27,7 @@ import {
   Gift,
   ArrowRight,
   ShieldCheck,
+  ChevronDown,
 } from "lucide-react";
 import { services as allServices } from "@/features/guest/services/pages/Services";
 
@@ -70,11 +71,46 @@ export default function BookingNewPage() {
       .catch(() => {});
   }, []);
 
+  const selectedDoctorObj = form.doctorId
+    ? doctors.find((d) => String(d.id || d.doctorId || d._id) === String(form.doctorId))
+    : null;
+
+  const scheduleStatus = (() => {
+    if (!selectedDoctorObj) return { available: true, message: "Jadwal tersedia" };
+
+    if (selectedDoctorObj.timeRange && typeof selectedDoctorObj.timeRange === "string") {
+      const parts = selectedDoctorObj.timeRange.split("-").map((t: string) => t.trim().replace(/WIB/i, "").trim());
+      if (parts.length === 2) {
+        const startTime = parts[0];
+        const endTime = parts[1];
+        const currentTime = form.preferredTime || "10:00";
+        if (currentTime < startTime || currentTime > endTime) {
+          return {
+            available: false,
+            message: `Dokter ${selectedDoctorObj.doctorName || ""} hanya berpraktik pukul ${selectedDoctorObj.timeRange}. Jam ${currentTime} WIB berada di luar jam praktik.`,
+          };
+        }
+      }
+    }
+
+    if (selectedDoctorObj.date && /^\d{4}-\d{2}-\d{2}$/.test(selectedDoctorObj.date)) {
+      if (selectedDoctorObj.date !== form.preferredDate) {
+        return {
+          available: false,
+          message: `Dokter ${selectedDoctorObj.doctorName || ""} hanya berpraktik pada tanggal ${selectedDoctorObj.displayDate || selectedDoctorObj.date}.`,
+        };
+      }
+    }
+
+    return { available: true, message: "Jadwal dokter tersedia." };
+  })();
+
   const validate = () => {
     if (!form.patientName || form.patientName.trim().length < 2) return "Nama pasien minimal 2 karakter.";
     if (!form.phone || !/^[0-9+\-\s]{8,20}$/.test(form.phone.trim())) return "Format nomor WhatsApp/Telepon tidak valid.";
     if (!form.preferredDate) return "Tanggal reservasi wajib diisi.";
     if (form.preferredDate < today) return "Tanggal reservasi tidak boleh di masa lalu.";
+    if (!scheduleStatus.available) return scheduleStatus.message;
     return null;
   };
 
@@ -357,47 +393,84 @@ export default function BookingNewPage() {
                     </div>
                   </div>
 
-                  {/* Section 3: Tanggal & Waktu */}
-                  <div className="space-y-4 pt-2">
+                  {/* Section 3: Tanggal & Jam Periksa */}
+                  <div className="space-y-5 pt-2">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-[#c9a24a] border-b border-gray-100 pb-2 flex items-center gap-1.5">
                       <CalendarDays className="w-4 h-4" />
                       Jadwal Periksa Yang Diinginkan
                     </h3>
 
+                    {/* Doctor Schedule Status Card if doctor is selected */}
+                    {selectedDoctorObj && (
+                      <div className={`p-3.5 rounded-xl border text-xs transition-all ${
+                        scheduleStatus.available
+                          ? "bg-amber-50/60 border-amber-200/80 text-gray-800"
+                          : "bg-rose-50/80 border-rose-200 text-rose-800"
+                      }`}>
+                        <div className="flex items-center justify-between font-semibold">
+                          <span>
+                            Dokter: <strong className="text-[#c9a24a]">{selectedDoctorObj.doctorName || "Dokter"}</strong> ({selectedDoctorObj.timeRange || "09:00 - 17:00 WIB"})
+                          </span>
+                          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                            scheduleStatus.available
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300/60"
+                              : "bg-rose-100 text-rose-800 border border-rose-300/60"
+                          }`}>
+                            {scheduleStatus.available ? "Tersedia" : "Tidak Ada Praktik"}
+                          </span>
+                        </div>
+                        {!scheduleStatus.available && (
+                          <p className="text-[11px] font-semibold text-rose-700 mt-1.5 pt-1.5 border-t border-rose-200">
+                            ⚠️ {scheduleStatus.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* 1. Pick Tanggal (Calendar) */}
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-700">Tanggal Periksa *</Label>
-                        <Input
-                          type="date"
-                          min={today}
-                          value={form.preferredDate}
-                          onChange={(e) => setForm({ ...form, preferredDate: e.target.value })}
-                          required
-                          className="rounded-xl border-gray-200 text-xs h-11"
-                        />
+                        <Label className="text-xs font-bold text-gray-700 flex items-center gap-1">
+                          <CalendarDays className="w-3.5 h-3.5 text-[#c9a24a]" />
+                          Tanggal Periksa *
+                        </Label>
+                        <div className="relative">
+                          <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#c9a24a] pointer-events-none" />
+                          <Input
+                            type="date"
+                            min={today}
+                            value={form.preferredDate}
+                            onChange={(e) => setForm({ ...form, preferredDate: e.target.value })}
+                            required
+                            className="pl-9 pr-3 rounded-xl border-gray-200 text-xs h-11 bg-white focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]/20 cursor-pointer"
+                          />
+                        </div>
                       </div>
 
+                      {/* 2. Pick Jam (Manual Time Picker) */}
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-700">Jam Periksa *</Label>
-                        <Select
-                          value={form.preferredTime}
-                          onValueChange={(val) => setForm({ ...form, preferredTime: val })}
-                        >
-                          <SelectTrigger className="rounded-xl border-gray-200 text-xs h-11">
-                            <SelectValue placeholder="Pilih Jam" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {["09:00", "09:30", "10:00", "10:30", "11:00", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00"].map((t) => (
-                              <SelectItem key={t} value={t}>
-                                {t} WIB
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label className="text-xs font-bold text-gray-700 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-[#c9a24a]" />
+                          Jam Periksa (Time Picker) *
+                        </Label>
+                        <div className="relative">
+                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#c9a24a] pointer-events-none" />
+                          <Input
+                            type="time"
+                            value={form.preferredTime}
+                            onChange={(e) => setForm({ ...form, preferredTime: e.target.value })}
+                            required
+                            className={`pl-9 pr-3 rounded-xl text-xs h-11 bg-white cursor-pointer font-bold ${
+                              scheduleStatus.available
+                                ? "border-gray-200 focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]/20"
+                                : "border-rose-300 text-rose-900 focus:border-rose-500 focus:ring-1 focus:ring-rose-200"
+                            }`}
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5 pt-2">
+                    <div className="space-y-1.5 pt-1">
                       <Label className="text-xs font-semibold text-gray-700">Catatan / Keluhan Pasien (Opsional)</Label>
                       <textarea
                         rows={3}
@@ -411,10 +484,18 @@ export default function BookingNewPage() {
 
                   <Button
                     type="submit"
-                    disabled={submitting}
-                    className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-bold rounded-xl h-12 text-sm shadow-md transition-all"
+                    disabled={submitting || !scheduleStatus.available}
+                    className={`w-full font-bold rounded-xl h-12 text-sm transition-all ${
+                      scheduleStatus.available
+                        ? "bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white shadow-md cursor-pointer"
+                        : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                    }`}
                   >
-                    {submitting ? "Memproses Reservasi Guest..." : "Kirim Permintaan Reservasi Guest"}
+                    {submitting
+                      ? "Memproses Reservasi Guest..."
+                      : !scheduleStatus.available
+                      ? "Pilih Tanggal/Jam Sesuai Jadwal Dokter"
+                      : "Kirim Permintaan Reservasi Guest"}
                   </Button>
                 </form>
               </CardContent>

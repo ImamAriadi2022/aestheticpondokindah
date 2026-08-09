@@ -1,5 +1,87 @@
 [
     {
+        "id": "act-169",
+        "date": "2026-08-09",
+        "time": "19:57",
+        "category": "Frontend | Feature | Reservation",
+        "type": "Feature",
+        "feature": "Fitur Filtering Dokter Spesialis Berdasarkan Tanggal Jadwal Ready",
+        "description": "Menambahkan fitur penyaringan (filtering) dokter spesialis pada Langkah 2 (Pilih Dokter Spesialis) berdasarkan tanggal jadwal praktik dokter. Dilengkapi dengan Pencarian Nama/Lokasi, Picker Kalender Filter Tanggal, dan Chip Pintas Tanggal ('Semua Tanggal', 'Hari Ini', 'Besok', 'Lusa'). Saat pasien memilih filter tanggal, daftar dokter akan langsung tersaring sesuai ketersediaan jadwal pada tanggal tersebut.",
+        "notes": "1. DesktopReservasi.tsx: Menambahkan state doctorSearch, doctorFilterDate, dan useMemo filteredDoctorSchedules.\n2. Menambahkan Date Picker Filter + Chip Pintas ('Semua Tanggal', 'Hari Ini', 'Besok', 'Lusa') serta empty state ramah saat dokter tidak berpraktik pada tanggal filter tertentu.\n3. Ketika dokter dipilih setelah difilter, parameter &date=doctorFilterDate otomatis diteruskan ke Langkah 3 (Pilih Tanggal & Jam).\n4. Kompilasi tsc 0 error & npm run build sukses di public/.",
+        "reason": "Memudahkan pasien menemukan dokter spesialis yang siap berpraktik pada tanggal yang mereka harapkan secara cepat dan fleksibel.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/DesktopReservasi.tsx",
+            "deploy.sh",
+            "public/activity_log.json"
+        ],
+        "before_progress": 99,
+        "after_progress": 100,
+        "status": "\ud83d\udfe2 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-168",
+        "date": "2026-08-09",
+        "time": "19:53",
+        "category": "Frontend | Feature | Reservation",
+        "type": "Feature",
+        "feature": "Sinkronisasi Real-Time Jadwal Praktik Dokter & Validasi Ketersediaan Reservasi",
+        "description": "Menyinkronkan fitur tanggal dan jam periksa pada DesktopReservasi.tsx dan BookingNew.tsx dengan data API jadwal praktik dokter (getPublicDoctorSchedules). Menambahkan kartu status jadwal dokter real-time (Indikator 'Jadwal Dokter Tersedia' / 'Tidak Ada Praktik'), peringatan otomatis jika pasien memilih jam di luar jam praktik (misalnya di luar 09:00 - 17:00 WIB) atau pada tanggal yang tidak tersedia, serta melakukan disable otomatis pada tombol 'Lanjut Ke Konfirmasi' & submit.",
+        "notes": "1. DesktopReservasi.tsx: Menambahkan `scheduleStatus` useMemo untuk mengecek rentang jam praktik (timeRange) & tanggal dokter secara presisi. Menampilkan badge status hijau/merah dan men-disable navigasi konfirmasi jika di luar jam praktik.\n2. BookingNew.tsx: Menambahkan sinkronisasi `selectedDoctorObj` & `scheduleStatus`, serta pencegahan submit formulir jika jadwal yang dipilih di luar praktik dokter.\n3. Diverifikasi dengan npx tsc --noEmit (0 errors) & npm run build sukses disajikan ke public/.",
+        "reason": "Memastikan janji temu pasien selalu valid dan sinkron dengan jam kerja aktual dokter agar tidak terjadi bentrok reservasi di luar jam praktik.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/DesktopReservasi.tsx",
+            "frontend-web/src/features/guest/reservation/pages/BookingNew.tsx",
+            "deploy.sh",
+            "public/activity_log.json"
+        ],
+        "before_progress": 99,
+        "after_progress": 100,
+        "status": "\ud83d\udfe2 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-167",
+        "date": "2026-08-09",
+        "time": "19:43",
+        "category": "Frontend | UX/UI | Reservation",
+        "type": "Refactor",
+        "feature": "Refactor Pemilihan Tanggal & Jam Reservasi Pasien ke Murni Calendar Date Picker & Time Picker Dropdown",
+        "description": "Menghapus seluruh tampilan card grid (tombol tanggal horizontal & slot jam berbentuk card) sesuai instruksi pengguna. Mengganti antarmuka dengan kontrol Calendar Date Picker (input date resmi yang membuka tampilan kalender interaktif browser/OS saat diklik) dan Time Picker Dropdown (dropdown pilihan jam periksa 09:00 - 19:00 WIB yang dikelompokkan berdasarkan sesi pagi, siang, dan sore/malam + kustom time picker).",
+        "notes": "1. DesktopReservasi.tsx (Dashboard User Step 3): Dirombak total menjadi form card bersih dengan kontrol Calendar Date Picker & Dropdown Time Picker.\n2. BookingNew.tsx: Dirombak menjadi kontrol Calendar Date Picker & Dropdown Time Picker.\n3. Diverifikasi dengan npx tsc --noEmit (0 errors) & npm run build sukses disajikan ke public/.",
+        "reason": "Memenuhi permintaan pengguna untuk pengalaman memilih tanggal melalui kalender interaktif dan memilih jam via dropdown / time picker murni tanpa card grid.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/DesktopReservasi.tsx",
+            "frontend-web/src/features/guest/reservation/pages/BookingNew.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 99,
+        "after_progress": 100,
+        "status": "\ud83d\udfe2 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-166",
+        "date": "2026-08-09",
+        "time": "19:30",
+        "category": "Frontend | UX/UI | Reservation",
+        "type": "Feature",
+        "feature": "Pemberian Time Picker & Date Selection UI pada Fitur Reservasi Guest",
+        "description": "Memperbarui antarmuka pemilihan jadwal reservasi pasien guest pada BookingNew.tsx, Header.tsx, dan HeroSection.tsx. Memisahkan pemilihan Tanggal Periksa dan Jam Periksa ke dalam format Time Picker interaktif dengan tombol shortcut cepat (Hari Ini, Besok, Lusa, +3 Hari) serta Grid Slot Jam Periksa (Sesi Pagi, Siang, Sore/Malam) dan kustom time input.",
+        "notes": "1. BookingNew.tsx: Menambahkan Quick Date Shortcut Chips (Hari Ini, Besok, Lusa, +3 Hari) dan Grid Jam Periksa interaktif berdasarkan sesi (\ud83c\udf05 Pagi 09:00-11:30, \u2600\ufe0f Siang 13:00-15:30, \ud83c\udf19 Sore 16:00-19:00 WIB) plus kustom input time.\n2. Header.tsx & HeroSection.tsx: Memisahkan field 'Pilih Waktu' lama menjadi 2 field terpisah: \ud83d\udcc5 Pilih Tanggal (type=date) & \u23f0 Pilih Jam (Time Pick dropdown 09:00-19:00 WIB).\n3. Diverifikasi dengan npx tsc --noEmit (0 errors) & npm run build sukses disajikan ke public/.",
+        "reason": "Meningkatkan User Experience (UX) calon pasien dalam memilih tanggal dan jam reservasi secara terpisah dan intuitif.",
+        "files": [
+            "frontend-web/src/features/guest/reservation/pages/BookingNew.tsx",
+            "frontend-web/src/core/layouts/Header.tsx",
+            "frontend-web/src/features/guest/home/components/HeroSection.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 99,
+        "after_progress": 100,
+        "status": "\ud83d\udfe2 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-165",
         "date": "2026-08-09",
         "time": "16:55",

@@ -24,6 +24,7 @@ import {
   Send,
   Loader2,
   Calendar as CalendarIcon,
+  ChevronDown,
 } from "lucide-react";
 import { services as allServices } from "@/features/guest/services/pages/Services";
 import { getPublicDoctorSchedules } from "@/features/guest/doctors/services/publicDoctorScheduleApi";
@@ -125,6 +126,32 @@ export default function DesktopReservasi({
   const [selectedTime, setSelectedTime] = useState<string | null>(timeParam || "10:00");
   const [complaintNote, setComplaintNote] = useState("");
 
+  // Doctor filtering state
+  const [doctorSearch, setDoctorSearch] = useState("");
+  const [doctorFilterDate, setDoctorFilterDate] = useState("");
+
+  const filteredDoctorSchedules = useMemo(() => {
+    return schedules.filter((s: any) => {
+      // 1. Search Query filter
+      const matchesSearch =
+        !doctorSearch.trim() ||
+        (s.doctorName && s.doctorName.toLowerCase().includes(doctorSearch.toLowerCase())) ||
+        (s.location && s.location.toLowerCase().includes(doctorSearch.toLowerCase()));
+
+      // 2. Date Filter
+      const matchesDate = (() => {
+        if (!doctorFilterDate) return true;
+        // Exact ISO date match
+        if (s.date === doctorFilterDate) return true;
+        // General match if s.date contains "Setiap Hari" or day names
+        if (s.date && (s.date.includes("Setiap Hari") || s.date.includes("Senin"))) return true;
+        return false;
+      })();
+
+      return matchesSearch && matchesDate;
+    });
+  }, [schedules, doctorSearch, doctorFilterDate]);
+
   // Map services for selection
   const bookingServices = useMemo(() => {
     return allServices.map((s, idx) => {
@@ -150,6 +177,52 @@ export default function DesktopReservasi({
   const activeScheduleObj = useMemo(() => {
     return schedules.find((s) => (s.id || s._id) === scheduleId) || schedules[0] || null;
   }, [scheduleId, schedules]);
+
+  // Real-time synchronization check against selected doctor's schedule
+  const scheduleStatus = useMemo(() => {
+    if (!activeScheduleObj) {
+      return { available: true, message: "Jadwal dokter tersedia", code: "AVAILABLE" };
+    }
+
+    // 1. Time range check (e.g., "09:00 - 17:00" or "10:00 - 18:00")
+    if (activeScheduleObj.timeRange && typeof activeScheduleObj.timeRange === "string") {
+      const parts = activeScheduleObj.timeRange.split("-").map((t: string) => t.trim().replace(/WIB/i, "").trim());
+      if (parts.length === 2) {
+        const startTime = parts[0];
+        const endTime = parts[1];
+        const currentTime = selectedTime || "10:00";
+        if (currentTime < startTime || currentTime > endTime) {
+          return {
+            available: false,
+            message: `Dokter ${activeScheduleObj.doctorName || ""} hanya berpraktik pada pukul ${activeScheduleObj.timeRange}. Jam ${currentTime} WIB berada di luar jam praktik.`,
+            code: "OUT_OF_TIME_RANGE",
+          };
+        }
+      }
+    }
+
+    // 2. Specific date check if schedule has specific date string (e.g. "2026-08-10")
+    if (activeScheduleObj.date && /^\d{4}-\d{2}-\d{2}$/.test(activeScheduleObj.date)) {
+      if (activeScheduleObj.date !== selectedDate) {
+        return {
+          available: false,
+          message: `Dokter ${activeScheduleObj.doctorName || ""} hanya memiliki jadwal praktik pada tanggal ${activeScheduleObj.displayDate || activeScheduleObj.date}.`,
+          code: "DATE_MISMATCH",
+        };
+      }
+    }
+
+    // 3. Slot capacity check
+    if (activeScheduleObj.isFull || (activeScheduleObj.slotsLeft !== undefined && activeScheduleObj.slotsLeft <= 0)) {
+      return {
+        available: false,
+        message: `Maaf, kuota janji temu untuk ${activeScheduleObj.doctorName || "dokter"} pada jadwal ini sudah penuh.`,
+        code: "SLOT_FULL",
+      };
+    }
+
+    return { available: true, message: "Jadwal dokter tersedia untuk reservasi.", code: "AVAILABLE" };
+  }, [activeScheduleObj, selectedDate, selectedTime]);
 
   // Load history reservations
   useEffect(() => {
@@ -379,10 +452,10 @@ export default function DesktopReservasi({
         </div>
       )}
 
-      {/* STEP 2: PILIH DOKTER */}
+      {/* STEP 2: PILIH DOKTER SPESIALIS */}
       {view === "services" && step === "dokter" && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-bold text-gray-900">Pilih Dokter Spesialis</h3>
               <p className="text-xs text-gray-500">
@@ -399,29 +472,119 @@ export default function DesktopReservasi({
             </Button>
           </div>
 
+          {/* Filter & Search Bar Header Card */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm space-y-3.5">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+              {/* Search Bar */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder="Cari nama dokter atau lokasi klinik..."
+                  value={doctorSearch}
+                  onChange={(e) => setDoctorSearch(e.target.value)}
+                  className="pl-10 h-11 text-xs rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white"
+                />
+              </div>
+
+              {/* Date Filter Picker */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-600 shrink-0 flex items-center gap-1">
+                  <CalendarIcon className="w-3.5 h-3.5 text-[#c9a24a]" />
+                  Filter Tanggal:
+                </span>
+                <Input
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={doctorFilterDate}
+                  onChange={(e) => setDoctorFilterDate(e.target.value)}
+                  className="w-40 h-11 text-xs font-semibold rounded-xl border-gray-200 bg-gray-50/50 focus:bg-white cursor-pointer"
+                />
+                {doctorFilterDate && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDoctorFilterDate("")}
+                    className="text-xs text-rose-600 hover:bg-rose-50 h-11 px-3 rounded-xl"
+                  >
+                    Reset
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Date Shortcut Chips */}
+            <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100">
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pintas Tanggal:</span>
+              <button
+                type="button"
+                onClick={() => setDoctorFilterDate("")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                  !doctorFilterDate
+                    ? "bg-[#c9a24a] text-white border-[#c9a24a] shadow-xs"
+                    : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                }`}
+              >
+                Semua Tanggal
+              </button>
+              {[
+                { label: "Hari Ini", days: 0 },
+                { label: "Besok", days: 1 },
+                { label: "Lusa", days: 2 },
+              ].map((chip) => {
+                const dateStr = (() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + chip.days);
+                  return d.toISOString().split("T")[0];
+                })();
+                const isSelected = doctorFilterDate === dateStr;
+                return (
+                  <button
+                    key={chip.label}
+                    type="button"
+                    onClick={() => setDoctorFilterDate(dateStr)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                      isSelected
+                        ? "bg-[#c9a24a] text-white border-[#c9a24a] shadow-xs"
+                        : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    {chip.label} ({dateStr})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Doctor List */}
           {schedLoading ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
               <Loader2 className="w-8 h-8 text-[#c9a24a] animate-spin mx-auto mb-2" />
               <p className="text-xs text-gray-500">Memuat daftar dokter & jadwal publik...</p>
             </div>
-          ) : schedules.length === 0 ? (
+          ) : filteredDoctorSchedules.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 space-y-3 p-6">
               <Stethoscope className="w-12 h-12 text-[#c9a24a] mx-auto opacity-70" />
-              <h4 className="font-bold text-gray-900">Dokter Siap Melayani</h4>
+              <h4 className="font-bold text-gray-900">Jadwal Dokter Tidak Ditemukan</h4>
               <p className="text-xs text-gray-500 max-w-md mx-auto">
-                Silakan lanjutkan untuk memilih tanggal dan waktu periksa yang sesuai dengan kebutuhan Anda.
+                {doctorFilterDate
+                  ? `Tidak ada dokter spesialis yang berpraktik pada tanggal ${doctorFilterDate}. Silakan pilih tanggal lain atau tampilkan semua jadwal.`
+                  : "Tidak ada jadwal dokter yang cocok dengan pencarian Anda."}
               </p>
               <Button
-                onClick={() => navigate(`/dashboard/user?tab=booking&step=jadwal&service=${serviceParam}`)}
-                className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white rounded-xl text-xs font-semibold px-6 h-10"
+                onClick={() => {
+                  setDoctorFilterDate("");
+                  setDoctorSearch("");
+                }}
+                className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white rounded-xl text-xs font-semibold px-6 h-10 cursor-pointer"
               >
-                Lanjut Ke Pemilihan Jadwal
+                Tampilkan Semua Dokter
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {schedules.map((s: any) => (
-                <div key={s.id || s._id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4">
+              {filteredDoctorSchedules.map((s: any) => (
+                <div key={s.id || s._id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
                   <div className="flex items-start gap-3">
                     <div className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0">
                       <Stethoscope className="w-6 h-6 text-[#c9a24a]" />
@@ -441,7 +604,7 @@ export default function DesktopReservasi({
                         <CalendarIcon className="w-3.5 h-3.5 text-[#c9a24a]" />
                         Hari & Tanggal:
                       </span>
-                      <span className="font-semibold text-gray-900">{s.date || "Setiap Hari"}</span>
+                      <span className="font-semibold text-gray-900">{s.displayDate || s.date || "Setiap Hari"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1 text-gray-500">
@@ -453,8 +616,12 @@ export default function DesktopReservasi({
                   </div>
 
                   <Button
-                    onClick={() => navigate(`/dashboard/user?tab=booking&step=jadwal&service=${serviceParam}&schedule=${s.id || s._id}`)}
-                    className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white rounded-xl text-xs font-semibold h-10 shadow-sm"
+                    onClick={() =>
+                      navigate(
+                        `/dashboard/user?tab=booking&step=jadwal&service=${serviceParam}&schedule=${s.id || s._id}${doctorFilterDate ? `&date=${doctorFilterDate}` : ""}`
+                      )
+                    }
+                    className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white rounded-xl text-xs font-semibold h-10 shadow-sm cursor-pointer"
                   >
                     Pilih Dokter Ini & Lanjut Jadwal
                   </Button>
@@ -465,9 +632,9 @@ export default function DesktopReservasi({
         </div>
       )}
 
-      {/* STEP 3: PILIH JADWAL & WAKTU */}
+      {/* STEP 3: PILIH JADWAL & WAKTU (Calendar Date Picker & Time Picker Dropdown) */}
       {view === "services" && step === "jadwal" && (
-        <div className="space-y-5">
+        <div className="space-y-6 max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-xl font-bold text-gray-900">Pilih Tanggal & Jam Periksa</h3>
@@ -485,78 +652,146 @@ export default function DesktopReservasi({
             </Button>
           </div>
 
-          {/* Date Picker (Upcoming 7 Days) */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-              <CalendarIcon className="w-4 h-4 text-[#c9a24a]" />
-              Pilih Tanggal Periksa
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-              {upcomingDates.map((d) => {
-                const isSelected = selectedDate === d.fullDate;
-                return (
-                  <button
-                    key={d.fullDate}
-                    type="button"
-                    onClick={() => setSelectedDate(d.fullDate)}
-                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${
-                      isSelected
-                        ? "bg-[#c9a24a] text-white border-[#c9a24a] shadow-md scale-105"
-                        : "bg-white border-gray-200 text-gray-800 hover:border-[#c9a24a]"
-                    }`}
-                  >
-                    <span className={`text-[11px] font-semibold ${isSelected ? "text-white/90" : "text-gray-500"}`}>
-                      {d.dayName}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-xl space-y-6">
+            {/* Synchronized Doctor Schedule Status Header */}
+            <div className={`p-4.5 rounded-2xl border transition-all ${
+              scheduleStatus.available
+                ? "bg-amber-50/60 border-amber-200/80"
+                : "bg-rose-50/80 border-rose-200/90"
+            }`}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0 shadow-xs ${
+                    scheduleStatus.available ? "bg-[#c9a24a] text-white" : "bg-rose-500 text-white"
+                  }`}>
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      Dokter: <span className="text-[#c9a24a]">{activeScheduleObj?.doctorName || "Dokter Klinik"}</span>
+                    </h4>
+                    <p className="text-[11px] text-gray-600 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                      <span>📅 Praktik: <strong className="text-gray-800">{activeScheduleObj?.displayDate || activeScheduleObj?.date || "Setiap Hari"}</strong></span>
+                      <span>•</span>
+                      <span>⏰ Jam: <strong className="text-gray-800">{activeScheduleObj?.timeRange || "09:00 - 17:00 WIB"}</strong></span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Status Indicator Badge */}
+                <div>
+                  {scheduleStatus.available ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300/60">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      Jadwal Dokter Tersedia
                     </span>
-                    <span className="text-lg font-extrabold mt-0.5">{d.dayNum}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300/60">
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                      Tidak Ada Praktik
+                    </span>
+                  )}
+                </div>
+              </div>
 
-          {/* Time Slots Picker */}
-          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-[#c9a24a]" />
-              Pilih Jam Praktik
-            </h4>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
-              {[
-                "09:00", "09:30", "10:00", "10:30", "11:00", "13:00",
-                "13:30", "14:00", "14:30", "15:00", "15:30", "16:00"
-              ].map((time) => {
-                const isSelected = selectedTime === time;
-                return (
-                  <button
-                    key={time}
-                    type="button"
-                    onClick={() => setSelectedTime(time)}
-                    className={`py-3 px-2 rounded-xl text-xs font-bold border transition-all ${
-                      isSelected
-                        ? "bg-[#c9a24a] text-white border-[#c9a24a] shadow-md"
-                        : "bg-white border-gray-200 text-gray-800 hover:border-[#c9a24a]"
-                    }`}
-                  >
-                    {time} WIB
-                  </button>
-                );
-              })}
+              {/* Warning Notice when Out of Schedule */}
+              {!scheduleStatus.available && (
+                <div className="mt-3 pt-3 border-t border-rose-200/80 text-xs font-semibold text-rose-700 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span>{scheduleStatus.message}</span>
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <Button
-              onClick={() =>
-                navigate(
-                  `/dashboard/user?tab=booking&step=konfirmasi&service=${serviceParam}&schedule=${scheduleId}&date=${selectedDate}&time=${selectedTime || "10:00"}`
-                )
-              }
-              className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold rounded-xl px-8 h-11 text-xs shadow-md transition-all flex items-center gap-2"
-            >
-              <span>Lanjut Ke Konfirmasi</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
+            {/* 1. Pilih Tanggal (Calendar Picker) */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                <CalendarIcon className="w-4 h-4 text-[#c9a24a]" />
+                Pilih Tanggal Periksa *
+              </label>
+              <div className="relative">
+                <CalendarIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#c9a24a] pointer-events-none" />
+                <Input
+                  type="date"
+                  min={new Date().toISOString().split("T")[0]}
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  required
+                  className="pl-12 pr-4 h-13 text-sm font-semibold rounded-2xl border-gray-200 bg-gray-50/50 hover:bg-gray-50 focus:bg-white focus:border-[#c9a24a] focus:ring-2 focus:ring-[#c9a24a]/20 cursor-pointer shadow-xs"
+                />
+              </div>
+              <p className="text-[11px] text-gray-400">
+                Pilih tanggal periksa yang sesuai dengan hari praktik dokter.
+              </p>
+            </div>
+
+            {/* 2. Pilih Jam (Manual Time Picker) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#c9a24a]" />
+                  Pilih Jam Periksa (Time Picker) *
+                </label>
+                {selectedTime && (
+                  <span className={`text-[11px] font-bold px-3 py-0.5 rounded-full border ${
+                    scheduleStatus.available
+                      ? "text-[#c9a24a] bg-amber-50 border-amber-200/60"
+                      : "text-rose-700 bg-rose-50 border-rose-200"
+                  }`}>
+                    Terpilih: {selectedTime} WIB
+                  </span>
+                )}
+              </div>
+
+              <div className="relative">
+                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#c9a24a] pointer-events-none" />
+                <Input
+                  type="time"
+                  value={selectedTime || "10:00"}
+                  onChange={(e) => setSelectedTime(e.target.value)}
+                  required
+                  className={`pl-12 pr-4 h-13 text-sm font-bold rounded-2xl bg-gray-50/50 hover:bg-gray-50 focus:bg-white cursor-pointer shadow-xs ${
+                    scheduleStatus.available
+                      ? "border-gray-200 focus:border-[#c9a24a] focus:ring-2 focus:ring-[#c9a24a]/20 text-gray-800"
+                      : "border-rose-300 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+                  }`}
+                />
+              </div>
+              <p className="text-[11px] text-gray-400">
+                Jam periksa harus berada di dalam jam praktik dokter ({activeScheduleObj?.timeRange || "09:00 - 17:00 WIB"}).
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              {!scheduleStatus.available ? (
+                <span className="text-xs text-rose-600 font-semibold flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4" />
+                  Pilih tanggal & jam yang sesuai jadwal dokter untuk melanjutkan
+                </span>
+              ) : (
+                <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Jadwal telah terverifikasi dengan dokter
+                </span>
+              )}
+
+              <Button
+                disabled={!scheduleStatus.available}
+                onClick={() =>
+                  navigate(
+                    `/dashboard/user?tab=booking&step=konfirmasi&service=${serviceParam}&schedule=${scheduleId}&date=${selectedDate}&time=${selectedTime || "10:00"}`
+                  )
+                }
+                className={`w-full sm:w-auto font-bold rounded-2xl px-8 h-12 text-sm shadow-lg transition-all flex items-center justify-center gap-2 ${
+                  scheduleStatus.available
+                    ? "bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white shadow-[#c9a24a]/20 cursor-pointer"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                }`}
+              >
+                <span>Lanjut Ke Konfirmasi</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}

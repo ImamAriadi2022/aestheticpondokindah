@@ -4,14 +4,16 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { toast } from "@/shared/ui/toast";
-import { CalendarDays, Phone, User, MessageSquare, Loader2 } from "lucide-react";
+import { CalendarDays, Phone, User, MessageSquare, Loader2, Clock } from "lucide-react";
 
 export default function HeroSection() {
+  const todayStr = new Date().toISOString().split("T")[0];
   const [appointment, setAppointment] = useState({
     fullName: "",
     phone: "",
     complaint: "",
-    time: "",
+    date: todayStr,
+    time: "10:00",
   });
 
   const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
@@ -35,7 +37,8 @@ export default function HeroSection() {
       name: appointment.fullName.trim(),
       phone: appointment.phone.trim(),
       complaint: appointment.complaint,
-      date: appointment.time,
+      date: appointment.date,
+      preferred_time: appointment.time,
       source,
     });
 
@@ -45,7 +48,7 @@ export default function HeroSection() {
         message: `Reservasi ${res.code || ""} berhasil dikirim! Tim kami akan segera menghubungi Anda.`,
         variant: "success",
       });
-      setAppointment({ fullName: "", phone: "", complaint: "", time: "" });
+      setAppointment({ fullName: "", phone: "", complaint: "", date: todayStr, time: "10:00" });
       setMobileBookingOpen(false);
     } else {
       toast({
@@ -250,16 +253,39 @@ export default function HeroSection() {
 
                   <div>
                     <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
-                      Pilih Waktu <span className="font-normal text-brand-warm-gray/60">(opsional)</span>
+                      Pilih Tanggal
                     </label>
                     <div className="relative">
                       <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-warm-gray" />
                       <Input
                         type="date"
+                        min={todayStr}
+                        value={appointment.date}
+                        onChange={(e) => setAppointment({ ...appointment, date: e.target.value })}
+                        className="h-11 font-body pl-9 text-xs"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
+                      Pilih Jam
+                    </label>
+                    <div className="relative">
+                      <Clock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-warm-gray" />
+                      <select
                         value={appointment.time}
                         onChange={(e) => setAppointment({ ...appointment, time: e.target.value })}
-                        className="h-11 font-body pl-9"
-                      />
+                        className="bg-background border border-border h-11 rounded-xl px-3 py-2 text-xs transition-colors w-full min-w-0 outline-none font-body pl-9 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/20"
+                        required
+                      >
+                        {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"].map((t) => (
+                          <option key={t} value={t}>
+                            {t} WIB
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -376,16 +402,39 @@ export default function HeroSection() {
 
                   <div>
                     <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
-                      Pilih Waktu <span className="font-normal text-brand-warm-gray/60">(opsional)</span>
+                      Pilih Tanggal
                     </label>
                     <div className="relative">
                       <CalendarDays className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-warm-gray" />
                       <Input
                         type="date"
+                        min={todayStr}
+                        value={appointment.date}
+                        onChange={(e) => setAppointment({ ...appointment, date: e.target.value })}
+                        className="h-11 text-sm font-body pl-9"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
+                      Pilih Jam
+                    </label>
+                    <div className="relative">
+                      <Clock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-warm-gray" />
+                      <select
                         value={appointment.time}
                         onChange={(e) => setAppointment({ ...appointment, time: e.target.value })}
-                        className="h-11 text-sm font-body pl-9"
-                      />
+                        className="bg-background border border-border h-11 rounded-xl px-3 py-2 text-sm transition-colors w-full min-w-0 outline-none font-body pl-9 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/20"
+                        required
+                      >
+                        {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"].map((t) => (
+                          <option key={t} value={t}>
+                            {t} WIB
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
