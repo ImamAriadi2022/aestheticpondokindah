@@ -33,6 +33,16 @@ export const CONTENT_SUBMENU: MenuItem["submenu"] = [
   { label: "Download App", href: "/dashboard/clinic?tab=content-download" },
 ];
 
+const BOOKING_SUBMENU: MenuItem["submenu"] = [
+  { label: "Reservasi", href: "/dashboard/clinic?tab=reservasi" },
+  { label: "Konsultasi", href: "/dashboard/clinic?tab=konsultasi" },
+];
+
+const USER_MANAGEMENT_SUBMENU: MenuItem["submenu"] = [
+  { label: "Daftar Pengguna", href: "/dashboard/clinic?tab=users" },
+  { label: "Membership", href: "/dashboard/clinic/membership" },
+];
+
 export const MENU: AppMenu = {
   root: {
     [ROLES.USER]: [
@@ -42,8 +52,12 @@ export const MENU: AppMenu = {
     ],
     [ROLES.CLINIC]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/clinic" },
-      { label: "Reservasi", icon: Calendar, href: "/dashboard/clinic?tab=reservasi" },
-      { label: "Konsultasi", icon: MessageSquare, href: "/dashboard/clinic?tab=konsultasi" },
+      {
+        label: "Sistem Booking",
+        icon: Calendar,
+        href: "/dashboard/clinic?tab=reservasi",
+        submenu: BOOKING_SUBMENU,
+      },
       { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan" },
       {
         label: "Konten",
@@ -51,8 +65,12 @@ export const MENU: AppMenu = {
         href: "/dashboard/clinic?tab=content-blog",
         submenu: CONTENT_SUBMENU,
       },
-      { label: "Pengguna", icon: Users, href: "/dashboard/clinic?tab=users" },
-      { label: "Membership", icon: Crown, href: "/dashboard/clinic/membership" },
+      {
+        label: "Kelola Pengguna",
+        icon: Users,
+        href: "/dashboard/clinic?tab=users",
+        submenu: USER_MANAGEMENT_SUBMENU,
+      },
       { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
       { label: "Pengaturan", icon: Settings, href: "/dashboard/clinic?tab=settings" },
     ],

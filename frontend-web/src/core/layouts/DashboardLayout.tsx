@@ -6,7 +6,7 @@ import AccountSidebar from "@/core/layouts/AccountSidebar";
 import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
 import DoctorSidebar from "@/features/doctor/layouts/DoctorSidebar";
-import { getMenuItems, CONTENT_SUBMENU, type MenuItem } from "@/core/permissions/index";
+import { getMenuItems, type MenuItem } from "@/core/permissions/index";
 import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, LogOut } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -38,7 +38,7 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [contentMenuOpen, setContentMenuOpen] = useState(false);
-  const contentButtonRef = useRef<HTMLButtonElement>(null);
+  const [floatingSubmenu, setFloatingSubmenu] = useState<MenuItem["submenu"]>([]);
   const [contentMenuPos, setContentMenuPos] = useState({ top: 0, left: 0 });
 
   const [userPopupOpen, setUserPopupOpen] = useState(false);
@@ -165,12 +165,6 @@ export default function DashboardLayout({
     return currentTab === hrefTab;
   };
 
-  const isClinicContentTab = () => {
-    if (role !== "clinic") return false;
-    const currentTab = new URLSearchParams(location.search).get("tab") || "dashboard";
-    return currentTab === "content" || currentTab.startsWith("content-");
-  };
-
   // Check if current tab is dashboard (only show right panel on dashboard)
   const currentTab = new URLSearchParams(location.search).get("tab") || "dashboard";
   const pathname = location.pathname;
@@ -243,23 +237,23 @@ export default function DashboardLayout({
             <nav className="relative z-10 flex-1 flex flex-col gap-2 px-3 py-4">
               {menuItems.map((item) => {
                 const active = isActive(item.href);
-                const isContent = role === "clinic" && item.label === "Konten";
+                const isSubmenu = role === "clinic" && Boolean(item.submenu?.length);
 
-                // Floating Content Submenu trigger
-                if (isContent) {
-                  const contentActive = isClinicContentTab();
+                // Pop-up submenu stays outside the compact sidebar.
+                if (isSubmenu) {
+                  const contentActive = item.submenu!.some((sub) => isActive(sub.href));
                   return (
                     <button
                       key={item.label}
-                      ref={contentButtonRef}
                       type="button"
-                      onClick={() => {
-                        const nextOpen = !contentMenuOpen;
-                        if (nextOpen && contentButtonRef.current) {
-                          const rect = contentButtonRef.current.getBoundingClientRect();
+                      onClick={(event) => {
+                        const nextOpen = !contentMenuOpen || floatingSubmenu !== item.submenu;
+                        if (nextOpen) {
+                          const rect = event.currentTarget.getBoundingClientRect();
                           setContentMenuPos({ top: rect.top, left: rect.right + 12 });
                         }
                         if (nextOpen && !contentActive) navigate(item.href);
+                        setFloatingSubmenu(item.submenu || []);
                         setContentMenuOpen(nextOpen);
                       }}
                       className={`
@@ -569,13 +563,13 @@ export default function DashboardLayout({
               </div>
             </div>
           </aside>
-          {/* Floating Content Submenu */}
+          {/* Floating submenu */}
           {contentMenuOpen && (
             <div
               className="fixed z-[60] bg-[#1a1612] border border-[#C9A24A]/40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-2 min-w-[180px] pointer-events-auto flex flex-col gap-1"
               style={{ top: contentMenuPos.top, left: contentMenuPos.left }}
             >
-              {CONTENT_SUBMENU?.map((sub) => {
+              {floatingSubmenu?.map((sub) => {
                 const subActive = isActive(sub.href);
                 return (
                   <Link
