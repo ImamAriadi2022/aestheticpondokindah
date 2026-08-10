@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
-import { submitPublicReservation, WA_NUMBER } from "@/features/guest/reservation/services/reservationApi";
+import { buildGuestBookingWhatsAppUrl, submitPublicReservation, WA_NUMBER } from "@/features/guest/reservation/services/reservationApi";
 import { Menu, X, Mail, Clock, MessageCircle, LogIn, User, Phone, Calendar, MessageSquare } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
@@ -39,6 +39,7 @@ export default function Header() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [bookingTerms, setBookingTerms] = useState<string>();
+  const [bookingWhatsappNumber, setBookingWhatsappNumber] = useState(WA_NUMBER);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const todayStr = new Date().toISOString().split("T")[0];
   const [formData, setFormData] = useState({
@@ -66,6 +67,13 @@ export default function Header() {
         message: `Reservasi ${res.code || ""} berhasil dibuat! Tim kami akan menghubungi Anda via WhatsApp.`,
         variant: "success",
       });
+      window.location.assign(buildGuestBookingWhatsAppUrl({
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        complaint: formData.complaint,
+        date: formData.date,
+        waNumber: bookingWhatsappNumber,
+      }));
     } else {
       toast({
         title: "Gagal",
@@ -92,7 +100,10 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    getPublicClinicSettings().then((settings) => setBookingTerms(settings.booking_terms)).catch(() => {});
+    getPublicClinicSettings().then((settings) => {
+      setBookingTerms(settings.booking_terms);
+      if (settings.booking_whatsapp_number) setBookingWhatsappNumber(settings.booking_whatsapp_number);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {

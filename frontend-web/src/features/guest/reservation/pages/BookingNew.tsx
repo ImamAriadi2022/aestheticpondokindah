@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router";
-import { submitPublicReservation } from "@/features/guest/reservation/services/reservationApi";
+import { buildGuestBookingWhatsAppUrl, submitPublicReservation } from "@/features/guest/reservation/services/reservationApi";
 import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
 import { API_BASE } from "@/core/api/apiConfig";
 import Header from "@/core/layouts/Header";
@@ -76,15 +76,6 @@ export default function BookingNewPage() {
   }, []);
 
   const waNumber = clinicSettings.booking_whatsapp_number || "6281990114949";
-
-  const buildWAMessage = (data: typeof form, res: any) => {
-    const name = res?.name || data.patientName.trim();
-    const phone = res?.phone || data.phone.trim();
-    const treatment = data.treatmentInterest || "Konsultasi Umum";
-    const date = data.preferredDate || "-";
-    const note = data.note ? `%0AKeluhan: ${encodeURIComponent(data.note)}` : `%0AKeluhan: ${encodeURIComponent(treatment)}`;
-    return `https://wa.me/${waNumber}?text=Halo%20Aesthetic%20Pondok%20Indah%2C%20saya%20ingin%20booking%20konsultasi.%0ANama%3A%20${encodeURIComponent(name)}%0ANo.%20HP%3A%20${encodeURIComponent(phone)}${note}%0AWaktu%3A%20${encodeURIComponent(date)}%0A*Dokter%20akan%20ditentukan%20oleh%20admin*`;
-  };
 
   useEffect(() => {
     fetch(`${API_BASE}/public/doctor-schedules`)
@@ -167,6 +158,13 @@ export default function BookingNewPage() {
 
       if (apiRes) {
         setSuccessResult(apiRes);
+        window.location.assign(buildGuestBookingWhatsAppUrl({
+          name: form.patientName.trim(),
+          phone: form.phone.trim(),
+          complaint: form.note || form.treatmentInterest,
+          date: form.preferredDate,
+          waNumber,
+        }));
       } else {
         setError("Gagal mengirim permintaan reservasi. Silakan periksa koneksi Anda.");
       }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { submitPublicReservation } from "@/features/guest/reservation/services/reservationApi";
+import { buildGuestBookingWhatsAppUrl, submitPublicReservation, WA_NUMBER } from "@/features/guest/reservation/services/reservationApi";
 import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
 import GuestBookingTermsDialog from "@/features/guest/reservation/components/GuestBookingTermsDialog";
 import { Button } from "@/shared/ui/button";
@@ -22,9 +22,13 @@ export default function HeroSection() {
   const [submitting, setSubmitting] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [bookingTerms, setBookingTerms] = useState<string>();
+  const [bookingWhatsappNumber, setBookingWhatsappNumber] = useState(WA_NUMBER);
 
   useEffect(() => {
-    getPublicClinicSettings().then((settings) => setBookingTerms(settings.booking_terms)).catch(() => {});
+    getPublicClinicSettings().then((settings) => {
+      setBookingTerms(settings.booking_terms);
+      if (settings.booking_whatsapp_number) setBookingWhatsappNumber(settings.booking_whatsapp_number);
+    }).catch(() => {});
   }, []);
 
   const submitHeroBooking = async (source: string) => {
@@ -57,6 +61,13 @@ export default function HeroSection() {
       });
       setAppointment({ fullName: "", phone: "", complaint: "", date: todayStr, time: "10:00" });
       setMobileBookingOpen(false);
+      window.location.assign(buildGuestBookingWhatsAppUrl({
+        name: appointment.fullName.trim(),
+        phone: appointment.phone.trim(),
+        complaint: appointment.complaint,
+        date: appointment.date,
+        waNumber: bookingWhatsappNumber,
+      }));
     } else {
       toast({
         title: "Gagal Mengirim",

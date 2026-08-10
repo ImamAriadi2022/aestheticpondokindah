@@ -17,6 +17,34 @@ export interface ReservationData {
 
 export const WA_NUMBER = "6281990114949";
 
+interface GuestBookingWhatsAppData {
+  name: string;
+  phone: string;
+  complaint: string;
+  date: string;
+  waNumber?: string;
+}
+
+/** Builds the guest booking message expected by the clinic's WhatsApp admin. */
+export const buildGuestBookingWhatsAppUrl = ({
+  name,
+  phone,
+  complaint,
+  date,
+  waNumber = WA_NUMBER,
+}: GuestBookingWhatsAppData) => {
+  const lines = [
+    "Halo Aesthetic Pondok Indah, saya ingin booking konsultasi.",
+    `Nama: ${name}`,
+    `No. HP: ${phone}`,
+    `Keluhan: ${complaint || "Konsultasi Umum"}`,
+    `Waktu: ${date}`,
+    "*Dokter akan ditentukan oleh admin*",
+  ];
+
+  return `https://wa.me/${waNumber.replace(/\D/g, "")}?text=${lines.map(encodeURIComponent).join("%0A")}`;
+};
+
 export const submitPublicReservation = async (data: ReservationData) => {
   try {
     // Persist to DB
