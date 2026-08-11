@@ -133,19 +133,53 @@ class MembershipAdminController extends Controller
         $type = $request->input('type', 'adjusted');
         $description = $request->input('description', 'Manual adjustment by admin');
 
-        $this->membershipService->addPoints(
-            $member,
-            $points,
-            $type,
-            $description
-        );
+        try {
+            $this->membershipService->addPoints(
+                $member,
+                $points,
+                $type,
+                $description
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => "Points updated successfully",
+            'message' => "Poin member berhasil diperbarui.",
             'data' => [
                 'points_adjusted' => $points,
                 'new_balance' => $member->fresh()->membership_points,
+            ],
+        ]);
+    }
+
+    /**
+     * Get point transaction history for a specific member
+     */
+    public function pointsHistory(Request $request, int $id): JsonResponse
+    {
+        $member = User::findOrFail($id);
+
+        $query = $member->membershipPoints()->latest();
+
+        if ($request->has('type') && $request->input('type') !== 'all') {
+            $query->where('type', $request->input('type'));
+        }
+
+        $history = $query->paginate($request->input('per_page', 20));
+
+        return response()->json([
+            'success' => true,
+            'data' => $history,
+            'member' => [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'membership_points' => $member->membership_points,
             ],
         ]);
     }

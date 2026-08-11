@@ -4363,8 +4363,13 @@ export default function ClinicDashboardPage() {
 
         if (contentView === "posts") {
           const displayPosts = apiPosts;
+          const isPublishedPost = (status?: string) => {
+            if (!status) return true;
+            return status.toLowerCase() === "published";
+          };
+
           const filtered = displayPosts
-            .filter((p) => (filterStatus === "All" ? true : (p.status || "Published") === filterStatus))
+            .filter((p) => (filterStatus === "All" ? true : filterStatus === "Published" ? isPublishedPost(p.status) : !isPublishedPost(p.status)))
             .filter((p) => (filterCategory === "Semua" ? true : p.category === filterCategory))
             .filter((p) => {
               const q = search.trim().toLowerCase();
@@ -4377,8 +4382,8 @@ export default function ClinicDashboardPage() {
             });
 
           // Calculate stats
-          const publishedCount = displayPosts.filter((p) => (p.status || "Published") === "Published").length;
-          const draftCount = displayPosts.filter((p) => (p.status || "Published") === "Draft").length;
+          const publishedCount = displayPosts.filter((p) => isPublishedPost(p.status)).length;
+          const draftCount = displayPosts.filter((p) => !isPublishedPost(p.status)).length;
           const categoriesUsed = new Set(displayPosts.map((p) => p.category).filter(Boolean)).size;
 
           return (
@@ -4470,7 +4475,7 @@ export default function ClinicDashboardPage() {
                       onClick={() => setFilterStatus("Draft")}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                         filterStatus === "Draft"
-                          ? "bg-gray-500 text-white"
+                          ? "bg-gray-700 text-white"
                           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                     >
@@ -4486,7 +4491,7 @@ export default function ClinicDashboardPage() {
                         onChange={(e) => setFilterCategory(e.target.value)}
                         className="h-9 rounded-xl border border-[#F0E6D3] bg-white px-3 text-sm text-[#4A3F35] outline-none focus:ring-2 focus:ring-[#C9A24A]/30"
                       >
-                        {["Semua", "Estetika", "Tips", "Ortodonti", "Anak", "Restoratif"].map((opt) => (
+                        {["Semua", "Estetika", "Tips", "Ortodonti", "Anak", "Restoratif", "Informasi"].map((opt) => (
                           <option key={opt} value={opt}>
                             {opt}
                           </option>
@@ -4567,11 +4572,11 @@ export default function ClinicDashboardPage() {
                             </td>
                             <td className="py-4 px-5 text-center">
                               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                                (p.status || "Published") === "Published"
+                                isPublishedPost(p.status)
                                   ? "bg-emerald-50 text-emerald-600 border-emerald-200"
                                   : "bg-gray-50 text-gray-600 border-gray-200"
                               }`}>
-                                {(p.status || "Published") === "Published" ? "Publis" : "Draft"}
+                                {isPublishedPost(p.status) ? "Publis" : "Draft"}
                               </span>
                             </td>
                             <td className="py-4 px-5 text-right">

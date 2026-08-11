@@ -242,7 +242,7 @@ export default function BlogEditorPanel({ editorId, apiPost, sessionName, token,
                 onChange={(e) => updateEditor({ category: e.target.value })}
                 className="w-full h-10 rounded-sm border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-[#c9a24a]/30"
               >
-                {["Estetika", "Tips", "Ortodonti", "Anak", "Restoratif"].map((opt) => (
+                {["Estetika", "Tips", "Ortodonti", "Anak", "Restoratif", "Informasi"].map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
                   </option>

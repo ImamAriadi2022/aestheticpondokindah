@@ -93,20 +93,7 @@ export default function BookingNewPage() {
   const scheduleStatus = (() => {
     if (!selectedDoctorObj) return { available: true, message: "Jadwal tersedia" };
 
-    if (selectedDoctorObj.timeRange && typeof selectedDoctorObj.timeRange === "string") {
-      const parts = selectedDoctorObj.timeRange.split("-").map((t: string) => t.trim().replace(/WIB/i, "").trim());
-      if (parts.length === 2) {
-        const startTime = parts[0];
-        const endTime = parts[1];
-        const currentTime = form.preferredTime || "10:00";
-        if (currentTime < startTime || currentTime > endTime) {
-          return {
-            available: false,
-            message: `Dokter ${selectedDoctorObj.doctorName || ""} hanya berpraktik pukul ${selectedDoctorObj.timeRange}. Jam ${currentTime} WIB berada di luar jam praktik.`,
-          };
-        }
-      }
-    }
+
 
     if (selectedDoctorObj.date && /^\d{4}-\d{2}-\d{2}$/.test(selectedDoctorObj.date)) {
       if (selectedDoctorObj.date !== form.preferredDate) {
@@ -311,10 +298,6 @@ export default function BookingNewPage() {
                       <span className="font-bold text-gray-900">{successResult.date}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Waktu:</span>{" "}
-                      <span className="font-bold text-[#c9a24a]">{successResult.preferred_time} WIB</span>
-                    </div>
-                    <div>
                       <span className="text-gray-500">Status:</span>{" "}
                       <span className="font-bold text-amber-700">Menunggu Konfirmasi Admin</span>
                     </div>
@@ -355,7 +338,13 @@ export default function BookingNewPage() {
                   <div className="pt-2 flex flex-col gap-3">
                     {/* WhatsApp CTA - shown after success */}
                     <a
-                      href={buildWAMessage(form, successResult)}
+                      href={buildGuestBookingWhatsAppUrl({
+                        name: form.patientName.trim(),
+                        phone: form.phone.trim(),
+                        complaint: form.note || form.treatmentInterest,
+                        date: form.preferredDate,
+                        waNumber,
+                      })}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full"
@@ -560,7 +549,7 @@ export default function BookingNewPage() {
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4">
                       {/* 1. Pick Tanggal (Calendar) */}
                       <div className="space-y-1.5">
                         <Label className="text-xs font-bold text-gray-700 flex items-center gap-1">
@@ -576,28 +565,6 @@ export default function BookingNewPage() {
                             onChange={(e) => setForm({ ...form, preferredDate: e.target.value })}
                             required
                             className="pl-9 pr-3 rounded-xl border-gray-200 text-xs h-11 bg-white focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]/20 cursor-pointer"
-                          />
-                        </div>
-                      </div>
-
-                      {/* 2. Pick Jam (Manual Time Picker) */}
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-gray-700 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-[#c9a24a]" />
-                          Jam Periksa (Time Picker) *
-                        </Label>
-                        <div className="relative">
-                          <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#c9a24a] pointer-events-none" />
-                          <Input
-                            type="time"
-                            value={form.preferredTime}
-                            onChange={(e) => setForm({ ...form, preferredTime: e.target.value })}
-                            required
-                            className={`pl-9 pr-3 rounded-xl text-xs h-11 bg-white cursor-pointer font-bold ${
-                              scheduleStatus.available
-                                ? "border-gray-200 focus:border-[#c9a24a] focus:ring-1 focus:ring-[#c9a24a]/20"
-                                : "border-rose-300 text-rose-900 focus:border-rose-500 focus:ring-1 focus:ring-rose-200"
-                            }`}
                           />
                         </div>
                       </div>
@@ -659,7 +626,7 @@ export default function BookingNewPage() {
                     {submitting
                       ? "Memproses Reservasi Guest..."
                       : !scheduleStatus.available
-                      ? "Pilih Tanggal/Jam Sesuai Jadwal Dokter"
+                      ? "Pilih Tanggal Sesuai Jadwal Dokter"
                       : "Lanjutkan & Baca Syarat Ketentuan"}
                   </Button>
                 </form>

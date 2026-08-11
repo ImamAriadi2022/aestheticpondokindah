@@ -216,7 +216,7 @@ export default function HeroSection() {
             <div className="rounded-3xl bg-background p-2 shadow-xl shadow-black/10">
               <div className="rounded-2xl bg-background border border-border">
                 <form
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr_1.8fr_auto] gap-4 p-5"
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.2fr_1.2fr_1fr_1.2fr_auto] gap-4 p-5"
                   onSubmit={(e) => handleHeroSubmit(e, "hero_desktop")}
                 >
                   <div>
@@ -295,26 +295,6 @@ export default function HeroSection() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
-                      Pilih Jam
-                    </label>
-                    <div className="relative">
-                      <Clock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-warm-gray" />
-                      <select
-                        value={appointment.time}
-                        onChange={(e) => setAppointment({ ...appointment, time: e.target.value })}
-                        className="bg-background border border-border h-11 rounded-xl px-3 py-2 text-xs transition-colors w-full min-w-0 outline-none font-body pl-9 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/20"
-                        required
-                      >
-                        {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"].map((t) => (
-                          <option key={t} value={t}>
-                            {t} WIB
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
 
                   <div className="flex items-end">
                     <Button
@@ -444,26 +424,6 @@ export default function HeroSection() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-brand-warm-gray mb-2 font-body">
-                      Pilih Jam
-                    </label>
-                    <div className="relative">
-                      <Clock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-warm-gray" />
-                      <select
-                        value={appointment.time}
-                        onChange={(e) => setAppointment({ ...appointment, time: e.target.value })}
-                        className="bg-background border border-border h-11 rounded-xl px-3 py-2 text-sm transition-colors w-full min-w-0 outline-none font-body pl-9 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/20"
-                        required
-                      >
-                        {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"].map((t) => (
-                          <option key={t} value={t}>
-                            {t} WIB
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
 
                   <Button
                     type="submit"

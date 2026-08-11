@@ -14,9 +14,9 @@ class UpdatePointsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'points' => 'required|integer|min:-10000|max:10000',
+            'points' => 'required|integer|min:-100000|max:100000',
             'type' => 'sometimes|required|in:earned,redeemed,expired,adjusted',
-            'description' => 'sometimes|string|max:500',
+            'description' => 'nullable|string|max:500',
         ];
     }
 }

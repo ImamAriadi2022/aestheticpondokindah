@@ -151,6 +151,7 @@ Route::prefix('admin')->group(function () {
             Route::get('/invoices', [MembershipAdminController::class, 'invoices']);
             Route::get('/invoices/{id}', [MembershipAdminController::class, 'showInvoice']);
             Route::get('/{id}', [MembershipAdminController::class, 'show']);
+            Route::get('/{id}/points-history', [MembershipAdminController::class, 'pointsHistory']);
             Route::patch('/{id}/level', [MembershipAdminController::class, 'updateLevel']);
             Route::patch('/{id}/points', [MembershipAdminController::class, 'updatePoints']);
             Route::delete('/{id}', [MembershipAdminController::class, 'destroy']);

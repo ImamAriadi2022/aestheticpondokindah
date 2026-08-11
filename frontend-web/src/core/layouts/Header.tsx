@@ -382,29 +382,6 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* Pilih Jam */}
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="time" className="text-xs sm:text-sm font-medium text-brand-charcoal">
-                  Pilih Jam
-                </Label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-gold/60 pointer-events-none" />
-                  <select
-                    id="time"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                    className="bg-background border border-border h-10 sm:h-12 rounded-xl px-3 py-2 text-sm transition-colors w-full min-w-0 outline-none font-body pl-9 sm:pl-10 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/20"
-                    required
-                  >
-                    {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00"].map((t) => (
-                      <option key={t} value={t}>
-                        {t} WIB
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
               {/* Submit Button */}
               <div className="sm:col-span-2 lg:col-span-4 pt-1 sm:pt-0">
                 <Button

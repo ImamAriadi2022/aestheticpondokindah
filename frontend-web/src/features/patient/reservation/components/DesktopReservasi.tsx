@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { services as allServices } from "@/features/guest/services/pages/Services";
 import { getPublicDoctorSchedules } from "@/features/guest/doctors/services/publicDoctorScheduleApi";
+import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
+import GuestBookingTermsDialog from "@/features/guest/reservation/components/GuestBookingTermsDialog";
 import { apiClient } from "@/core/api/apiClient";
 import { API_BASE } from "@/core/api/apiConfig";
 
@@ -104,6 +106,16 @@ export default function DesktopReservasi({
   const [schedules, setSchedules] = useState<any[]>([]);
   const [schedLoading, setSchedLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Terms & Conditions Modal State
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [bookingTerms, setBookingTerms] = useState<string>();
+
+  useEffect(() => {
+    getPublicClinicSettings()
+      .then((s) => setBookingTerms(s.booking_terms))
+      .catch(() => {});
+  }, []);
 
   // Generate next 7 days for date picker
   const upcomingDates = useMemo(() => {
@@ -887,7 +899,7 @@ export default function DesktopReservasi({
                 </div>
 
                 <Button
-                  onClick={handleConfirmReservation}
+                  onClick={() => setShowTermsModal(true)}
                   disabled={submitting}
                   className="w-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold rounded-xl h-11 text-xs shadow-md transition-all flex items-center justify-center gap-2"
                 >
@@ -1018,6 +1030,14 @@ export default function DesktopReservasi({
           </div>
         </div>
       )}
+
+      {/* Syarat & Ketentuan Modal Dialog */}
+      <GuestBookingTermsDialog
+        open={showTermsModal}
+        onOpenChange={setShowTermsModal}
+        terms={bookingTerms}
+        onConfirm={handleConfirmReservation}
+      />
     </div>
   );
 }

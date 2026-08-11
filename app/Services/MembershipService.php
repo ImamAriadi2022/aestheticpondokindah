@@ -182,10 +182,20 @@ class MembershipService
             ]);
 
             // Update user point balance
-            $currentBalance = $user->membership_points;
-            $newBalance = $type === 'earned' || $type === 'adjusted' 
-                ? $currentBalance + $points 
-                : max(0, $currentBalance - $points);
+            $currentBalance = (int) $user->membership_points;
+            if ($type === 'redeemed' || $type === 'expired') {
+                $deductAmount = abs($points);
+                if ($currentBalance < $deductAmount) {
+                    throw new \InvalidArgumentException("Saldo poin member tidak mencukupi untuk pengurangan poin.");
+                }
+                $newBalance = $currentBalance - $deductAmount;
+            } else {
+                // earned or adjusted
+                $newBalance = $currentBalance + $points;
+                if ($newBalance < 0) {
+                    throw new \InvalidArgumentException("Penyesuaian poin akan menyebabkan saldo menjadi negatif.");
+                }
+            }
 
             $user->update([
                 'membership_points' => $newBalance,

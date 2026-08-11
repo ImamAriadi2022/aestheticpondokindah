@@ -90,6 +90,14 @@ const getMembershipAuthToken = (): string | null => {
   }
 };
 
+const TIER_RANKS: Record<string, number> = {
+  bronze: 1,
+  gold: 2,
+  platinum: 3,
+};
+
+const getLevelRank = (lvl: string) => TIER_RANKS[lvl?.toLowerCase()] || 0;
+
 export default function MembershipUpgradePage() {
   const navigate = useNavigate();
   const [options, setOptions] = useState<UpgradeOption[]>([]);
@@ -104,7 +112,6 @@ export default function MembershipUpgradePage() {
   const [showRequirementsDialog, setShowRequirementsDialog] = useState(false);
   const [manualPayment, setManualPayment] = useState<{ whatsappUrl: string | null; orderId: string } | null>(null);
 
-  void currentLevel;
   const session = getSession();
   void session;
 
@@ -126,7 +133,7 @@ export default function MembershipUpgradePage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          setOptions(data.data.tiers || data.data.upgrade_options);
+          setOptions(data.data.tiers || data.data.upgrade_options || []);
           setCurrentLevel(data.data.current_level);
           setCurrentLabel(data.data.current_label);
           setAutoProgress(data.data.auto_upgrade_progress);
@@ -227,20 +234,12 @@ export default function MembershipUpgradePage() {
         }
         setError(data.message || "Gagal membuat pembayaran");
         setProcessing(null);
+        setProcessing(null);
         return;
       }
 
       const { snap_token, transaction_id, payment_url } = data.data;
 
-      if (data.data.payment_mode === "manual_confirmation") {
-        setManualPayment({
-          whatsappUrl: data.data.whatsapp_url || null,
-          orderId: data.data.order_id,
-        });
-        setProcessing(null);
-        return;
-      }
-      
       // 2. Jika Snap sudah siap, buka popup Midtrans.
       // Token dari backend adalah sumber kebenaran; client key hanya diperlukan
       // untuk memuat script Snap, bukan untuk memutuskan apakah token valid.
@@ -261,10 +260,6 @@ export default function MembershipUpgradePage() {
             setProcessing(null);
           }
         });
-      } else if (payment_url) {
-        // Script Snap gagal dimuat (mis. diblokir browser), tetapi transaksi
-        // tetap dapat dilanjutkan melalui halaman pembayaran Midtrans.
-        window.location.assign(payment_url);
       } else {
         setError("Pembayaran tidak dapat dibuka. Silakan coba lagi.");
         setProcessing(null);
@@ -454,17 +449,6 @@ export default function MembershipUpgradePage() {
           </p>
         </div>
 
-        {!paymentGatewayAvailable && (
-          <Card className="mb-4 border-amber-200 bg-amber-50">
-            <CardContent className="flex items-start gap-3 p-4 text-sm text-amber-800">
-              <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-              <p>
-                Midtrans belum aktif. Anda tetap dapat mengajukan upgrade dan mengonfirmasi pembayaran melalui WhatsApp admin.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Upgrade Options */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900">
@@ -483,6 +467,7 @@ export default function MembershipUpgradePage() {
               const Icon = tierIcons[option.level] || Crown;
               const colors = tierColors[option.level];
               const isCurrentTier = option.level === currentLevel;
+              const isLowerTier = getLevelRank(option.level) < getLevelRank(currentLevel);
               
               return (
                 <Card
@@ -545,12 +530,20 @@ export default function MembershipUpgradePage() {
 
                     {/* CTA */}
                     <Button
-                      className={`w-full bg-gradient-to-r ${colors.gradient} text-white font-bold hover:opacity-90`}
+                      className={
+                        isCurrentTier
+                          ? "w-full bg-gray-200 text-gray-700 font-bold cursor-not-allowed hover:bg-gray-200"
+                          : isLowerTier
+                          ? "w-full bg-gray-100 text-gray-400 font-bold cursor-not-allowed hover:bg-gray-100"
+                          : `w-full bg-gradient-to-r ${colors.gradient} text-white font-bold hover:opacity-90`
+                      }
                       onClick={() => handleUpgrade(option.level, option.price)}
-                      disabled={processing === option.level || isCurrentTier}
+                      disabled={processing === option.level || isCurrentTier || isLowerTier}
                     >
                       {isCurrentTier ? (
                         "Tier Saat Ini"
+                      ) : isLowerTier ? (
+                        "Terdaftar di Tier Lebih Tinggi"
                       ) : processing === option.level ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />

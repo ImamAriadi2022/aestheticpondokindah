@@ -160,7 +160,7 @@ const knowledgeBase: KnowledgeItem[] = [
     id: "blog",
     keywords: ["blog", "artikel", "tips", "informasi", "edukasi"],
     answer:
-      "Kami menyediakan artikel Tips & Informasi Kesehatan Gigi di halaman 'Blog' (kategori: Estetika, Tips, Ortodonti, Anak, Restoratif).",
+      "Kami menyediakan artikel Tips & Informasi Kesehatan Gigi di halaman 'Blog' (kategori: Estetika, Tips, Ortodonti, Anak, Restoratif, Informasi).",
   },
   {
     id: "testimonials_gallery",

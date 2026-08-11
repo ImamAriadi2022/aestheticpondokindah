@@ -115,6 +115,17 @@ class ContentSeeder extends Seeder
                 'status' => 'published',
                 'published_at' => now()->subWeeks(2),
             ],
+            [
+                'title' => 'Aesthetic Pondok Indah Membuka Layanan Digital Odontogram Baru',
+                'slug' => 'layanan-digital-odontogram-baru',
+                'excerpt' => 'Kami bangga memperkenalkan teknologi Odontogram Digital terbaru untuk pencatatan rekam medis gigi Anda yang lebih presisi.',
+                'category' => 'Informasi',
+                'cover_image_path' => 'post/Sampul-Veneer-1536x829.png',
+                'content_html' => '<p>Aesthetic Pondok Indah Dental Clinic berkomitmen untuk terus meningkatkan pelayanan kesehatan gigi Anda dengan menghadirkan teknologi medis terdepan. Kali ini, kami meluncurkan fitur **Digital Odontogram** yang terintegrasi secara langsung ke sistem rekam medis Anda.</p><h2>Manfaat Digital Odontogram bagi Pasien</h2><ul><li>Pencatatan kondisi gigi yang jauh lebih cepat dan akurat</li><li>Riwayat penanganan gigi terstruktur dan dapat diakses kapan saja</li><li>Mempermudah dokter gigi dalam menganalisis keluhan jangka panjang Anda</li></ul><p>Semua informasi rekam medis dilindungi dengan protokol keamanan data pasien yang ketat.</p>',
+                'reading_time_minutes' => 3,
+                'status' => 'published',
+                'published_at' => now()->subDays(2),
+            ],
         ];
 
         foreach ($posts as $data) {

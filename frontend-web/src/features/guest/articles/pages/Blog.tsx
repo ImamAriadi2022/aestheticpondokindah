@@ -5,7 +5,7 @@ import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/core/api/apiConfig";
 
-const categories = ["Semua", "Estetika", "Tips", "Ortodonti", "Anak", "Restoratif"] as const;
+const categories = ["Semua", "Estetika", "Tips", "Ortodonti", "Anak", "Restoratif", "Informasi"] as const;
 
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState("Semua");

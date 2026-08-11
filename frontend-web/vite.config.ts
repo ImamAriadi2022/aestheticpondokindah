@@ -4,11 +4,12 @@ import react from "@vitejs/plugin-react";
 import { mochaPlugins } from "@getmocha/vite-plugins";
 
 export default defineConfig({
+  envDir: "../",
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-	  plugins: [
-	    ...mochaPlugins(process.env as any),
-	    react(),
-	  ],
+  plugins: [
+    ...mochaPlugins(process.env as any),
+    react(),
+  ],
 	  server: {
 	    port: 5173,
 	    strictPort: true,

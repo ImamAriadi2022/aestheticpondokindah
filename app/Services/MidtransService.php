@@ -75,23 +75,24 @@ class MidtransService
                     'expiry_duration' => 60,
                     'unit' => 'minute',
                 ],
-                'enabled_payments' => [
-                    'credit_card',
-                    'bca_va',
-                    'bni_va',
-                    'bri_va',
-                    'gopay',
-                    'shopeepay',
-                    'qris',
-                    'echannel', // Mandiri bill
-                    'permata_va',
-                    'other_va',
-                ],
                 'callbacks' => [
                     'finish' => url('/membership/upgrade/success'),
                     'error' => url('/membership/upgrade/error'),
                 ],
             ];
+
+            Log::info('MIDTRANS CONFIG DIAGNOSTIC', [
+                'isProduction' => $this->isProduction,
+                'serverKey' => $this->serverKey,
+                'sdkIsProduction' => MidtransConfig::$isProduction,
+                'sdkServerKey' => MidtransConfig::$serverKey,
+            ]);
+
+            // Ensure SDK static config is updated dynamically
+            MidtransConfig::$serverKey = $this->serverKey;
+            MidtransConfig::$isProduction = $this->isProduction;
+            MidtransConfig::$isSanitized = true;
+            MidtransConfig::$is3ds = true;
 
             // Generate Snap Token
             $snapToken = Snap::getSnapToken($params);
@@ -111,14 +112,19 @@ class MidtransService
             ];
 
         } catch (\Exception $e) {
-            Log::error('Failed to create Snap token: ' . $e->getMessage(), [
+            $msg = $e->getMessage();
+            Log::error('Failed to create Snap token: ' . $msg, [
                 'transaction_id' => $transaction->id,
                 'order_id' => $transaction->metadata['order_id'] ?? null,
             ]);
 
+            $friendlyMessage = str_contains($msg, '401')
+                ? 'Kunci Midtrans (MIDTRANS_SERVER_KEY) pada .env Anda ditolak oleh server Midtrans (HTTP 401 Access Denied). Silakan periksa atau perbarui Server Key di dashboard Midtrans Anda.'
+                : 'Gagal membuat token pembayaran Midtrans: ' . $msg;
+
             return [
                 'success' => false,
-                'message' => 'Gagal membuat token pembayaran: ' . $e->getMessage(),
+                'message' => $friendlyMessage,
             ];
         }
     }
