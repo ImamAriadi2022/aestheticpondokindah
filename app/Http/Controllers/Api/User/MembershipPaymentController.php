@@ -419,16 +419,7 @@ class MembershipPaymentController extends Controller
 
     private function getUnmetUpgradeRequirements(User $user): array
     {
-        $profile = $user->membershipProfile;
-
-        if ($profile && $profile->isComplete()) {
-            return [];
-        }
-
-        return [[
-            'code' => 'membership_profile',
-            'message' => 'Lengkapi profil membership: jenis kelamin, tanggal lahir, kota, keluhan gigi, dan minat perawatan.',
-            'action' => 'complete_membership_profile',
-        ]];
+        // Paid upgrades via Midtrans proceed directly without profile survey blocks.
+        return [];
     }
 }
