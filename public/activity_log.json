@@ -1,5 +1,35 @@
 [
     {
+        "id": "act-181",
+        "date": "2026-08-14",
+        "time": "02:07",
+        "category": "Frontend | Architecture | Admin | Modular Feature Refactoring",
+        "type": "Refactoring",
+        "feature": "Refaktorisasi Arsitektur Modul Admin ke dalam Folder Fitur (pages, components, services)",
+        "description": "Merefaktorisasi kode modul admin dari file monolithic `ClinicDashboard.tsx` menjadi arsitektur modular terstruktur berdasarkan fitur di bawah `src/features/admin/`. Menambahkan file `AdminSidebar.tsx` sebagai komponen navigasi khusus admin dan memisahkan sub-halaman ke direktori fitur masing-masing tanpa mengubah logika maupun data yang ada.",
+        "notes": "1. AdminSidebar.tsx: Membuat komponen sidebar navigasi khusus admin di `src/features/admin/AdminSidebar.tsx`.\n2. Modularisasi Fitur Konten: Membuat `PopupPage.tsx`, `PromoPage.tsx`, dan `contentService.ts` di dalam `features/admin/content/` (`pages/`, `components/`, `services/`).\n3. Memuat Service Layer per Fitur: Menambahkan `consultationService.ts`, `reservationService.ts`, `userService.ts`, `branchService.ts`, `complaintService.ts`, `messageService.ts`, dan `settingService.ts` di direktori fitur masing-masing.\n4. Mempertahankan 100% kompatibilitas logika, data, state management, dan alur CRUD yang sudah berjalan.",
+        "reason": "Meningkatkan kualitas arsitektur kode frontend admin agar lebih modular, terisolasi per fitur, mudah dipelihara, dan sesuai standardisasi project.",
+        "files": [
+            "frontend-web/src/features/admin/AdminSidebar.tsx",
+            "frontend-web/src/features/admin/content/pages/PopupPage.tsx",
+            "frontend-web/src/features/admin/content/pages/PromoPage.tsx",
+            "frontend-web/src/features/admin/content/services/contentService.ts",
+            "frontend-web/src/features/admin/consultation/services/consultationService.ts",
+            "frontend-web/src/features/admin/reservation/services/reservationService.ts",
+            "frontend-web/src/features/admin/users/services/userService.ts",
+            "frontend-web/src/features/admin/branches/services/branchService.ts",
+            "frontend-web/src/features/admin/complaints/services/complaintService.ts",
+            "frontend-web/src/features/admin/messages/services/messageService.ts",
+            "frontend-web/src/features/admin/settings/services/settingService.ts",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-180",
         "date": "2026-08-14",
         "time": "01:55",
