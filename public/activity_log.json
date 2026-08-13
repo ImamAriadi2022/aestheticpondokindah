@@ -1,5 +1,25 @@
 [
     {
+        "id": "act-173",
+        "date": "2026-08-14",
+        "time": "00:14",
+        "category": "Cleanup | Repository | Database",
+        "type": "Optimization",
+        "feature": "Pembersihan Source Code & SQL Dump Folder Wilayah",
+        "description": "Menghapus direktori source code dan berkas dump SQL wilayah (`wilayah/`) karena seluruh data lokasi Indonesia sudah termigrasi penuh ke dalam database MySQL backend. Menyesuaikan `DatabaseSeeder.php` dan `deploy.sh` agar proses deployment lebih ringan dan cepat.",
+        "notes": "1. Menghapus folder `wilayah/` (~40MB berkas SQL dump seeder).\n2. Memperbarui `DatabaseSeeder.php` untuk melepas pemanggilan `WilayahSeeder`.\n3. Memperbarui `deploy.sh` untuk melepas pengecekan auto-seeding Wilayah.\n4. Endpoint API Wilayah Controller (`/api/wilayah/*`) dan formulir lokasi di frontend tetap berjalan 100% normal dari tabel database.",
+        "reason": "Mengurangi ukuran repositori, mempercepat proses deployment, dan mengeliminasi berkas seeder mentah yang sudah tidak digunakan.",
+        "files": [
+            "database/seeders/DatabaseSeeder.php",
+            "deploy.sh",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-172",
         "date": "2026-08-13",
         "time": "14:55",

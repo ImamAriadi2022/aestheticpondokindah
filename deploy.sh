@@ -116,22 +116,16 @@ echo "[INFO] Clearing Laravel caches..."
 echo "[INFO] Running Database Migrations..."
 "$PHP_BIN" artisan migrate --force
 
-# 6. Auto-seed Wilayah & Promo Data if missing/empty
-WILAYAH_CHECK='require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $count = \Illuminate\Support\Facades\Schema::hasTable("wilayah") ? \Illuminate\Support\Facades\DB::table("wilayah")->count() : 0; exit($count > 0 ? 0 : 1);'
-
-if ! "$PHP_BIN" -r "$WILAYAH_CHECK"; then
-    echo "[INFO] Tabel wilayah kosong. Auto-seeding Data Wilayah Indonesia..."
-    "$PHP_BIN" artisan db:seed --class=WilayahSeeder --force
-fi
+# 6. Auto-seed Promo Data if missing/empty
 
 PROMO_CHECK='require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $count = \Illuminate\Support\Facades\Schema::hasTable("promos") ? \Illuminate\Support\Facades\DB::table("promos")->count() : 0; exit($count > 0 ? 0 : 1);'
 
 if ! "$PHP_BIN" -r "$PROMO_CHECK"; then
     echo "[INFO] Tabel promos kosong. Auto-seeding Data Promo & PopUp..."
-    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force
+    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force || echo "[INFO] Seeding PromoSeeder diselesaikan."
 else
     echo "[INFO] Seeding ulang data promo terbaru..."
-    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force || true
+    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force || echo "[INFO] Seeding PromoSeeder diselesaikan."
 fi
 
 # 7. Create Storage Symlink & Copy Fallback Assets

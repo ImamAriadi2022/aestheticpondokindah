@@ -17,7 +17,7 @@ class WilayahSeeder extends Seeder
         
         if (!file_exists($sqlPath)) {
             if (isset($this->command)) {
-                $this->command->error("File SQL wilayah tidak ditemukan di: {$sqlPath}");
+                $this->command->warn("File SQL wilayah tidak ditemukan di: {$sqlPath}. Menggunakan data database wilayah yang sudah ada. Seeding dilewati secara aman.");
             }
             return;
         }
