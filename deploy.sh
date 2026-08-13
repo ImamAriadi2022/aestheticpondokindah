@@ -4,6 +4,7 @@
 # Aesthetic Pondok Indah Dental Clinic System
 # Compatible with: Plesk, cPanel, DirectAdmin, VPS (Ubuntu/Debian/AlmaLinux)
 # Target Document Root Server: public/ (Laravel Standard Webroot)
+# Frontend Webroot Output: public/ (Dist React & Assets)
 # ==============================================================================
 
 set -euo pipefail
@@ -61,12 +62,19 @@ fi
 echo "[OK] Using PHP CLI: $($PHP_BIN -r 'echo PHP_VERSION;')"
 
 # 2. Directory & Permission Setup
-mkdir -p storage/app/public \
+mkdir -p storage/app/public/promos \
+         storage/app/public/popups \
+         storage/app/public/popup \
+         storage/app/public/layanan \
+         storage/app/public/dokter \
+         storage/app/public/hero \
+         storage/app/public/galeri \
          storage/framework/cache \
          storage/framework/sessions \
          storage/framework/views \
          storage/logs \
-         bootstrap/cache
+         bootstrap/cache \
+         public/storage/promos
 
 chmod -R 775 storage bootstrap/cache 2>/dev/null || chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
@@ -108,27 +116,55 @@ echo "[INFO] Clearing Laravel caches..."
 echo "[INFO] Running Database Migrations..."
 "$PHP_BIN" artisan migrate --force
 
-# 6. Auto-seed Wilayah Indonesia if empty
+# 6. Auto-seed Wilayah & Promo Data if missing/empty
 WILAYAH_CHECK='require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $count = \Illuminate\Support\Facades\Schema::hasTable("wilayah") ? \Illuminate\Support\Facades\DB::table("wilayah")->count() : 0; exit($count > 0 ? 0 : 1);'
 
 if ! "$PHP_BIN" -r "$WILAYAH_CHECK"; then
-    echo "[INFO] Tabel wilayah kosong. Auto-seeding Data Wilayah Indonesia (Kepmendagri terbaru)..."
+    echo "[INFO] Tabel wilayah kosong. Auto-seeding Data Wilayah Indonesia..."
     "$PHP_BIN" artisan db:seed --class=WilayahSeeder --force
 fi
 
-# 7. Create Storage Link for Public Webroot
+PROMO_CHECK='require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $count = \Illuminate\Support\Facades\Schema::hasTable("promos") ? \Illuminate\Support\Facades\DB::table("promos")->count() : 0; exit($count > 0 ? 0 : 1);'
+
+if ! "$PHP_BIN" -r "$PROMO_CHECK"; then
+    echo "[INFO] Tabel promos kosong. Auto-seeding Data Promo & PopUp..."
+    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force
+else
+    echo "[INFO] Seeding ulang data promo terbaru..."
+    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force || true
+fi
+
+# 7. Create Storage Symlink & Copy Fallback Assets
+echo "[INFO] Memverifikasi storage link (public/storage -> storage/app/public)..."
 if [ ! -e public/storage ] && [ ! -L public/storage ]; then
-    echo "[INFO] Membuat storage link (public/storage -> storage/app/public)..."
-    "$PHP_BIN" artisan storage:link || "$PHP_BIN" create_storage_link.php || echo "[WARNING] Storage symlink gagal dibuat otomatis; periksa izin symlink hosting."
+    "$PHP_BIN" artisan storage:link || "$PHP_BIN" create_storage_link.php || echo "[WARNING] Storage symlink gagal dibuat; menyalin berkas secara langsung."
+fi
+
+# Copy promo images to public/storage/promos as a fail-safe fallback for hosting environments
+if [ -d "storage/app/public/promos" ]; then
+    mkdir -p public/storage/promos
+    cp -rf storage/app/public/promos/* public/storage/promos/ 2>/dev/null || true
+fi
+
+if [ -f "public/popup/Paket-Implant.png" ]; then
+    cp -f public/popup/Paket-Implant.png public/storage/promos/Paket-Implant.png 2>/dev/null || true
+    cp -f public/popup/Paket-Implant.png storage/app/public/promos/Paket-Implant.png 2>/dev/null || true
 fi
 
 # 8. Optional Frontend Recompile (if Node/npm is present on server)
 NPM_BIN="$(command -v npm || true)"
 if [ -n "$NPM_BIN" ] && [ -d "frontend-web" ]; then
-    echo "[INFO] Node.js/npm terdeteksi. Mengompilasi bundel frontend React..."
+    echo "[INFO] Node.js/npm terdeteksi. Mengompilasi bundel frontend React ke public/..."
     (cd frontend-web && npm install --no-audit --no-fund && npm run build) || echo "[WARNING] Build frontend via npm gagal; tetap menggunakan bundel terkompilasi sebelumnya di public/."
 else
-    echo "[INFO] Node.js/npm tidak dipasang di server. Menggunakan bundel terkompilasi yang sudah ada di public/assets/."
+    echo "[INFO] Node.js/npm tidak dipasang di server. Menggunakan bundel terkompilasi yang sudah ada di public/ (HTML & assets)."
+fi
+
+# Verify critical webroot files
+if [ -f "public/index.html" ] || [ -f "public/index.php" ]; then
+    echo "[OK] Webroot frontend public/ terverifikasi."
+else
+    echo "[WARNING] public/index.html atau public/index.php tidak ditemukan."
 fi
 
 # 9. Cache Configuration, Routes, and Views
@@ -139,7 +175,8 @@ echo "[INFO] Optimizing & Caching Laravel configuration, routes, and views..."
 
 echo "======================================================================"
 echo " SUCCESS: Deployment Selesai dan Sistem Siap Berjalan!"
-echo " Webroot: public/"
+echo " Webroot Frontend: public/"
+echo " Backend Root: . (Laravel Standard Root)"
 echo " PHP Version: $($PHP_BIN -r 'echo PHP_VERSION;')"
 echo " Timestamp: $(date)"
 echo "======================================================================"

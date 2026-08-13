@@ -83,6 +83,7 @@ import {
   Loader2,
   ClipboardList,
   CheckCircle2,
+  XCircle,
   Clock,
   Zap,
   Crown,
@@ -791,6 +792,11 @@ export default function ClinicDashboardPage() {
   const [apiDownloadApps, setApiDownloadApps] = useState<any[]>([]);
   const [_loadingContent, setLoadingContent] = useState(false);
 
+  // Promo search and filter states
+  const [promoSearch, setPromoSearch] = useState("");
+  const [promoCategoryFilter, setPromoCategoryFilter] = useState("Semua");
+  const [promoStatusFilter, setPromoStatusFilter] = useState("Semua");
+
   const token = localStorage.getItem("apident:token");
 
   // Redirect to login if not authenticated
@@ -1067,6 +1073,33 @@ export default function ClinicDashboardPage() {
       logger.error("Gagal fetch promos", e);
     } finally {
       setLoadingContent(false);
+    }
+  };
+
+  const togglePromoStatus = async (promo: any) => {
+    try {
+      const formData = new FormData();
+      formData.append("is_active", promo.is_active ? "0" : "1");
+      formData.append("_method", "PUT");
+
+      const res = await fetch(`${API_BASE}/admin/promos/${promo.id}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (res.ok) {
+        toast({
+          title: "Status Diperbarui",
+          message: `Promo "${promo.title}" sekarang ${!promo.is_active ? "Aktif" : "Non-aktif"}`,
+          variant: "success",
+        });
+        await fetchApiPromos();
+      } else {
+        toast({ title: "Gagal", message: "Gagal mengubah status promo", variant: "error" });
+      }
+    } catch (e) {
+      logger.error("Gagal toggle status promo", e);
     }
   };
 
@@ -4991,53 +5024,61 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-xl font-bold text-[#4A3F35]">Pop Up Promo</h2>
-                <p className="text-sm text-[#8A7B6B] mt-1">Kelola pop up promo yang muncul di halaman utama (selalu aktif).</p>
+                <p className="text-sm text-[#8A7B6B] mt-1">Kelola dan aktifkan / non-aktifkan pop up promo yang muncul di halaman utama klinik.</p>
               </div>
-              <Button
-                className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 h-10"
-                onClick={async () => {
-                  try {
-                    const firstPopup = apiPopups[0];
-                    const isNew = !firstPopup;
-                    const formData = new FormData();
-                    formData.append("title", popupPromo.title);
-                    formData.append("headline", popupPromo.headline);
-                    formData.append("message", popupPromo.message);
-                    formData.append("button_label", popupPromo.buttonLabel);
-                    formData.append("enabled", "1");
-                    if (popupPromo.imageFile) {
-                      formData.append("image", popupPromo.imageFile);
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#F0E6D3] bg-white shadow-xs">
+                  <span className="text-xs font-semibold text-[#4A3F35]">Status:</span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${popupPromo.enabled ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                    {popupPromo.enabled ? "🟢 AKTIF" : "🔴 NON-AKTIF"}
+                  </span>
+                </div>
+                <Button
+                  className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 h-10"
+                  onClick={async () => {
+                    try {
+                      const firstPopup = apiPopups[0];
+                      const isNew = !firstPopup;
+                      const formData = new FormData();
+                      formData.append("title", popupPromo.title);
+                      formData.append("headline", popupPromo.headline);
+                      formData.append("message", popupPromo.message);
+                      formData.append("button_label", popupPromo.buttonLabel);
+                      formData.append("enabled", popupPromo.enabled ? "1" : "0");
+                      if (popupPromo.imageFile) {
+                        formData.append("image", popupPromo.imageFile);
+                      }
+                      const url = isNew
+                        ? `${API_BASE}/admin/popups`
+                        : `${API_BASE}/admin/popups/${firstPopup.id}`;
+
+                      if (!isNew) {
+                        formData.append("_method", "PUT");
+                      }
+
+                      const res = await fetch(url, {
+                        method: "POST",
+                        headers: { "Authorization": `Bearer ${token}` },
+                        body: formData,
+                      });
+
+                      if (!res.ok) {
+                        logger.error("Gagal simpan popup", await res.text());
+                        return;
+                      }
+
+                      toast({ title: "Tersimpan", message: `Pop up promo berhasil disimpan (${popupPromo.enabled ? "Aktif" : "Non-aktif"})`, variant: "success" });
+                      await fetchApiPopups();
+                      setPopupPromo((p) => ({ ...p, imageFile: null }));
+                    } catch (e) {
+                      logger.error("Gagal simpan popup", e);
                     }
-                    const url = isNew
-                      ? `${API_BASE}/admin/popups`
-                      : `${API_BASE}/admin/popups/${firstPopup.id}`;
-
-                    if (!isNew) {
-                      formData.append("_method", "PUT");
-                    }
-
-                    const res = await fetch(url, {
-                      method: "POST",
-                      headers: { "Authorization": `Bearer ${token}` },
-                      body: formData,
-                    });
-
-                    if (!res.ok) {
-                      logger.error("Gagal simpan popup", await res.text());
-                      return;
-                    }
-
-                    toast({ title: "Tersimpan", message: "Pop up berhasil disimpan", variant: "success" });
-                    await fetchApiPopups();
-                    setPopupPromo((p) => ({ ...p, imageFile: null }));
-                  } catch (e) {
-                    logger.error("Gagal simpan popup", e);
-                  }
-                }}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Simpan
-              </Button>
+                  }}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Simpan Perubahan
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -5046,30 +5087,49 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                 <div className="p-5 border-b border-[#F0E6D3]">
                   <h3 className="text-base font-bold text-[#4A3F35] flex items-center gap-2">
                     <Type className="w-4 h-4 text-[#B8943F]" />
-                    Konten Pop Up
+                    Pengaturan & Konten Pop Up
                   </h3>
                 </div>
-                <div className="p-5 space-y-4">
+                <div className="p-5 space-y-5">
+                  {/* Status Toggle Card */}
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-[#FAF8F5] border border-[#F0E6D3]">
+                    <div>
+                      <label className="text-sm font-bold text-[#4A3F35] block">Tampilkan Pop Up Promo di Halaman Utama</label>
+                      <span className="text-xs text-[#8A7B6B]">
+                        {popupPromo.enabled
+                          ? "Pop-up sedang AKTIF dan akan muncul saat pasien/pengunjung membuka halaman utama."
+                          : "Pop-up NON-AKTIF (disembunyikan dari pengunjung)."}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPopupPromo((p) => ({ ...p, enabled: !p.enabled }))}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${popupPromo.enabled ? "bg-emerald-500" : "bg-red-500"}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${popupPromo.enabled ? "translate-x-6" : "translate-x-1"}`} />
+                    </button>
+                  </div>
+
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-[#4A3F35]">Judul Kecil</label>
+                    <label className="text-sm font-semibold text-[#4A3F35]">Judul Kecil (Sub-heading)</label>
                     <Input
                       value={popupPromo.title}
                       onChange={(e) => setPopupPromo((p) => ({ ...p, title: e.target.value }))}
                       className="rounded-xl border-[#F0E6D3] focus-visible:ring-[#C9A24A]/30"
-                      placeholder="Contoh: Promo Spesial"
+                      placeholder="Contoh: PROMO SPESIAL BULAN INI"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-[#4A3F35]">Headline</label>
+                    <label className="text-sm font-semibold text-[#4A3F35]">Headline Utama</label>
                     <Input
                       value={popupPromo.headline}
                       onChange={(e) => setPopupPromo((p) => ({ ...p, headline: e.target.value }))}
                       className="rounded-xl border-[#F0E6D3] focus-visible:ring-[#C9A24A]/30"
-                      placeholder="Contoh: Diskon 20% Treatment"
+                      placeholder="Contoh: Diskon 20% Veneer & Bleaching Gigi"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-[#4A3F35]">Deskripsi</label>
+                    <label className="text-sm font-semibold text-[#4A3F35]">Deskripsi / Pesan</label>
                     <textarea
                       value={popupPromo.message}
                       onChange={(e) => setPopupPromo((p) => ({ ...p, message: e.target.value }))}
@@ -5078,16 +5138,16 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-[#4A3F35]">Label Tombol</label>
+                    <label className="text-sm font-semibold text-[#4A3F35]">Label Tombol WhatsApp / Klaim</label>
                     <Input
                       value={popupPromo.buttonLabel}
                       onChange={(e) => setPopupPromo((p) => ({ ...p, buttonLabel: e.target.value }))}
                       className="rounded-xl border-[#F0E6D3] focus-visible:ring-[#C9A24A]/30"
-                      placeholder="Contoh: Lihat Detail"
+                      placeholder="Contoh: Ambil Promo Sekarang"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold text-[#4A3F35]">Gambar</label>
+                    <label className="text-sm font-semibold text-[#4A3F35]">Gambar Pop Up</label>
                     <label className="inline-flex items-center justify-center w-full h-12 rounded-xl border-2 border-dashed border-[#F0E6D3] bg-[#FDF8F0]/50 text-sm font-medium text-[#B8943F] hover:bg-[#F5E6C8] hover:border-[#C9A24A] transition-colors cursor-pointer">
                       <input
                         type="file"
@@ -5102,29 +5162,43 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                         }}
                       />
                       <Upload className="w-4 h-4 mr-2" />
-                      Unggah Gambar
+                      Unggah Gambar Pop Up
                     </label>
                   </div>
                 </div>
               </div>
 
               {/* Preview Card */}
-              <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white">
-                    <div className="h-32 w-full bg-gray-100 overflow-hidden">
+              <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden space-y-3 p-4">
+                <h4 className="text-sm font-bold text-[#4A3F35]">Preview Tampilan (Mobile/Desktop)</h4>
+                <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-xs">
+                  {popupPromo.enabled ? (
+                    <div className="absolute top-2 right-2 z-10 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                      AKTIF
+                    </div>
+                  ) : (
+                    <div className="absolute top-2 right-2 z-10 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                      NON-AKTIF
+                    </div>
+                  )}
+                  <div className="h-36 w-full bg-gray-100 overflow-hidden relative">
+                    {popupPromo.imageUrl ? (
                       <img src={popupPromo.imageUrl} alt="promo" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <p className="text-[10px] font-semibold tracking-widest text-gray-500">{popupPromo.title || "WELCOME OFFER"}</p>
-                      <p className="text-sm font-bold text-gray-900">{popupPromo.headline || "Headline"}</p>
-                      <p className="text-xs text-gray-600 leading-relaxed">{popupPromo.message || "Deskripsi"}</p>
-                      <button type="button" className="w-full h-9 rounded-xl text-white text-sm font-semibold bg-gradient-to-r from-[#c9a24a] to-[#a8843a]">
-                        {popupPromo.buttonLabel || "Button"}
-                      </button>
-                    </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-[#FDF8F0] text-[#B8943F] text-xs">
+                        Belum ada gambar
+                      </div>
+                    )}
                   </div>
-                </CardContent>
+                  <div className="p-4 space-y-2">
+                    <p className="text-[10px] font-semibold tracking-widest text-[#B8943F] uppercase">{popupPromo.title || "WELCOME OFFER"}</p>
+                    <p className="text-sm font-bold text-[#2C2416]">{popupPromo.headline || "Headline Promo"}</p>
+                    <p className="text-xs text-[#5C5546] leading-relaxed">{popupPromo.message || "Deskripsi detail promo akan tampil di sini..."}</p>
+                    <button type="button" className="w-full h-9 rounded-xl text-white text-xs font-semibold bg-gradient-to-r from-[#C9A24A] to-[#A8843A] shadow-xs">
+                      {popupPromo.buttonLabel || "Ambil Promo"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -5366,125 +5440,244 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
           );
         }
 
+        const filteredPromos = apiPromos.filter((p: any) => {
+          const matchSearch = !promoSearch || p.title?.toLowerCase().includes(promoSearch.toLowerCase()) || p.description?.toLowerCase().includes(promoSearch.toLowerCase());
+          const matchCategory = promoCategoryFilter === "Semua" || p.category?.toLowerCase() === promoCategoryFilter.toLowerCase();
+          const matchStatus = promoStatusFilter === "Semua" || (promoStatusFilter === "Aktif" ? p.is_active : !p.is_active);
+          return matchSearch && matchCategory && matchStatus;
+        });
+
+        const activeCount = apiPromos.filter((p: any) => p.is_active).length;
+        const inactiveCount = apiPromos.filter((p: any) => !p.is_active).length;
+
         return (
-          <div className="space-y-4">
-            <Card className="rounded-sm border-0 shadow-sm">
-              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4">
+          <div className="space-y-5">
+            {/* Header & Quick Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-[#F0E6D3] shadow-xs flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg sm:text-xl font-bold text-gray-900">Daftar Promo</CardTitle>
-                  <p className="text-sm text-gray-500">Kelola promo untuk halaman Promo</p>
+                  <p className="text-xs text-[#8A7B6B] font-medium">Total Promo</p>
+                  <p className="text-2xl font-bold text-[#4A3F35] mt-0.5">{apiPromos.length}</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold rounded-sm"
-                    onClick={() => {
-                      setSearchParams((prev) => {
-                        const next = new URLSearchParams(prev);
-                        next.set("tab", "content-promo");
-                        next.set("view", "editor");
-                        next.delete("id");
-                        return next;
-                      });
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Tambah Promo
-                  </Button>
+                <div className="w-10 h-10 rounded-xl bg-[#FAF8F5] border border-[#F0E6D3] flex items-center justify-center text-[#B8943F]">
+                  <Tag className="w-5 h-5" />
                 </div>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-[#F0E6D3] shadow-xs flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-emerald-600 font-medium">Promo Aktif</p>
+                  <p className="text-2xl font-bold text-emerald-700 mt-0.5">{activeCount}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-[#F0E6D3] shadow-xs flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Promo Non-aktif</p>
+                  <p className="text-2xl font-bold text-gray-600 mt-0.5">{inactiveCount}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400">
+                  <XCircle className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Main Table Card */}
+            <Card className="rounded-2xl border border-[#F0E6D3] shadow-sm bg-white overflow-hidden">
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#F0E6D3] p-5">
+                <div>
+                  <CardTitle className="text-lg font-bold text-[#4A3F35]">Daftar All Promo</CardTitle>
+                  <p className="text-xs text-[#8A7B6B] mt-0.5">Kelola seluruh promo penawaran klinik, status aktif, dan periode promo.</p>
+                </div>
+                <Button
+                  className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 h-10"
+                  onClick={() => {
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      next.set("tab", "content-promo");
+                      next.set("view", "editor");
+                      next.delete("id");
+                      return next;
+                    });
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tambah Promo Baru
+                </Button>
               </CardHeader>
 
-              <CardContent className="space-y-3">
-                <div className="overflow-x-auto">
+              <CardContent className="p-5 space-y-4">
+                {/* Search & Filter Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF8F5] p-3 rounded-xl border border-[#F0E6D3]">
+                  <div className="relative flex-1">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      value={promoSearch}
+                      onChange={(e) => setPromoSearch(e.target.value)}
+                      placeholder="Cari promo berdasarkan judul..."
+                      className="pl-9 bg-white border-[#F0E6D3] rounded-xl text-xs h-9 focus-visible:ring-[#C9A24A]/30"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={promoCategoryFilter}
+                      onChange={(e) => setPromoCategoryFilter(e.target.value)}
+                      className="h-9 rounded-xl border border-[#F0E6D3] bg-white px-3 text-xs text-[#4A3F35] outline-none focus:ring-2 focus:ring-[#C9A24A]/30"
+                    >
+                      <option value="Semua">Semua Kategori</option>
+                      <option value="Bronze">Bronze</option>
+                      <option value="Gold">Gold</option>
+                      <option value="Platinum">Platinum</option>
+                    </select>
+                    <select
+                      value={promoStatusFilter}
+                      onChange={(e) => setPromoStatusFilter(e.target.value)}
+                      className="h-9 rounded-xl border border-[#F0E6D3] bg-white px-3 text-xs text-[#4A3F35] outline-none focus:ring-2 focus:ring-[#C9A24A]/30"
+                    >
+                      <option value="Semua">Semua Status</option>
+                      <option value="Aktif">Status: Aktif</option>
+                      <option value="Non-aktif">Status: Non-aktif</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto rounded-xl border border-[#F0E6D3]">
                   <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="text-gray-500 font-medium text-xs sm:text-sm">Gambar</TableHead>
-                        <TableHead className="text-gray-500 font-medium text-xs sm:text-sm">Judul</TableHead>
-                        <TableHead className="text-gray-500 font-medium text-xs sm:text-sm">Status</TableHead>
-                        <TableHead className="text-gray-500 font-medium text-xs sm:text-sm">Periode</TableHead>
-                        <TableHead className="text-gray-500 font-medium text-xs sm:text-sm text-right">Aksi</TableHead>
+                    <TableHeader className="bg-[#FAF8F5]">
+                      <TableRow className="hover:bg-transparent border-b border-[#F0E6D3]">
+                        <TableHead className="text-[#4A3F35] font-bold text-xs">Gambar</TableHead>
+                        <TableHead className="text-[#4A3F35] font-bold text-xs">Judul & Slug</TableHead>
+                        <TableHead className="text-[#4A3F35] font-bold text-xs">Kategori</TableHead>
+                        <TableHead className="text-[#4A3F35] font-bold text-xs">Status (Quick Switch)</TableHead>
+                        <TableHead className="text-[#4A3F35] font-bold text-xs">Periode</TableHead>
+                        <TableHead className="text-[#4A3F35] font-bold text-xs text-right">Aksi</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {apiPromos.length === 0 ? (
+                      {filteredPromos.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-gray-400 text-center py-8 text-base">
-                            Belum ada promo.
+                          <TableCell colSpan={6} className="text-gray-400 text-center py-10 text-sm">
+                            {apiPromos.length === 0 ? "Belum ada promo terdaftar. Klik 'Tambah Promo Baru' untuk membuat." : "Tidak ada promo yang cocok dengan pencarian / filter."}
                           </TableCell>
                         </TableRow>
                       ) : (
-                        apiPromos.map((p: any) => (
-                          <TableRow key={p.id} className="hover:bg-gray-50/50">
-                            <TableCell>
-                              <div className="w-12 h-10 rounded-sm bg-gray-100 overflow-hidden border border-gray-200">
-                                <img src={getStorageUrl(p.image_url || p.image_path) || "/dashboard/placeholder.png"} alt={p.title} className="w-full h-full object-cover" />
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-medium text-sm sm:text-base">
-                              <button
-                                type="button"
-                                className="text-left hover:text-[#a8843a]"
-                                onClick={() => {
-                                  setSearchParams((prev) => {
-                                    const next = new URLSearchParams(prev);
-                                    next.set("tab", "content-promo");
-                                    next.set("view", "editor");
-                                    next.set("id", String(p.id));
-                                    return next;
-                                  });
-                                }}
-                              >
-                                {p.title}
-                              </button>
-                            </TableCell>
-                            <TableCell className="text-sm sm:text-base">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-medium ${p.is_active ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
-                                {p.is_active ? "Aktif" : "Nonaktif"}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-sm sm:text-base text-gray-600">
-                              {p.starts_at ? new Date(p.starts_at).toLocaleDateString("id-ID") : "-"} s/d {p.ends_at ? new Date(p.ends_at).toLocaleDateString("id-ID") : "-"}
-                            </TableCell>
-                            <TableCell className="text-right whitespace-nowrap">
-                              <Button
-                                variant="outline"
-                                className="rounded-sm border-gray-200 h-9 text-xs mr-2"
-                                onClick={() => {
-                                  setSearchParams((prev) => {
-                                    const next = new URLSearchParams(prev);
-                                    next.set("tab", "content-promo");
-                                    next.set("view", "editor");
-                                    next.set("id", String(p.id));
-                                    return next;
-                                  });
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
-                                onClick={async () => {
-                                  const ok = window.confirm(`Hapus promo "${p.title}"?`);
-                                  if (!ok) return;
-                                  try {
-                                    const res = await fetch(`${API_BASE}/admin/promos/${p.id}`, {
-                                      method: "DELETE",
-                                      headers: { "Authorization": `Bearer ${token}` },
+                        filteredPromos.map((p: any) => {
+                          const cat = (p.category || "Bronze").toLowerCase();
+                          let catBg = "bg-amber-100 text-amber-800 border-amber-200";
+                          if (cat === "gold") catBg = "bg-[#C59E3F]/15 text-[#A37E28] border-[#C59E3F]/30";
+                          if (cat === "platinum") catBg = "bg-slate-100 text-slate-700 border-slate-300";
+                          if (cat === "diamond") catBg = "bg-cyan-100 text-cyan-800 border-cyan-200";
+
+                          return (
+                            <TableRow key={p.id} className="hover:bg-[#FAF8F5]/60 transition-colors border-b border-gray-100">
+                              <TableCell>
+                                <div className="w-14 h-11 rounded-lg bg-[#FAF8F5] overflow-hidden border border-[#F0E6D3] flex items-center justify-center relative">
+                                  {getStorageUrl(p.image_url || p.image_path) ? (
+                                    <img
+                                      src={getStorageUrl(p.image_url || p.image_path)!}
+                                      alt={p.title}
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                        const sibling = e.currentTarget.nextElementSibling as HTMLElement;
+                                        if (sibling) sibling.style.display = "flex";
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div
+                                    className="w-full h-full flex items-center justify-center bg-[#FAF8F5] text-[#B8943F]"
+                                    style={{ display: getStorageUrl(p.image_url || p.image_path) ? "none" : "flex" }}
+                                  >
+                                    <Tag className="w-4 h-4 text-[#B8943F]/70" />
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <button
+                                    type="button"
+                                    className="text-left font-bold text-sm text-[#4A3F35] hover:text-[#C9A24A] transition-colors"
+                                    onClick={() => {
+                                      setSearchParams((prev) => {
+                                        const next = new URLSearchParams(prev);
+                                        next.set("tab", "content-promo");
+                                        next.set("view", "editor");
+                                        next.set("id", String(p.id));
+                                        return next;
+                                      });
+                                    }}
+                                  >
+                                    {p.title}
+                                  </button>
+                                  <p className="text-[11px] text-gray-400 font-mono">/{p.slug}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${catBg}`}>
+                                  {p.category || "Bronze"}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => togglePromoStatus(p)}
+                                    title="Klik untuk mengubah status aktif/non-aktif promo"
+                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${p.is_active ? "bg-emerald-500" : "bg-red-500"}`}
+                                  >
+                                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${p.is_active ? "translate-x-4" : "translate-x-0.5"}`} />
+                                  </button>
+                                  <span className={`text-xs font-semibold ${p.is_active ? "text-emerald-700" : "text-red-600"}`}>
+                                    {p.is_active ? "Aktif" : "Non-aktif"}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-xs text-gray-600">
+                                {p.starts_at ? new Date(p.starts_at).toLocaleDateString("id-ID") : "-"} s/d {p.ends_at ? new Date(p.ends_at).toLocaleDateString("id-ID") : "-"}
+                              </TableCell>
+                              <TableCell className="text-right whitespace-nowrap">
+                                <Button
+                                  variant="outline"
+                                  className="rounded-lg border-[#F0E6D3] h-8 text-xs text-[#4A3F35] hover:bg-[#FAF8F5] mr-2"
+                                  onClick={() => {
+                                    setSearchParams((prev) => {
+                                      const next = new URLSearchParams(prev);
+                                      next.set("tab", "content-promo");
+                                      next.set("view", "editor");
+                                      next.set("id", String(p.id));
+                                      return next;
                                     });
-                                    if (res.ok) {
-                                      toast({ title: "Berhasil", message: "Promo dihapus", variant: "success" });
-                                      await fetchApiPromos();
-                                    }
-                                  } catch (e) { logger.error("Gagal hapus promo", e); }
-                                }}
-                              >
-                                Hapus
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg text-xs"
+                                  onClick={async () => {
+                                    const ok = window.confirm(`Hapus promo "${p.title}"?`);
+                                    if (!ok) return;
+                                    try {
+                                      const res = await fetch(`${API_BASE}/admin/promos/${p.id}`, {
+                                        method: "DELETE",
+                                        headers: { "Authorization": `Bearer ${token}` },
+                                      });
+                                      if (res.ok) {
+                                        toast({ title: "Berhasil", message: "Promo berhasil dihapus", variant: "success" });
+                                        await fetchApiPromos();
+                                      }
+                                    } catch (e) { logger.error("Gagal hapus promo", e); }
+                                  }}
+                                >
+                                  Hapus
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                       )}
                     </TableBody>
                   </Table>
@@ -7109,7 +7302,7 @@ function PromoEditor({ current, editorId, token, fetchApiPromos, setSearchParams
                   onChange={(e) => updateSaved({ category: e.target.value })}
                   className="w-full h-10 rounded-sm border border-gray-200 bg-white px-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-[#c9a24a]/30"
                 >
-                  {["Bronze", "Gold", "Platinum", "Diamond"].map((opt) => (
+                  {["Bronze", "Gold", "Platinum"].map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
                     </option>
@@ -7134,15 +7327,20 @@ function PromoEditor({ current, editorId, token, fetchApiPromos, setSearchParams
                   className="rounded-sm border-gray-200"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="promo-active"
-                  checked={saved.isActive}
-                  onChange={(e) => updateSaved({ isActive: e.target.checked })}
-                  className="w-4 h-4 rounded border-gray-300 text-[#c9a24a] focus:ring-[#c9a24a]"
-                />
-                <label htmlFor="promo-active" className="text-sm font-medium text-gray-700">Aktif</label>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#FAF8F5] border border-[#F0E6D3]">
+                <div>
+                  <label className="text-xs font-bold text-[#4A3F35] block">Status Promo</label>
+                  <span className="text-[11px] text-[#8A7B6B]">
+                    {saved.isActive ? "🟢 Promo Aktif & Tampil di Publik" : "🔴 Promo Non-aktif (Disembunyikan)"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => updateSaved({ isActive: !saved.isActive })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${saved.isActive ? "bg-emerald-500" : "bg-red-500"}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${saved.isActive ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-700">Tanggal Mulai</label>

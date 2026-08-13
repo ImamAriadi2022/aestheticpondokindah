@@ -67,7 +67,7 @@ class PromoAdminController extends Controller
             'image_path' => $imagePath,
             'button_label' => $data['button_label'] ?? 'Klaim Promo',
             'contact_whatsapp' => $data['contact_whatsapp'] ?? null,
-            'is_active' => (bool)($data['is_active'] ?? true),
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
             'starts_at' => $data['starts_at'] ?? null,
             'ends_at' => $data['ends_at'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
@@ -107,7 +107,7 @@ class PromoAdminController extends Controller
         if (array_key_exists('category', $data)) $promo->category = $data['category'];
         if (array_key_exists('button_label', $data)) $promo->button_label = $data['button_label'];
         if (array_key_exists('contact_whatsapp', $data)) $promo->contact_whatsapp = $data['contact_whatsapp'];
-        if (array_key_exists('is_active', $data)) $promo->is_active = (bool)$data['is_active'];
+        if (array_key_exists('is_active', $data) || $request->has('is_active')) $promo->is_active = $request->boolean('is_active');
         if (array_key_exists('starts_at', $data)) $promo->starts_at = $data['starts_at'];
         if (array_key_exists('ends_at', $data)) $promo->ends_at = $data['ends_at'];
         if (array_key_exists('sort_order', $data)) $promo->sort_order = $data['sort_order'];

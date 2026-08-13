@@ -50,7 +50,7 @@ class PopupAdminController extends Controller
             'button_label' => $data['button_label'] ?? null,
             'button_url' => $data['button_url'] ?? null,
             'image_path' => $imagePath,
-            'enabled' => (bool)($data['enabled'] ?? false),
+            'enabled' => $request->has('enabled') ? $request->boolean('enabled') : false,
             'starts_at' => $data['starts_at'] ?? null,
             'ends_at' => $data['ends_at'] ?? null,
             'priority' => $data['priority'] ?? 0,
@@ -86,7 +86,7 @@ class PopupAdminController extends Controller
         if (array_key_exists('message', $data)) $popup->message = $data['message'];
         if (array_key_exists('button_label', $data)) $popup->button_label = $data['button_label'];
         if (array_key_exists('button_url', $data)) $popup->button_url = $data['button_url'];
-        if (array_key_exists('enabled', $data)) $popup->enabled = (bool)$data['enabled'];
+        if (array_key_exists('enabled', $data) || $request->has('enabled')) $popup->enabled = $request->boolean('enabled');
         if (array_key_exists('starts_at', $data)) $popup->starts_at = $data['starts_at'];
         if (array_key_exists('ends_at', $data)) $popup->ends_at = $data['ends_at'];
         if (array_key_exists('priority', $data)) $popup->priority = (int)$data['priority'];

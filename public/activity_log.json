@@ -1,5 +1,67 @@
 [
     {
+        "id": "act-172",
+        "date": "2026-08-13",
+        "time": "14:55",
+        "category": "Deployment | DevOps | Script | Production",
+        "type": "Enhancement",
+        "feature": "Pembaruan Script Otomatis Deployment (`deploy.sh`)",
+        "description": "Memperbarui skrip `deploy.sh` agar sinkron dengan struktur direktori production di mana root frontend berada pada folder `public/` dan root Laravel berada di root proyek. Menambahkan pembuatan direktori storage lengkap, auto-seeding promo & popup, penanganan symlink serta pencopy-an fallback gambar promo untuk memastikan seluruh fitur tampil sempurna saat di-deploy.",
+        "notes": "1. deploy.sh: Menambahkan `mkdir -p` untuk sub-folder storage public (`promos`, `popups`, `layanan`, dll.).\n2. Menambahkan pengecekan & seeding otomatis `WilayahSeeder` dan `PromoSeeder` jika data kosong atau diperbarui.\n3. Menambahkan mekanisme penyalinan fallback gambar promo dari `storage/app/public/promos` ke `public/storage/promos` untuk mengantisipasi hosting tanpa izin symlink.\n4. Memverifikasi kelengkapan berkas webroot `public/` dan pencachean otomatis config, route, serta view Laravel.",
+        "reason": "Memastikan deployment production di server berjalan lancar, otomatis, dan menampilkan seluruh aset promo & pop up dengan sempurna.",
+        "files": [
+            "deploy.sh",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-171",
+        "date": "2026-08-13",
+        "time": "14:38",
+        "category": "Frontend | UI/UX | Admin | Toggle Switch Fix",
+        "type": "Bug Fix",
+        "feature": "Perbaikan Visual Toggle Switch (Posisi Knob & Warna Merah Non-aktif)",
+        "description": "Memperbaiki bug visual pada komponen toggle switch status promo & pop up di Admin Dashboard. Mengoreksi nama class translate Tailwind (translate-x-4/translate-x-6) agar posisi knob saat Aktif berada di sebelah KANAN dan saat Non-aktif berada di sebelah KIRI, serta mengubah warna background status Non-aktif menjadi MERAH (bg-red-500).",
+        "notes": "1. ClinicDashboard.tsx: Mengubah `translate-x-4.5` yang tidak valid menjadi `translate-x-4` pada tabel quick promo switch.\n2. Mengubah warna background kondisi `is_active = false` dari `bg-gray-300` menjadi `bg-red-500` (merah terang).\n3. Menyelaraskan posisi knob & warna merah pada seluruh toggle switch (PopUp Promo, Tabel All Promo, dan PromoEditor).\n4. Kompilasi build Vite berhasil 100% tanpa error.",
+        "reason": "Memastikan standar indikator UI toggle switch konsisten (Kiri = Non-aktif merah, Kanan = Aktif hijau).",
+        "files": [
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-170",
+        "date": "2026-08-13",
+        "time": "14:22",
+        "category": "Backend | Frontend | Admin | Promo | PopUp",
+        "type": "Feature",
+        "feature": "Fitur Toggle Aktif/Non-aktif Pop Up Promo dan CRUD All Promo Panel Admin",
+        "description": "Menambahkan kontrol switch interaktif untuk mengaktifkan dan me-nonaktifkan Pop Up Promo di Admin Dashboard, serta meningkatkan manajemen All Promos dengan fitur pencarian judul, filter kategori/status, statistik cepat, dan tombol toggle status langsung dari tabel.",
+        "notes": "1. PopupAdminController.php & PromoAdminController.php: Menggunakan $request->boolean() untuk konversi nilai enabled / is_active dari FormData.\n2. ClinicDashboard.tsx (content-popup): Menambahkan banner status (🟢 Aktif / 🔴 Non-aktif), toggle switch interaktif, dan penanda preview live.\n3. ClinicDashboard.tsx (content-promo): Menambahkan kartu statistik cepat (Total, Aktif, Non-aktif), baris pencarian & filter kategori, serta tombol quick switch status pada setiap baris tabel promo.\n4. PromoEditor: Mengubah checkbox status promo menjadi toggle switch modern berstandar UI clinic.",
+        "reason": "Memungkinkan admin klinik untuk mengontrol munculnya pop up promo pada halaman utama pasien dan mengelola seluruh promo dengan cepat dan efisien.",
+        "files": [
+            "app/Http/Controllers/Api/Admin/Content/PopupAdminController.php",
+            "app/Http/Controllers/Api/Admin/Content/PromoAdminController.php",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/progres.php",
+            "public_html/progres.php",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-169",
         "date": "2026-08-09",
         "time": "19:57",
