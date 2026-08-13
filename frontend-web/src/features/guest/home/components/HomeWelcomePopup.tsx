@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
-import { API_BASE } from "@/core/api/apiConfig";
+import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
 
 type Props = {
   open: boolean;
@@ -11,29 +11,30 @@ type Props = {
 export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
   const interactedRef = useRef(false);
   const timerRef = useRef<number | null>(null);
-  const [popupData, setPopupData] = useState<any>(() => {
-    try {
-      const cached = localStorage.getItem("apident:cached_popup");
-      return cached ? JSON.parse(cached) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [popupData, setPopupData] = useState<any>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/public/popup/active`)
+    // Clear legacy localStorage cache to prevent stale disabled popups
+    try {
+      localStorage.removeItem("apident:cached_popup");
+    } catch {}
+
+    fetch(`${API_BASE}/public/popup/active?_t=${Date.now()}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data) {
+        if (data && data.id && (data.enabled === true || data.enabled === 1 || data.enabled === "1")) {
           setPopupData(data);
-          localStorage.setItem("apident:cached_popup", JSON.stringify(data));
+          onOpenChange(true);
         } else {
           setPopupData(null);
-          localStorage.removeItem("apident:cached_popup");
+          onOpenChange(false);
         }
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => {
+        setPopupData(null);
+        onOpenChange(false);
+      });
+  }, [onOpenChange]);
 
   useEffect(() => {
     if (!open) {
@@ -55,7 +56,7 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       timerRef.current = null;
     };
-  }, [open, onOpenChange]);
+  }, [open, popupData, onOpenChange]);
 
   const markInteracted = () => {
     interactedRef.current = true;
@@ -76,8 +77,8 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
   const title = popupData.title || "";
   const headline = popupData.headline || "";
   const message = popupData.message || "";
-  const buttonLabel = popupData.button_label || "";
-  const imageUrl = popupData.image_url || "";
+  const buttonLabel = popupData.button_label || "Ambil Promo";
+  const imageUrl = getStorageUrl(popupData.image_url) || popupData.image_url || "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,11 +92,17 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
         </span>
         <div className="grid grid-cols-1 md:grid-cols-2" onMouseDown={markInteracted} onKeyDown={markInteracted}>
           <div className="relative bg-brand-cream">
-            <img
-              src={imageUrl}
-              alt="Aesthetic Pondok Indah Dental"
-              className="w-full h-auto object-cover max-h-[200px] sm:max-h-[220px] md:max-h-none md:min-h-[420px]"
-            />
+            {imageUrl ? (
+              <img
+                src={imageUrl}
+                alt={title || "Aesthetic Pondok Indah Dental"}
+                className="w-full h-auto object-cover max-h-[200px] sm:max-h-[220px] md:max-h-none md:min-h-[420px]"
+              />
+            ) : (
+              <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-[#FDF8F0] text-[#B8943F] text-xs">
+                Promo Spesial Klinik
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-black/20" />
           </div>
 
@@ -110,7 +117,7 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
 
             <div className="mt-4 sm:mt-5 space-y-2.5 sm:space-y-3">
               <a
-                href={whatsappHref}
+                href={popupData.button_url || whatsappHref}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => {

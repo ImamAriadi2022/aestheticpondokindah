@@ -95,6 +95,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/popups', [PopupAdminController::class, 'index']);
         Route::post('/popups', [PopupAdminController::class, 'store']);
         Route::post('/popups/{popup}', [PopupAdminController::class, 'update']);
+        Route::put('/popups/{popup}', [PopupAdminController::class, 'update']);
         Route::delete('/popups/{popup}', [PopupAdminController::class, 'destroy']);
 
         Route::get('/gallery-items', [GalleryAdminController::class, 'index']);

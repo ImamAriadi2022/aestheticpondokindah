@@ -8,7 +8,12 @@ const getApiBaseUrl = (): string => {
     return import.meta.env.VITE_API_BASE_URL;
   }
 
-  // Cek apakah di environment production
+  // Handle local development or local preview on localhost / 127.0.0.1
+  if (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+    return "http://localhost:8000/api";
+  }
+
+  // Cek apakah di environment production di server hosting
   if (import.meta.env.PROD) {
     if (typeof window !== "undefined" && window.location.origin) {
       return `${window.location.origin}/api`;
@@ -31,6 +36,10 @@ export const API_BASE = getApiBaseUrl();
 export const getStorageUrl = (imageUrl: string | null | undefined): string | null => {
   if (!imageUrl) return null;
 
+  if (imageUrl.startsWith("blob:") || imageUrl.startsWith("data:")) {
+    return imageUrl;
+  }
+
   const baseUrl = API_BASE.replace("/api", "");
 
   // If the backend returned a path that already contains /storage/, extract it
@@ -39,7 +48,7 @@ export const getStorageUrl = (imageUrl: string | null | undefined): string | nul
     return baseUrl + path;
   }
 
-  // Already an absolute URL from a different domain (e.g. CDN)
+  // Already an absolute URL
   if (imageUrl.startsWith("http")) {
     return imageUrl;
   }

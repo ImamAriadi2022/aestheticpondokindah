@@ -1,5 +1,128 @@
 [
     {
+        "id": "act-179",
+        "date": "2026-08-14",
+        "time": "01:51",
+        "category": "Frontend | Backend | Admin | PopUp File Upload Fix",
+        "type": "Bug Fix",
+        "feature": "Perbaikan Persistensi Berkas Gambar Pop Up Saat Disimpan & Direfresh",
+        "description": "Memperbaiki masalah berkas foto pop up promo yang hilang dari database/tampilan saat direfresh. Menghapus penambahan `_method: PUT` pada request multipart FormData di `ClinicDashboard.tsx` agar PHP Superglobal `$_FILES` dan `$request->hasFile('image')` terbaca 100% presisi oleh backend Laravel.",
+        "notes": "1. ClinicDashboard.tsx: Mengubah request `fetch()` saat menyimpan pembaruan pop up dengan gambar dari `POST` dengan `_method: PUT` menjadi `POST` murni (`/api/admin/popups/{id}`).\n2. Memperbarui handler respons `fetchApiPopups` agar secara langsung mengupdate `imageUrl` dari objek `savedPopup` yang dikembalikan backend.",
+        "reason": "Memastikan gambar yang diunggah tersimpan sempurna ke dalam database MySQL dan langsung bertahan selamanya meskipun halaman direfresh.",
+        "files": [
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-178",
+        "date": "2026-08-14",
+        "time": "01:49",
+        "category": "Backend | Frontend | Admin | PopUp Image Mirroring",
+        "type": "Bug Fix",
+        "feature": "Perbaikan Pengunggahan & Penayangan Gambar Pop Up Promo",
+        "description": "Memperbaiki masalah gambar Pop Up Promo yang tidak muncul di preview admin maupun di modal pop up halaman utama. Menambahkan sinkronisasi penyalinan berkas gambar terunggah di backend, penyelarasan format URL media, dan dukungan URL blob/data pada helper `getStorageUrl`.",
+        "notes": "1. PopupAdminController.php: Menambahkan method `mirrorStorageFile` untuk secara otomatis menyalin gambar terunggah dari `storage/app/public/popups/` ke `public/storage/popups/` sehingga dapat diakses sempurna di Windows/Laragon tanpa terhambat symlink.\n2. apiConfig.ts: Memperbarui `getStorageUrl` agar mengenali URL gambar berformat `blob:` dan `data:` secara langsung saat pengunggahan gambar oleh admin.\n3. ClinicDashboard.tsx & HomeWelcomePopup.tsx: Memasang helper `getStorageUrl` pada tag `<img>` preview admin dan modal pop-up publik.",
+        "reason": "Memastikan gambar Pop Up Promo yang diunggah admin langsung tampil di preview kartu admin dan penayangan publik halaman utama.",
+        "files": [
+            "app/Http/Controllers/Api/Admin/Content/PopupAdminController.php",
+            "frontend-web/src/core/api/apiConfig.ts",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "frontend-web/src/features/guest/home/components/HomeWelcomePopup.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-177",
+        "date": "2026-08-14",
+        "time": "01:44",
+        "category": "Frontend | API | Home | PopUp Single Source Fix",
+        "type": "Bug Fix",
+        "feature": "Pemberantasan Delay Pop Up & Penyelarasan API Base URL Localhost",
+        "description": "Memperbaiki masalah pemicu pop up yang berkedip/delay 1-2 detik pada halaman utama. Memperbarui `apiConfig.ts` agar pada environment localhost/preview selalu mengarah ke Laravel backend (:8000), serta menyatukan pemicu modal pop up ke dalam satu Single Source of Truth pada `HomeWelcomePopup.tsx`.",
+        "notes": "1. apiConfig.ts: Memastikan request API saat pengujian localhost selalu diarahkan ke `http://localhost:8000/api` sehingga tidak pernah mengembalikan HTML index.html (404/fallback Vite).\n2. HomeWelcomePopup.tsx & Home.tsx: Menyatukan pemicu pembukaan modal pop-up. `HomeWelcomePopup.tsx` secara langsung mengecek database lewat endpoint `/api/public/popup/active`. Jika database mengembalikan data pop-up aktif (`enabled === true`), barulah modal dibuka. Jika non-aktif (`enabled === false` atau `null`), modal dijamin TIDAK PERNAH dirender atau dibuka.",
+        "reason": "Mengeliminasi delay 1-2 detik pemicu pop up dan memastikan hanya pop up berstatus AKTIF murni dari database MySQL yang dapat tampil di halaman utama.",
+        "files": [
+            "frontend-web/src/core/api/apiConfig.ts",
+            "frontend-web/src/features/guest/home/components/HomeWelcomePopup.tsx",
+            "frontend-web/src/features/guest/home/pages/Home.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-176",
+        "date": "2026-08-14",
+        "time": "01:40",
+        "category": "Frontend | Home | Admin | PopUp Trigger Fix",
+        "type": "Bug Fix",
+        "feature": "Perbaikan Pembukaan Pop Up di Home Page & Visual Switch Toggle",
+        "description": "Menghapus logika pembukaan paksa `setPopupOpen(true)` berbasis `localStorage` di `Home.tsx` yang menyebabkan modal pop-up tetap terbuka meskipun API publik mengembalikan `null`. Menyelaraskan pula posisi knob switch toggle formulir admin dengan transform inline CSS presisi.",
+        "notes": "1. Home.tsx: Memperbaiki `useEffect` pembuka modal pop-up agar hanya membuka modal `popupOpen = true` jika API `/public/popup/active` benar-benar mengembalikan data pop-up aktif (`enabled !== false`). Menutup modal dan membersihkan cache `localStorage` jika tidak ada pop-up aktif.\n2. ClinicDashboard.tsx: Memasang `style={{ transform: popupPromo.enabled ? 'translateX(22px)' : 'translateX(2px)' }}` pada knob switch toggle agar posisi knob di kiri saat NON-AKTIF (merah) dan di kanan saat AKTIF (hijau) tampil 100% konsisten.",
+        "reason": "Menghentikan pemanggilan pop-up hantu yang tersimpan di localStorage dan memastikan modal pop-up publik taat pada status toggle di Admin Dashboard.",
+        "files": [
+            "frontend-web/src/features/guest/home/pages/Home.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-175",
+        "date": "2026-08-14",
+        "time": "01:37",
+        "category": "Frontend | Home | Admin | PopUp Sync Fix",
+        "type": "Bug Fix",
+        "feature": "Perbaikan Sinkronisasi Real-Time & Caching Pop Up Promo",
+        "description": "Memperbaiki masalah pop up yang sempat berkedip saat refresh admin dan menyembunyikan pop up secara sempurna di halaman utama publik saat status non-aktif. Mengapus penyimpanan cache `localStorage` usang pada `HomeWelcomePopup.tsx` serta menyelaraskan state awal `popupPromo.enabled` di Admin Dashboard.",
+        "notes": "1. HomeWelcomePopup.tsx: Menghapus pembacaan sinkron dari `localStorage.getItem('apident:cached_popup')` yang menyebabkan pop-up lama tetap muncul di halaman utama meskipun admin telah me-non-aktifkannya. Memasang pengecekan real-time langsung ke API `/public/popup/active`.\n2. ClinicDashboard.tsx: Mengubah default initial state `popupPromo.enabled` dari `true` menjadi `false` untuk mencegah kedipan status AKTIF saat halaman direfresh sebelum data API selesai dimuat.\n3. Melakukan sinkronisasi penuh status non-aktif pada database lokal.",
+        "reason": "Memastikan pop up promo langsung tersembunyi dari pengunjung halaman utama saat di-non-aktifkan dan tampilan status di admin dashboard konsisten sejak pertama kali dimuat.",
+        "files": [
+            "frontend-web/src/features/guest/home/components/HomeWelcomePopup.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-174",
+        "date": "2026-08-14",
+        "time": "01:32",
+        "category": "Backend | Frontend | Admin | PopUp Promo Fix",
+        "type": "Bug Fix",
+        "feature": "Perbaikan Penyimpanan & Toggle Status Pop Up Promo ke Database",
+        "description": "Memperbaiki masalah gagal simpan dan toggle status Pop Up Promo pada Admin Dashboard. Menambahkan pemetaan route PUT di backend API, menyempurnakan parsing validasi boolean untuk FormData, serta mengimplementasikan penyimpanan otomatis instan saat switch toggle diubah.",
+        "notes": "1. routes/api.php: Menambahkan `Route::put('/popups/{popup}', ...)` sehingga request update via FormData dengan `_method=PUT` tidak lagi mengembalikan error 405 Method Not Allowed.\n2. PopupAdminController.php: Mengubah aturan validasi title & enabled serta menggunakan `$request->boolean('enabled')` agar nilai status aktif/non-aktif tersimpan presisi di database MySQL.\n3. ClinicDashboard.tsx: Menambahkan handler `togglePopupStatusDirectly` untuk menyimpan perubahan toggle switch secara instan ke database, menyediakan notifikasi Toast umpan balik, dan default fallback title.",
+        "reason": "Memastikan pengeditan, pengunggahan gambar, serta switch toggle status aktif/non-aktif Pop Up Promo dapat tersimpan sempurna ke dalam database.",
+        "files": [
+            "routes/api.php",
+            "app/Http/Controllers/Api/Admin/Content/PopupAdminController.php",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-173",
         "date": "2026-08-14",
         "time": "00:14",

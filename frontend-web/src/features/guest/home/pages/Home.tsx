@@ -10,39 +10,10 @@ import TestimonialsSection from "@/features/guest/home/components/TestimonialsSe
 import GallerySection from "@/features/guest/home/components/GallerySection";
 import CTASection from "@/features/guest/home/components/CTASection";
 import HomeWelcomePopup from "@/features/guest/home/components/HomeWelcomePopup";
-import { useEffect, useState } from "react";
-import { API_BASE } from "@/core/api/apiConfig";
+import { useState } from "react";
 
 export default function HomePage() {
   const [popupOpen, setPopupOpen] = useState(false);
-
-  useEffect(() => {
-    const cached = localStorage.getItem("apident:cached_popup");
-
-    // Buka popup hanya setelah render stabil dan hanya jika ada cache.
-    // Ini menghindari race condition Radix Dialog Portal yang kadang bikin blank.
-    if (cached) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => setPopupOpen(true));
-      });
-    }
-
-    // Tetap fetch untuk sync data terbaru (tanpa memaksa open).
-    fetch(`${API_BASE}/public/popup/active`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) {
-          localStorage.setItem("apident:cached_popup", JSON.stringify(data));
-          // Kalau belum open (misalnya cache kosong), open setelah data siap.
-          if (!cached) {
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => setPopupOpen(true));
-            });
-          }
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="min-h-screen">

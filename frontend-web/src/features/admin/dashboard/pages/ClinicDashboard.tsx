@@ -1387,7 +1387,7 @@ export default function ClinicDashboardPage() {
     buttonLabel: "",
     imageUrl: "",
     imageFile: null as File | null,
-    enabled: true,
+    enabled: false,
   });
 
   const [_galleryItems] = useState<{ id: string; title: string; imageUrl: string; category: string }[]>([]);
@@ -5018,6 +5018,36 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
       }
 
       case "content-popup": {
+        const togglePopupStatusDirectly = async (newStatus: boolean) => {
+          setPopupPromo((p) => ({ ...p, enabled: newStatus }));
+          const firstPopup = apiPopups[0];
+          if (firstPopup) {
+            try {
+              const formData = new FormData();
+              formData.append("enabled", newStatus ? "1" : "0");
+              formData.append("_method", "PUT");
+              const res = await fetch(`${API_BASE}/admin/popups/${firstPopup.id}`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData,
+              });
+              if (res.ok) {
+                toast({
+                  title: "Status Pop Up Diperbarui",
+                  message: `Pop up promo berhasil di-${newStatus ? "aktifkan" : "non-aktifkan"}.`,
+                  variant: "success",
+                });
+                await fetchApiPopups();
+              } else {
+                toast({ title: "Gagal Perbarui Status", message: "Tidak dapat mengubah status di database.", variant: "error" });
+              }
+            } catch (e) {
+              logger.error("Gagal toggle status popup", e);
+              toast({ title: "Koneksi Error", message: "Gagal terhubung ke server.", variant: "error" });
+            }
+          }
+        };
+
         return (
           <div className="space-y-6">
             {/* Header */}
@@ -5040,10 +5070,10 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                       const firstPopup = apiPopups[0];
                       const isNew = !firstPopup;
                       const formData = new FormData();
-                      formData.append("title", popupPromo.title);
-                      formData.append("headline", popupPromo.headline);
-                      formData.append("message", popupPromo.message);
-                      formData.append("button_label", popupPromo.buttonLabel);
+                      formData.append("title", popupPromo.title || "Pop Up Promo");
+                      formData.append("headline", popupPromo.headline || "");
+                      formData.append("message", popupPromo.message || "");
+                      formData.append("button_label", popupPromo.buttonLabel || "");
                       formData.append("enabled", popupPromo.enabled ? "1" : "0");
                       if (popupPromo.imageFile) {
                         formData.append("image", popupPromo.imageFile);
@@ -5052,10 +5082,6 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                         ? `${API_BASE}/admin/popups`
                         : `${API_BASE}/admin/popups/${firstPopup.id}`;
 
-                      if (!isNew) {
-                        formData.append("_method", "PUT");
-                      }
-
                       const res = await fetch(url, {
                         method: "POST",
                         headers: { "Authorization": `Bearer ${token}` },
@@ -5063,15 +5089,23 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                       });
 
                       if (!res.ok) {
-                        logger.error("Gagal simpan popup", await res.text());
+                        const errText = await res.text();
+                        logger.error("Gagal simpan popup", errText);
+                        toast({ title: "Gagal Menyimpan", message: "Terjadi kesalahan saat menyimpan data pop up ke database.", variant: "error" });
                         return;
                       }
 
-                      toast({ title: "Tersimpan", message: `Pop up promo berhasil disimpan (${popupPromo.enabled ? "Aktif" : "Non-aktif"})`, variant: "success" });
+                      const savedPopup = await res.json();
+                      toast({ title: "Tersimpan Ke Database", message: `Pop up promo berhasil disimpan (${popupPromo.enabled ? "Aktif" : "Non-aktif"})`, variant: "success" });
                       await fetchApiPopups();
-                      setPopupPromo((p) => ({ ...p, imageFile: null }));
+                      if (savedPopup && savedPopup.image_url) {
+                        setPopupPromo((p) => ({ ...p, imageUrl: savedPopup.image_url, imageFile: null }));
+                      } else {
+                        setPopupPromo((p) => ({ ...p, imageFile: null }));
+                      }
                     } catch (e) {
                       logger.error("Gagal simpan popup", e);
+                      toast({ title: "Gagal Menyimpan", message: "Gagal terhubung ke server saat menyimpan.", variant: "error" });
                     }
                   }}
                 >
@@ -5103,10 +5137,13 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                     </div>
                     <button
                       type="button"
-                      onClick={() => setPopupPromo((p) => ({ ...p, enabled: !p.enabled }))}
+                      onClick={() => togglePopupStatusDirectly(!popupPromo.enabled)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${popupPromo.enabled ? "bg-emerald-500" : "bg-red-500"}`}
                     >
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${popupPromo.enabled ? "translate-x-6" : "translate-x-1"}`} />
+                      <span
+                        className="inline-block h-4 w-4 rounded-full bg-white transition-transform duration-200 shadow-xs"
+                        style={{ transform: popupPromo.enabled ? "translateX(22px)" : "translateX(2px)" }}
+                      />
                     </button>
                   </div>
 
@@ -5183,7 +5220,7 @@ function DownloadAppEditor({ current, editorId, token, fetchApiDownloadApps, set
                   )}
                   <div className="h-36 w-full bg-gray-100 overflow-hidden relative">
                     {popupPromo.imageUrl ? (
-                      <img src={popupPromo.imageUrl} alt="promo" className="w-full h-full object-cover" />
+                      <img src={getStorageUrl(popupPromo.imageUrl) || popupPromo.imageUrl} alt="promo" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-[#FDF8F0] text-[#B8943F] text-xs">
                         Belum ada gambar

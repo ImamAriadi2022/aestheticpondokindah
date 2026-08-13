@@ -20,13 +20,13 @@ class PopupAdminController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'headline' => 'nullable|string|max:255',
             'message' => 'nullable|string',
             'button_label' => 'nullable|string|max:255',
             'button_url' => 'nullable|string|max:500',
             'image' => 'nullable|image|max:5120',
-            'enabled' => 'nullable|boolean',
+            'enabled' => 'nullable',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date',
             'priority' => 'nullable|integer',
@@ -41,16 +41,17 @@ class PopupAdminController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('popups', 'public');
+            $this->mirrorStorageFile($imagePath);
         }
 
         $popup = Popup::create([
-            'title' => $data['title'],
+            'title' => !empty($data['title']) ? $data['title'] : 'Pop Up Promo',
             'headline' => $data['headline'] ?? null,
             'message' => $data['message'] ?? null,
             'button_label' => $data['button_label'] ?? null,
             'button_url' => $data['button_url'] ?? null,
             'image_path' => $imagePath,
-            'enabled' => $request->has('enabled') ? $request->boolean('enabled') : false,
+            'enabled' => $request->has('enabled') ? $request->boolean('enabled') : true,
             'starts_at' => $data['starts_at'] ?? null,
             'ends_at' => $data['ends_at'] ?? null,
             'priority' => $data['priority'] ?? 0,
@@ -68,11 +69,11 @@ class PopupAdminController extends Controller
             'button_label' => 'nullable|string|max:255',
             'button_url' => 'nullable|string|max:500',
             'image' => 'nullable|image|max:5120',
-            'enabled' => 'nullable|boolean',
+            'enabled' => 'nullable',
             'starts_at' => 'nullable|date',
             'ends_at' => 'nullable|date',
             'priority' => 'nullable|integer',
-            'remove_image' => 'nullable|boolean',
+            'remove_image' => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -81,17 +82,21 @@ class PopupAdminController extends Controller
 
         $data = $validator->validated();
 
-        if (array_key_exists('title', $data)) $popup->title = $data['title'];
-        if (array_key_exists('headline', $data)) $popup->headline = $data['headline'];
-        if (array_key_exists('message', $data)) $popup->message = $data['message'];
-        if (array_key_exists('button_label', $data)) $popup->button_label = $data['button_label'];
-        if (array_key_exists('button_url', $data)) $popup->button_url = $data['button_url'];
-        if (array_key_exists('enabled', $data) || $request->has('enabled')) $popup->enabled = $request->boolean('enabled');
-        if (array_key_exists('starts_at', $data)) $popup->starts_at = $data['starts_at'];
-        if (array_key_exists('ends_at', $data)) $popup->ends_at = $data['ends_at'];
-        if (array_key_exists('priority', $data)) $popup->priority = (int)$data['priority'];
+        if ($request->has('title') && filled($request->input('title'))) {
+            $popup->title = $request->input('title');
+        }
+        if ($request->has('headline')) $popup->headline = $data['headline'] ?? null;
+        if ($request->has('message')) $popup->message = $data['message'] ?? null;
+        if ($request->has('button_label')) $popup->button_label = $data['button_label'] ?? null;
+        if ($request->has('button_url')) $popup->button_url = $data['button_url'] ?? null;
+        if ($request->has('enabled')) {
+            $popup->enabled = $request->boolean('enabled');
+        }
+        if ($request->has('starts_at')) $popup->starts_at = $data['starts_at'] ?? null;
+        if ($request->has('ends_at')) $popup->ends_at = $data['ends_at'] ?? null;
+        if ($request->has('priority')) $popup->priority = (int)($data['priority'] ?? 0);
 
-        if (!empty($data['remove_image']) && $popup->image_path) {
+        if ($request->boolean('remove_image') && $popup->image_path) {
             Storage::disk('public')->delete($popup->image_path);
             $popup->image_path = null;
         }
@@ -101,6 +106,7 @@ class PopupAdminController extends Controller
                 Storage::disk('public')->delete($popup->image_path);
             }
             $popup->image_path = $request->file('image')->store('popups', 'public');
+            $this->mirrorStorageFile($popup->image_path);
         }
 
         $popup->save();
@@ -116,8 +122,32 @@ class PopupAdminController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    private function mirrorStorageFile(string $relativePath): void
+    {
+        try {
+            $source = storage_path('app/public/' . $relativePath);
+            $dest = public_path('storage/' . $relativePath);
+            $dir = dirname($dest);
+            if (!file_exists($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            if (file_exists($source)) {
+                copy($source, $dest);
+            }
+        } catch (\Throwable $e) {}
+    }
+
     private function serialize(Popup $popup): array
     {
+        $imageUrl = null;
+        if ($popup->image_path) {
+            $cleanPath = ltrim($popup->image_path, '/');
+            if (str_starts_with($cleanPath, 'storage/')) {
+                $cleanPath = substr($cleanPath, 8);
+            }
+            $imageUrl = asset('storage/' . $cleanPath);
+        }
+
         return [
             'id' => (string) $popup->id,
             'title' => $popup->title,
@@ -125,7 +155,7 @@ class PopupAdminController extends Controller
             'message' => $popup->message,
             'button_label' => $popup->button_label,
             'button_url' => $popup->button_url,
-            'image_url' => $popup->image_path ? asset('storage/' . $popup->image_path) : null,
+            'image_url' => $imageUrl,
             'image_path' => $popup->image_path,
             'enabled' => (bool) $popup->enabled,
             'starts_at' => optional($popup->starts_at)->toISOString(),
