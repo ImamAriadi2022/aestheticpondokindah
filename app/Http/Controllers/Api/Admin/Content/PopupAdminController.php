@@ -40,8 +40,7 @@ class PopupAdminController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('popups', 'public');
-            $this->mirrorStorageFile($imagePath);
+            $imagePath = $this->processAndSaveWebp($request->file('image'));
         }
 
         $popup = Popup::create([
@@ -98,15 +97,16 @@ class PopupAdminController extends Controller
 
         if ($request->boolean('remove_image') && $popup->image_path) {
             Storage::disk('public')->delete($popup->image_path);
+            @unlink(public_path('storage/' . ltrim($popup->image_path, '/')));
             $popup->image_path = null;
         }
 
         if ($request->hasFile('image')) {
             if ($popup->image_path) {
                 Storage::disk('public')->delete($popup->image_path);
+                @unlink(public_path('storage/' . ltrim($popup->image_path, '/')));
             }
-            $popup->image_path = $request->file('image')->store('popups', 'public');
-            $this->mirrorStorageFile($popup->image_path);
+            $popup->image_path = $this->processAndSaveWebp($request->file('image'));
         }
 
         $popup->save();
@@ -117,9 +117,78 @@ class PopupAdminController extends Controller
     {
         if ($popup->image_path) {
             Storage::disk('public')->delete($popup->image_path);
+            @unlink(public_path('storage/' . ltrim($popup->image_path, '/')));
         }
         $popup->delete();
         return response()->json(['ok' => true]);
+    }
+
+    private function processAndSaveWebp(\Illuminate\Http\UploadedFile $file): ?string
+    {
+        $filePath = $file->getRealPath();
+        $mime = $file->getMimeType();
+
+        $image = match ($mime) {
+            'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($filePath),
+            'image/png' => @imagecreatefrompng($filePath),
+            'image/gif' => @imagecreatefromgif($filePath),
+            'image/webp' => @imagecreatefromwebp($filePath),
+            'image/bmp', 'image/x-ms-bmp' => @imagecreatefrombmp($filePath),
+            default => null,
+        };
+
+        if (!$image) {
+            $path = $file->store('popups', 'public');
+            $this->mirrorStorageFile($path);
+            return $path;
+        }
+
+        $origW = imagesx($image);
+        $origH = imagesy($image);
+
+        $maxW = 1200;
+        $maxH = 1200;
+        $newW = $origW;
+        $newH = $origH;
+
+        if ($origW > $maxW || $origH > $maxH) {
+            $ratio = min($maxW / $origW, $maxH / $origH);
+            $newW = (int) round($origW * $ratio);
+            $newH = (int) round($origH * $ratio);
+        }
+
+        $canvas = imagecreatetruecolor($newW, $newH);
+        imagealphablending($canvas, false);
+        imagesavealpha($canvas, true);
+
+        imagecopyresampled(
+            $canvas,
+            $image,
+            0, 0, 0, 0,
+            $newW, $newH,
+            $origW, $origH
+        );
+
+        $relativeFilename = 'popups/popup_' . uniqid() . '_' . time() . '.webp';
+        $storageDir = storage_path('app/public/popups');
+        if (!file_exists($storageDir)) {
+            mkdir($storageDir, 0755, true);
+        }
+
+        $fullStoragePath = storage_path('app/public/' . $relativeFilename);
+        $saved = imagewebp($canvas, $fullStoragePath, 85);
+
+        imagedestroy($canvas);
+        imagedestroy($image);
+
+        if ($saved) {
+            $this->mirrorStorageFile($relativeFilename);
+            return $relativeFilename;
+        }
+
+        $path = $file->store('popups', 'public');
+        $this->mirrorStorageFile($path);
+        return $path;
     }
 
     private function mirrorStorageFile(string $relativePath): void
