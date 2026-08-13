@@ -73,6 +73,8 @@ Route::prefix('admin')->group(function () {
         Route::post('/doctors/{user}/reset-password', [UserController::class, 'resetPassword']);
 
         Route::get('/doctor-schedules', [DoctorScheduleController::class, 'adminIndex']);
+        Route::post('/doctor-schedules', [DoctorScheduleController::class, 'adminStore']);
+        Route::delete('/doctor-schedules/{schedule}', [DoctorScheduleController::class, 'adminDestroy']);
 
         Route::get('/branches', [BranchController::class, 'adminIndex']);
         Route::post('/branches', [BranchController::class, 'store']);

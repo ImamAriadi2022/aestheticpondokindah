@@ -41,6 +41,54 @@ class DoctorScheduleController extends Controller
         return response()->json($items);
     }
 
+    public function adminStore(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+            'date' => 'required|date',
+            'time_range' => 'required|string|max:100',
+            'location' => 'required|string|max:255',
+            'total_slots' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $data = $validator->validated();
+
+        $schedule = DoctorSchedule::create([
+            'user_id' => $data['user_id'],
+            'date' => $data['date'],
+            'time_range' => $data['time_range'],
+            'location' => $data['location'],
+            'total_slots' => $data['total_slots'] ?? 10,
+            'booked_slots' => 0,
+        ]);
+
+        return response()->json([
+            'message' => 'Jadwal dokter berhasil ditambahkan',
+            'schedule' => [
+                'id' => (string) $schedule->id,
+                'doctorId' => (string) $schedule->user_id,
+                'date' => $schedule->date->format('Y-m-d'),
+                'displayDate' => $schedule->date->format('d F Y'),
+                'timeRange' => $schedule->time_range,
+                'location' => $schedule->location,
+                'totalSlots' => $schedule->total_slots,
+                'bookedSlots' => $schedule->booked_slots,
+                'slotsLeft' => $schedule->slots_left,
+                'isFull' => $schedule->is_full,
+            ],
+        ], 201);
+    }
+
+    public function adminDestroy(DoctorSchedule $schedule): JsonResponse
+    {
+        $schedule->delete();
+        return response()->json(['message' => 'Jadwal dokter berhasil dihapus']);
+    }
+
     public function publicIndex(Request $request): JsonResponse
     {
         $items = DoctorSchedule::query()

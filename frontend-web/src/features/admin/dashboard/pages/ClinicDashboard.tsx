@@ -274,7 +274,15 @@ export default function ClinicDashboardPage() {
         );
 
       case "doctors":
-        return <DoctorsPage doctors={apiDoctors} token={token || ""} fetchApiDoctors={fetchApiDoctors} />;
+        return (
+          <DoctorsPage
+            doctors={apiDoctors}
+            doctorSchedules={doctorSchedules}
+            token={token || ""}
+            fetchApiDoctors={fetchApiDoctors}
+            fetchDoctorSchedules={fetchDoctorSchedules}
+          />
+        );
 
       case "konsultasi":
         return <ConsultationPage consultations={consultations} />;

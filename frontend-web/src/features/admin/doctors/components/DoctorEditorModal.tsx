@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { toast } from "@/shared/ui/toast";
-import { User, Mail, Phone, Lock, Stethoscope, ShieldCheck, Briefcase, MapPin, DollarSign, Activity, FileText, Camera } from "lucide-react";
+import { User, Mail, Phone, Lock, Stethoscope, ShieldCheck, Briefcase, MapPin, DollarSign, Activity, FileText } from "lucide-react";
 
 type DoctorEditorModalProps = {
   open: boolean;
@@ -123,111 +123,113 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-[#4A3F35] flex items-center gap-2">
-            <Stethoscope className="w-5 h-5 text-[#C9A24A]" />
-            {isEdit ? "Edit Data & Kredensial Dokter" : "Tambah Dokter Spesialis Baru"}
+      <DialogContent className="w-[92vw] max-w-5xl sm:max-w-5xl max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#F0E6D3]">
+        <DialogHeader className="pb-2 border-b border-gray-100">
+          <DialogTitle className="text-2xl font-bold text-[#4A3F35] flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
+              <Stethoscope className="w-5 h-5" />
+            </div>
+            {isEdit ? "Edit Data & Kredensial Dokter Spesialis" : "Tambah Dokter Spesialis Baru"}
           </DialogTitle>
-          <p className="text-xs text-[#8A7B6B]">
+          <p className="text-xs text-[#8A7B6B] mt-1">
             {isEdit
-              ? "Perbarui informasi profil, spesialisasi, dan status keaktifan dokter."
-              : "Daftarkan dokter baru beserta akun dan kredensial login ke sistem klinik."}
+              ? "Perbarui informasi profil kedokteran, kredensial login akun, dan status keaktifan berpraktik."
+              : "Daftarkan akun dokter baru beserta kredensial login (Email & Password) ke dalam database klinik."}
           </p>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-2">
-          {/* Seksi 1: Akun & Kredensial Login */}
-          <div className="bg-[#FAF8F5] p-4 rounded-xl border border-[#F0E6D3] space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+          {/* Seksi 1: Kredensial Login Akun */}
+          <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#F0E6D3] space-y-4">
             <h4 className="text-xs font-bold text-[#4A3F35] uppercase tracking-wider flex items-center gap-2">
               <Lock className="w-4 h-4 text-[#C9A24A]" />
               Kredensial Login Akun Dokter
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">Email Akun Login *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs font-semibold text-gray-700">Email Akun Login Dokter *</Label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
                   <Input
                     type="email"
                     required={!isEdit}
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="dokter@aestheticpondokindah.id"
-                    className="pl-9 rounded-xl border-gray-200"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-xs font-semibold text-gray-700">Nomor WhatsApp / Telepon *</Label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
                   <Input
                     type="tel"
                     required
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+62812..."
-                    className="pl-9 rounded-xl border-gray-200"
+                    placeholder="+62 812-3456-7890"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-xs font-semibold text-gray-700">
-                  {isEdit ? "Password Baru (Kosongkan jika tidak diubah)" : "Password Akun *"}
+                  {isEdit ? "Password Baru (Kosongkan jika tidak diubah)" : "Password Akun Dokter *"}
                 </Label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
                   <Input
                     type="password"
                     required={!isEdit}
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     placeholder={isEdit ? "••••••••" : "Password minimal 6 karakter"}
-                    className="pl-9 rounded-xl border-gray-200"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-xs font-semibold text-gray-700">Konfirmasi Password</Label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
                   <Input
                     type="password"
                     value={form.confirmPassword}
                     onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                    placeholder="Ketik ulang password"
-                    className="pl-9 rounded-xl border-gray-200"
+                    placeholder="Ketik ulang password baru"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
                   />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Seksi 2: Profil & Spesialisasi Dokter */}
-          <div className="space-y-4">
+          {/* Seksi 2: Profil & Kredensial Kedokteran */}
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 space-y-4 shadow-xs">
             <h4 className="text-xs font-bold text-[#4A3F35] uppercase tracking-wider flex items-center gap-2">
               <User className="w-4 h-4 text-[#C9A24A]" />
-              Profil & Kredensial Kedokteran
+              Profil & Kredensial Kedokteran Spesialis
             </h4>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5 md:col-span-2">
-                <Label className="text-xs font-semibold text-gray-700">Nama Lengkap & Gelar *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="space-y-1.5 lg:col-span-2">
+                <Label className="text-xs font-semibold text-gray-700">Nama Lengkap & Gelar Dokter *</Label>
                 <Input
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Contoh: drg. Amanda Putri, Sp.KGA"
-                  className="rounded-xl border-gray-200"
+                  className="h-10 rounded-xl border-gray-200 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">Spesialisasi Dokter *</Label>
+                <Label className="text-xs font-semibold text-gray-700">Spesialisasi Utama *</Label>
                 <select
                   value={form.specialization}
                   onChange={(e) => setForm({ ...form, specialization: e.target.value })}
@@ -242,42 +244,38 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">Cabang Utama Praktik</Label>
-                <Input
-                  value={form.primary_branch}
-                  onChange={(e) => setForm({ ...form, primary_branch: e.target.value })}
-                  placeholder="Aesthetic Pondok Indah - Cabang Utama"
-                  className="rounded-xl border-gray-200"
-                />
+                <Label className="text-xs font-semibold text-gray-700">Nomor STR (Surat Tanda Registrasi)</Label>
+                <div className="relative">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 absolute left-3.5 top-3" />
+                  <Input
+                    value={form.str}
+                    onChange={(e) => setForm({ ...form, str: e.target.value })}
+                    placeholder="31.2.1.100.3.21.987654"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">Nomor STR (Registrasi)</Label>
-                <Input
-                  value={form.str}
-                  onChange={(e) => setForm({ ...form, str: e.target.value })}
-                  placeholder="31.2.1.100.3.21.987654"
-                  className="rounded-xl border-gray-200"
-                />
+                <Label className="text-xs font-semibold text-gray-700">Nomor SIP (Surat Izin Praktik)</Label>
+                <div className="relative">
+                  <ShieldCheck className="w-4 h-4 text-[#C9A24A] absolute left-3.5 top-3" />
+                  <Input
+                    value={form.sip}
+                    onChange={(e) => setForm({ ...form, sip: e.target.value })}
+                    placeholder="503/449/SIP.DG/DKS/2024"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">Nomor SIP (Izin Praktik)</Label>
-                <Input
-                  value={form.sip}
-                  onChange={(e) => setForm({ ...form, sip: e.target.value })}
-                  placeholder="503/449/SIP.DG/DKS/2024"
-                  className="rounded-xl border-gray-200"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">Pendidikan & Alumni</Label>
+                <Label className="text-xs font-semibold text-gray-700">Pendidikan & Alumni Almamater</Label>
                 <Input
                   value={form.education}
                   onChange={(e) => setForm({ ...form, education: e.target.value })}
                   placeholder="FKG Universitas Indonesia (UI)"
-                  className="rounded-xl border-gray-200"
+                  className="h-10 rounded-xl border-gray-200 text-xs"
                 />
               </div>
 
@@ -288,29 +286,45 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                   min={0}
                   value={form.experience_years}
                   onChange={(e) => setForm({ ...form, experience_years: Number(e.target.value) })}
-                  className="rounded-xl border-gray-200"
+                  className="h-10 rounded-xl border-gray-200 text-xs"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-gray-700">Tarif Baseline Konsultasi (Rp)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  step={10000}
-                  value={form.consultation_fee}
-                  onChange={(e) => setForm({ ...form, consultation_fee: Number(e.target.value) })}
-                  className="rounded-xl border-gray-200"
-                />
+                <div className="relative">
+                  <DollarSign className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                  <Input
+                    type="number"
+                    min={0}
+                    step={10000}
+                    value={form.consultation_fee}
+                    onChange={(e) => setForm({ ...form, consultation_fee: Number(e.target.value) })}
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-gray-700">Status Keaktifan Praktik</Label>
-                <div className="flex items-center gap-3 h-10">
+                <Label className="text-xs font-semibold text-gray-700">Cabang Utama Berpraktik</Label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                  <Input
+                    value={form.primary_branch}
+                    onChange={(e) => setForm({ ...form, primary_branch: e.target.value })}
+                    placeholder="Aesthetic Pondok Indah - Cabang Utama"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
+                <Label className="text-xs font-semibold text-gray-700">Status Keaktifan Berpraktik</Label>
+                <div className="flex items-center gap-3 bg-[#FAF8F5] p-3 rounded-xl border border-[#F0E6D3]">
                   <button
                     type="button"
                     onClick={() => setForm({ ...form, is_active: !form.is_active })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${
                       form.is_active ? "bg-emerald-600" : "bg-gray-300"
                     }`}
                   >
@@ -320,39 +334,46 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                       }`}
                     />
                   </button>
-                  <span className={`text-xs font-bold ${form.is_active ? "text-emerald-700" : "text-gray-500"}`}>
-                    {form.is_active ? "Aktif Berpraktik" : "Non-aktif (Cuti / Libur)"}
-                  </span>
+                  <div>
+                    <p className={`text-xs font-bold ${form.is_active ? "text-emerald-700" : "text-gray-600"}`}>
+                      {form.is_active ? "Aktif Berpraktik" : "Non-aktif (Cuti / Libur)"}
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      {form.is_active
+                        ? "Dokter dapat menerima reservasi konsultasi & perawatan pasien."
+                        : "Dokter sementara waktu tidak muncul di reservasi pasien."}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1.5 md:col-span-2">
+              <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
                 <Label className="text-xs font-semibold text-gray-700">Biografi & Deskripsi Praktik Dokter</Label>
                 <textarea
-                  className="w-full h-20 p-3 rounded-xl border border-gray-200 text-xs outline-none focus:ring-2 focus:ring-[#C9A24A]/30 resize-none"
+                  className="w-full h-24 p-3.5 rounded-xl border border-gray-200 text-xs outline-none focus:ring-2 focus:ring-[#C9A24A]/30 resize-none"
                   value={form.bio}
                   onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                  placeholder="Ringkasan biografi, bidang keahlian, dan pendekatan pelayanan pasien..."
+                  placeholder="Ringkasan biografi, profil profesional, bidang keahlian, dan pendekatan pelayanan dokter kepada pasien..."
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter className="pt-2">
+          <DialogFooter className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="rounded-xl border-gray-200"
+              className="rounded-xl border-gray-200 h-11 px-6 text-xs font-semibold"
             >
               Batal
             </Button>
             <Button
               type="submit"
               disabled={saving}
-              className="bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:opacity-90 text-white font-semibold rounded-xl"
+              className="bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:opacity-90 text-white font-semibold rounded-xl h-11 px-8 text-xs shadow-md shadow-[#C9A24A]/20"
             >
-              {saving ? "Memproses..." : isEdit ? "Simpan Perubahan" : "Daftarkan Dokter Baru"}
+              {saving ? "Memproses..." : isEdit ? "Simpan Perubahan Dokter" : "Daftarkan Dokter Spesialis"}
             </Button>
           </DialogFooter>
         </form>

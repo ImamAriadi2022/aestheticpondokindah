@@ -105,10 +105,24 @@ class UserController extends Controller
                     'name' => $u->name,
                     'email' => $u->email,
                     'phone' => $u->whatsapp,
+                    'whatsapp' => $u->whatsapp,
                     'domicile' => $domicile,
                     'membership_status' => $u->membership_status ?? 'active',
                     'role' => $u->role,
                     'avatar' => $this->formatMediaUrl($u->avatar),
+                    'avatar_url' => $this->formatMediaUrl($u->avatar),
+                    'specialization' => $u->specialization ?? 'Dokter Gigi Spesialis',
+                    'speciality' => $u->specialization ?? 'Dokter Gigi Spesialis',
+                    'str' => $u->str_number,
+                    'str_number' => $u->str_number,
+                    'sip' => $u->sip_number,
+                    'sip_number' => $u->sip_number,
+                    'education' => $u->education,
+                    'experience_years' => $u->experience_years ?? 5,
+                    'consultation_fee' => $u->consultation_fee ?? 250000,
+                    'primary_branch' => $u->primary_branch ?? 'Aesthetic Pondok Indah - Cabang Utama',
+                    'bio' => $u->bio,
+                    'is_active' => $u->status === 'active',
                     'created_at' => optional($u->created_at)->toISOString(),
                     'birthDate' => optional($u->birth_date)->format('Y-m-d'),
                     'gender' => $u->gender,
@@ -119,11 +133,6 @@ class UserController extends Controller
                     'city' => $u->city,
                     'district' => $u->district,
                     'postalCode' => $u->postal_code,
-                    'interests' => $u->interests ?? [],
-                    'isCoffeeDrinker' => $u->is_coffee_drinker,
-                    'isSmoker' => $u->is_smoker,
-                    'sourceInfo' => $u->source_info,
-                    'insuranceProvider' => $u->insurance_provider,
                 ];
             })
             ->values();
@@ -165,7 +174,15 @@ class UserController extends Controller
             'whatsapp' => $request->whatsapp,
             'password' => Hash::make($request->password),
             'role' => 'doctor',
-            'status' => 'active',
+            'status' => $request->has('is_active') ? ($request->boolean('is_active') ? 'active' : 'inactive') : 'active',
+            'specialization' => $request->specialization ?? 'Dokter Gigi Spesialis',
+            'str_number' => $request->str ?? $request->str_number,
+            'sip_number' => $request->sip ?? $request->sip_number,
+            'education' => $request->education,
+            'experience_years' => $request->experience_years,
+            'consultation_fee' => $request->consultation_fee,
+            'primary_branch' => $request->primary_branch,
+            'bio' => $request->bio,
             'city' => $request->city,
             'province' => $request->province,
             'district' => $request->district,
@@ -183,12 +200,13 @@ class UserController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Dokter berhasil ditambahkan',
+            'message' => 'Akun dokter berhasil dibuat',
             'user' => [
                 'id' => (string) $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->whatsapp,
+                'specialization' => $user->specialization,
                 'domicile' => $user->city,
                 'role' => $user->role,
                 'created_at' => optional($user->created_at)->toISOString(),
@@ -226,6 +244,15 @@ class UserController extends Controller
             'membership_status' => 'nullable|string|max:20',
             'membership_level' => 'nullable|in:bronze,gold,platinum',
             'password' => 'nullable|string|min:6',
+            'specialization' => 'nullable|string|max:255',
+            'str' => 'nullable|string|max:100',
+            'sip' => 'nullable|string|max:100',
+            'education' => 'nullable|string|max:255',
+            'experience_years' => 'nullable|integer|min:0',
+            'consultation_fee' => 'nullable|numeric|min:0',
+            'primary_branch' => 'nullable|string|max:255',
+            'bio' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
             'dentalComplaints' => 'nullable|array',
             'dentalComplaints.*' => 'string|max:100',
             'desiredServices' => 'nullable|array',
@@ -249,10 +276,21 @@ class UserController extends Controller
 
         $data = $validator->validated();
 
-        DB::transaction(function () use ($user, $data) {
+        DB::transaction(function () use ($user, $data, $request) {
             if (array_key_exists('name', $data)) $user->name = $data['name'];
             if (array_key_exists('email', $data)) $user->email = $data['email'];
             if (array_key_exists('whatsapp', $data)) $user->whatsapp = $data['whatsapp'];
+            if (array_key_exists('specialization', $data)) $user->specialization = $data['specialization'];
+            if (array_key_exists('str', $data)) $user->str_number = $data['str'];
+            if (array_key_exists('sip', $data)) $user->sip_number = $data['sip'];
+            if (array_key_exists('education', $data)) $user->education = $data['education'];
+            if (array_key_exists('experience_years', $data)) $user->experience_years = $data['experience_years'];
+            if (array_key_exists('consultation_fee', $data)) $user->consultation_fee = $data['consultation_fee'];
+            if (array_key_exists('primary_branch', $data)) $user->primary_branch = $data['primary_branch'];
+            if (array_key_exists('bio', $data)) $user->bio = $data['bio'];
+            if (array_key_exists('is_active', $data)) {
+                $user->status = $data['is_active'] ? 'active' : 'inactive';
+            }
             if (array_key_exists('avatar', $data) && !empty($data['avatar'])) {
                 $user->avatar = $this->processAvatarUpload($user, $data['avatar']);
             }

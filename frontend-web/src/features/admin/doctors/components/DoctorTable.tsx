@@ -86,7 +86,6 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
               <TableHead>Dokter & Kredensial Login</TableHead>
               <TableHead>Spesialisasi & Cabang</TableHead>
               <TableHead>Kredensial STR / SIP</TableHead>
-              <TableHead>Jadwal Praktik</TableHead>
               <TableHead>Status Praktik</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
@@ -94,7 +93,7 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
           <TableBody>
             {filteredDoctors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-xs text-[#8A7B6B]">
+                <TableCell colSpan={6} className="text-center py-10 text-xs text-[#8A7B6B]">
                   Tidak ada dokter spesialis yang sesuai dengan pencarian.
                 </TableCell>
               </TableRow>
@@ -157,22 +156,6 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
                   </TableCell>
 
                   <TableCell>
-                    {doc.schedules && doc.schedules.length > 0 ? (
-                      <div className="space-y-0.5">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                          <Calendar className="w-3 h-3 text-[#C9A24A]" />
-                          {doc.schedules.length} Sesi Praktik
-                        </span>
-                        <p className="text-[10px] text-gray-500">
-                          {doc.schedules.map((s: any) => s.day).join(", ")}
-                        </p>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-gray-400 italic">Belum diatur</span>
-                    )}
-                  </TableCell>
-
-                  <TableCell>
                     <button
                       type="button"
                       onClick={() => onToggleStatus(doc.id, doc.is_active !== false)}
@@ -203,7 +186,7 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
                       variant="ghost"
                       onClick={() => onManageSchedule(doc)}
                       className="h-8 px-2 text-[11px] font-bold text-[#C9A24A] bg-[#FAF8F5] hover:bg-[#F5E6C8]/40 border border-[#F0E6D3] rounded-lg"
-                      title="Kelola Jadwal Praktik"
+                      title="Kelola Jadwal Praktik Dokter"
                     >
                       <Calendar className="w-3.5 h-3.5 mr-1" />
                       Jadwal

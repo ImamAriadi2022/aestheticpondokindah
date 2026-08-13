@@ -37,13 +37,6 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
 
   const [saving, setSaving] = useState(false);
 
-  // Sync schedules when doctor prop changes
-  useState(() => {
-    if (doctor?.schedules) {
-      setSchedules(doctor.schedules);
-    }
-  });
-
   const handleAddSlot = () => {
     if (!newTimeStart || !newTimeEnd) {
       toast({ title: "Gagal", message: "Jam mulai dan jam selesai wajib diisi", variant: "error" });
@@ -81,32 +74,34 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-[#4A3F35] flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-[#C9A24A]" />
-            Kelola Jadwal Praktik Spesialis
+      <DialogContent className="w-[90vw] max-w-4xl sm:max-w-4xl max-h-[88vh] overflow-y-auto rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#F0E6D3]">
+        <DialogHeader className="pb-2 border-b border-gray-100">
+          <DialogTitle className="text-2xl font-bold text-[#4A3F35] flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
+              <Calendar className="w-5 h-5" />
+            </div>
+            Kelola Jadwal Sesi Praktik Dokter Spesialis
           </DialogTitle>
-          <p className="text-xs text-[#8A7B6B]">
-            Dokter: <strong className="text-[#4A3F35]">{doctor?.name || "Dokter Spesialis"}</strong> ({doctor?.specialization || "Spesialis"})
+          <p className="text-xs text-[#8A7B6B] mt-1">
+            Dokter: <strong className="text-[#4A3F35] font-bold">{doctor?.name || "Dokter Spesialis"}</strong> ({doctor?.specialization || "Spesialis"})
           </p>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        <div className="space-y-6 py-3">
           {/* Form Tambah Slot Jadwal Baru */}
-          <div className="bg-[#FAF8F5] p-4 rounded-xl border border-[#F0E6D3] space-y-3">
-            <h4 className="text-xs font-bold text-[#4A3F35] uppercase tracking-wider flex items-center gap-1.5">
+          <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#F0E6D3] space-y-4 shadow-xs">
+            <h4 className="text-xs font-bold text-[#4A3F35] uppercase tracking-wider flex items-center gap-2">
               <Plus className="w-4 h-4 text-[#C9A24A]" />
-              Tambah Sesi Jadwal Praktik Baru
+              Tambah Sesi Sesi Praktik Baru
             </h4>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-gray-700">Hari Praktik</Label>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-gray-700">Hari Praktik</Label>
                 <select
                   value={newDay}
                   onChange={(e) => setNewDay(e.target.value)}
-                  className="w-full h-9 rounded-lg border border-gray-200 bg-white px-2 text-xs text-gray-900 outline-none focus:ring-1 focus:ring-[#C9A24A]"
+                  className="w-full h-10 rounded-xl border border-gray-200 bg-white px-3 text-xs text-gray-900 outline-none focus:ring-2 focus:ring-[#C9A24A]/30"
                 >
                   {DAYS_OF_WEEK.map((d) => (
                     <option key={d} value={d}>
@@ -116,86 +111,90 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-gray-700">Jam Mulai</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-gray-700">Jam Mulai</Label>
                 <Input
                   type="time"
                   value={newTimeStart}
                   onChange={(e) => setNewTimeStart(e.target.value)}
-                  className="h-9 text-xs rounded-lg border-gray-200"
+                  className="h-10 text-xs rounded-xl border-gray-200"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-gray-700">Jam Selesai</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-gray-700">Jam Selesai</Label>
                 <Input
                   type="time"
                   value={newTimeEnd}
                   onChange={(e) => setNewTimeEnd(e.target.value)}
-                  className="h-9 text-xs rounded-lg border-gray-200"
+                  className="h-10 text-xs rounded-xl border-gray-200"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-gray-700">Kuota Pasien</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-gray-700">Kuota Pasien</Label>
                 <Input
                   type="number"
                   min={1}
                   max={50}
                   value={newQuota}
                   onChange={(e) => setNewQuota(Number(e.target.value))}
-                  className="h-9 text-xs rounded-lg border-gray-200"
+                  className="h-10 text-xs rounded-xl border-gray-200"
                 />
               </div>
-            </div>
 
-            <div className="flex items-center justify-between gap-3 pt-1">
-              <div className="flex-1 space-y-1">
-                <Label className="text-[11px] font-semibold text-gray-700">Lokasi / Cabang Praktik</Label>
+              <div className="space-y-1.5 col-span-2 md:col-span-1">
+                <Label className="text-xs font-semibold text-gray-700">Aksi</Label>
+                <Button
+                  type="button"
+                  onClick={handleAddSlot}
+                  className="w-full h-10 bg-[#C9A24A] hover:bg-[#A8843A] text-white text-xs font-semibold rounded-xl shadow-xs"
+                >
+                  + Tambah Sesi
+                </Button>
+              </div>
+
+              <div className="space-y-1.5 col-span-2 md:col-span-5">
+                <Label className="text-xs font-semibold text-gray-700">Lokasi / Cabang Praktik</Label>
                 <Input
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="Cabang Utama / Cabang Selatan"
-                  className="h-9 text-xs rounded-lg border-gray-200"
+                  placeholder="Contoh: Aesthetic Pondok Indah - Cabang Utama"
+                  className="h-10 text-xs rounded-xl border-gray-200"
                 />
               </div>
-              <Button
-                type="button"
-                onClick={handleAddSlot}
-                className="mt-5 h-9 bg-[#C9A24A] hover:bg-[#A8843A] text-white text-xs font-semibold rounded-lg px-4"
-              >
-                + Tambah Slot
-              </Button>
             </div>
           </div>
 
           {/* Daftar Slot Jadwal Terdaftar */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-gray-700">Daftar Jadwal Praktik Terdaftar ({schedules.length} Sesi)</h4>
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-gray-700 flex items-center justify-between">
+              <span>Daftar Jadwal Praktik Terdaftar ({schedules.length} Sesi)</span>
+            </h4>
             
             {schedules.length === 0 ? (
-              <div className="p-6 text-center text-xs text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+              <div className="p-8 text-center text-xs text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                 Belum ada jadwal praktik terdaftar untuk dokter ini.
               </div>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
                 {schedules.map((slot, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white border border-gray-100 shadow-xs hover:border-[#C9A24A]/40 transition-all"
+                    className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-gray-100 shadow-xs hover:border-[#C9A24A]/40 transition-all"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
+                      <div className="w-9 h-9 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
                         <Clock className="w-4 h-4" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-gray-900">{slot.day}</span>
-                          <span className="text-xs font-semibold text-[#C9A24A] bg-[#FAF8F5] px-2 py-0.5 rounded-full border border-[#F0E6D3]">
+                          <span className="text-xs font-semibold text-[#C9A24A] bg-[#FAF8F5] px-2.5 py-0.5 rounded-full border border-[#F0E6D3]">
                             {slot.time}
                           </span>
                         </div>
-                        <p className="text-[11px] text-gray-500 mt-0.5 flex items-center gap-2">
+                        <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-2">
                           <span>📍 {slot.location}</span>
                           <span>•</span>
                           <span>👥 Kuota: {slot.quota} Pasien</span>
@@ -208,7 +207,7 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
                       size="sm"
                       variant="ghost"
                       onClick={() => handleRemoveSlot(idx)}
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -219,12 +218,12 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
           </div>
         </div>
 
-        <DialogFooter className="pt-2">
+        <DialogFooter className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl border-gray-200"
+            className="rounded-xl border-gray-200 h-11 px-6 text-xs font-semibold"
           >
             Batal
           </Button>
@@ -232,9 +231,9 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:opacity-90 text-white font-semibold rounded-xl"
+            className="bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:opacity-90 text-white font-semibold rounded-xl h-11 px-8 text-xs shadow-md shadow-[#C9A24A]/20"
           >
-            {saving ? "Memproses..." : "Simpan Jadwal Praktik"}
+            {saving ? "Memproses..." : "Simpan Jadwal Praktik Dokter"}
           </Button>
         </DialogFooter>
       </DialogContent>

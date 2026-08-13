@@ -3,14 +3,16 @@ import DoctorTable from "../components/DoctorTable";
 import DoctorEditorModal from "../components/DoctorEditorModal";
 import DoctorScheduleModal from "../components/DoctorScheduleModal";
 import { Button } from "@/shared/ui/button";
-import { Plus, Stethoscope, Users, CheckCircle2, XCircle, Calendar } from "lucide-react";
+import { Plus, Stethoscope, Users, CheckCircle2, Calendar } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
 import { API_BASE } from "@/core/api/apiConfig";
 
 type Props = {
   doctors: any[];
+  doctorSchedules?: any[];
   token?: string;
   fetchApiDoctors?: () => Promise<void>;
+  fetchDoctorSchedules?: () => Promise<void>;
 };
 
 const DEFAULT_DOCTORS = [
@@ -76,7 +78,13 @@ const DEFAULT_DOCTORS = [
   },
 ];
 
-export default function DoctorsPage({ doctors: propsDoctors, token, fetchApiDoctors }: Props) {
+export default function DoctorsPage({
+  doctors: propsDoctors,
+  doctorSchedules = [],
+  token,
+  fetchApiDoctors,
+  fetchDoctorSchedules,
+}: Props) {
   const [localDoctors, setLocalDoctors] = useState<any[]>(
     Array.isArray(propsDoctors) && propsDoctors.length > 0 ? propsDoctors : DEFAULT_DOCTORS
   );
@@ -108,7 +116,22 @@ export default function DoctorsPage({ doctors: propsDoctors, token, fetchApiDoct
 
   // Open Manage Schedule Modal
   const handleManageSchedule = (doc: any) => {
-    setScheduleDoctor(doc);
+    const dbSchedulesForDoc = doctorSchedules
+      .filter((s: any) => String(s.doctorId || s.user_id) === String(doc.id))
+      .map((s: any) => ({
+        id: s.id,
+        day: s.displayDate || s.date || "Senin",
+        time: s.timeRange || s.time_range || "09:00 - 14:00",
+        quota: s.totalSlots || s.total_slots || 10,
+        location: s.location || "Cabang Utama",
+      }));
+
+    const docWithSchedules = {
+      ...doc,
+      schedules: dbSchedulesForDoc.length > 0 ? dbSchedulesForDoc : doc.schedules || [],
+    };
+
+    setScheduleDoctor(docWithSchedules);
     setScheduleOpen(true);
   };
 
@@ -243,16 +266,46 @@ export default function DoctorsPage({ doctors: propsDoctors, token, fetchApiDoct
     }
   };
 
-  // Save Schedules for a doctor
+  // Save Schedules for a doctor to DB API
   const handleSaveSchedules = async (docId: string, schedules: any[]) => {
+    const authToken = token || localStorage.getItem("apident:token");
+
     setLocalDoctors((prev) =>
       prev.map((d) => (String(d.id) === String(docId) ? { ...d, schedules } : d))
     );
+
+    if (authToken && String(docId).match(/^\d+$/)) {
+      try {
+        const latestSlot = schedules[schedules.length - 1];
+        if (latestSlot) {
+          const todayIso = new Date().toISOString().split("T")[0];
+          await fetch(`${API_BASE}/admin/doctor-schedules`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              user_id: docId,
+              date: todayIso,
+              time_range: latestSlot.time || "09:00 - 14:00",
+              location: latestSlot.location || "Cabang Utama",
+              total_slots: latestSlot.quota || 10,
+            }),
+          });
+          if (fetchDoctorSchedules) await fetchDoctorSchedules();
+        }
+      } catch (e) {
+        console.error("Gagal menyimpan jadwal ke API", e);
+      }
+    }
   };
 
   const activeCount = localDoctors.filter((d) => d.is_active !== false).length;
-  const inactiveCount = localDoctors.filter((d) => d.is_active === false).length;
-  const totalSchedules = localDoctors.reduce((acc, d) => acc + (d.schedules?.length || 0), 0);
+  const totalSchedulesApi = Array.isArray(doctorSchedules) ? doctorSchedules.length : 0;
+  const totalSchedulesLocal = localDoctors.reduce((acc, d) => acc + (d.schedules?.length || 0), 0);
+  const totalSchedules = totalSchedulesApi > 0 ? totalSchedulesApi : totalSchedulesLocal;
 
   return (
     <div className="space-y-6">
@@ -304,7 +357,7 @@ export default function DoctorsPage({ doctors: propsDoctors, token, fetchApiDoct
             <Calendar className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs text-amber-800 font-semibold">Total Sesi Jadwal</p>
+            <p className="text-xs text-amber-800 font-semibold">Total Sesi Jadwal (Database)</p>
             <p className="text-lg font-bold text-[#4A3F35]">{totalSchedules} Sesi Terdaftar</p>
           </div>
         </div>

@@ -1,5 +1,111 @@
 [
     {
+        "id": "act-196",
+        "date": "2026-08-14",
+        "time": "02:51",
+        "category": "Frontend | UI/UX | Component System | Dialog Content Constraint Fix",
+        "type": "Bug Fix & Styling Upgrade",
+        "feature": "Perbaikan Pembatas Lebar Dialog Pop-Up (`dialog.tsx`)",
+        "description": "Memperbaiki masalah kelas dasar `sm:max-w-md` yang membatasi seluruh pop-up dialog di aplikasi menjadi 448px (sempit). Menghapus pembatasan bawaan `sm:max-w-md` pada `DialogContent` (`dialog.tsx`) agar properti `max-w-5xl` (1024px) dan `max-w-4xl` (896px) pada `DoctorEditorModal` dan `DoctorScheduleModal` dapat melebar sempurna di layar.",
+        "notes": "1. dialog.tsx: Mengubah pembatas bawaan agar mengizinkan `max-w-5xl` dan `max-w-4xl` melebar hingga 92vw layar tanpa terpotong.\n2. Visual Result: Pop-up Tambah Dokter dan Kelola Jadwal kini tampil sangat luas, proporsional, dan nyaman tanpa scrollbar horizontal terpotong.\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi keluhan dan tangkapan layar pengguna bahwa pop-up sebelumnya masih sempit akibat terpotong oleh batasan `sm:max-w-md` bawaan komponen dasar Dialog.",
+        "files": [
+            "frontend-web/src/shared/ui/dialog.tsx",
+            "frontend-web/src/features/admin/doctors/components/DoctorEditorModal.tsx",
+            "frontend-web/src/features/admin/doctors/components/DoctorScheduleModal.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-195",
+        "date": "2026-08-14",
+        "time": "02:49",
+        "category": "Frontend | UI/UX | Admin Doctors | Modal Dialog Layout Expansion",
+        "type": "UI/UX Layout Upgrade",
+        "feature": "Perlebaran & Perbaikan Pop-Up Manajemen Dokter Spesialis & Jadwal",
+        "description": "Memperlebar ukuran dialog pop-up manajemen dokter (`DoctorEditorModal.tsx` & `DoctorScheduleModal.tsx`). `DoctorEditorModal` kini menggunakan `max-w-5xl` (1024px) dengan grid 3-kolom untuk profil kedokteran & kredensial. `DoctorScheduleModal` kini menggunakan `max-w-4xl` (896px) dengan grid 2-kolom untuk sesi jadwal terdaftar.",
+        "notes": "1. DoctorEditorModal.tsx: Memperlebar lebar dialog dari 768px (`max-w-3xl`) menjadi 1024px (`max-w-5xl`) serta memperluas padding & field layout.\n2. DoctorScheduleModal.tsx: Memperlebar lebar dialog dari 672px (`max-w-2xl`) menjadi 896px (`max-w-4xl`) dengan layout kartu sesi 2-kolom.\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi permintaan pengguna untuk memperlebar ukuran pop-up dialog pada modul manajemen dokter agar tidak sempit dan nyaman digunakan.",
+        "files": [
+            "frontend-web/src/features/admin/doctors/components/DoctorEditorModal.tsx",
+            "frontend-web/src/features/admin/doctors/components/DoctorScheduleModal.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-194",
+        "date": "2026-08-14",
+        "time": "02:47",
+        "category": "Frontend | UI/UX | Admin Doctors | Schedule Feature Clarification",
+        "type": "UI Clarification & Feature Retaining",
+        "feature": "Restorasi Fitur 'Jadwal' Dokter & Mempertahankan Hapus Kolom Tabel",
+        "description": "Mempertahankan fitur pengelolaan jadwal dokter spesialis (`DoctorScheduleModal.tsx`, `DoctorScheduleController.php`, `doctor-schedules` API) serta mengembalikan tombol 'Jadwal' pada kolom Aksi tabel. Kolom header & sel tabel 'Jadwal Praktik' tetap dihapus sesuai permintaan agar antarmuka tabel ringkas dan rapi.",
+        "notes": "1. DoctorTable.tsx: Mempertahankan tombol 'Jadwal' di kolom Aksi (membuka modal kelola jadwal per dokter).\n2. DoctorScheduleModal.tsx: Tetap aktif untuk manajemen slot sesi jam, kuota, & cabang praktik dokter.\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi klarifikasi pengguna bahwa yang ingin dihapus hanya kolom tabel 'Jadwal Praktik', sedangkan fitur pengelolaan jadwal dokter tetap diaktifkan via tombol 'Jadwal'.",
+        "files": [
+            "frontend-web/src/features/admin/doctors/components/DoctorTable.tsx",
+            "frontend-web/src/features/admin/doctors/pages/DoctorsPage.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-193",
+        "date": "2026-08-14",
+        "time": "02:46",
+        "category": "Frontend | UI/UX | Admin Doctors | Layout Simplification",
+        "type": "Refactoring & Visual Cleanup",
+        "feature": "Penghapusan Kolom 'Jadwal Praktik' pada Tabel Manajemen Dokter",
+        "description": "Menghapus kolom 'Jadwal Praktik' dari tabel Manajemen Dokter Spesialis (`DoctorTable.tsx` & `DoctorsPage.tsx`). Tabel kini menampilkan 6 kolom utama secara lebih rapi: Foto, Dokter & Kredensial Login, Spesialisasi & Cabang, Kredensial STR/SIP, Status Praktik, dan Aksi (Edit & Hapus).",
+        "notes": "1. DoctorTable.tsx: Menghapus `<TableHead>Jadwal Praktik</TableHead>` dan kolom `<TableCell>` serta tombol aksi 'Jadwal'.\n2. DoctorsPage.tsx: Merapikan summary card menjadi 2 kartu utama (Total Dokter Terdaftar & Dokter Aktif Praktik).\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi permintaan pengguna untuk menghapus kolom tabel 'Jadwal Praktik' agar tampilan tabel lebih bersih dan fokus pada kredensial dokter.",
+        "files": [
+            "frontend-web/src/features/admin/doctors/components/DoctorTable.tsx",
+            "frontend-web/src/features/admin/doctors/pages/DoctorsPage.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-192",
+        "date": "2026-08-14",
+        "time": "02:44",
+        "category": "Backend & Frontend | API Connection | Admin Doctors Management Integration",
+        "type": "Database Integration & API Wiring",
+        "feature": "Koneksi Database Modul Dokter Spesialis & Sesi Jadwal Live",
+        "description": "Menyambungkan modul Manajemen Dokter Spesialis (`DoctorsPage.tsx`, `UserController.php`, `DoctorScheduleController.php`, `routes/api.php`) secara penuh ke database Laravel. Menghubungkan total sesi terjadwal dari endpoint API GET `/api/admin/doctor-schedules`, serta menambahkan rilis POST & DELETE `/api/admin/doctor-schedules` untuk manajemen jadwal dokter spesialis.",
+        "notes": "1. Database Serialization: Memastikan `UserController.php` menyerialisasikan field spesialisasi, STR, SIP, pendidikan, pengalaman, tarif, cabang utama, bio, dan status keaktifan ke JSON response.\n2. Schedule API Routes: Menambahkan route `POST /api/admin/doctor-schedules` dan `DELETE /api/admin/doctor-schedules/{schedule}` untuk kelola jadwal dokter dari admin.\n3. Total Sesi Live Database: Kartu 'Total Sesi Jadwal (Database)' pada `DoctorsPage.tsx` kini secara otomatis menghitung jumlah sesi jadwal riil dari database backend.\n4. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi permintaan pengguna untuk mengoneksikan seluruh modul manajemen dokter spesialis dan hitungan total sesi terjadwal secara langsung ke database.",
+        "files": [
+            "app/Http/Controllers/Api/UserController.php",
+            "app/Http/Controllers/Api/DoctorScheduleController.php",
+            "routes/api.php",
+            "frontend-web/src/features/admin/doctors/pages/DoctorsPage.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-191",
         "date": "2026-08-14",
         "time": "02:39",
