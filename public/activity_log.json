@@ -1,5 +1,28 @@
 [
     {
+        "id": "act-191",
+        "date": "2026-08-14",
+        "time": "02:39",
+        "category": "Frontend | UI/UX | Admin Doctors | Specialist Doctor Management Refactoring",
+        "type": "Refactoring & Feature Upgrade",
+        "feature": "Pembaruan Manajemen Dokter Spesialis (Pendaftaran Akun, Kredensial, Jadwal & Toggle Status)",
+        "description": "Mengembangkan ulang modul Manajemen Dokter Spesialis (`DoctorsPage.tsx`, `DoctorTable.tsx`, `DoctorEditorModal.tsx`, `DoctorScheduleModal.tsx`). Admin kini dapat menambah dokter baru beserta akun & kredensial login (Email & Password), mengedit profil kedokteran (STR, SIP, Spesialisasi, Tarif), mengelola jadwal praktik interaktif (Hari, Jam, Kuota, Cabang), mengubah status keaktifan berpraktik secara langsung via toggle badge, serta menghapus dokter.",
+        "notes": "1. DoctorEditorModal.tsx: Modal pendaftaran dokter baru lengkap dengan kredensial login akun dokter & data spesialisasi kedokteran.\n2. DoctorScheduleModal.tsx: Modal pengelolaan slot jadwal praktik per dokter spesialis.\n3. DoctorTable.tsx: Tabel interaktif dengan tombol toggle Aktif/Non-aktif instant, filter status, pencarian, dan tombol aksi (Jadwal, Edit, Hapus).\n4. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi permintaan pengguna untuk fitur manajemen dokter spesialis yang lengkap mulai dari pendaftaran akun/kredensial, edit profil, pengelolaan jadwal, switch status keaktifan, hingga penghapusan.",
+        "files": [
+            "frontend-web/src/features/admin/doctors/pages/DoctorsPage.tsx",
+            "frontend-web/src/features/admin/doctors/components/DoctorTable.tsx",
+            "frontend-web/src/features/admin/doctors/components/DoctorEditorModal.tsx",
+            "frontend-web/src/features/admin/doctors/components/DoctorScheduleModal.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-190",
         "date": "2026-08-14",
         "time": "02:34",
