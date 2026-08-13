@@ -7,7 +7,7 @@ import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
 import DoctorSidebar from "@/features/doctor/layouts/DoctorSidebar";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
-import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, LogOut } from "lucide-react";
+import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -512,18 +512,6 @@ export default function DashboardLayout({
                       </Link>
 
                       <Link
-                        to="/profile/edit"
-                        onClick={() => {
-                          setUserPopupOpen(false);
-                          handleMenuClick();
-                        }}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all"
-                      >
-                        <Pencil className="w-4 h-4 text-[#C9A24A]" />
-                        Edit Profil (Foto)
-                      </Link>
-
-                      <Link
                         to="/settings"
                         onClick={() => {
                           setUserPopupOpen(false);
@@ -532,19 +520,23 @@ export default function DashboardLayout({
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all"
                       >
                         <Settings className="w-4 h-4 text-[#C9A24A]" />
-                        Pengaturan
+                        Preferensi
                       </Link>
 
                       <Link
-                        to="/download"
+                        to={role === "clinic" ? "/dashboard/clinic?tab=content-download" : "/download"}
                         onClick={() => {
                           setUserPopupOpen(false);
                           handleMenuClick();
                         }}
                         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all"
                       >
-                        <Download className="w-4 h-4 text-[#C9A24A]" />
-                        Download Aplikasi
+                        {role === "clinic" ? (
+                          <Upload className="w-4 h-4 text-[#C9A24A]" />
+                        ) : (
+                          <Download className="w-4 h-4 text-[#C9A24A]" />
+                        )}
+                        {role === "clinic" ? "Upload Aplikasi" : "Download Aplikasi"}
                       </Link>
 
                       <button

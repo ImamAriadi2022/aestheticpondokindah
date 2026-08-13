@@ -145,13 +145,21 @@ export default function ProfileDetailPage() {
               variant="outline"
               size="icon"
               className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600"
-              onClick={() => navigate("/dashboard/user")}
+              onClick={() => navigate(sessionRole === "clinic" ? "/dashboard/clinic" : sessionRole === "doctor" ? "/dashboard/doctor" : "/dashboard/user")}
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Detail Profil</h1>
-              <p className="text-sm text-gray-500">Informasi identitas diri, domisili, dan preferensi medis Anda</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {sessionRole === "clinic" ? "Detail Profil Administrator" : "Detail Profil"}
+              </h1>
+              <p className="text-sm text-gray-500">
+                {sessionRole === "clinic"
+                  ? "Informasi identitas akun dan hak akses administrator klinik"
+                  : sessionRole === "doctor"
+                  ? "Informasi kredensial dan data operasional dokter"
+                  : "Informasi identitas diri, domisili, dan preferensi medis Anda"}
+              </p>
             </div>
           </div>
 
@@ -199,7 +207,7 @@ export default function ProfileDetailPage() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{profile.name}</h2>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Akun Terverifikasi
+                  {sessionRole === "clinic" ? "Administrator Klinik" : "Akun Terverifikasi"}
                 </span>
               </div>
 
@@ -214,45 +222,109 @@ export default function ProfileDetailPage() {
                 </div>
               </div>
 
-              {/* Progress & Membership Bar */}
-              <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
-                {/* Completion */}
-                <div className={`bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 ${sessionRole === "doctor" ? "sm:col-span-2" : ""}`}>
-                  <div className="flex justify-between items-center text-xs text-[#d4c5b0] mb-2">
-                    <span>Kelengkapan Profil</span>
-                    <span className="font-bold text-[#e8c547]">{completionPercent}%</span>
+              {/* Progress & Membership Bar (Hidden for clinic admin) */}
+              {sessionRole !== "clinic" && (
+                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+                  {/* Completion */}
+                  <div className={`bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 ${sessionRole === "doctor" ? "sm:col-span-2" : ""}`}>
+                    <div className="flex justify-between items-center text-xs text-[#d4c5b0] mb-2">
+                      <span>Kelengkapan Profil</span>
+                      <span className="font-bold text-[#e8c547]">{completionPercent}%</span>
+                    </div>
+                    <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-[#c9a24a] to-[#e8c547] h-full transition-all duration-500 rounded-full"
+                        style={{ width: `${completionPercent}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-[#c9a24a] to-[#e8c547] h-full transition-all duration-500 rounded-full"
-                      style={{ width: `${completionPercent}%` }}
-                    />
-                  </div>
-                </div>
 
-                {/* Membership Badge & Points (hidden for doctors) */}
-                {sessionRole !== "doctor" && (
-                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 flex items-center justify-between">
-                    <div>
-                      <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Tier Membership</p>
-                      <p className="text-sm font-bold text-[#e8c547]">{tier.label}</p>
+                  {/* Membership Badge & Points (hidden for doctors & clinic admin) */}
+                  {sessionRole === "user" && (
+                    <div className="bg-white/5 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Tier Membership</p>
+                        <p className="text-sm font-bold text-[#e8c547]">{tier.label}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Total Poin</p>
+                        <p className="text-sm font-bold text-emerald-400 flex items-center gap-1 justify-end">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {profile.membershipPoints.toLocaleString("id-ID")}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[11px] text-[#d4c5b0] uppercase tracking-wider font-semibold">Total Poin</p>
-                      <p className="text-sm font-bold text-emerald-400 flex items-center gap-1 justify-end">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        {profile.membershipPoints.toLocaleString("id-ID")}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Read-Only Grid Cards */}
-        {sessionRole === "doctor" ? (
+        {sessionRole === "clinic" ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Card 1: Informasi Akun Administrator */}
+              <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+                <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                      <User className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-base">Informasi Akun Administrator</h3>
+                  </div>
+                </div>
+                <CardContent className="p-6 divide-y divide-gray-100">
+                  <DisplayRow icon={User} label="Nama Administrator" value={profile.name} />
+                  <DisplayRow icon={Mail} label="Email Operasional" value={profile.email} />
+                  <DisplayRow icon={Phone} label="Nomor WhatsApp" value={profile.phone} />
+                  <DisplayRow icon={ShieldCheck} label="Peran Sistem" value="Administrator Utama Klinik" />
+                  <DisplayRow icon={CheckCircle2} label="Status Akun" value="Aktif & Terverifikasi" />
+                </CardContent>
+              </Card>
+
+              {/* Card 2: Pengaturan Sistem & Akses Cepat */}
+              <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
+                <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                      <Activity className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-bold text-gray-900 text-base">Pengaturan & Konfigurasi Sistem</h3>
+                  </div>
+                </div>
+                <CardContent className="p-6 space-y-4">
+                  <p className="text-xs text-gray-500">Akses cepat ke pusat konfigurasi operasional klinik dan preferensi keamanan akun administrator Anda.</p>
+                  
+                  <div className="space-y-3 pt-1">
+                    <Button
+                      onClick={() => navigate("/dashboard/clinic?tab=settings")}
+                      className="w-full justify-between bg-[#FAF8F5] hover:bg-[#F5E6C8]/40 text-[#4A3F35] border border-[#F0E6D3] rounded-xl h-12 px-4 font-semibold text-xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Activity className="w-4 h-4 text-[#C9A24A]" />
+                        <span>Kelola Pengaturan Klinik</span>
+                      </div>
+                      <ArrowLeft className="w-4 h-4 rotate-180 text-[#8A7B6B]" />
+                    </Button>
+
+                    <Button
+                      onClick={() => navigate("/settings")}
+                      className="w-full justify-between bg-[#FAF8F5] hover:bg-[#F5E6C8]/40 text-[#4A3F35] border border-[#F0E6D3] rounded-xl h-12 px-4 font-semibold text-xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <User className="w-4 h-4 text-[#C9A24A]" />
+                        <span>Kelola Preferensi & Keamanan</span>
+                      </div>
+                      <ArrowLeft className="w-4 h-4 rotate-180 text-[#8A7B6B]" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        ) : sessionRole === "doctor" ? (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Professional Credentials */}

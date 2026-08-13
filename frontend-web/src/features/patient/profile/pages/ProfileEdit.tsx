@@ -370,7 +370,81 @@ export default function ProfileEditPage() {
         </div>
 
         {/* 2-Column Grid Layout Matching ProfileDetail.tsx */}
-        <>
+        {sessionRole === "clinic" ? (
+          <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white max-w-2xl mx-auto">
+            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
+                <User className="w-4 h-4" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-base">Edit Data Administrator</h3>
+            </div>
+            <CardContent className="p-6 space-y-5">
+              {/* Foto Avatar Upload */}
+              <div className="flex items-center gap-4 bg-amber-50/40 p-4 rounded-2xl border border-amber-100/60">
+                <div className="relative shrink-0">
+                  {profile.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt="Foto Profil"
+                      className="w-16 h-16 rounded-full object-cover shadow-md border-2 border-[#c9a24a]"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-[#c9a24a] flex items-center justify-center text-white font-bold text-xl shadow-md">
+                      {profile.name ? profile.name.charAt(0).toUpperCase() : "U"}
+                    </div>
+                  )}
+                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm cursor-pointer hover:bg-gray-50">
+                    <Camera className="w-3.5 h-3.5 text-[#c9a24a]" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900">Foto Profil Administrator</h4>
+                  <p className="text-xs text-gray-500">Unggah foto profil administrator klinik (maks 2MB)</p>
+                </div>
+              </div>
+
+              {/* Nama Lengkap Admin */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-700">Nama Lengkap Administrator</label>
+                <Input
+                  value={profile.name}
+                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                  placeholder="Nama administrator"
+                  className="rounded-xl border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]/20 text-gray-900"
+                />
+              </div>
+
+              {/* Email Operasional */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-700">Email Operasional</label>
+                <Input
+                  value={profile.email}
+                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                  placeholder="Email aktif"
+                  className="rounded-xl border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]/20 text-gray-900"
+                />
+              </div>
+
+              {/* Nomor WhatsApp */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-700">Nomor WhatsApp Admin</label>
+                <Input
+                  value={profile.phone}
+                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                  placeholder="+628..."
+                  className="rounded-xl border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]/20 text-gray-900"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Card 1: Informasi Pribadi */}
           <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden bg-white">
@@ -770,7 +844,8 @@ export default function ProfileEditPage() {
             </div>
           </CardContent>
         </Card>
-        </>
+      </>
+    )}
 
         {/* Bottom Save Action */}
         <div className="flex items-center justify-end gap-3 pt-4">

@@ -120,10 +120,43 @@ export default function ClinicDashboardPage() {
   };
 
   const fetchApiDownloadApps = async () => {
+    const defaultApps = [
+      {
+        id: "app-1",
+        title: "Aesthetic Mobile App (Android APK)",
+        description: "Rilis resmi aplikasi pasien Android untuk reservasi & rekam medis.",
+        version: "1.2.0",
+        platform: "android",
+        download_link: "https://aestheticpondokindah.id/download/apk/latest",
+        is_active: true,
+        is_development: false,
+        sort_order: 1,
+      },
+      {
+        id: "app-2",
+        title: "Aesthetic Mobile App (iOS App Store)",
+        description: "Tautan rilis aplikasi iOS resmi di Apple App Store.",
+        version: "1.1.0",
+        platform: "ios",
+        download_link: "https://apps.apple.com/app/aesthetic-pondok-indah/id123456789",
+        is_active: true,
+        is_development: false,
+        sort_order: 2,
+      },
+    ];
+
     try {
       const res = await fetch(`${API_BASE}/admin/download-apps`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setApiDownloadApps(await res.json());
-    } catch (e) { logger.error("Gagal memuat rilis aplikasi", e); }
+      if (res.ok) {
+        const data = await res.json();
+        setApiDownloadApps(Array.isArray(data) && data.length > 0 ? data : defaultApps);
+      } else {
+        setApiDownloadApps(defaultApps);
+      }
+    } catch (e) {
+      logger.error("Gagal memuat rilis aplikasi", e);
+      setApiDownloadApps(defaultApps);
+    }
   };
 
   const fetchReservations = async () => {

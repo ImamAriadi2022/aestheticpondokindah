@@ -99,8 +99,8 @@ export default function NewMobileDashboardLayout({
           { label: "Beranda", icon: Home, href: "/dashboard/clinic" },
           { label: "Reservasi", icon: CalendarDays, href: "/dashboard/clinic?tab=reservasi" },
           { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
-          { label: "Pengaturan", icon: Settings, href: "/dashboard/clinic?tab=settings" },
-          { label: "Profil", icon: UserCircle, href: "/settings" },
+          { label: "Pengaturan Klinik", icon: Settings, href: "/dashboard/clinic?tab=settings" },
+          { label: "Preferensi", icon: UserCircle, href: "/settings" },
         ];
       case "doctor":
         return [
@@ -169,7 +169,7 @@ export default function NewMobileDashboardLayout({
     if (path.startsWith("/dashboard/user/consultation/")) return "Konsultasi";
     if (path === "/profile") return "Detail Profil";
     if (path === "/profile/edit") return "Edit Profil";
-    if (path === "/settings") return "Pengaturan";
+    if (path === "/settings") return "Preferensi";
     if (path === "/membership") return "Membership";
     if (path === "/security") return "Keamanan";
     if (path === "/help") return "Bantuan";

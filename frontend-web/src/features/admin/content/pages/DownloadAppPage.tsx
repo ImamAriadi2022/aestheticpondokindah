@@ -50,8 +50,8 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#4A3F35]">Download Aplikasi Mobile</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">Kelola rilis berkas APK Android & iOS aplikasi klinik untuk pengunjung.</p>
+          <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Aplikasi Mobile</h2>
+          <p className="text-sm text-[#8A7B6B] mt-1">Kelola daftar rilis berkas APK Android & iOS aplikasi klinik untuk pengunjung.</p>
         </div>
         <Button
           className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white font-semibold rounded-xl"

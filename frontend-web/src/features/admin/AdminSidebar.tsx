@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Stethoscope,
   Settings,
+  SlidersHorizontal,
   Building2,
   MessageSquare,
   Sparkles,
@@ -93,7 +94,7 @@ export default function AdminSidebar({ activeTab }: Props) {
           },
           {
             id: "content-download",
-            label: "Download Aplikasi",
+            label: "Daftar Aplikasi Mobile",
             icon: Download,
             href: "/dashboard/clinic?tab=content-download",
           },

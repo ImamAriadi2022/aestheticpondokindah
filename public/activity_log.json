@@ -1,5 +1,150 @@
 [
     {
+        "id": "act-190",
+        "date": "2026-08-14",
+        "time": "02:34",
+        "category": "Frontend | UI/UX | Admin Content | Mobile App Release Management Audit",
+        "type": "Refactoring & Feature Audit",
+        "feature": "Audit & Pembaruan Judul 'Daftar Aplikasi Mobile'",
+        "description": "Melakukan audit penuh pada fitur manajemen rilis aplikasi mobile admin (`DownloadAppPage.tsx`, `DownloadAppEditor.tsx`, `AdminSidebar.tsx`, `menu.ts`). Mengubah judul dan label menu dari 'Download Aplikasi Mobile' menjadi 'Daftar Aplikasi Mobile' serta menambahkan fallback rilis sampel saat database awal kosong.",
+        "notes": "1. Audit Backend & Frontend: Terhubung penuh ke API Laravel GET/POST/PUT/DELETE `/api/admin/download-apps`.\n2. Wording Update: Mengubah judul 'Download Aplikasi Mobile' -> 'Daftar Aplikasi Mobile' di halaman admin dan menu sidebar.\n3. Sample Fallback: Menyiapkan sampel data rilis awal (Android APK & iOS) jika database belum terisi agar admin langsung dapat melihat contoh daftar rilis.\n4. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi permintaan audit fungsional dan pengubahan istilah menjadi 'Daftar Aplikasi Mobile' yang sesuai dengan konteks admin.",
+        "files": [
+            "frontend-web/src/features/admin/content/pages/DownloadAppPage.tsx",
+            "frontend-web/src/features/admin/content/components/DownloadAppEditor.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "frontend-web/src/features/admin/AdminSidebar.tsx",
+            "frontend-web/src/core/permissions/menu.ts",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-189",
+        "date": "2026-08-14",
+        "time": "02:31",
+        "category": "Frontend | UI/UX | Admin Preferences | Privacy, Security & Delete Account Cleanup",
+        "type": "Refactoring",
+        "feature": "Penyesuaian Halaman Preferensi Administrator (`Settings.tsx`)",
+        "description": "Menyesuaikan halaman Preferensi (`Settings.tsx`) khusus untuk role admin/clinic dengan menyembunyikan fitur Hapus Akun, Keamanan Akun (ganti email/pass/logout semua), dan Privasi & Legal (Syarat/Ketentuan/Privasi), sehingga hanya menyajikan preferensi notifikasi browser dan pengingat operasional yang relevan.",
+        "notes": "1. Settings.tsx: Menambahkan pengondisian `sessionRole !== 'clinic'` pada sekian section (Keamanan, Privasi & Legal, Hapus Akun).\n2. Header & Banner: Mengubah subtitle preferensi khusus admin.\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memastikan halaman Preferensi admin bersih, tidak mengacak-acak akun utama atau legalitas sistem pasien.",
+        "files": [
+            "frontend-web/src/features/patient/profile/pages/Settings.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-188",
+        "date": "2026-08-14",
+        "time": "02:28",
+        "category": "Frontend | UI/UX | Profile Detail & Edit | Admin Self Edit Feature",
+        "type": "Refactoring",
+        "feature": "Penambahan Tombol & Form Edit Profil Khusus Admin",
+        "description": "Menampilkan kembali tombol 'Edit Profil' di halaman Detail Profil Administrator (`ProfileDetail.tsx`) dan menyesuaikan halaman `ProfileEdit.tsx` agar admin dapat mengedit foto avatar, nama administrator, email operasional, dan nomor WhatsApp admin secara khusus tanpa form pasien.",
+        "notes": "1. ProfileDetail.tsx: Menampilkan tombol Edit Profil untuk semua role termasuk admin.\n2. ProfileEdit.tsx: Menyiapkan kartu terisolasi 'Edit Data Administrator' (Nama, Email, WA, Upload Avatar).\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memungkinkan administrator klinik untuk mengelola dan memperbarui data profil diri (nama, foto, email, dan WhatsApp) secara mandiri.",
+        "files": [
+            "frontend-web/src/features/patient/profile/pages/ProfileDetail.tsx",
+            "frontend-web/src/features/patient/profile/pages/ProfileEdit.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-187",
+        "date": "2026-08-14",
+        "time": "02:26",
+        "category": "Frontend | UI/UX | Profile Detail | Admin Profile Simplification",
+        "type": "Refactoring",
+        "feature": "Penyederhanaan Tampilan Detail Profil Administrator",
+        "description": "Menyederhanakan tampilan halaman Detail Profil (`/profile`) khusus untuk role admin/clinic. Menghapus informasi pasien yang tidak relevan bagi admin seperti membership tier, progress kelengkapan profil, data pribadi detail (golongan darah, pekerjaan, tgl lahir), alamat/domisili, serta preferensi medis dan gaya hidup.",
+        "notes": "1. ProfileDetail.tsx: Menyiapkan tampilan khusus Admin 2-Column Grid (Informasi Akun Admin & Akses Pengaturan Sistem).\n2. Header Bar & Banner: Menghapus tombol Edit Profil & bar kelengkapan/membership bagi admin.\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi permintaan pengguna agar tampilan detail profil admin khusus menampilkan data hak akses operasional dan link navigasi pengaturan sistem klinik secara bersih dan profesional.",
+        "files": [
+            "frontend-web/src/features/patient/profile/pages/ProfileDetail.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-186",
+        "date": "2026-08-14",
+        "time": "02:25",
+        "category": "Frontend | UI/UX | Layout & User Popup | Profile Menu Customization",
+        "type": "Refactoring",
+        "feature": "Pembaruan Menu Popup Profil Admin (Penghapusan Edit Profil & Pengubahan Upload Aplikasi)",
+        "description": "Menghapus opsi 'Edit Profil' dari popup profil avatar di header dan mengubah opsi 'Download Aplikasi' menjadi 'Upload Aplikasi' khusus untuk role admin (mengarahkan langsung ke tab manajemen rilis aplikasi `/dashboard/clinic?tab=content-download`).",
+        "notes": "1. DashboardLayout & AccountSidebar: Menghapus link Edit Profil.\n2. Role Logic: Menampilkan 'Upload Aplikasi' dengan ikon Upload khusus untuk role clinic/admin.\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Menyesuaikan alur kerja khusus admin klinik yang bertanggung jawab mengunggah rilis APK/aplikasi klinik, bukan mengunduh.",
+        "files": [
+            "frontend-web/src/core/layouts/DashboardLayout.tsx",
+            "frontend-web/src/core/layouts/AccountSidebar.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-185",
+        "date": "2026-08-14",
+        "time": "02:23",
+        "category": "Frontend | UI/UX | Admin | Sidebar Simplification",
+        "type": "Refactoring",
+        "feature": "Penghapusan Preferensi dari Sidebar Admin",
+        "description": "Menghapus item menu 'Preferensi' dari `AdminSidebar.tsx` dan `menu.ts` agar sidebar admin fokus pada fitur utama & 'Pengaturan Klinik'. Akses ke 'Preferensi' kini khusus tersedia pada menu popup/dropdown avatar profil admin di header.",
+        "notes": "1. AdminSidebar: Menghapus item Preferensi dari grup Sistem.\n2. Menu Registry: Memperbarui registry menu role clinic.\n3. Build Verification: Dibatasi 100% lulus tanpa error `npm run build`.",
+        "reason": "Memenuhi permintaan pengguna agar sidebar admin lebih bersih dan preferensi akun cukup diakses via popup avatar admin di header.",
+        "files": [
+            "frontend-web/src/features/admin/AdminSidebar.tsx",
+            "frontend-web/src/core/permissions/menu.ts",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
+        "id": "act-184",
+        "date": "2026-08-14",
+        "time": "02:22",
+        "category": "Frontend | UI/UX | Admin & Layout | Navigation Labeling",
+        "type": "Refactoring",
+        "feature": "Pemisahan Label Pengaturan Klinik & Preferensi Akun Admin",
+        "description": "Memisahkan secara tegas dua jenis pengaturan pada UI Admin: Pengaturan Klinik (`/dashboard/clinic?tab=settings` untuk konfigurasi operasional, nomor WA, email, alamat) dan Preferensi (`/settings` untuk preferensi akun, keamanan, notifikasi).",
+        "notes": "1. AdminSidebar: Menambahkan item menu 'Pengaturan Klinik' dan 'Preferensi' di grup Sistem.\n2. DashboardLayout & AccountSidebar: Mengubah label dropdown/menu dari 'Pengaturan' menjadi 'Preferensi'.\n3. Mobile Navigation: Menyesuaikan label navigasi mobile menjadi 'Pengaturan Klinik' dan 'Preferensi'.\n4. Settings Page: Memperbarui judul header preferensi akun menjadi 'Preferensi'.",
+        "reason": "Menghindari kebingungan pengguna dengan membedakan secara langsung antara pengaturan sistem klinik dan preferensi personal akun.",
+        "files": [
+            "frontend-web/src/features/admin/AdminSidebar.tsx",
+            "frontend-web/src/core/layouts/DashboardLayout.tsx",
+            "frontend-web/src/core/layouts/AccountSidebar.tsx",
+            "frontend-web/src/core/layouts/NewMobileDashboardLayout.tsx",
+            "frontend-web/src/core/permissions/menu.ts",
+            "frontend-web/src/features/patient/profile/pages/Settings.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Antigravity AI | Developer"
+    },
+    {
         "id": "act-183",
         "date": "2026-08-14",
         "time": "02:17",

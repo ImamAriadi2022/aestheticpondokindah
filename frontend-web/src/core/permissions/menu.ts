@@ -30,7 +30,7 @@ export const CONTENT_SUBMENU: MenuItem["submenu"] = [
   { label: "Pop Up", href: "/dashboard/clinic?tab=content-popup" },
   { label: "Galeri", href: "/dashboard/clinic?tab=content-gallery" },
   { label: "Testimoni", href: "/dashboard/clinic?tab=content-testimonials" },
-  { label: "Download App", href: "/dashboard/clinic?tab=content-download" },
+  { label: "Daftar Aplikasi Mobile", href: "/dashboard/clinic?tab=content-download" },
 ];
 
 const BOOKING_SUBMENU: MenuItem["submenu"] = [
@@ -72,7 +72,7 @@ export const MENU: AppMenu = {
         submenu: USER_MANAGEMENT_SUBMENU,
       },
       { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
-      { label: "Pengaturan", icon: Settings, href: "/dashboard/clinic?tab=settings" },
+      { label: "Pengaturan Klinik", icon: Settings, href: "/dashboard/clinic?tab=settings" },
     ],
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },

@@ -143,79 +143,87 @@ export default function SettingsPage() {
               <Settings className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Pengaturan</h1>
-              <p className="text-sm text-gray-500">Kelola preferensi keamanan dan notifikasi akun Anda</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {sessionRole === "clinic" ? "Preferensi Administrator" : "Preferensi"}
+              </h1>
+              <p className="text-sm text-gray-500">
+                {sessionRole === "clinic"
+                  ? "Atur preferensi notifikasi browser dan pengingat operasional admin"
+                  : "Kelola preferensi keamanan dan notifikasi akun Anda"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Section 1: Keamanan Akun */}
-        <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-          <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
-              <Shield className="w-4 h-4" />
-            </div>
-            <h3 className="font-bold text-gray-900 text-base">Keamanan Akun</h3>
-          </div>
-          <CardContent className="p-6 divide-y divide-gray-100">
-            {/* Ubah Password */}
-            <div className="py-4 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-gray-400" />
-                  Ubah Password
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">Perbarui kata sandi secara berkala untuk menjaga keamanan akun</p>
+        {/* Section 1: Keamanan Akun (User & Doctor Only) */}
+        {sessionRole !== "clinic" && (
+          <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+                <Shield className="w-4 h-4" />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
-                onClick={() => setChangePasswordOpen(true)}
-              >
-                Ubah
-              </Button>
+              <h3 className="font-bold text-gray-900 text-base">Keamanan Akun</h3>
             </div>
+            <CardContent className="p-6 divide-y divide-gray-100">
+              {/* Ubah Password */}
+              <div className="py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-gray-400" />
+                    Ubah Password
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">Perbarui kata sandi secara berkala untuk menjaga keamanan akun</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setChangePasswordOpen(true)}
+                >
+                  Ubah
+                </Button>
+              </div>
 
-            {/* Ganti Email */}
-            <div className="py-4 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
+              {/* Ganti Email */}
+              <div className="py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    Ganti Email
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">Ubah alamat email utama yang terhubung dengan akun ini</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setChangeEmailOpen(true)}
+                >
                   Ganti Email
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">Ubah alamat email utama yang terhubung dengan akun ini</p>
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
-                onClick={() => setChangeEmailOpen(true)}
-              >
-                Ganti Email
-              </Button>
-            </div>
 
-            {/* Logout Semua Perangkat */}
-            <div className="py-4 flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <LogOut className="w-4 h-4 text-gray-400" />
-                  Logout dari Semua Perangkat
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">Akhiri sesi aktif di browser atau perangkat mobile lain</p>
+              {/* Logout Semua Perangkat */}
+              <div className="py-4 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <LogOut className="w-4 h-4 text-gray-400" />
+                    Logout dari Semua Perangkat
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">Akhiri sesi aktif di browser atau perangkat mobile lain</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50"
+                  onClick={handleLogoutAllDevices}
+                >
+                  Logout Semua
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50"
-                onClick={handleLogoutAllDevices}
-              >
-                Logout Semua
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Section 2: Notifikasi Website Browser */}
         <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
@@ -243,7 +251,9 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <p className="text-xs text-gray-500">
-                  Terima pemberitahuan konfirmasi reservasi, panggilan konsultasi, dan pengingat jadwal langsung di browser Anda.
+                  {sessionRole === "clinic"
+                    ? "Terima pemberitahuan push langsung di browser saat ada reservasi booking baru atau pesan konsultasi pasien masuk."
+                    : "Terima pemberitahuan konfirmasi reservasi, panggilan konsultasi, dan pengingat jadwal langsung di browser Anda."}
                 </p>
               </div>
 
@@ -259,59 +269,63 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Section 3: Privasi & Legal */}
-        <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-          <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-              <FileText className="w-4 h-4" />
+        {/* Section 3: Privasi & Legal (User & Doctor Only) */}
+        {sessionRole !== "clinic" && (
+          <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                <FileText className="w-4 h-4" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-base">Privasi & Legal</h3>
             </div>
-            <h3 className="font-bold text-gray-900 text-base">Privasi & Legal</h3>
-          </div>
-          <CardContent className="p-6 divide-y divide-gray-100">
-            <a
-              href="#/privacy-policy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-4 flex items-center justify-between text-gray-700 hover:text-[#c9a24a] transition-colors"
-            >
-              <span className="text-sm font-semibold">Kebijakan Privasi</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </a>
-            <a
-              href="#/terms-of-service"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-4 flex items-center justify-between text-gray-700 hover:text-[#c9a24a] transition-colors"
-            >
-              <span className="text-sm font-semibold">Syarat & Ketentuan Layanan</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </a>
-          </CardContent>
-        </Card>
+            <CardContent className="p-6 divide-y divide-gray-100">
+              <a
+                href="#/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-4 flex items-center justify-between text-gray-700 hover:text-[#c9a24a] transition-colors"
+              >
+                <span className="text-sm font-semibold">Kebijakan Privasi</span>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </a>
+              <a
+                href="#/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-4 flex items-center justify-between text-gray-700 hover:text-[#c9a24a] transition-colors"
+              >
+                <span className="text-sm font-semibold">Syarat & Ketentuan Layanan</span>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </a>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Section 4: Hapus Akun */}
-        <Card className="rounded-2xl border-rose-100 bg-rose-50/30 shadow-sm overflow-hidden">
-          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-                <Trash2 className="w-5 h-5" />
+        {/* Section 4: Hapus Akun (User & Doctor Only) */}
+        {sessionRole !== "clinic" && (
+          <Card className="rounded-2xl border-rose-100 bg-rose-50/30 shadow-sm overflow-hidden">
+            <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-rose-900">Hapus Akun</h4>
+                  <p className="text-xs text-rose-700/80 mt-0.5">
+                    Tindakan ini permanen. Semua data riwayat rekam medis & poin membership akan terhapus.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="text-base font-bold text-rose-900">Hapus Akun</h4>
-                <p className="text-xs text-rose-700/80 mt-0.5">
-                  Tindakan ini permanen. Semua data riwayat rekam medis & poin membership akan terhapus.
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="destructive"
-              className="rounded-xl px-5 h-10 bg-rose-600 hover:bg-rose-700 font-semibold text-xs text-white"
-              onClick={() => setDeleteAccountOpen(true)}
-            >
-              Hapus Akun Saya
-            </Button>
-          </CardContent>
-        </Card>
+              <Button
+                variant="destructive"
+                className="rounded-xl px-5 h-10 bg-rose-600 hover:bg-rose-700 font-semibold text-xs text-white"
+                onClick={() => setDeleteAccountOpen(true)}
+              >
+                Hapus Akun Saya
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Modal Change Password */}

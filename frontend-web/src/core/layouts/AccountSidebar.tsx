@@ -16,6 +16,7 @@ import {
   LifeBuoy,
   Settings,
   Download,
+  Upload,
 } from "lucide-react";
 
 interface MenuItem {
@@ -463,18 +464,6 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                   </Link>
 
                   <Link
-                    to="/profile/edit"
-                    onClick={() => {
-                      setUserPopupOpen(false);
-                      handleMenuClick();
-                    }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all"
-                  >
-                    <Pencil className="w-4 h-4 text-[#C9A24A]" />
-                    Edit Profil
-                  </Link>
-
-                  <Link
                     to="/settings"
                     onClick={() => {
                       setUserPopupOpen(false);
@@ -483,19 +472,23 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all"
                   >
                     <Settings className="w-4 h-4 text-[#C9A24A]" />
-                    Pengaturan
+                    Preferensi
                   </Link>
 
                   <Link
-                    to="/download"
+                    to={(session as any)?.role === "clinic" ? "/dashboard/clinic?tab=content-download" : "/download"}
                     onClick={() => {
                       setUserPopupOpen(false);
                       handleMenuClick();
                     }}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all"
                   >
-                    <Download className="w-4 h-4 text-[#C9A24A]" />
-                    Download Aplikasi
+                    {(session as any)?.role === "clinic" ? (
+                      <Upload className="w-4 h-4 text-[#C9A24A]" />
+                    ) : (
+                      <Download className="w-4 h-4 text-[#C9A24A]" />
+                    )}
+                    {(session as any)?.role === "clinic" ? "Upload Aplikasi" : "Download Aplikasi"}
                   </Link>
 
                   <button
