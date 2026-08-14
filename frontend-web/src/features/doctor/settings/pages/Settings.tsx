@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
-import { Input } from "@/shared/ui/input";
 import DashboardLayout from "@/core/layouts/DashboardLayout";
 import { toast } from "@/shared/ui/toast";
 import { clearSession, getSession } from "@/core/auth/services/session";
@@ -11,17 +10,19 @@ import {
   Settings,
   Shield,
   Bell,
-  FileText,
   Trash2,
   Lock,
   Mail,
   LogOut,
-  ChevronRight,
-  AlertTriangle,
   CheckCircle2,
   BellOff,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/shared/ui/dialog";
+import {
+  DoctorChangePasswordModal,
+  DoctorChangeEmailModal,
+  DoctorDeleteAccountModal,
+} from "../components/DoctorSecurityModals";
+import { changeDoctorPassword } from "../services/doctorSettingsService";
 
 export default function DoctorSettingsPage() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export default function DoctorSettingsPage() {
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       toast({
@@ -75,15 +76,24 @@ export default function DoctorSettingsPage() {
       });
       return;
     }
-    toast({
-      title: "Password Berhasil Diubah",
-      message: "Gunakan password baru Anda untuk login berikutnya.",
-      variant: "info",
-    });
-    setChangePasswordOpen(false);
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    try {
+      await changeDoctorPassword(oldPassword, newPassword);
+      toast({
+        title: "Password Berhasil Diubah",
+        message: "Gunakan password baru Anda untuk login berikutnya.",
+        variant: "info",
+      });
+      setChangePasswordOpen(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err: any) {
+      toast({
+        title: "Gagal",
+        message: err.message || "Gagal mengubah password.",
+        variant: "error",
+      });
+    }
   };
 
   const handleChangeEmail = (e: React.FormEvent) => {
@@ -199,9 +209,9 @@ export default function DoctorSettingsPage() {
               <div>
                 <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   <LogOut className="w-4 h-4 text-gray-400" />
-                  Logout dari Semua Perangkat
+                  Keluar dari Semua Perangkat
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">Akhiri sesi aktif di browser atau perangkat mobile lain</p>
+                <p className="text-xs text-gray-500 mt-0.5">Akhiri semua sesi login aktif di perangkat lain</p>
               </div>
               <Button
                 variant="outline"
@@ -215,218 +225,102 @@ export default function DoctorSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Section 2: Notifikasi Website Browser */}
+        {/* Section 2: Notifikasi */}
         <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
           <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+            <div className="w-8 h-8 rounded-xl bg-[#c9a24a]/10 flex items-center justify-center text-[#c9a24a]">
               <Bell className="w-4 h-4" />
             </div>
-            <h3 className="font-bold text-gray-900 text-base">Notifikasi Browser Website</h3>
+            <h3 className="font-bold text-gray-900 text-base">Notifikasi Praktik</h3>
           </div>
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-amber-50/40 p-4 rounded-2xl border border-amber-100/60">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-gray-900">Notifikasi Push Browser</p>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   {notifPermission === "granted" ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Aktif
-                    </span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                      <BellOff className="w-3 h-3" />
-                      Belum Diizinkan
-                    </span>
+                    <BellOff className="w-4 h-4 text-gray-400" />
                   )}
-                </div>
-                <p className="text-xs text-gray-500">
-                  Terima pemberitahuan reservasi pasien, jadwal praktik, dan panggilan konsultasi langsung di browser Anda.
+                  Notifikasi Browser
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {notifPermission === "granted"
+                    ? "Notifikasi browser aktif untuk jadwal dan reservasi pasien baru."
+                    : "Izinkan notifikasi browser untuk menerima pembaruan jadwal dan pasien."}
                 </p>
               </div>
-
-              {notifPermission !== "granted" && (
+              {notifPermission !== "granted" ? (
                 <Button
+                  size="sm"
+                  className="rounded-xl bg-[#c9a24a] hover:bg-[#a8843a] text-white"
                   onClick={requestNotifPermission}
-                  className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:opacity-90 text-white font-semibold rounded-xl text-xs px-4 h-10 shrink-0"
                 >
-                  Aktifkan Notifikasi Browser
+                  Aktifkan Notifikasi
                 </Button>
+              ) : (
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                  Aktif
+                </span>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Section 3: Privasi & Legal */}
-        <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-          <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-              <FileText className="w-4 h-4" />
+        {/* Section 3: Zona Bahaya */}
+        <Card className="rounded-2xl border-rose-100 shadow-sm overflow-hidden">
+          <div className="bg-rose-50/80 px-6 py-4 border-b border-rose-100 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600">
+              <Trash2 className="w-4 h-4" />
             </div>
-            <h3 className="font-bold text-gray-900 text-base">Privasi & Legal</h3>
+            <h3 className="font-bold text-rose-900 text-base">Zona Bahaya</h3>
           </div>
-          <CardContent className="p-6 divide-y divide-gray-100">
-            <a
-              href="#/privacy-policy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-4 flex items-center justify-between text-gray-700 hover:text-[#c9a24a] transition-colors"
-            >
-              <span className="text-sm font-semibold">Kebijakan Privasi</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </a>
-            <a
-              href="#/terms-of-service"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-4 flex items-center justify-between text-gray-700 hover:text-[#c9a24a] transition-colors"
-            >
-              <span className="text-sm font-semibold">Syarat & Ketentuan Layanan</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-            </a>
-          </CardContent>
-        </Card>
-
-        {/* Section 4: Hapus Akun */}
-        <Card className="rounded-2xl border-rose-100 bg-rose-50/30 shadow-sm overflow-hidden">
-          <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-base font-bold text-rose-900">Hapus Akun</h4>
-                <p className="text-xs text-rose-700/80 mt-0.5">
-                  Tindakan ini permanen. Semua data profil praktik & riwayat jadwal praktik akan terhapus.
-                </p>
-              </div>
+          <CardContent className="p-6 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-rose-900">Hapus Akun Praktik</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Tindakan ini permanen. Semua data profil praktik & riwayat jadwal praktik akan terhapus.
+              </p>
             </div>
             <Button
               variant="destructive"
               className="rounded-xl px-5 h-10 bg-rose-600 hover:bg-rose-700 font-semibold text-xs text-white"
               onClick={() => setDeleteAccountOpen(true)}
             >
-              Hapus Akun Saya
+              Hapus Akun
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Modal Change Password */}
-      <Dialog open={changePasswordOpen} onOpenChange={setChangePasswordOpen}>
-        <DialogContent className="max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Ubah Kata Sandi</DialogTitle>
-            <DialogDescription className="text-xs text-gray-500">
-              Masukkan password lama dan password baru Anda.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleChangePassword} className="space-y-4 py-2">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-700">Password Lama</label>
-              <Input
-                type="password"
-                required
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-700">Password Baru</label>
-              <Input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-700">Konfirmasi Password Baru</label>
-              <Input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setChangePasswordOpen(false)} className="rounded-xl">
-                Batal
-              </Button>
-              <Button type="submit" className="bg-[#c9a24a] hover:bg-[#a8843a] text-white rounded-xl">
-                Simpan Password
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Security Modals */}
+      <DoctorChangePasswordModal
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+        oldPassword={oldPassword}
+        setOldPassword={setOldPassword}
+        newPassword={newPassword}
+        setNewPassword={setNewPassword}
+        confirmPassword={confirmPassword}
+        setConfirmPassword={setConfirmPassword}
+        onSubmit={handleChangePassword}
+      />
 
-      {/* Modal Change Email */}
-      <Dialog open={changeEmailOpen} onOpenChange={setChangeEmailOpen}>
-        <DialogContent className="max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Ganti Alamat Email</DialogTitle>
-            <DialogDescription className="text-xs text-gray-500">
-              Masukkan email baru Anda. Tautan verifikasi akan dikirimkan ke email tersebut.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleChangeEmail} className="space-y-4 py-2">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-700">Email Baru</label>
-              <Input
-                type="email"
-                required
-                placeholder="nama@domain.com"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="rounded-xl"
-              />
-            </div>
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setChangeEmailOpen(false)} className="rounded-xl">
-                Batal
-              </Button>
-              <Button type="submit" className="bg-[#c9a24a] hover:bg-[#a8843a] text-white rounded-xl">
-                Kirim Verifikasi
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <DoctorChangeEmailModal
+        open={changeEmailOpen}
+        onOpenChange={setChangeEmailOpen}
+        newEmail={newEmail}
+        setNewEmail={setNewEmail}
+        onSubmit={handleChangeEmail}
+      />
 
-      {/* Modal Delete Account */}
-      <Dialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen}>
-        <DialogContent className="max-w-md rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-rose-600 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5" />
-              Konfirmasi Hapus Akun
-            </DialogTitle>
-            <DialogDescription className="text-xs text-gray-600">
-              Tindakan ini tidak dapat dibatalkan. Silakan ketik <strong className="text-rose-600">HAPUS</strong> untuk mengonfirmasi.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <Input
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder='Ketik "HAPUS"'
-              className="rounded-xl border-rose-200"
-            />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleteAccountOpen(false)} className="rounded-xl">
-              Batal
-            </Button>
-            <Button type="button" variant="destructive" onClick={handleDeleteAccount} className="rounded-xl text-white">
-              Hapus Permanen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DoctorDeleteAccountModal
+        open={deleteAccountOpen}
+        onOpenChange={setDeleteAccountOpen}
+        deleteConfirmText={deleteConfirmText}
+        setDeleteConfirmText={setDeleteConfirmText}
+        onConfirm={handleDeleteAccount}
+      />
     </DashboardLayout>
   );
 }

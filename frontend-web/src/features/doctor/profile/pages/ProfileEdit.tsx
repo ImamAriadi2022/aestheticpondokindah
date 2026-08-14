@@ -8,6 +8,7 @@ import DashboardLayout from "@/core/layouts/DashboardLayout";
 import { API_BASE } from "@/core/api/apiConfig";
 import { logger } from "@/core/utils/logger";
 import { toast } from "@/shared/ui/toast";
+import { updateDoctorProfile } from "../services/doctorProfileService";
 import {
   Select,
   SelectContent,
@@ -83,20 +84,7 @@ export default function DoctorProfileEditPage() {
 
       const token = localStorage.getItem("apident:token");
       if (token) {
-        const res = await fetch(`${API_BASE}/user/profile`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-          body: JSON.stringify(profile),
-        });
-
-        if (res.ok) {
-          const updatedUser = await res.json();
-          updateSessionProfile(updatedUser);
-        }
+        await updateDoctorProfile(profile);
       }
 
       toast({

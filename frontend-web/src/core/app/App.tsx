@@ -42,7 +42,7 @@ const BranchDetailPage = lazy(() => import("@/features/guest/branches/pages/Bran
 const DashboardPage = lazy(() => import("@/core/router/Dashboard"));
 const UserDashboardPage = lazy(() => import("@/features/patient/dashboard/pages/UserDashboardNew"));
 const DoctorDashboardPage = lazy(() => import("@/features/doctor/dashboard/pages/DoctorDashboard"));
-const DoctorConsultationChatPage = lazy(() => import("@/features/doctor/consultation/scheduled/pages/ConsultationChatPage"));
+const DoctorConsultationChatPage = lazy(() => import("@/features/doctor/consultation/pages/ConsultationChatPage"));
 const DoctorScheduleFormPage = lazy(() => import("@/features/doctor/schedule/pages/DoctorScheduleForm"));
 const ClinicDashboardPage = lazy(() => import("@/features/admin/dashboard/pages/ClinicDashboard"));
 const ClinicDoctorFormPage = lazy(() => import("@/features/admin/doctors/pages/ClinicDoctorForm"));

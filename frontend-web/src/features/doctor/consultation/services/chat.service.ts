@@ -1,25 +1,35 @@
 import { apiClient } from "@/core/api/apiClient";
-import type { ConsultationMessage } from "@/features/doctor/consultation/types/consultation";
+import type { ConsultationMessage } from "./consultation.types";
 
-export async function getConsultationMessages(id: string): Promise<ConsultationMessage[]> {
+export async function getConsultationMessages(
+  consultationId: string
+): Promise<ConsultationMessage[]> {
   const res = await apiClient.get<{ messages: ConsultationMessage[] }>(
-    `/doctor/consultations/${id}/messages`
+    `/doctor/consultations/${consultationId}/messages`
   );
-  return res.messages;
+  return res.messages || [];
 }
 
 export async function sendConsultationMessage(
-  id: string,
-  body: string
+  consultationId: string,
+  message: string,
+  attachmentUrl?: string
 ): Promise<ConsultationMessage> {
   const res = await apiClient.post<{ message: ConsultationMessage }>(
-    `/doctor/consultations/${id}/messages`,
-    { body }
+    `/doctor/consultations/${consultationId}/messages`,
+    {
+      message,
+      attachment_url: attachmentUrl,
+    }
   );
   return res.message;
 }
 
-export async function markConsultationRead(id: string): Promise<number> {
-  const res = await apiClient.post<{ read: number }>(`/doctor/consultations/${id}/read`);
-  return res.read ?? 0;
+export async function markConsultationRead(
+  consultationId: string
+): Promise<{ markedCount: number }> {
+  return apiClient.post<{ markedCount: number }>(
+    `/doctor/consultations/${consultationId}/read`,
+    {}
+  );
 }

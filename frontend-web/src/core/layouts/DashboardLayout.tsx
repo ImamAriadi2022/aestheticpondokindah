@@ -5,7 +5,7 @@ import { clearSessionStorage, touchSessionLastActive } from "@/core/auth/service
 import AccountSidebar from "@/core/layouts/AccountSidebar";
 import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
-import DoctorSidebar from "@/features/doctor/layouts/DoctorSidebar";
+import DoctorSidebar from "@/features/doctor/DoctorSidebar";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
 import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut } from "lucide-react";
 

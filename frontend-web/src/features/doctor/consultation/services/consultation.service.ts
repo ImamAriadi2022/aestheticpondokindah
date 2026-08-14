@@ -4,7 +4,7 @@ import type {
   ConsultationStatus,
   DoctorConsultation,
   PatientSummary,
-} from "@/features/doctor/consultation/types/consultation";
+} from "./consultation.types";
 
 export async function getDoctorConsultations(params?: {
   type?: "quick" | "scheduled";
@@ -41,6 +41,8 @@ export async function updateConsultationStatus(
   return res.consultation;
 }
 
-export async function getPatientSummary(id: string): Promise<PatientSummary> {
-  return apiClient.get<PatientSummary>(`/doctor/consultations/${id}/patient-summary`);
+export async function getPatientSummary(consultationId: string): Promise<PatientSummary> {
+  return apiClient.get<PatientSummary>(
+    `/doctor/consultations/${consultationId}/patient-summary`
+  );
 }
