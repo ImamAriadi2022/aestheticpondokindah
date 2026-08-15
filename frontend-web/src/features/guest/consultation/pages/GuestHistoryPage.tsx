@@ -8,7 +8,7 @@ import { toast } from "@/shared/ui/toast";
 import { ArrowLeft, MessageSquareText, Clock, KeyRound, Trash2 } from "lucide-react";
 import { StatusBadge } from "@/shared/consultation/components/StatusBadge";
 import type { ConsultationStatus } from "@/shared/consultation/types/consultation";
-import { useGuestSession } from "@/features/guest/consultation/context/GuestSessionContext";
+import { useGuestSession } from "../services/GuestSessionContext";
 
 export default function GuestHistoryPage() {
   const navigate = useNavigate();

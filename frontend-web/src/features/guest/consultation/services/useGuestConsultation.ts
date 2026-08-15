@@ -4,7 +4,7 @@ import {
   markGuestRead,
   sendGuestMessage,
   type GuestConsultationDetail,
-} from "@/features/guest/consultation/services/guestConsultationApi";
+} from "./guestConsultationApi";
 
 const DEFAULT_POLL_INTERVAL_MS = 10000;
 

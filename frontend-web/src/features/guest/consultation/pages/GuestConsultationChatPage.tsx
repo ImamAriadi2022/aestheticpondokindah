@@ -7,8 +7,8 @@ import { Button } from "@/shared/ui/button";
 import { ChatWindow } from "@/shared/consultation/components/ChatWindow";
 import { MeetingLinkPanel } from "@/shared/consultation/components/MeetingLinkPanel";
 import { StatusBadge } from "@/shared/consultation/components/StatusBadge";
-import { useGuestConsultation } from "@/features/guest/consultation/hooks/useGuestConsultation";
-import { useGuestSession } from "@/features/guest/consultation/context/GuestSessionContext";
+import { useGuestConsultation } from "../services/useGuestConsultation";
+import { useGuestSession } from "../services/GuestSessionContext";
 
 export default function GuestConsultationChatPage() {
   const { token = "" } = useParams();

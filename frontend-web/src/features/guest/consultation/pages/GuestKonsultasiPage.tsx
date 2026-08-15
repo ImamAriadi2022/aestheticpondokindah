@@ -18,8 +18,8 @@ import {
   AlertCircle,
   Stethoscope,
 } from "lucide-react";
-import { createGuestConsultation } from "@/features/guest/consultation/services/guestConsultationApi";
-import { useGuestSession } from "@/features/guest/consultation/context/GuestSessionContext";
+import { createGuestConsultation } from "../services/guestConsultationApi";
+import { useGuestSession } from "../services/GuestSessionContext";
 
 const symptoms = [
   { id: "sakit", label: "Sakit Gigi", icon: Frown, color: "bg-red-100 text-red-600" },

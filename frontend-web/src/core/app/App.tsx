@@ -8,7 +8,7 @@ import ChatBot from "@/features/guest/chatbot/components/ChatBot";
 import { ToastViewport } from "@/shared/ui/toast";
 import { trackVisit } from "@/core/api/analyticsApi";
 import { PwaManager } from "@/core/providers/PwaManager";
-import { GuestSessionProvider } from "@/features/guest/consultation/context/GuestSessionContext";
+import { GuestSessionProvider } from "@/features/guest/consultation/services/GuestSessionContext";
 import NotFoundPage from "@/shared/pages/NotFoundPage";
 import ForbiddenPage from "@/shared/pages/ForbiddenPage";
 import { getSession } from "@/core/auth/services/session";
