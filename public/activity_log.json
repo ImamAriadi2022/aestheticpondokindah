@@ -1,5 +1,31 @@
 [
     {
+        "id": "act-203",
+        "date": "2026-08-15",
+        "time": "19:04",
+        "category": "Frontend | Architecture Refactoring | Patient Features",
+        "type": "Codebase Standardization & Modularization",
+        "feature": "Standardisasi Arsitektur 3-Folder Seluruh Modul Patient",
+        "description": "Merefaktor seluruh 6 sub-fitur pada folder `features/patient/` (`complaint`, `consultation`, `dashboard`, `membership`, `profile`, `reservation`) ke pola standar 3 folder (`pages/`, `components/`, `services/`) secara seragam dan ketat tanpa mengubah logika, fungsi, atau data yang sudah berjalan.",
+        "notes": "1. Standardisasi Modul: Seluruh 6 sub-fitur kini memiliki struktur folder yang bersih dan konsisten (`pages/`, `components/`, `services/`).\n2. Service Extraction: Membuat `complaintApi.ts` pada `complaint/services/`, `userDashboardService.ts` pada `dashboard/services/`, `userProfileApi.ts` pada `profile/services/`, dan `patientReservationApi.ts` pada `reservation/services/`.\n3. Component Extraction: Membuat `MembershipTierCard.tsx` dan `ProfileHeaderCard.tsx`.\n4. Build Verification: `npm run build` sukses 100% tanpa error (Exit Code: 0).\n5. Author: Diseragamkan menjadi 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna untuk merefaktor seluruh modul patient dengan standar dan kontrak arsitektur 3-folder yang sama.",
+        "files": [
+            "frontend-web/src/features/patient/complaint/pages/ComplaintPage.tsx",
+            "frontend-web/src/features/patient/complaint/services/complaintApi.ts",
+            "frontend-web/src/features/patient/consultation/services/complaintApi.ts",
+            "frontend-web/src/features/patient/dashboard/services/userDashboardService.ts",
+            "frontend-web/src/features/patient/membership/components/MembershipTierCard.tsx",
+            "frontend-web/src/features/patient/profile/components/ProfileHeaderCard.tsx",
+            "frontend-web/src/features/patient/profile/services/userProfileApi.ts",
+            "frontend-web/src/features/patient/reservation/services/patientReservationApi.ts",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-202",
         "date": "2026-08-15",
         "time": "18:45",
