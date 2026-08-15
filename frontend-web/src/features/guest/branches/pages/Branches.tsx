@@ -1,19 +1,21 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
-import { MapPin, ArrowRight } from "lucide-react";
-import { getDemoBranches } from "@/features/guest/reservation/services/bookingDemo";
-
-const slugify = (s: string) =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+import { MapPin, ArrowRight, Loader2 } from "lucide-react";
+import { fetchPublicBranches, type BranchWithSlug } from "../services/branchesService";
 
 export default function BranchesPage() {
-  const branches = getDemoBranches().map((b) => ({ ...b, slug: slugify(b.name) }));
+  const [branches, setBranches] = useState<BranchWithSlug[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPublicBranches()
+      .then((data) => setBranches(data))
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -35,34 +37,40 @@ export default function BranchesPage() {
 
         <section className="py-14 sm:py-20 bg-background">
           <div className="container mx-auto px-4">
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {branches.map((b) => (
-                <Card key={b.id} className="rounded-2xl border-border shadow-lg shadow-black/5">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-xl font-bold text-brand-charcoal">{b.name}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex gap-2 text-sm text-brand-warm-gray font-body">
-                      <MapPin className="w-4 h-4 text-brand-gold mt-0.5" />
-                      <div className="line-clamp-3">{b.address}</div>
-                    </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-brand-gold animate-spin" />
+              </div>
+            ) : (
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {branches.map((b) => (
+                  <Card key={b.id} className="rounded-2xl border-border shadow-lg shadow-black/5 hover:shadow-xl transition-all">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-xl font-bold text-brand-charcoal">{b.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex gap-2 text-sm text-brand-warm-gray font-body">
+                        <MapPin className="w-4 h-4 text-brand-gold mt-0.5" />
+                        <div className="line-clamp-3">{b.address}</div>
+                      </div>
 
-                    <div className="flex gap-2 flex-wrap">
-                      <Link to={`/branches/${encodeURIComponent(b.slug)}`}>
-                        <Button variant="outline" className="rounded-xl font-body">
-                          Lihat Detail <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </Link>
-                      <Link to={`/booking/new?branch=${encodeURIComponent(b.id)}`}>
-                        <Button className="rounded-xl bg-gradient-gold hover:opacity-90 text-white font-semibold font-body">
-                          Booking Cabang Ini
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <Link to={`/branches/${encodeURIComponent(b.slug)}`}>
+                          <Button variant="outline" className="rounded-xl font-body">
+                            Lihat Detail <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </Link>
+                        <Link to={`/booking/new?branch=${encodeURIComponent(b.id)}`}>
+                          <Button className="rounded-xl bg-gradient-gold hover:opacity-90 text-white font-semibold font-body">
+                            Booking Cabang Ini
+                          </Button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>

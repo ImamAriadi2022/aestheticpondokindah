@@ -1,3 +1,5 @@
+import { apiClient } from "@/core/api/apiClient";
+
 export type ServiceSpecialistSection = {
   label: string;
   names: string[];
@@ -23,7 +25,7 @@ export const generalDentists = [
   "Ryan Jusuf",
 ];
 
-export const services: ServiceDetail[] = [
+export const defaultServices: ServiceDetail[] = [
   {
     id: "dental-whitening",
     title: "Dental Whitening",
@@ -422,3 +424,29 @@ export const services: ServiceDetail[] = [
     generalDentists,
   },
 ];
+
+export const services = defaultServices;
+
+export async function fetchPublicServices(): Promise<ServiceDetail[]> {
+  try {
+    const data = await apiClient.get<any[]>("/public/services");
+    if (Array.isArray(data) && data.length > 0) {
+      return data.map((d) => ({
+        id: d.slug || String(d.id),
+        title: d.title,
+        image: d.image || "/layanan/Dental Whitening.png",
+        intro: d.intro,
+        paragraphs: Array.isArray(d.paragraphs) ? d.paragraphs : [],
+        steps: Array.isArray(d.steps) ? d.steps : [],
+        generalDentists: Array.isArray(d.general_dentists) ? d.general_dentists : generalDentists,
+        specialistSection: d.specialist_names && d.specialist_names.length > 0 ? {
+          label: d.specialist_label || "Spesialis Kami:",
+          names: d.specialist_names,
+        } : undefined,
+      }));
+    }
+  } catch {
+    // Fallback to default
+  }
+  return defaultServices;
+}

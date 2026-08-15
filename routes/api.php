@@ -41,8 +41,17 @@ use App\Http\Controllers\Api\User\NotificationController;
 use App\Http\Controllers\Api\User\ReservationController as UserReservationController;
 use App\Http\Controllers\Api\WilayahController;
 use App\Http\Controllers\Api\Public\AnalyticsVisitController;
-use App\Http\Controllers\Api\Public\ClinicSettingPublicController;
 use App\Http\Controllers\Api\Admin\ClinicSettingAdminController;
+use App\Http\Controllers\Api\Admin\ClinicServiceAdminController;
+use App\Http\Controllers\Api\Admin\FaqAdminController;
+use App\Http\Controllers\Api\Admin\ContactMessageAdminController;
+use App\Http\Controllers\Api\Admin\AboutAdminController;
+use App\Http\Controllers\Api\Admin\LegalAdminController;
+use App\Http\Controllers\Api\Public\ClinicServicePublicController;
+use App\Http\Controllers\Api\Public\FaqPublicController;
+use App\Http\Controllers\Api\Public\ContactPublicController;
+use App\Http\Controllers\Api\Public\AboutPublicController;
+use App\Http\Controllers\Api\Public\LegalPublicController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/wilayah/provinsi', [WilayahController::class, 'provinces']);
@@ -168,6 +177,30 @@ Route::prefix('admin')->group(function () {
         Route::post('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'update']);
         Route::put('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'update']);
         Route::delete('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'destroy']);
+
+        // Informasi & Layanan Publik Admin Routes
+        Route::get('/services', [ClinicServiceAdminController::class, 'index']);
+        Route::post('/services', [ClinicServiceAdminController::class, 'store']);
+        Route::get('/services/{service}', [ClinicServiceAdminController::class, 'show']);
+        Route::put('/services/{service}', [ClinicServiceAdminController::class, 'update']);
+        Route::delete('/services/{service}', [ClinicServiceAdminController::class, 'destroy']);
+
+        Route::get('/faqs', [FaqAdminController::class, 'index']);
+        Route::post('/faqs', [FaqAdminController::class, 'store']);
+        Route::get('/faqs/{faq}', [FaqAdminController::class, 'show']);
+        Route::put('/faqs/{faq}', [FaqAdminController::class, 'update']);
+        Route::delete('/faqs/{faq}', [FaqAdminController::class, 'destroy']);
+
+        Route::get('/contact-messages', [ContactMessageAdminController::class, 'index']);
+        Route::get('/contact-messages/{contactMessage}', [ContactMessageAdminController::class, 'show']);
+        Route::put('/contact-messages/{contactMessage}', [ContactMessageAdminController::class, 'update']);
+        Route::delete('/contact-messages/{contactMessage}', [ContactMessageAdminController::class, 'destroy']);
+
+        Route::get('/about', [AboutAdminController::class, 'show']);
+        Route::put('/about', [AboutAdminController::class, 'update']);
+
+        Route::get('/legal/{type}', [LegalAdminController::class, 'show']);
+        Route::put('/legal/{type}', [LegalAdminController::class, 'update']);
     });
 });
 
@@ -321,6 +354,14 @@ Route::prefix('public')->group(function () {
     Route::get('/download-apps', [ContentController::class, 'downloadApps']);
     Route::middleware('throttle:60,1')->post('/reservations', [ReservationController::class, 'store']);
     Route::get('/settings', [ClinicSettingPublicController::class, 'index']);
+
+    // Informasi & Layanan Publik
+    Route::get('/services', [ClinicServicePublicController::class, 'index']);
+    Route::get('/services/{slug}', [ClinicServicePublicController::class, 'show']);
+    Route::get('/faqs', [FaqPublicController::class, 'index']);
+    Route::post('/contact', [ContactPublicController::class, 'store']);
+    Route::get('/about', [AboutPublicController::class, 'show']);
+    Route::get('/legal/{type}', [LegalPublicController::class, 'show']);
 });
 
 // Midtrans sends this callback without an application session/token.

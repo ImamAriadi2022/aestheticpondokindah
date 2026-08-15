@@ -1,3 +1,5 @@
+import { apiClient } from "@/core/api/apiClient";
+
 export interface ClinicStatistic {
   value: string;
   label: string;
@@ -7,6 +9,15 @@ export interface ClinicStatistic {
 export interface ClinicValue {
   title: string;
   description: string;
+}
+
+export interface ClinicAboutData {
+  hero_title: string;
+  hero_subtitle: string;
+  story_title: string;
+  story_paragraphs: string[];
+  stats: ClinicStatistic[];
+  values: ClinicValue[];
 }
 
 export const ABOUT_STATS: ClinicStatistic[] = [
@@ -30,3 +41,28 @@ export const ABOUT_VALUES: ClinicValue[] = [
     description: "Proses sterilisasi multi-tahap demi menjaga keamanan dan kebersihan maksimal.",
   },
 ];
+
+export async function fetchPublicAbout(): Promise<ClinicAboutData> {
+  const fallback: ClinicAboutData = {
+    hero_title: "About The Company Aesthetic Pondok Indah",
+    hero_subtitle:
+      "At Aesthetic Pondok Indah Dental Clinic, we deliver professional dental solutions that go beyond treating problems. Our focus is on enhancing your smile, improving confidence, and supporting long-term health.",
+    story_title: "Professional Care that Puts You First",
+    story_paragraphs: [
+      "Aesthetic Pondok Indah Dental Clinic didirikan dengan visi menghadirkan perawatan gigi berstandar tinggi yang mengutamakan kenyamanan, estetika alami, dan kesehatan jangka panjang.",
+      "Dengan tim dokter spesialis berpengalaman dan teknologi modern, kami berkomitmen memberikan perawatan yang personal dan presisi untuk setiap pasien.",
+    ],
+    stats: ABOUT_STATS,
+    values: ABOUT_VALUES,
+  };
+
+  try {
+    const data = await apiClient.get<ClinicAboutData>("/public/about");
+    if (data && data.hero_title) {
+      return data;
+    }
+  } catch {
+    // Fallback
+  }
+  return fallback;
+}

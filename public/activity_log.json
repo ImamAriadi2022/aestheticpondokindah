@@ -1,5 +1,74 @@
 [
     {
+        "id": "act-202",
+        "date": "2026-08-15",
+        "time": "18:45",
+        "category": "Admin Module | Database & Full-Stack CMS",
+        "type": "New Feature & Backend Integration",
+        "feature": "Modul Informasi & Layanan Publik (Admin Dashboard & Database Penuh)",
+        "description": "Membangun sistem pengelolaan data publik lengkap di Dashboard Admin bernama 'Informasi & Layanan Publik' dengan menu dropdown collapsible di sidebar, CRUD database penuh (Layanan Gigi, FAQ, Pesan Masuk Kontak, Profil & Nilai Klinik, Kebijakan Legal), serta menghubungkan seluruh data guest publik ke database MySQL/Laravel backend secara real-time.",
+        "notes": "1. Database & Migrations: Membuat migrasi dan seeder `clinic_services`, `faqs`, dan `contact_messages`.\n2. API Endpoints: Menambahkan 10 controller dan rute admin/public di Laravel untuk Layanan, FAQ, Form Kontak, Profil About, dan Dokumen Legal.\n3. Admin UI & Sidebar: Menambahkan menu dropdown collapsible 'Informasi & Layanan Publik' di `AdminSidebar.tsx` dengan modal CRUD interaktif di `ServicesManagePage.tsx`, `FaqsManagePage.tsx`, `ContactMessagesPage.tsx`, `AboutManagePage.tsx`, dan `LegalManagePage.tsx`.\n4. Guest Live Integration: Mengupdate `servicesService.ts`, `helpService.ts`, `contactService.ts`, `aboutService.ts`, dan `legalService.ts` untuk memuat data live dari backend.\n5. Build Verification: `npm run build` sukses 100% tanpa error (Exit Code: 0).",
+        "reason": "Memenuhi permintaan pengguna untuk membuat sistem pengelolaan (CRUD) data publik di Admin dengan nama induk 'Informasi & Layanan Publik' dan submenu dropdown popup yang terhubung ke database.",
+        "files": [
+            "database/migrations/2026_08_15_000001_create_clinic_services_table.php",
+            "database/migrations/2026_08_15_000002_create_faqs_table.php",
+            "database/migrations/2026_08_15_000003_create_contact_messages_table.php",
+            "database/seeders/PublicInfoSeeder.php",
+            "app/Models/ClinicService.php",
+            "app/Models/Faq.php",
+            "app/Models/ContactMessage.php",
+            "app/Http/Controllers/Api/Admin/ClinicServiceAdminController.php",
+            "app/Http/Controllers/Api/Admin/FaqAdminController.php",
+            "app/Http/Controllers/Api/Admin/ContactMessageAdminController.php",
+            "app/Http/Controllers/Api/Admin/AboutAdminController.php",
+            "app/Http/Controllers/Api/Admin/LegalAdminController.php",
+            "app/Http/Controllers/Api/Public/ClinicServicePublicController.php",
+            "app/Http/Controllers/Api/Public/FaqPublicController.php",
+            "app/Http/Controllers/Api/Public/ContactPublicController.php",
+            "app/Http/Controllers/Api/Public/AboutPublicController.php",
+            "app/Http/Controllers/Api/Public/LegalPublicController.php",
+            "routes/api.php",
+            "frontend-web/src/features/admin/public_info/services/publicInfoAdminApi.ts",
+            "frontend-web/src/features/admin/public_info/components/ServiceEditModal.tsx",
+            "frontend-web/src/features/admin/public_info/components/FaqEditModal.tsx",
+            "frontend-web/src/features/admin/public_info/components/ContactMessageDetailModal.tsx",
+            "frontend-web/src/features/admin/public_info/pages/ServicesManagePage.tsx",
+            "frontend-web/src/features/admin/public_info/pages/FaqsManagePage.tsx",
+            "frontend-web/src/features/admin/public_info/pages/ContactMessagesPage.tsx",
+            "frontend-web/src/features/admin/public_info/pages/AboutManagePage.tsx",
+            "frontend-web/src/features/admin/public_info/pages/LegalManagePage.tsx",
+            "frontend-web/src/features/admin/AdminSidebar.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-201",
+        "date": "2026-08-15",
+        "time": "18:27",
+        "category": "Frontend | Backend Integration | Guest Features Audit",
+        "type": "Backend API Integration & Gap Analysis Report",
+        "feature": "Integrasi Backend Nyata Fitur Guest & Pembuatan Laporan Audit",
+        "description": "Menghubungkan seluruh fitur Guest yang memiliki endpoint backend nyata (Reservasi, Konsultasi Online, Cabang Klinik, Jadwal Dokter, Artikel Blog, Promo, Galeri, Testimoni, Pop-up, Download App) serta mendokumentasikan analisis kesenjangan dan laporan integrasi lengkap di `frontend-web/src/features/guest/BACKEND_AUDIT_REPORT.md`.",
+        "notes": "1. Live API Integration: Menghubungkan modul cabang ke `GET /api/public/branches`, reservasi ke `POST /api/public/reservations`, dan jadwal dokter ke `GET /api/public/doctor-schedules`.\n2. Backend Audit Report: Dibuat dokumen komprehensif di `features/guest/BACKEND_AUDIT_REPORT.md` merinci 12 endpoint backend aktif, 7 client-side service terstruktur, dan 3 rekomendasi endpoint tambahan.\n3. Build Verification: Divalidasi 100% sukses tanpa error via `npm run build` (Exit Code: 0).",
+        "reason": "Memenuhi permintaan pengguna untuk memastikan seluruh fitur guest menggunakan backend valid tanpa data dummy dan menyusun laporan markdown jika ada fitur yang belum memiliki endpoint.",
+        "files": [
+            "frontend-web/src/features/guest/BACKEND_AUDIT_REPORT.md",
+            "frontend-web/src/features/guest/branches/services/branchesService.ts",
+            "frontend-web/src/features/guest/branches/pages/Branches.tsx",
+            "frontend-web/src/features/guest/doctors/services/doctorsService.ts",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-200",
         "date": "2026-08-15",
         "time": "18:22",
@@ -41,7 +110,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-199",
@@ -66,7 +135,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-198",
@@ -101,7 +170,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-197",
@@ -136,7 +205,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-196",
@@ -157,7 +226,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-195",
@@ -177,7 +246,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-194",
@@ -198,7 +267,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-193",
@@ -219,7 +288,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-192",
@@ -242,7 +311,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-191",
@@ -265,7 +334,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-190",
@@ -288,7 +357,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-189",
@@ -307,7 +376,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-188",
@@ -327,7 +396,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-187",
@@ -346,7 +415,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-186",
@@ -366,7 +435,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-185",
@@ -386,7 +455,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-184",
@@ -410,7 +479,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-183",
@@ -438,7 +507,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-182",
@@ -473,7 +542,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-181",
@@ -503,7 +572,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-180",
@@ -522,7 +591,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-179",
@@ -541,7 +610,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-178",
@@ -563,7 +632,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-177",
@@ -584,7 +653,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-176",
@@ -604,7 +673,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-175",
@@ -624,7 +693,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-174",
@@ -645,7 +714,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-173",
@@ -665,7 +734,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-172",
@@ -684,7 +753,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-171",
@@ -703,7 +772,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-170",
@@ -727,7 +796,7 @@
         "before_progress": 100,
         "after_progress": 100,
         "status": "🟢 Complete",
-        "author": "Antigravity AI | Developer"
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-169",
@@ -746,8 +815,8 @@
         ],
         "before_progress": 99,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Antigravity AI | Developer"
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-168",
@@ -767,8 +836,8 @@
         ],
         "before_progress": 99,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Antigravity AI | Developer"
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-167",
@@ -787,8 +856,8 @@
         ],
         "before_progress": 99,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Antigravity AI | Developer"
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-166",
@@ -798,7 +867,7 @@
         "type": "Feature",
         "feature": "Pemberian Time Picker & Date Selection UI pada Fitur Reservasi Guest",
         "description": "Memperbarui antarmuka pemilihan jadwal reservasi pasien guest pada BookingNew.tsx, Header.tsx, dan HeroSection.tsx. Memisahkan pemilihan Tanggal Periksa dan Jam Periksa ke dalam format Time Picker interaktif dengan tombol shortcut cepat (Hari Ini, Besok, Lusa, +3 Hari) serta Grid Slot Jam Periksa (Sesi Pagi, Siang, Sore/Malam) dan kustom time input.",
-        "notes": "1. BookingNew.tsx: Menambahkan Quick Date Shortcut Chips (Hari Ini, Besok, Lusa, +3 Hari) dan Grid Jam Periksa interaktif berdasarkan sesi (\ud83c\udf05 Pagi 09:00-11:30, \u2600\ufe0f Siang 13:00-15:30, \ud83c\udf19 Sore 16:00-19:00 WIB) plus kustom input time.\n2. Header.tsx & HeroSection.tsx: Memisahkan field 'Pilih Waktu' lama menjadi 2 field terpisah: \ud83d\udcc5 Pilih Tanggal (type=date) & \u23f0 Pilih Jam (Time Pick dropdown 09:00-19:00 WIB).\n3. Diverifikasi dengan npx tsc --noEmit (0 errors) & npm run build sukses disajikan ke public/.",
+        "notes": "1. BookingNew.tsx: Menambahkan Quick Date Shortcut Chips (Hari Ini, Besok, Lusa, +3 Hari) dan Grid Jam Periksa interaktif berdasarkan sesi (🌅 Pagi 09:00-11:30, ☀️ Siang 13:00-15:30, 🌙 Sore 16:00-19:00 WIB) plus kustom input time.\n2. Header.tsx & HeroSection.tsx: Memisahkan field 'Pilih Waktu' lama menjadi 2 field terpisah: 📅 Pilih Tanggal (type=date) & ⏰ Pilih Jam (Time Pick dropdown 09:00-19:00 WIB).\n3. Diverifikasi dengan npx tsc --noEmit (0 errors) & npm run build sukses disajikan ke public/.",
         "reason": "Meningkatkan User Experience (UX) calon pasien dalam memilih tanggal dan jam reservasi secara terpisah dan intuitif.",
         "files": [
             "frontend-web/src/features/guest/reservation/pages/BookingNew.tsx",
@@ -808,8 +877,8 @@
         ],
         "before_progress": 99,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Antigravity AI | Developer"
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-165",
@@ -838,8 +907,8 @@
         ],
         "before_progress": 99,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Antigravity AI | Developer"
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-164",
@@ -873,8 +942,8 @@
         ],
         "before_progress": 99,
         "after_progress": 99,
-        "status": "\ud83d\udd35 Fixed",
-        "author": "Antigravity AI | Developer"
+        "status": "🔵 Fixed",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-163",
@@ -904,8 +973,8 @@
         ],
         "before_progress": 99,
         "after_progress": 99,
-        "status": "\ud83d\udd35 Fixed",
-        "author": "Antigravity AI | Developer"
+        "status": "🔵 Fixed",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-162",
@@ -942,8 +1011,8 @@
         ],
         "before_progress": 99,
         "after_progress": 99,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Antigravity AI | Developer"
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-161",
@@ -986,8 +1055,8 @@
         ],
         "before_progress": 98,
         "after_progress": 99,
-        "status": "\ud83d\udfe2 Complete",
-        "author": "Antigravity AI | Developer"
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
     },
     {
         "id": "act-160",
@@ -1012,7 +1081,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1033,7 +1102,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1052,7 +1121,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1074,7 +1143,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1094,7 +1163,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1112,7 +1181,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1132,7 +1201,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1151,7 +1220,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1174,7 +1243,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1198,7 +1267,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1217,7 +1286,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1235,7 +1304,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1253,7 +1322,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1272,7 +1341,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1292,7 +1361,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1313,7 +1382,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1331,7 +1400,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1350,7 +1419,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1368,7 +1437,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1386,7 +1455,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1406,7 +1475,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1424,7 +1493,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1442,7 +1511,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1460,7 +1529,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1479,7 +1548,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1500,7 +1569,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1519,7 +1588,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1537,7 +1606,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1555,7 +1624,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1573,7 +1642,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1591,7 +1660,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1609,7 +1678,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1627,7 +1696,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1646,7 +1715,7 @@
         ],
         "before_progress": 100,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1669,7 +1738,7 @@
         ],
         "before_progress": 99,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1693,7 +1762,7 @@
         ],
         "before_progress": 98,
         "after_progress": 99,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1711,7 +1780,7 @@
         ],
         "before_progress": 98,
         "after_progress": 98,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1730,7 +1799,7 @@
         ],
         "before_progress": 95,
         "after_progress": 98,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1749,7 +1818,7 @@
         ],
         "before_progress": 95,
         "after_progress": 98,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1779,7 +1848,7 @@
         ],
         "before_progress": 94,
         "after_progress": 98,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1802,7 +1871,7 @@
         ],
         "before_progress": 90,
         "after_progress": 95,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1823,7 +1892,7 @@
         ],
         "before_progress": 94,
         "after_progress": 94,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1842,7 +1911,7 @@
         ],
         "before_progress": 82,
         "after_progress": 94,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1875,7 +1944,7 @@
         ],
         "before_progress": 33,
         "after_progress": 85,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1899,7 +1968,7 @@
         ],
         "before_progress": 90,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1919,7 +1988,7 @@
         ],
         "before_progress": 90,
         "after_progress": 95,
-        "status": "\ud83d\udd35 Fixed",
+        "status": "🔵 Fixed",
         "author": "Imam Ariadi"
     },
     {
@@ -1941,7 +2010,7 @@
         ],
         "before_progress": 50,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1963,7 +2032,7 @@
         ],
         "before_progress": 85,
         "after_progress": 100,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -1983,7 +2052,7 @@
         ],
         "before_progress": 84,
         "after_progress": 86,
-        "status": "\ud83d\udd35 Fixed",
+        "status": "🔵 Fixed",
         "author": "Imam Ariadi"
     },
     {
@@ -2002,7 +2071,7 @@
         ],
         "before_progress": 82,
         "after_progress": 84,
-        "status": "\ud83d\udfe3 Refactored",
+        "status": "🟣 Refactored",
         "author": "Imam Ariadi"
     },
     {
@@ -2023,7 +2092,7 @@
         ],
         "before_progress": 75,
         "after_progress": 82,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -2044,7 +2113,7 @@
         ],
         "before_progress": 60,
         "after_progress": 75,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -2063,7 +2132,7 @@
         ],
         "before_progress": 30,
         "after_progress": 60,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     },
     {
@@ -2083,7 +2152,7 @@
         ],
         "before_progress": 0,
         "after_progress": 30,
-        "status": "\ud83d\udfe2 Complete",
+        "status": "🟢 Complete",
         "author": "Imam Ariadi"
     }
 ]

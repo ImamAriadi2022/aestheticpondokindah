@@ -16,6 +16,27 @@ class ClinicSetting extends Model
         'description',
     ];
 
+    public function getValueAttribute($value)
+    {
+        if ($this->type === 'json' || (is_string($value) && (str_starts_with(trim($value), '{') || str_starts_with(trim($value), '[')))) {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                return $decoded;
+            }
+        }
+        return $value;
+    }
+
+    public function setValueAttribute($value)
+    {
+        if (is_array($value) || is_object($value)) {
+            $this->attributes['value'] = json_encode($value);
+            $this->attributes['type'] = 'json';
+        } else {
+            $this->attributes['value'] = $value;
+        }
+    }
+
     /**
      * Get a setting value by key.
      */
