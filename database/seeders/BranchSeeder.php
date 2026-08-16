@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Branch;
+use App\Models\Shared\Branch\Branch;
 use Illuminate\Database\Seeder;
 
 class BranchSeeder extends Seeder

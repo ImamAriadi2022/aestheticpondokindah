@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\DoctorSchedule;
-use App\Models\Reservation;
-use App\Models\User;
+use App\Models\Doctor\Schedule\DoctorSchedule;
+use App\Models\Shared\Reservation\Reservation;
+use App\Models\Shared\User\User;
 use Illuminate\Database\Seeder;
 
 class NormalizeDoctorSchedulesAndReservationsSeeder extends Seeder

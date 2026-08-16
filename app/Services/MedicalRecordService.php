@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\MedicalRecord;
-use App\Models\Visit;
+use App\Models\Doctor\MedicalRecord\MedicalRecord;
+use App\Models\Doctor\Visit\Visit;
 use InvalidArgumentException;
 use RuntimeException;
 

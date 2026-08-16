@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Admin\Content;
 
 use App\Http\Controllers\Controller;
-use App\Models\Testimonial;
+use App\Models\Guest\Content\Testimonial;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;

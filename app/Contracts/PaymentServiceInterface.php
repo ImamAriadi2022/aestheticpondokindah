@@ -2,8 +2,8 @@
 
 namespace App\Contracts;
 
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Models\Patient\Billing\Invoice;
+use App\Models\Patient\Billing\Payment;
 
 interface PaymentServiceInterface
 {

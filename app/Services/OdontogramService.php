@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\MedicalRecord;
-use App\Models\Odontogram;
-use App\Models\ToothState;
-use App\Models\User;
+use App\Models\Doctor\MedicalRecord\MedicalRecord;
+use App\Models\Doctor\Odontogram\Odontogram;
+use App\Models\Doctor\Odontogram\ToothState;
+use App\Models\Shared\User\User;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use RuntimeException;

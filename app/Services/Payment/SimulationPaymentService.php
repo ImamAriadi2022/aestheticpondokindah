@@ -3,8 +3,8 @@
 namespace App\Services\Payment;
 
 use App\Contracts\PaymentServiceInterface;
-use App\Models\Invoice;
-use App\Models\Payment;
+use App\Models\Patient\Billing\Invoice;
+use App\Models\Patient\Billing\Payment;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;

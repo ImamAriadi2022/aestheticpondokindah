@@ -5,8 +5,8 @@ namespace App\Services;
 use Midtrans\Snap;
 use Midtrans\Transaction;
 use Midtrans\Config as MidtransConfig;
-use App\Models\User;
-use App\Models\MembershipTransaction;
+use App\Models\Shared\User\User;
+use App\Models\Patient\Membership\MembershipTransaction;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
 

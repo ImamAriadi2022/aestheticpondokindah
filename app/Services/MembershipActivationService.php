@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use App\Models\Invoice;
-use App\Models\MembershipHistory;
-use App\Models\MembershipPoint;
-use App\Models\MembershipTransaction;
-use App\Models\Payment;
-use App\Models\User;
+use App\Models\Patient\Billing\Invoice;
+use App\Models\Patient\Membership\MembershipHistory;
+use App\Models\Patient\Membership\MembershipPoint;
+use App\Models\Patient\Membership\MembershipTransaction;
+use App\Models\Patient\Billing\Payment;
+use App\Models\Shared\User\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

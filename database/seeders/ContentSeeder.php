@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\GalleryItem;
-use App\Models\Popup;
-use App\Models\Post;
-use App\Models\Testimonial;
-use App\Models\User;
+use App\Models\Guest\Content\GalleryItem;
+use App\Models\Guest\Content\Popup;
+use App\Models\Guest\Content\Post;
+use App\Models\Guest\Content\Testimonial;
+use App\Models\Shared\User\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 

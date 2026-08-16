@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Promo;
+use App\Models\Guest\Content\Promo;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
 

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\User;
+use App\Models\Shared\User\User;
 
 class ProfileCompletionService
 {

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\DoctorSchedule;
-use App\Models\User;
+use App\Models\Doctor\Schedule\DoctorSchedule;
+use App\Models\Shared\User\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Schema;

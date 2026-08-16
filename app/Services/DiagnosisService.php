@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\Diagnosis;
-use App\Models\Icd10Code;
-use App\Models\MedicalRecord;
-use App\Models\User;
+use App\Models\Doctor\Diagnosis\Diagnosis;
+use App\Models\Doctor\Diagnosis\Icd10Code;
+use App\Models\Doctor\MedicalRecord\MedicalRecord;
+use App\Models\Shared\User\User;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
 use RuntimeException;

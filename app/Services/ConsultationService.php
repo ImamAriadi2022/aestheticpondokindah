@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Consultation;
-use App\Models\ConsultationMessage;
-use App\Models\MedicalRecord;
-use App\Models\User;
-use App\Models\Visit;
+use App\Models\Shared\Consultation\Consultation;
+use App\Models\Shared\Consultation\ConsultationMessage;
+use App\Models\Doctor\MedicalRecord\MedicalRecord;
+use App\Models\Shared\User\User;
+use App\Models\Doctor\Visit\Visit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 

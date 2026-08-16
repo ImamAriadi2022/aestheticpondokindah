@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\MembershipHistory;
-use App\Models\MembershipPoint;
-use App\Models\MembershipProfile;
-use App\Models\MembershipTransaction;
-use App\Models\User;
+use App\Models\Patient\Membership\MembershipHistory;
+use App\Models\Patient\Membership\MembershipPoint;
+use App\Models\Patient\Membership\MembershipProfile;
+use App\Models\Patient\Membership\MembershipTransaction;
+use App\Models\Shared\User\User;
 use Illuminate\Database\Seeder;
 
 class MembershipSeeder extends Seeder

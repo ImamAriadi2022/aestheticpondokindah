@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Models\Payment;
+use App\Models\Patient\Billing\Payment;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 

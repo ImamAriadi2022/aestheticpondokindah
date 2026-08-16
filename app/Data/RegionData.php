@@ -2,7 +2,7 @@
 
 namespace App\Data;
 
-use App\Models\Wilayah;
+use App\Models\Guest\Wilayah\Wilayah;
 use Illuminate\Support\Facades\Schema;
 
 class RegionData

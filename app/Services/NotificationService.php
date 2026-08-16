@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Notification;
-use App\Models\User;
+use App\Models\Patient\Notification\Notification;
+use App\Models\Shared\User\User;
 
 class NotificationService
 {

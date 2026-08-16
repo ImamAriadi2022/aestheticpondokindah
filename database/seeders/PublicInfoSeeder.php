@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\ClinicService;
-use App\Models\Faq;
-use App\Models\ClinicSetting;
+use App\Models\Guest\Service\ClinicService;
+use App\Models\Guest\Faq\Faq;
+use App\Models\Admin\Settings\ClinicSetting;
 
 class PublicInfoSeeder extends Seeder
 {

@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\ClinicalProcedure;
-use App\Models\MedicalRecord;
-use App\Models\ProcedureCatalog;
-use App\Models\User;
+use App\Models\Doctor\Procedure\ClinicalProcedure;
+use App\Models\Doctor\MedicalRecord\MedicalRecord;
+use App\Models\Doctor\Procedure\ProcedureCatalog;
+use App\Models\Shared\User\User;
 use Illuminate\Database\Eloquent\Collection;
 use InvalidArgumentException;
 use RuntimeException;

@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Reservation;
-use App\Models\Visit;
+use App\Models\Shared\Reservation\Reservation;
+use App\Models\Doctor\Visit\Visit;
 use InvalidArgumentException;
 use RuntimeException;
 

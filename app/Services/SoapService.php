@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\MedicalRecord;
-use App\Models\SoapNote;
-use App\Models\User;
+use App\Models\Doctor\MedicalRecord\MedicalRecord;
+use App\Models\Doctor\MedicalRecord\SoapNote;
+use App\Models\Shared\User\User;
 use RuntimeException;
 
 class SoapService

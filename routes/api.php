@@ -2,28 +2,32 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Auth Controllers
-use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\Auth\RegistrationController;
+// =========================================================================
+// 1. SHARED CONTROLLERS (Multi-Actor Interaction)
+// =========================================================================
+use App\Http\Controllers\Api\Shared\Auth\AuthController;
+use App\Http\Controllers\Api\Shared\Auth\RegistrationController;
+use App\Http\Controllers\Api\Shared\User\UserController;
+use App\Http\Controllers\Api\Shared\Branch\BranchController;
+use App\Http\Controllers\Api\Shared\Wilayah\WilayahController;
+use App\Http\Controllers\Api\Shared\Media\UploadController;
 
-// Common Controllers
-use App\Http\Controllers\Api\Common\BranchController;
-use App\Http\Controllers\Api\Common\UploadController;
-use App\Http\Controllers\Api\Common\WilayahController;
-
-// Admin Controllers
-use App\Http\Controllers\Api\Admin\AboutAdminController;
-use App\Http\Controllers\Api\Admin\AnalyticsAdminController;
-use App\Http\Controllers\Api\Admin\ClinicServiceAdminController;
-use App\Http\Controllers\Api\Admin\ClinicSettingAdminController;
-use App\Http\Controllers\Api\Admin\ComplaintAdminController;
-use App\Http\Controllers\Api\Admin\ConsultationAdminController;
-use App\Http\Controllers\Api\Admin\ContactMessageAdminController;
-use App\Http\Controllers\Api\Admin\DownloadAppAdminController;
-use App\Http\Controllers\Api\Admin\FaqAdminController;
-use App\Http\Controllers\Api\Admin\LegalAdminController;
-use App\Http\Controllers\Api\Admin\MembershipAdminController;
-use App\Http\Controllers\Api\Admin\ReservationAdminController;
+// =========================================================================
+// 2. ADMIN CONTROLLERS (Clinic Management & Content)
+// =========================================================================
+use App\Http\Controllers\Api\Admin\Analytics\AnalyticsAdminController;
+use App\Http\Controllers\Api\Admin\Settings\ClinicSettingAdminController;
+use App\Http\Controllers\Api\Admin\DownloadApp\DownloadAppAdminController;
+use App\Http\Controllers\Api\Admin\PromoClaim\PromoClaimController;
+use App\Http\Controllers\Api\Admin\Reservation\ReservationAdminController;
+use App\Http\Controllers\Api\Admin\Consultation\ConsultationAdminController;
+use App\Http\Controllers\Api\Admin\Complaint\ComplaintAdminController;
+use App\Http\Controllers\Api\Admin\Membership\MembershipAdminController;
+use App\Http\Controllers\Api\Admin\PublicInfo\ClinicServiceAdminController;
+use App\Http\Controllers\Api\Admin\PublicInfo\FaqAdminController;
+use App\Http\Controllers\Api\Admin\PublicInfo\ContactMessageAdminController;
+use App\Http\Controllers\Api\Admin\PublicInfo\AboutAdminController;
+use App\Http\Controllers\Api\Admin\PublicInfo\LegalAdminController;
 use App\Http\Controllers\Api\Admin\Content\GalleryAdminController;
 use App\Http\Controllers\Api\Admin\Content\MediaAdminController;
 use App\Http\Controllers\Api\Admin\Content\PopupAdminController;
@@ -31,41 +35,45 @@ use App\Http\Controllers\Api\Admin\Content\PostAdminController;
 use App\Http\Controllers\Api\Admin\Content\PromoAdminController;
 use App\Http\Controllers\Api\Admin\Content\TestimonialAdminController;
 
-// Doctor Controllers
-use App\Http\Controllers\Api\Doctor\ConsultationMeetingController;
-use App\Http\Controllers\Api\Doctor\ConsultationMessageController;
-use App\Http\Controllers\Api\Doctor\DiagnosisController;
-use App\Http\Controllers\Api\Doctor\DoctorConsultationController;
-use App\Http\Controllers\Api\Doctor\DoctorQueueController;
-use App\Http\Controllers\Api\Doctor\DoctorScheduleController;
-use App\Http\Controllers\Api\Doctor\MedicalRecordController;
-use App\Http\Controllers\Api\Doctor\OdontogramController;
-use App\Http\Controllers\Api\Doctor\ProcedureController;
-use App\Http\Controllers\Api\Doctor\SoapController;
-use App\Http\Controllers\Api\Doctor\VisitController;
+// =========================================================================
+// 3. DOCTOR CONTROLLERS (Clinical Practice & EMR)
+// =========================================================================
+use App\Http\Controllers\Api\Doctor\Schedule\DoctorScheduleController;
+use App\Http\Controllers\Api\Doctor\Consultation\DoctorConsultationController;
+use App\Http\Controllers\Api\Doctor\Consultation\ConsultationMessageController;
+use App\Http\Controllers\Api\Doctor\Consultation\ConsultationMeetingController;
+use App\Http\Controllers\Api\Doctor\Queue\DoctorQueueController;
+use App\Http\Controllers\Api\Doctor\Visit\VisitController;
+use App\Http\Controllers\Api\Doctor\MedicalRecord\MedicalRecordController;
+use App\Http\Controllers\Api\Doctor\MedicalRecord\SoapController;
+use App\Http\Controllers\Api\Doctor\Diagnosis\DiagnosisController;
+use App\Http\Controllers\Api\Doctor\Procedure\ProcedureController;
+use App\Http\Controllers\Api\Doctor\Odontogram\OdontogramController;
 
-// User / Patient Controllers
-use App\Http\Controllers\Api\User\ComplaintController as UserComplaintController;
-use App\Http\Controllers\Api\User\ConsultationController as UserConsultationController;
-use App\Http\Controllers\Api\User\MembershipController as UserMembershipController;
-use App\Http\Controllers\Api\User\MembershipPaymentController as UserMembershipPaymentController;
-use App\Http\Controllers\Api\User\NotificationController as UserNotificationController;
-use App\Http\Controllers\Api\User\PaymentController as UserPaymentController;
-use App\Http\Controllers\Api\User\ReservationController as UserReservationController;
-use App\Http\Controllers\Api\User\UserController;
+// =========================================================================
+// 4. PATIENT CONTROLLERS (Patient Account, Membership & Finance)
+// =========================================================================
+use App\Http\Controllers\Api\Patient\Membership\MembershipController as UserMembershipController;
+use App\Http\Controllers\Api\Patient\Membership\MembershipPaymentController as UserMembershipPaymentController;
+use App\Http\Controllers\Api\Patient\Billing\PaymentController as UserPaymentController;
+use App\Http\Controllers\Api\Patient\Complaint\ComplaintController as UserComplaintController;
+use App\Http\Controllers\Api\Patient\Notification\NotificationController as UserNotificationController;
+use App\Http\Controllers\Api\Patient\Reservation\ReservationController as UserReservationController;
+use App\Http\Controllers\Api\Patient\Consultation\ConsultationController as UserConsultationController;
 
-// Public / Guest Controllers
-use App\Http\Controllers\Api\Public\AboutPublicController;
-use App\Http\Controllers\Api\Public\AnalyticsVisitController;
-use App\Http\Controllers\Api\Public\ClinicServicePublicController;
-use App\Http\Controllers\Api\Public\ClinicSettingPublicController;
-use App\Http\Controllers\Api\Public\ContactPublicController;
-use App\Http\Controllers\Api\Public\ContentController;
-use App\Http\Controllers\Api\Public\FaqPublicController;
-use App\Http\Controllers\Api\Public\GuestConsultationController;
-use App\Http\Controllers\Api\Public\LegalPublicController;
-use App\Http\Controllers\Api\Public\PromoClaimController;
-use App\Http\Controllers\Api\Public\ReservationController as PublicReservationController;
+// =========================================================================
+// 5. GUEST CONTROLLERS (Public Facing Information & Services)
+// =========================================================================
+use App\Http\Controllers\Api\Guest\Service\ClinicServicePublicController;
+use App\Http\Controllers\Api\Guest\Faq\FaqPublicController;
+use App\Http\Controllers\Api\Guest\Contact\ContactPublicController;
+use App\Http\Controllers\Api\Guest\Content\ContentController;
+use App\Http\Controllers\Api\Guest\Reservation\ReservationController as PublicReservationController;
+use App\Http\Controllers\Api\Guest\Consultation\GuestConsultationController;
+use App\Http\Controllers\Api\Guest\Analytics\AnalyticsVisitController;
+use App\Http\Controllers\Api\Guest\Settings\ClinicSettingPublicController;
+use App\Http\Controllers\Api\Guest\About\AboutPublicController;
+use App\Http\Controllers\Api\Guest\Legal\LegalPublicController;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,7 +82,7 @@ use App\Http\Controllers\Api\Public\ReservationController as PublicReservationCo
 */
 
 // =========================================================================
-// 1. COMMON / UTILITY ROUTES
+// 1. COMMON / SHARED UTILITY ROUTES
 // =========================================================================
 Route::get('/wilayah/provinsi', [WilayahController::class, 'provinces']);
 Route::get('/wilayah/kabupaten/{provinceId}', [WilayahController::class, 'regencies']);
@@ -82,7 +90,7 @@ Route::get('/wilayah/kecamatan/{regencyId}', [WilayahController::class, 'distric
 Route::get('/wilayah/kelurahan/{districtId}', [WilayahController::class, 'villages']);
 
 // =========================================================================
-// 2. AUTHENTICATION ROUTES
+// 2. AUTHENTICATION ROUTES (SHARED ACROSS ALL ACTORS)
 // =========================================================================
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
@@ -249,7 +257,7 @@ Route::prefix('admin')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload', [UploadController::class, 'store']);
 
-    // Profile
+    // Profile (Shared User entity)
     Route::get('/user/profile', [UserController::class, 'showProfile']);
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
 
