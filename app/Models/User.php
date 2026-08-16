@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -90,6 +91,29 @@ class User extends Authenticatable
         ];
     }
 
+    // =========================================================================
+    // QUERY SCOPES
+    // =========================================================================
+
+    public function scopePatients($query)
+    {
+        return $query->where('role', 'patient');
+    }
+
+    public function scopeDoctors($query)
+    {
+        return $query->where('role', 'doctor');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    // =========================================================================
+    // BUSINESS LOGIC & HELPERS
+    // =========================================================================
+
     public function isProfileComplete(): bool
     {
         return !empty($this->name)
@@ -140,41 +164,6 @@ class User extends Authenticatable
         return in_array($this->membership_level, ['gold', 'platinum']);
     }
 
-    public function promoClaims(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(PromoClaim::class);
-    }
-
-    public function profile(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(UserProfile::class);
-    }
-
-    public function complaints(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(Complaint::class);
-    }
-
-    public function membershipProfile(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(MembershipProfile::class);
-    }
-
-    public function membershipTransactions(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(MembershipTransaction::class);
-    }
-
-    public function membershipPoints(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(MembershipPoint::class);
-    }
-
-    public function membershipHistories(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(MembershipHistory::class);
-    }
-
     public function getNextMembershipLevel(): ?string
     {
         return match($this->membership_level) {
@@ -215,5 +204,94 @@ class User extends Authenticatable
             'percentage' => round($percentage, 1),
             'remaining' => $remaining,
         ];
+    }
+
+    // =========================================================================
+    // ELOQUENT RELATIONSHIPS
+    // =========================================================================
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    public function membershipProfile(): HasOne
+    {
+        return $this->hasOne(MembershipProfile::class);
+    }
+
+    public function promoClaims(): HasMany
+    {
+        return $this->hasMany(PromoClaim::class);
+    }
+
+    public function complaints(): HasMany
+    {
+        return $this->hasMany(Complaint::class);
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    public function patientConsultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class, 'user_id');
+    }
+
+    public function doctorConsultations(): HasMany
+    {
+        return $this->hasMany(Consultation::class, 'doctor_id');
+    }
+
+    public function doctorSchedules(): HasMany
+    {
+        return $this->hasMany(DoctorSchedule::class, 'user_id');
+    }
+
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class, 'patient_id');
+    }
+
+    public function medicalRecords(): HasMany
+    {
+        return $this->hasMany(MedicalRecord::class, 'patient_id');
+    }
+
+    public function membershipTransactions(): HasMany
+    {
+        return $this->hasMany(MembershipTransaction::class);
+    }
+
+    public function membershipPoints(): HasMany
+    {
+        return $this->hasMany(MembershipPoint::class);
+    }
+
+    public function membershipHistories(): HasMany
+    {
+        return $this->hasMany(MembershipHistory::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(UserDeviceToken::class);
     }
 }

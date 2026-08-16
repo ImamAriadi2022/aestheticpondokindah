@@ -16,4 +16,9 @@ class Branch extends Model
         'phone',
         'status',
     ];
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 }

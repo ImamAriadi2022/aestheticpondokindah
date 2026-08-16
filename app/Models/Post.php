@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Post extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'author_id',
         'title',
@@ -25,12 +28,25 @@ class Post extends Model
         'canonical_url',
     ];
 
-    protected $casts = [
-        'tags' => 'array',
-        'is_featured' => 'boolean',
-        'published_at' => 'datetime',
-        'reading_time_minutes' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'tags' => 'array',
+            'is_featured' => 'boolean',
+            'published_at' => 'datetime',
+            'reading_time_minutes' => 'integer',
+        ];
+    }
+
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
+
+    public function scopeFeatured($query)
+    {
+        return $query->where('is_featured', true);
+    }
 
     public function author(): BelongsTo
     {

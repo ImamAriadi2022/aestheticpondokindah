@@ -1,64 +1,89 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
+
+// Auth Controllers
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\RegistrationController;
+
+// Common Controllers
+use App\Http\Controllers\Api\Common\BranchController;
+use App\Http\Controllers\Api\Common\UploadController;
+use App\Http\Controllers\Api\Common\WilayahController;
+
+// Admin Controllers
+use App\Http\Controllers\Api\Admin\AboutAdminController;
+use App\Http\Controllers\Api\Admin\AnalyticsAdminController;
+use App\Http\Controllers\Api\Admin\ClinicServiceAdminController;
+use App\Http\Controllers\Api\Admin\ClinicSettingAdminController;
 use App\Http\Controllers\Api\Admin\ComplaintAdminController;
-use App\Http\Controllers\Api\ComplaintController;
-use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Admin\ConsultationAdminController;
+use App\Http\Controllers\Api\Admin\ContactMessageAdminController;
+use App\Http\Controllers\Api\Admin\DownloadAppAdminController;
+use App\Http\Controllers\Api\Admin\FaqAdminController;
+use App\Http\Controllers\Api\Admin\LegalAdminController;
+use App\Http\Controllers\Api\Admin\MembershipAdminController;
+use App\Http\Controllers\Api\Admin\ReservationAdminController;
 use App\Http\Controllers\Api\Admin\Content\GalleryAdminController;
 use App\Http\Controllers\Api\Admin\Content\MediaAdminController;
 use App\Http\Controllers\Api\Admin\Content\PopupAdminController;
 use App\Http\Controllers\Api\Admin\Content\PostAdminController;
 use App\Http\Controllers\Api\Admin\Content\PromoAdminController;
 use App\Http\Controllers\Api\Admin\Content\TestimonialAdminController;
-use App\Http\Controllers\Api\Admin\DownloadAppAdminController;
-use App\Http\Controllers\Api\Admin\AnalyticsAdminController;
-use App\Http\Controllers\Api\Admin\ReservationAdminController;
-use App\Http\Controllers\Api\BranchController;
-use App\Http\Controllers\Api\Admin\ConsultationAdminController;
-use App\Http\Controllers\Api\Admin\MembershipAdminController;
-use App\Http\Controllers\Api\Public\ContentController;
-use App\Http\Controllers\Api\Public\ReservationController;
-use App\Http\Controllers\Api\RegistrationController;
-use App\Http\Controllers\Api\PromoClaimController;
-use App\Http\Controllers\Api\ConsultationController;
-use App\Http\Controllers\Api\GuestConsultationController;
-use App\Http\Controllers\Api\ConsultationMessageController;
-use App\Http\Controllers\Api\ConsultationMeetingController;
-use App\Http\Controllers\Api\DoctorConsultationController;
-use App\Http\Controllers\Api\Doctor\DoctorQueueController;
-use App\Http\Controllers\Api\DoctorScheduleController;
-use App\Http\Controllers\Api\UploadController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\User\MembershipController;
-use App\Http\Controllers\Api\User\PaymentController;
-use App\Http\Controllers\Api\VisitController;
-use App\Http\Controllers\Api\MedicalRecordController;
-use App\Http\Controllers\Api\SoapController;
-use App\Http\Controllers\Api\DiagnosisController;
-use App\Http\Controllers\Api\ProcedureController;
-use App\Http\Controllers\Api\OdontogramController;
-use App\Http\Controllers\Api\User\MembershipPaymentController;
-use App\Http\Controllers\Api\User\NotificationController;
-use App\Http\Controllers\Api\User\ReservationController as UserReservationController;
-use App\Http\Controllers\Api\WilayahController;
-use App\Http\Controllers\Api\Public\AnalyticsVisitController;
-use App\Http\Controllers\Api\Admin\ClinicSettingAdminController;
-use App\Http\Controllers\Api\Admin\ClinicServiceAdminController;
-use App\Http\Controllers\Api\Admin\FaqAdminController;
-use App\Http\Controllers\Api\Admin\ContactMessageAdminController;
-use App\Http\Controllers\Api\Admin\AboutAdminController;
-use App\Http\Controllers\Api\Admin\LegalAdminController;
-use App\Http\Controllers\Api\Public\ClinicServicePublicController;
-use App\Http\Controllers\Api\Public\FaqPublicController;
-use App\Http\Controllers\Api\Public\ContactPublicController;
-use App\Http\Controllers\Api\Public\AboutPublicController;
-use App\Http\Controllers\Api\Public\LegalPublicController;
-use Illuminate\Support\Facades\Route;
 
+// Doctor Controllers
+use App\Http\Controllers\Api\Doctor\ConsultationMeetingController;
+use App\Http\Controllers\Api\Doctor\ConsultationMessageController;
+use App\Http\Controllers\Api\Doctor\DiagnosisController;
+use App\Http\Controllers\Api\Doctor\DoctorConsultationController;
+use App\Http\Controllers\Api\Doctor\DoctorQueueController;
+use App\Http\Controllers\Api\Doctor\DoctorScheduleController;
+use App\Http\Controllers\Api\Doctor\MedicalRecordController;
+use App\Http\Controllers\Api\Doctor\OdontogramController;
+use App\Http\Controllers\Api\Doctor\ProcedureController;
+use App\Http\Controllers\Api\Doctor\SoapController;
+use App\Http\Controllers\Api\Doctor\VisitController;
+
+// User / Patient Controllers
+use App\Http\Controllers\Api\User\ComplaintController as UserComplaintController;
+use App\Http\Controllers\Api\User\ConsultationController as UserConsultationController;
+use App\Http\Controllers\Api\User\MembershipController as UserMembershipController;
+use App\Http\Controllers\Api\User\MembershipPaymentController as UserMembershipPaymentController;
+use App\Http\Controllers\Api\User\NotificationController as UserNotificationController;
+use App\Http\Controllers\Api\User\PaymentController as UserPaymentController;
+use App\Http\Controllers\Api\User\ReservationController as UserReservationController;
+use App\Http\Controllers\Api\User\UserController;
+
+// Public / Guest Controllers
+use App\Http\Controllers\Api\Public\AboutPublicController;
+use App\Http\Controllers\Api\Public\AnalyticsVisitController;
+use App\Http\Controllers\Api\Public\ClinicServicePublicController;
+use App\Http\Controllers\Api\Public\ClinicSettingPublicController;
+use App\Http\Controllers\Api\Public\ContactPublicController;
+use App\Http\Controllers\Api\Public\ContentController;
+use App\Http\Controllers\Api\Public\FaqPublicController;
+use App\Http\Controllers\Api\Public\GuestConsultationController;
+use App\Http\Controllers\Api\Public\LegalPublicController;
+use App\Http\Controllers\Api\Public\PromoClaimController;
+use App\Http\Controllers\Api\Public\ReservationController as PublicReservationController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+// =========================================================================
+// 1. COMMON / UTILITY ROUTES
+// =========================================================================
 Route::get('/wilayah/provinsi', [WilayahController::class, 'provinces']);
 Route::get('/wilayah/kabupaten/{provinceId}', [WilayahController::class, 'regencies']);
 Route::get('/wilayah/kecamatan/{regencyId}', [WilayahController::class, 'districts']);
 Route::get('/wilayah/kelurahan/{districtId}', [WilayahController::class, 'villages']);
 
+// =========================================================================
+// 2. AUTHENTICATION ROUTES
+// =========================================================================
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [RegistrationController::class, 'register']);
@@ -66,14 +91,21 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 });
 
+// =========================================================================
+// 3. ADMIN CLINIC ROUTES
+// =========================================================================
 Route::prefix('admin')->group(function () {
     Route::middleware(['auth:sanctum', 'role:clinic_admin'])->group(function () {
+        // Analytics
         Route::get('/analytics/summary', [AnalyticsAdminController::class, 'summary']);
+
+        // User / Patient Management
         Route::get('/users', [UserController::class, 'index']);
         Route::put('/users/{user}', [UserController::class, 'update']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
 
+        // Doctor Management
         Route::get('/doctors', [UserController::class, 'doctors']);
         Route::get('/doctors/{user}', [UserController::class, 'show']);
         Route::post('/doctors', [UserController::class, 'storeDoctor']);
@@ -81,15 +113,18 @@ Route::prefix('admin')->group(function () {
         Route::delete('/doctors/{user}', [UserController::class, 'destroy']);
         Route::post('/doctors/{user}/reset-password', [UserController::class, 'resetPassword']);
 
+        // Doctor Schedules (Admin)
         Route::get('/doctor-schedules', [DoctorScheduleController::class, 'adminIndex']);
         Route::post('/doctor-schedules', [DoctorScheduleController::class, 'adminStore']);
         Route::delete('/doctor-schedules/{schedule}', [DoctorScheduleController::class, 'adminDestroy']);
 
+        // Branches (Admin)
         Route::get('/branches', [BranchController::class, 'adminIndex']);
         Route::post('/branches', [BranchController::class, 'store']);
         Route::put('/branches/{branch}', [BranchController::class, 'update']);
         Route::delete('/branches/{branch}', [BranchController::class, 'destroy']);
 
+        // Reservations (Admin)
         Route::get('/reservations', [ReservationAdminController::class, 'index']);
         Route::put('/reservations/{reservation}', [ReservationAdminController::class, 'update']);
 
@@ -98,6 +133,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'show']);
         Route::put('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'update']);
 
+        // Content Management
         Route::get('/posts', [PostAdminController::class, 'index']);
         Route::post('/posts', [PostAdminController::class, 'store']);
         Route::post('/posts/{post}', [PostAdminController::class, 'update']);
@@ -131,6 +167,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/media', [MediaAdminController::class, 'store']);
         Route::delete('/media/{media}', [MediaAdminController::class, 'destroy']);
 
+        // Consultations (Admin)
         Route::get('/consultations', [ConsultationAdminController::class, 'index']);
         Route::get('/consultations/queue', [ConsultationAdminController::class, 'queue']);
         Route::get('/doctors-availability', [ConsultationAdminController::class, 'doctorsAvailability']);
@@ -143,16 +180,18 @@ Route::prefix('admin')->group(function () {
         Route::get('/consultations/{consultation}', [ConsultationAdminController::class, 'show']);
         Route::put('/consultations/{consultation}', [ConsultationAdminController::class, 'update']);
 
+        // Complaints (Admin)
         Route::get('/complaints', [ComplaintAdminController::class, 'index']);
         Route::put('/complaints/{complaint}', [ComplaintAdminController::class, 'update']);
         Route::delete('/complaints/{complaint}', [ComplaintAdminController::class, 'destroy']);
 
+        // Promo Claims (Admin)
         Route::get('/users/search', [PromoClaimController::class, 'search']);
         Route::get('/users/{user}/promo-eligibility', [PromoClaimController::class, 'eligibility']);
         Route::post('/users/{user}/claim-promo', [PromoClaimController::class, 'store']);
         Route::get('/users/{user}/promo-claims', [PromoClaimController::class, 'index']);
 
-        // Membership Admin Routes
+        // Membership (Admin)
         Route::prefix('membership')->group(function () {
             Route::get('/', [MembershipAdminController::class, 'index']);
             Route::get('/upgrade-requests', [MembershipAdminController::class, 'requests']);
@@ -171,14 +210,14 @@ Route::prefix('admin')->group(function () {
             Route::get('/level-distribution', [MembershipAdminController::class, 'levelDistribution']);
         });
 
-        // Download App Admin Routes
+        // Download Apps (Admin)
         Route::get('/download-apps', [DownloadAppAdminController::class, 'index']);
         Route::post('/download-apps', [DownloadAppAdminController::class, 'store']);
         Route::post('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'update']);
         Route::put('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'update']);
         Route::delete('/download-apps/{downloadApp}', [DownloadAppAdminController::class, 'destroy']);
 
-        // Informasi & Layanan Publik Admin Routes
+        // Informasi & Layanan Publik (Admin)
         Route::get('/services', [ClinicServiceAdminController::class, 'index']);
         Route::post('/services', [ClinicServiceAdminController::class, 'store']);
         Route::get('/services/{service}', [ClinicServiceAdminController::class, 'show']);
@@ -204,30 +243,40 @@ Route::prefix('admin')->group(function () {
     });
 });
 
+// =========================================================================
+// 4. PATIENT / USER AUTHENTICATED ROUTES
+// =========================================================================
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload', [UploadController::class, 'store']);
 
+    // Profile
     Route::get('/user/profile', [UserController::class, 'showProfile']);
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
-    Route::get('/user/consultations', [ConsultationController::class, 'index']);
-    Route::post('/user/consultations', [ConsultationController::class, 'store']);
-    Route::get('/user/consultations/{id}', [ConsultationController::class, 'show']);
-    Route::post('/user/consultations/{id}/messages', [ConsultationController::class, 'sendMessage']);
-    Route::post('/user/consultations/{id}/read', [ConsultationController::class, 'markRead']);
-    Route::get('/user/consultations/{id}/meetings', [ConsultationController::class, 'meetings']);
+
+    // Consultations (Patient)
+    Route::get('/user/consultations', [UserConsultationController::class, 'index']);
+    Route::post('/user/consultations', [UserConsultationController::class, 'store']);
+    Route::get('/user/consultations/{id}', [UserConsultationController::class, 'show']);
+    Route::post('/user/consultations/{id}/messages', [UserConsultationController::class, 'sendMessage']);
+    Route::post('/user/consultations/{id}/read', [UserConsultationController::class, 'markRead']);
+    Route::get('/user/consultations/{id}/meetings', [UserConsultationController::class, 'meetings']);
+
+    // Reservations (Patient)
     Route::get('/user/reservations', [UserReservationController::class, 'index']);
     Route::post('/user/reservations', [UserReservationController::class, 'store']);
     Route::get('/user/reservations/{id}', [UserReservationController::class, 'show']);
     Route::put('/user/reservations/{id}/cancel', [UserReservationController::class, 'cancel']);
-    Route::get('/user/complaints', [ComplaintController::class, 'index']);
-    Route::post('/user/complaints', [ComplaintController::class, 'store']);
-    Route::get('/user/complaints/{complaint}', [ComplaintController::class, 'show']);
 
-    // Patient Visit Routes (Task 5.1)
+    // Complaints (Patient)
+    Route::get('/user/complaints', [UserComplaintController::class, 'index']);
+    Route::post('/user/complaints', [UserComplaintController::class, 'store']);
+    Route::get('/user/complaints/{complaint}', [UserComplaintController::class, 'show']);
+
+    // Patient Visits
     Route::get('/user/visits', [VisitController::class, 'patientIndex']);
     Route::get('/user/visits/{id}', [VisitController::class, 'patientShow']);
 
-    // Patient Medical Record Routes (Task 5.2 & 5.3 & 5.4 & 5.5 & 5.6)
+    // Patient Medical Records
     Route::get('/user/medical-records', [MedicalRecordController::class, 'patientIndex']);
     Route::get('/user/medical-records/{id}', [MedicalRecordController::class, 'patientShow']);
     Route::get('/user/medical-records/{id}/soap', [SoapController::class, 'patientShow']);
@@ -237,48 +286,55 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/icd10', [DiagnosisController::class, 'searchIcd10']);
     Route::get('/procedure-catalog', [ProcedureController::class, 'searchCatalog']);
 
-    Route::get('/user/payments', [PaymentController::class, 'index']);
-    Route::post('/user/invoices/{id}/payment', [PaymentController::class, 'createPayment']);
-    Route::get('/user/payments/{id}', [PaymentController::class, 'show']);
+    // Payments & Invoices
+    Route::get('/user/payments', [UserPaymentController::class, 'index']);
+    Route::post('/user/invoices/{id}/payment', [UserPaymentController::class, 'createPayment']);
+    Route::get('/user/payments/{id}', [UserPaymentController::class, 'show']);
 
-    // Notification Routes
-    Route::get('/user/notifications', [NotificationController::class, 'index']);
-    Route::get('/user/notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::post('/user/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
-    Route::post('/user/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
-    Route::delete('/user/notifications/{id}', [NotificationController::class, 'destroy']);
-    Route::delete('/user/notifications', [NotificationController::class, 'clearAll']);
-    Route::post('/user/device-token', [NotificationController::class, 'storeDeviceToken']);
-    Route::delete('/user/device-token', [NotificationController::class, 'deleteDeviceToken']);
+    // Notifications
+    Route::get('/user/notifications', [UserNotificationController::class, 'index']);
+    Route::get('/user/notifications/unread-count', [UserNotificationController::class, 'unreadCount']);
+    Route::post('/user/notifications/{id}/read', [UserNotificationController::class, 'markAsRead']);
+    Route::post('/user/notifications/read-all', [UserNotificationController::class, 'markAllAsRead']);
+    Route::delete('/user/notifications/{id}', [UserNotificationController::class, 'destroy']);
+    Route::delete('/user/notifications', [UserNotificationController::class, 'clearAll']);
+    Route::post('/user/device-token', [UserNotificationController::class, 'storeDeviceToken']);
+    Route::delete('/user/device-token', [UserNotificationController::class, 'deleteDeviceToken']);
 
-    // Membership User Routes
+    // Membership (User)
     Route::prefix('membership')->group(function () {
-        Route::get('/', [MembershipController::class, 'index']);
-        Route::get('/tiers', [MembershipController::class, 'tiers']); // Public endpoint
-        Route::get('/profile', [MembershipController::class, 'getProfile']);
-        Route::post('/profile', [MembershipController::class, 'updateProfile']);
-        Route::get('/points', [MembershipController::class, 'getPoints']);
-        Route::get('/history', [MembershipController::class, 'getHistory']);
-        Route::get('/transactions', [MembershipController::class, 'getTransactions']);
-        Route::post('/upgrade', [MembershipController::class, 'upgrade']);
-        Route::post('/request-upgrade', [MembershipController::class, 'requestUpgrade']);
-        Route::post('/renew', [MembershipController::class, 'renew']);
-        Route::post('/cancel', [MembershipController::class, 'cancel']);
-        Route::post('/redeem-points', [MembershipController::class, 'redeemPoints']);
-        Route::post('/points/redeem', [MembershipController::class, 'redeemPoints']);
-        
-        // Payment Routes
-        Route::get('/payment/options', [MembershipPaymentController::class, 'getUpgradeOptions']);
-        Route::post('/payment/create', [MembershipPaymentController::class, 'createPayment']);
-        Route::get('/payment/status/{transactionId}', [MembershipPaymentController::class, 'checkStatus']);
+        Route::get('/', [UserMembershipController::class, 'index']);
+        Route::get('/tiers', [UserMembershipController::class, 'tiers']);
+        Route::get('/profile', [UserMembershipController::class, 'getProfile']);
+        Route::post('/profile', [UserMembershipController::class, 'updateProfile']);
+        Route::get('/points', [UserMembershipController::class, 'getPoints']);
+        Route::get('/history', [UserMembershipController::class, 'getHistory']);
+        Route::get('/transactions', [UserMembershipController::class, 'getTransactions']);
+        Route::post('/upgrade', [UserMembershipController::class, 'upgrade']);
+        Route::post('/request-upgrade', [UserMembershipController::class, 'requestUpgrade']);
+        Route::post('/renew', [UserMembershipController::class, 'renew']);
+        Route::post('/cancel', [UserMembershipController::class, 'cancel']);
+        Route::post('/redeem-points', [UserMembershipController::class, 'redeemPoints']);
+        Route::post('/points/redeem', [UserMembershipController::class, 'redeemPoints']);
+
+        // Membership Payment
+        Route::get('/payment/options', [UserMembershipPaymentController::class, 'getUpgradeOptions']);
+        Route::post('/payment/create', [UserMembershipPaymentController::class, 'createPayment']);
+        Route::get('/payment/status/{transactionId}', [UserMembershipPaymentController::class, 'checkStatus']);
     });
 
+    // =========================================================================
+    // 5. DOCTOR PRACTITIONER ROUTES
+    // =========================================================================
     Route::middleware('role:doctor')->group(function () {
+        // Schedules
         Route::get('/doctor/schedules', [DoctorScheduleController::class, 'index']);
         Route::post('/doctor/schedules', [DoctorScheduleController::class, 'store']);
         Route::get('/doctor/schedules/{schedule}', [DoctorScheduleController::class, 'show']);
         Route::put('/doctor/schedules/{schedule}', [DoctorScheduleController::class, 'update']);
         Route::delete('/doctor/schedules/{schedule}', [DoctorScheduleController::class, 'destroy']);
+
+        // Consultations (Doctor)
         Route::get('/doctor/consultations', [DoctorConsultationController::class, 'index']);
         Route::get('/doctor/consultations/dashboard', [DoctorConsultationController::class, 'dashboard']);
         Route::get('/doctor/consultations/{id}', [DoctorConsultationController::class, 'show']);
@@ -295,52 +351,61 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/doctor/consultation-meetings/{id}', [ConsultationMeetingController::class, 'update']);
         Route::delete('/doctor/consultation-meetings/{id}', [ConsultationMeetingController::class, 'destroy']);
 
+        // Doctor Queue
         Route::get('/doctor/queue', [DoctorQueueController::class, 'queue']);
         Route::get('/doctor/reservations/{id}', [DoctorQueueController::class, 'show']);
         Route::put('/doctor/reservations/{id}/start', [DoctorQueueController::class, 'start']);
         Route::put('/doctor/reservations/{id}/complete', [DoctorQueueController::class, 'complete']);
 
-        // Doctor Visit Routes (Task 5.1)
+        // Visits (Doctor)
         Route::get('/doctor/visits', [VisitController::class, 'doctorIndex']);
         Route::get('/doctor/visits/{id}', [VisitController::class, 'doctorShow']);
         Route::put('/doctor/visits/{id}/status', [VisitController::class, 'updateStatus']);
 
-        // Doctor Medical Record Routes (Task 5.2)
+        // Medical Records (EMR)
         Route::get('/doctor/medical-records', [MedicalRecordController::class, 'doctorIndex']);
         Route::get('/doctor/medical-records/{id}', [MedicalRecordController::class, 'doctorShow']);
         Route::put('/doctor/medical-records/{id}/status', [MedicalRecordController::class, 'updateStatus']);
         Route::post('/doctor/medical-records/{id}/finalize', [MedicalRecordController::class, 'finalize']);
         Route::post('/doctor/medical-records/{id}/lock', [MedicalRecordController::class, 'lock']);
 
-        // Structured SOAP Note Routes (Task 5.3)
+        // SOAP Notes
         Route::get('/doctor/medical-records/{id}/soap', [SoapController::class, 'doctorShow']);
         Route::post('/doctor/medical-records/{id}/soap', [SoapController::class, 'storeOrUpdate']);
 
-        // Clinical Diagnosis Routes (Task 5.4)
+        // Diagnoses (ICD-10)
         Route::get('/doctor/medical-records/{id}/diagnoses', [DiagnosisController::class, 'doctorIndex']);
         Route::post('/doctor/medical-records/{id}/diagnoses', [DiagnosisController::class, 'store']);
         Route::put('/doctor/diagnoses/{id}', [DiagnosisController::class, 'update']);
         Route::delete('/doctor/diagnoses/{id}', [DiagnosisController::class, 'destroy']);
 
-        // Clinical Procedure Routes (Task 5.5)
+        // Procedures
         Route::get('/doctor/medical-records/{id}/procedures', [ProcedureController::class, 'doctorIndex']);
         Route::post('/doctor/medical-records/{id}/procedures', [ProcedureController::class, 'store']);
         Route::put('/doctor/procedures/{id}', [ProcedureController::class, 'update']);
         Route::delete('/doctor/procedures/{id}', [ProcedureController::class, 'destroy']);
 
-        // Electronic Odontogram Routes (Task 5.6)
+        // Odontogram
         Route::get('/doctor/medical-records/{id}/odontogram', [OdontogramController::class, 'doctorShow']);
         Route::post('/doctor/medical-records/{id}/odontogram/tooth', [OdontogramController::class, 'updateTooth']);
         Route::post('/doctor/medical-records/{id}/odontogram/bulk', [OdontogramController::class, 'bulkUpdate']);
     });
 });
 
+// =========================================================================
+// 6. PUBLIC & GUEST ACCESSIBLE ROUTES
+// =========================================================================
 Route::prefix('public')->group(function () {
+    // Analytics
     Route::post('/analytics/visit', [AnalyticsVisitController::class, 'store']);
+
+    // Guest Consultations
     Route::post('/consultations', [GuestConsultationController::class, 'store']);
     Route::get('/consultations/{token}', [GuestConsultationController::class, 'show']);
     Route::post('/consultations/{token}/messages', [GuestConsultationController::class, 'sendMessage']);
     Route::post('/consultations/{token}/read', [GuestConsultationController::class, 'markRead']);
+
+    // Public Media & Content
     Route::get('/posts', [ContentController::class, 'posts']);
     Route::get('/posts/{slug}', [ContentController::class, 'postBySlug']);
     Route::get('/popup/active', [ContentController::class, 'activePopup']);
@@ -350,9 +415,9 @@ Route::prefix('public')->group(function () {
     Route::get('/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
     Route::get('/branches', [BranchController::class, 'index']);
-    Route::get('/membership/tiers', [MembershipController::class, 'tiers']);
+    Route::get('/membership/tiers', [UserMembershipController::class, 'tiers']);
     Route::get('/download-apps', [ContentController::class, 'downloadApps']);
-    Route::middleware('throttle:60,1')->post('/reservations', [ReservationController::class, 'store']);
+    Route::middleware('throttle:60,1')->post('/reservations', [PublicReservationController::class, 'store']);
     Route::get('/settings', [ClinicSettingPublicController::class, 'index']);
 
     // Informasi & Layanan Publik
@@ -364,5 +429,7 @@ Route::prefix('public')->group(function () {
     Route::get('/legal/{type}', [LegalPublicController::class, 'show']);
 });
 
-// Midtrans sends this callback without an application session/token.
-Route::post('/membership/payment/webhook', [MembershipPaymentController::class, 'webhook']);
+// =========================================================================
+// 7. WEBHOOKS & EXTERNAL CALLBACKS
+// =========================================================================
+Route::post('/membership/payment/webhook', [UserMembershipPaymentController::class, 'webhook']);

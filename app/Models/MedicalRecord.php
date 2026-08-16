@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class MedicalRecord extends Model
 {
@@ -21,10 +23,23 @@ class MedicalRecord extends Model
         'locked_at',
     ];
 
-    protected $casts = [
-        'finalized_at' => 'datetime',
-        'locked_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'finalized_at' => 'datetime',
+            'locked_at' => 'datetime',
+        ];
+    }
+
+    public function scopeFinalized($query)
+    {
+        return $query->where('status', 'finalized')->orWhereNotNull('finalized_at');
+    }
+
+    public function scopeLocked($query)
+    {
+        return $query->where('status', 'locked')->orWhereNotNull('locked_at');
+    }
 
     public function visit(): BelongsTo
     {
@@ -41,22 +56,22 @@ class MedicalRecord extends Model
         return $this->belongsTo(User::class, 'doctor_id');
     }
 
-    public function soapNote(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function soapNote(): HasOne
     {
         return $this->hasOne(SoapNote::class);
     }
 
-    public function diagnoses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function diagnoses(): HasMany
     {
         return $this->hasMany(Diagnosis::class);
     }
 
-    public function clinicalProcedures(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function clinicalProcedures(): HasMany
     {
         return $this->hasMany(ClinicalProcedure::class);
     }
 
-    public function odontogram(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function odontogram(): HasOne
     {
         return $this->hasOne(Odontogram::class);
     }
@@ -68,6 +83,6 @@ class MedicalRecord extends Model
 
     public function isReadOnly(): bool
     {
-        return $this->isLocked() || in_array($this->status, ['finalized', 'locked'], true);
+        return in_array($this->status, ['finalized', 'locked'], true);
     }
 }

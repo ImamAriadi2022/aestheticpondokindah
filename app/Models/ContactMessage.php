@@ -20,7 +20,20 @@ class ContactMessage extends Model
         'replied_at',
     ];
 
-    protected $casts = [
-        'replied_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'replied_at' => 'datetime',
+        ];
+    }
+
+    public function scopeUnread($query)
+    {
+        return $query->where('status', 'unread');
+    }
+
+    public function scopeReplied($query)
+    {
+        return $query->where('status', 'replied');
+    }
 }

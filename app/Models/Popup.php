@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Popup extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'title',
         'headline',
@@ -19,10 +22,29 @@ class Popup extends Model
         'priority',
     ];
 
-    protected $casts = [
-        'enabled' => 'boolean',
-        'starts_at' => 'datetime',
-        'ends_at' => 'datetime',
-        'priority' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'enabled' => 'boolean',
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
+            'priority' => 'integer',
+        ];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('enabled', true)
+            ->where(function ($q) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            });
+    }
+
+    public function scopeOrdered($query)
+    {
+        return $query->orderByDesc('priority')->orderByDesc('id');
+    }
 }

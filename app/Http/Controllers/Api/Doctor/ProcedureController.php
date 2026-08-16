@@ -1,41 +1,41 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\Doctor;
 
 use App\Http\Controllers\Controller;
-use App\Models\Diagnosis;
+use App\Models\ClinicalProcedure;
 use App\Models\MedicalRecord;
-use App\Services\DiagnosisService;
+use App\Services\ProcedureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 use RuntimeException;
 
-class DiagnosisController extends Controller
+class ProcedureController extends Controller
 {
-    protected DiagnosisService $diagnosisService;
+    protected ProcedureService $procedureService;
 
-    public function __construct(DiagnosisService $diagnosisService)
+    public function __construct(ProcedureService $procedureService)
     {
-        $this->diagnosisService = $diagnosisService;
+        $this->procedureService = $procedureService;
     }
 
     /**
-     * Search ICD-10 codes
+     * Search procedure catalog items
      */
-    public function searchIcd10(Request $request): JsonResponse
+    public function searchCatalog(Request $request): JsonResponse
     {
         $query = $request->input('query', '');
-        $codes = $this->diagnosisService->searchIcd10($query);
+        $catalog = $this->procedureService->searchCatalog($query);
 
         return response()->json([
             'success' => true,
-            'data' => $codes,
+            'data' => $catalog,
         ]);
     }
 
     /**
-     * Patient views diagnoses for their medical record (Read-Only)
+     * Patient views procedures for their medical record (Read-Only)
      */
     public function patientIndex(Request $request, int|string $recordId): JsonResponse
     {
@@ -48,24 +48,25 @@ class DiagnosisController extends Controller
 
         // Strict Patient IDOR Check
         if ((int) $record->patient_id !== (int) $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke diagnosis rekam medis ini.'], 403);
+            return response()->json(['message' => 'Anda tidak memiliki akses ke tindakan medis rekam medis ini.'], 403);
         }
 
-        $diagnoses = Diagnosis::where('medical_record_id', $record->id)
-            ->orderByRaw("FIELD(type, 'primary', 'secondary', 'differential')")
+        $procedures = ClinicalProcedure::with(['catalog', 'diagnosis', 'doctor:id,name'])
+            ->where('medical_record_id', $record->id)
+            ->latest()
             ->get();
 
         return response()->json([
             'success' => true,
             'data' => [
                 'medical_record' => $record,
-                'diagnoses' => $diagnoses,
+                'procedures' => $procedures,
             ],
         ]);
     }
 
     /**
-     * Doctor views diagnoses for assigned medical record
+     * Doctor views procedures for assigned medical record
      */
     public function doctorIndex(Request $request, int|string $recordId): JsonResponse
     {
@@ -78,34 +79,35 @@ class DiagnosisController extends Controller
 
         // Strict Doctor IDOR Check
         if ((int) $record->doctor_id !== (int) $doctor->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke diagnosis rekam medis dokter ini.'], 403);
+            return response()->json(['message' => 'Anda tidak memiliki akses ke tindakan medis rekam medis dokter ini.'], 403);
         }
 
-        $diagnoses = Diagnosis::where('medical_record_id', $record->id)
-            ->orderByRaw("FIELD(type, 'primary', 'secondary', 'differential')")
+        $procedures = ClinicalProcedure::with(['catalog', 'diagnosis', 'patient:id,name,email,whatsapp'])
+            ->where('medical_record_id', $record->id)
+            ->latest()
             ->get();
 
         return response()->json([
             'success' => true,
             'data' => [
                 'medical_record' => $record,
-                'diagnoses' => $diagnoses,
+                'procedures' => $procedures,
                 'is_read_only' => $record->isReadOnly(),
             ],
         ]);
     }
 
     /**
-     * Doctor creates new clinical diagnosis
+     * Doctor creates new clinical procedure
      */
     public function store(Request $request, int|string $recordId): JsonResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'nullable|in:primary,secondary,differential',
+            'procedure_catalog_id' => 'required|exists:procedure_catalogs,id',
+            'diagnosis_id' => 'nullable|exists:diagnoses,id',
+            'tooth_number' => 'nullable|string|max:10',
             'notes' => 'nullable|string|max:2000',
-            'icd10_code' => 'nullable|string|max:20',
-            'icd10_description' => 'nullable|string|max:255',
+            'status' => 'nullable|in:planned,in_progress,completed,cancelled',
         ]);
 
         $doctor = $request->user();
@@ -117,20 +119,20 @@ class DiagnosisController extends Controller
 
         // Strict Doctor IDOR Check
         if ((int) $record->doctor_id !== (int) $doctor->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke diagnosis rekam medis dokter ini.'], 403);
+            return response()->json(['message' => 'Anda tidak memiliki akses ke tindakan medis rekam medis dokter ini.'], 403);
         }
 
         try {
-            $diagnosis = $this->diagnosisService->createDiagnosis(
+            $procedure = $this->procedureService->createProcedure(
                 $record,
                 $doctor,
-                $request->only(['name', 'type', 'notes', 'icd10_code', 'icd10_description'])
+                $request->only(['procedure_catalog_id', 'diagnosis_id', 'tooth_number', 'notes', 'status'])
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Diagnosis klinis berhasil ditambahkan.',
-                'data' => $diagnosis,
+                'message' => 'Tindakan medis berhasil ditambahkan.',
+                'data' => $procedure,
             ], 201);
         } catch (InvalidArgumentException | RuntimeException $e) {
             return response()->json([
@@ -141,40 +143,39 @@ class DiagnosisController extends Controller
     }
 
     /**
-     * Doctor updates existing diagnosis
+     * Doctor updates existing clinical procedure / status
      */
     public function update(Request $request, int|string $id): JsonResponse
     {
         $request->validate([
-            'name' => 'nullable|string|max:255',
-            'type' => 'nullable|in:primary,secondary,differential',
+            'diagnosis_id' => 'nullable|exists:diagnoses,id',
+            'tooth_number' => 'nullable|string|max:10',
             'notes' => 'nullable|string|max:2000',
-            'icd10_code' => 'nullable|string|max:20',
-            'icd10_description' => 'nullable|string|max:255',
+            'status' => 'nullable|in:planned,in_progress,completed,cancelled',
         ]);
 
         $doctor = $request->user();
-        $diagnosis = Diagnosis::with('medicalRecord')->find($id);
+        $procedure = ClinicalProcedure::with('medicalRecord')->find($id);
 
-        if (!$diagnosis) {
-            return response()->json(['message' => 'Diagnosis tidak ditemukan.'], 404);
+        if (!$procedure) {
+            return response()->json(['message' => 'Tindakan medis tidak ditemukan.'], 404);
         }
 
         // Strict Doctor IDOR Check
-        if ((int) $diagnosis->doctor_id !== (int) $doctor->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke diagnosis dokter ini.'], 403);
+        if ((int) $procedure->doctor_id !== (int) $doctor->id) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke tindakan medis dokter ini.'], 403);
         }
 
         try {
-            $updated = $this->diagnosisService->updateDiagnosis(
-                $diagnosis,
+            $updated = $this->procedureService->updateProcedure(
+                $procedure,
                 $doctor,
-                $request->only(['name', 'type', 'notes', 'icd10_code', 'icd10_description'])
+                $request->only(['diagnosis_id', 'tooth_number', 'notes', 'status'])
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Diagnosis klinis berhasil diperbarui.',
+                'message' => 'Tindakan medis berhasil diperbarui.',
                 'data' => $updated,
             ]);
         } catch (InvalidArgumentException | RuntimeException $e) {
@@ -186,28 +187,28 @@ class DiagnosisController extends Controller
     }
 
     /**
-     * Doctor deletes diagnosis
+     * Doctor deletes clinical procedure
      */
     public function destroy(Request $request, int|string $id): JsonResponse
     {
         $doctor = $request->user();
-        $diagnosis = Diagnosis::with('medicalRecord')->find($id);
+        $procedure = ClinicalProcedure::with('medicalRecord')->find($id);
 
-        if (!$diagnosis) {
-            return response()->json(['message' => 'Diagnosis tidak ditemukan.'], 404);
+        if (!$procedure) {
+            return response()->json(['message' => 'Tindakan medis tidak ditemukan.'], 404);
         }
 
         // Strict Doctor IDOR Check
-        if ((int) $diagnosis->doctor_id !== (int) $doctor->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke diagnosis dokter ini.'], 403);
+        if ((int) $procedure->doctor_id !== (int) $doctor->id) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke tindakan medis dokter ini.'], 403);
         }
 
         try {
-            $this->diagnosisService->deleteDiagnosis($diagnosis, $doctor);
+            $this->procedureService->deleteProcedure($procedure, $doctor);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Diagnosis klinis berhasil dihapus.',
+                'message' => 'Tindakan medis berhasil dihapus.',
             ]);
         } catch (RuntimeException $e) {
             return response()->json([
