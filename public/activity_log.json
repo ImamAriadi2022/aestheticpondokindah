@@ -1,5 +1,51 @@
 [
     {
+        "id": "act-212",
+        "date": "2026-08-18",
+        "time": "14:38",
+        "category": "DevOps & Deployment | Automated Production Script | deploy.sh Optimization",
+        "type": "DevOps Automation & Production Alignment",
+        "feature": "Pembaruan Script Otomasi Deployment Production (`deploy.sh`)",
+        "description": "Menyempurnakan script `deploy.sh` agar sepenuhnya mendukung struktur backend 5-domain dan alur reservasi digital signature baru. Menambahkan pembuatan folder storage `signatures/` dan `avatars/`, optimalisasi autoloader `composer dump-autoload -o`, pembersihan cache berkas usang, kompilasi build frontend React, dan pembuatan cache produksi berkinerja tinggi (`config:cache`, `route:cache`, `view:cache`).",
+        "notes": "1. Multi-Platform Support: Kompatibel dengan Plesk, cPanel, EA-PHP, DirectAdmin, dan Linux VPS.\n2. Autoload Optimization: Menjalankan dump-autoload teroptimasi untuk kelancaran model & service 5 domain.\n3. Cache Verification: Menguji dan memastikan artisan cache (config, route, view) berjalan tanpa error (Exit Code: 0).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna untuk memastikan deploy.sh terupdate dan menyesuaikan semua perubahan agar di lingkungan production semuanya berjalan normal.",
+        "files": [
+            "deploy.sh",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-211",
+        "date": "2026-08-18",
+        "time": "14:36",
+        "category": "Frontend & Backend | Reservation Flow UI/UX Overhaul | PWA & Desktop Dual POV",
+        "type": "Feature Implementation & Complete UI/UX Overhaul",
+        "feature": "Implementasi Alur Baru UI/UX Sistem Reservasi Gigi (7-Step Flow) Berbasis Referensi Mobile & POV Desktop",
+        "description": "Mengimplementasikan seluruh alur UI/UX reservasi & booking perawatan gigi baru berdasarkan 7 referensi visual pada `new-ui/`: 1) Pilih Layanan (kategori pills, harga, durasi, thumbnail foto), 2) Pilih Dokter Spesialis (rating, pengalaman, almamater), 3) Pilih Jadwal & Jam Praktik (grid 3-kolom, slider tanggal), 4) Konfirmasi & Tanda Tangan Digital (Canvas Signature Pad), 5) Pop-up Sukses Booking, 6) Riwayat Booking (Aktif & Selesai), dan 7) Detail Riwayat & E-Ticket (Invoice). Mendukung tampilan Mobile PWA 100% presisi dan Desktop POV 2-kolom dengan Sticky Live Summary Card.",
+        "notes": "1. 7-Step Visual Flow: Seluruh tahapan dari referensi `new-ui/` telah terwujud secara presisi dan interaktif.\n2. Digital Signature Pad: Canvas interaktif pendeteksi touch & mouse dengan tombol clear dan validasi persetujuan S&K.\n3. Dual POV Layout: Tampilan Mobile PWA menggunakan bottom navigation dan sticky bottom bar; Desktop POV menggunakan layout 2-kolom dengan Live Booking Summary Card di sidebar kanan.\n4. Backend API Sync: Endpoint `/api/public/reservations` dan `/api/user/reservations` terverifikasi 100% sukses memproses data reservasi baru.\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna untuk mengimplementasikan alur baru UI reservasi dari folder new-ui untuk PWA mobile dan POV desktop yang user-friendly.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/DigitalSignaturePad.tsx",
+            "frontend-web/src/features/patient/reservation/components/BookingSuccessModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/ETicketModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/BookingHistoryList.tsx",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/patient/reservation/components/DesktopReservasi.tsx",
+            "frontend-web/src/features/guest/reservation/pages/BookingNew.tsx",
+            "app/Http/Controllers/Api/Patient/Reservation/ReservationController.php",
+            "app/Http/Controllers/Api/Guest/Reservation/ReservationController.php",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-210",
         "date": "2026-08-16",
         "time": "15:36",

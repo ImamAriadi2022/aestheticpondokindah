@@ -69,27 +69,33 @@ mkdir -p storage/app/public/promos \
          storage/app/public/dokter \
          storage/app/public/hero \
          storage/app/public/galeri \
+         storage/app/public/signatures \
+         storage/app/public/avatars \
          storage/framework/cache \
          storage/framework/sessions \
          storage/framework/views \
          storage/logs \
          bootstrap/cache \
-         public/storage/promos
+         public/storage/promos \
+         public/storage/layanan \
+         public/storage/dokter
 
 chmod -R 775 storage bootstrap/cache 2>/dev/null || chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
-# 3. Composer Dependencies Reconciliation
+# 3. Composer Dependencies & Classmap Optimization
 COMPOSER_BIN="$(command -v composer || true)"
 if [ -z "$COMPOSER_BIN" ] && [ -f "composer.phar" ]; then
     COMPOSER_BIN="$PHP_BIN composer.phar"
 fi
 
 if [ -n "$COMPOSER_BIN" ]; then
-    echo "[INFO] Menjalankan Composer Install..."
+    echo "[INFO] Menjalankan Composer Install & Autoload Optimization..."
     if [ "$COMPOSER_BIN" = "$PHP_BIN composer.phar" ]; then
         $COMPOSER_BIN install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+        $COMPOSER_BIN dump-autoload --optimize --no-interaction
     else
         "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+        "$PHP_BIN" "$COMPOSER_BIN" dump-autoload --optimize --no-interaction
     fi
 elif [ -f vendor/autoload.php ]; then
     echo "[INFO] Composer binary tidak ada; menggunakan folder vendor/ yang sudah tersedia."
@@ -100,6 +106,9 @@ fi
 
 # Clear old config cache before Artisan boots
 rm -f bootstrap/cache/config.php
+rm -f bootstrap/cache/routes-v7.php
+rm -f bootstrap/cache/services.php
+rm -f bootstrap/cache/packages.php
 
 # 4. Check & Generate APP_KEY if missing/invalid
 KEY_CHECK='$contents = @file_get_contents(".env"); preg_match("/^APP_KEY\\s*=\\s*(.*)$/m", (string) $contents, $match); $key = trim($match[1] ?? ""); $key = trim($key, "\\\" "); $raw = str_starts_with($key, "base64:") ? base64_decode(substr($key, 7), true) : $key; exit(is_string($raw) && strlen($raw) === 32 ? 0 : 1);'
@@ -116,8 +125,7 @@ echo "[INFO] Clearing Laravel caches..."
 echo "[INFO] Running Database Migrations..."
 "$PHP_BIN" artisan migrate --force
 
-# 6. Auto-seed Promo Data if missing/empty
-
+# 6. Auto-seed Promo & Initial Data if missing/empty
 PROMO_CHECK='require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $count = \Illuminate\Support\Facades\Schema::hasTable("promos") ? \Illuminate\Support\Facades\DB::table("promos")->count() : 0; exit($count > 0 ? 0 : 1);'
 
 if ! "$PHP_BIN" -r "$PROMO_CHECK"; then
@@ -134,7 +142,7 @@ if [ ! -e public/storage ] && [ ! -L public/storage ]; then
     "$PHP_BIN" artisan storage:link || "$PHP_BIN" create_storage_link.php || echo "[WARNING] Storage symlink gagal dibuat; menyalin berkas secara langsung."
 fi
 
-# Copy promo images to public/storage/promos as a fail-safe fallback for hosting environments
+# Copy media assets as fail-safe fallback for hosting environments
 if [ -d "storage/app/public/promos" ]; then
     mkdir -p public/storage/promos
     cp -rf storage/app/public/promos/* public/storage/promos/ 2>/dev/null || true
@@ -145,7 +153,7 @@ if [ -f "public/popup/Paket-Implant.png" ]; then
     cp -f public/popup/Paket-Implant.png storage/app/public/promos/Paket-Implant.png 2>/dev/null || true
 fi
 
-# 8. Optional Frontend Recompile (if Node/npm is present on server)
+# 8. Frontend Recompile (if Node/npm is present on server)
 NPM_BIN="$(command -v npm || true)"
 if [ -n "$NPM_BIN" ] && [ -d "frontend-web" ]; then
     echo "[INFO] Node.js/npm terdeteksi. Mengompilasi bundel frontend React ke public/..."
@@ -161,7 +169,7 @@ else
     echo "[WARNING] public/index.html atau public/index.php tidak ditemukan."
 fi
 
-# 9. Cache Configuration, Routes, and Views
+# 9. Cache Configuration, Routes, and Views for Production High-Performance
 echo "[INFO] Optimizing & Caching Laravel configuration, routes, and views..."
 "$PHP_BIN" artisan config:cache
 "$PHP_BIN" artisan route:cache

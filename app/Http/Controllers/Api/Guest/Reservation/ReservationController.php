@@ -27,6 +27,7 @@ class ReservationController extends Controller
             'preferred_time' => ['nullable', 'string', 'max:20'],
             'complaint' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', 'string', 'max:50'],
+            'signature_data' => ['nullable', 'string'],
         ]);
 
         $scheduleId = $validated['doctor_schedule_id'] ?? null;

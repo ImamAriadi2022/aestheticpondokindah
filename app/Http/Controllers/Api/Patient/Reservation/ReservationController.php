@@ -77,6 +77,7 @@ class ReservationController extends Controller
             'treatment_interest' => ['nullable', 'string', 'max:255'],
             'complaint' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', 'string', 'max:50'],
+            'signature_data' => ['nullable', 'string'],
         ]);
 
         $user = $request->user();
