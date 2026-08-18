@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Doctor\MedicalRecord;
 
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
 use App\Models\Doctor\Visit\Visit;

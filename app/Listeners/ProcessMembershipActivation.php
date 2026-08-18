@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\PaymentSettled;
-use App\Services\MembershipActivationService;
+use App\Services\Patient\Membership\MembershipActivationService;
 use Illuminate\Support\Facades\Log;
 
 class ProcessMembershipActivation

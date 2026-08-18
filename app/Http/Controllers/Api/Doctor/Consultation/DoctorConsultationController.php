@@ -9,7 +9,7 @@ use App\Models\Doctor\Diagnosis\Diagnosis;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
 use App\Models\Doctor\MedicalRecord\SoapNote;
 use App\Models\Doctor\Visit\Visit;
-use App\Services\ConsultationService;
+use App\Services\Shared\Consultation\ConsultationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

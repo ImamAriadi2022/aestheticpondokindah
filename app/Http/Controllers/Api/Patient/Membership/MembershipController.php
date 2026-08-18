@@ -8,7 +8,7 @@ use App\Http\Requests\Membership\UpgradeMembershipRequest;
 use App\Models\Patient\Membership\MembershipPoint;
 use App\Models\Patient\Membership\MembershipProfile;
 use App\Models\Patient\Membership\MembershipTransaction;
-use App\Services\MembershipService;
+use App\Services\Patient\Membership\MembershipService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 

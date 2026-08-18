@@ -86,7 +86,7 @@ class DoctorQueueController extends Controller
         $reservation->save();
 
         // Automatic Visit Creation & Transition (Task 5.1)
-        $visitService = app(\App\Services\VisitService::class);
+        $visitService = app(\App\Services\Doctor\Visit\VisitService::class);
         $visit = $visitService->findOrCreateFromReservation($reservation);
         $visitService->transitionStatus($visit, 'in_progress');
 
@@ -132,7 +132,7 @@ class DoctorQueueController extends Controller
         $reservation->save();
 
         // Automatic Visit Completion (Task 5.1)
-        $visitService = app(\App\Services\VisitService::class);
+        $visitService = app(\App\Services\Doctor\Visit\VisitService::class);
         $visit = $visitService->findOrCreateFromReservation($reservation);
         $visitService->transitionStatus($visit, 'completed');
 

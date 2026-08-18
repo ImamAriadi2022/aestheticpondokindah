@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Payment;
+namespace App\Services\Patient\Payment;
 
 use App\Contracts\PaymentServiceInterface;
 use App\Models\Patient\Billing\Invoice;

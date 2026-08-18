@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Doctor\Odontogram;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
-use App\Services\OdontogramService;
+use App\Services\Doctor\Odontogram\OdontogramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;

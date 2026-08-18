@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Doctor\Visit;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor\Visit\Visit;
-use App\Services\VisitService;
+use App\Services\Doctor\Visit\VisitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Patient\Payment;
 
 use Midtrans\Snap;
 use Midtrans\Transaction;

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Doctor\Procedure;
 use App\Http\Controllers\Controller;
 use App\Models\Doctor\Procedure\ClinicalProcedure;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
-use App\Services\ProcedureService;
+use App\Services\Doctor\Procedure\ProcedureService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;

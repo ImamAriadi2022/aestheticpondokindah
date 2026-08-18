@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Guest\Consultation;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shared\Consultation\Consultation;
-use App\Services\ConsultationService;
+use App\Services\Shared\Consultation\ConsultationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

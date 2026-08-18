@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Shared\Consultation;
 
+use App\Services\Doctor\Visit\VisitService;
+use App\Services\Doctor\MedicalRecord\MedicalRecordService;
+use App\Services\Shared\Notification\NotificationService;
 use App\Models\Shared\Consultation\Consultation;
 use App\Models\Shared\Consultation\ConsultationMessage;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Doctor\Visit;
 
+use App\Services\Doctor\MedicalRecord\MedicalRecordService;
 use App\Models\Shared\Reservation\Reservation;
 use App\Models\Doctor\Visit\Visit;
 use InvalidArgumentException;

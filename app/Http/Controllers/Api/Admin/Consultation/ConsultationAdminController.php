@@ -7,7 +7,7 @@ use App\Models\Shared\Consultation\Consultation;
 use App\Models\Doctor\Schedule\DoctorSchedule;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
 use App\Models\Shared\User\User;
-use App\Services\ConsultationService;
+use App\Services\Shared\Consultation\ConsultationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

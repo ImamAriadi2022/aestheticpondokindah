@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Admin\PromoClaim;
 use App\Http\Controllers\Controller;
 use App\Models\Admin\PromoClaim\PromoClaim;
 use App\Models\Shared\User\User;
-use App\Services\ProfileCompletionService;
+use App\Services\Patient\Profile\ProfileCompletionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;

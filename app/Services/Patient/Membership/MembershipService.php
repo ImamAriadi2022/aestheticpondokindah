@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Patient\Membership;
 
 use App\Models\Patient\Membership\MembershipHistory;
 use App\Models\Patient\Membership\MembershipPoint;

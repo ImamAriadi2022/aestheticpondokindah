@@ -8,7 +8,7 @@ use App\Http\Requests\Admin\Membership\UpdatePointsRequest;
 use App\Models\Shared\User\User;
 use App\Models\Patient\Membership\MembershipTransaction;
 use App\Models\Patient\Billing\Invoice;
-use App\Services\MembershipService;
+use App\Services\Patient\Membership\MembershipService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;

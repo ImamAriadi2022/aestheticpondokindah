@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\Doctor\MedicalRecord;
 
 use App\Http\Controllers\Controller;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
-use App\Services\SoapService;
+use App\Services\Doctor\MedicalRecord\SoapService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use RuntimeException;

@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(
             \App\Contracts\PaymentServiceInterface::class,
-            \App\Services\Payment\SimulationPaymentService::class
+            \App\Services\Patient\Payment\SimulationPaymentService::class
         );
     }
 

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Shared\Consultation\Consultation;
 use App\Models\Doctor\Schedule\DoctorSchedule;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
-use App\Services\ConsultationService;
+use App\Services\Shared\Consultation\ConsultationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

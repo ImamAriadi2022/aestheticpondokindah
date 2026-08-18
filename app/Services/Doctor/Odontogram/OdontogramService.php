@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Doctor\Odontogram;
 
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
 use App\Models\Doctor\Odontogram\Odontogram;

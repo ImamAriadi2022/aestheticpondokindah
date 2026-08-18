@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Doctor\Diagnosis;
 
 use App\Models\Doctor\Diagnosis\Diagnosis;
 use App\Models\Doctor\Diagnosis\Icd10Code;

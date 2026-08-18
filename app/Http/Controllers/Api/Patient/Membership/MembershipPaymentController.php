@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api\Patient\Membership;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shared\User\User;
-use App\Services\MembershipService;
-use App\Services\MidtransService;
+use App\Services\Patient\Membership\MembershipService;
+use App\Services\Patient\Payment\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

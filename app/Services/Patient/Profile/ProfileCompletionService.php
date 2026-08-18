@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Patient\Profile;
 
 use App\Models\Shared\User\User;
 
