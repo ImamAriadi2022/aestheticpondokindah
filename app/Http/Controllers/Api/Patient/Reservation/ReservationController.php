@@ -133,6 +133,8 @@ class ReservationController extends Controller
             'source' => $validated['source'] ?? 'user_dashboard',
             'status' => 'Baru',
             'payment_status' => 'Belum Bayar',
+            'signature_data' => $validated['signature_data'] ?? null,
+            'terms_accepted_at' => !empty($validated['signature_data']) ? now() : null,
         ]);
 
         return response()->json([
@@ -227,6 +229,8 @@ class ReservationController extends Controller
             'payment_status' => $reservation->payment_status ?? 'Belum Bayar',
             'notes' => $reservation->complaint,
             'admin_notes' => $reservation->admin_notes,
+            'signature_data' => $reservation->signature_data,
+            'terms_accepted_at' => optional($reservation->terms_accepted_at)->toISOString(),
             'rescheduled_at' => optional($reservation->rescheduled_at)->toISOString(),
             'created_at' => optional($reservation->created_at)->toISOString(),
             'updated_at' => optional($reservation->updated_at)->toISOString(),

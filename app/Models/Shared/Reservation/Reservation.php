@@ -30,6 +30,8 @@ class Reservation extends Model
         'status',
         'payment_status',
         'admin_notes',
+        'signature_data',
+        'terms_accepted_at',
         'rescheduled_at',
     ];
 
@@ -38,6 +40,7 @@ class Reservation extends Model
         return [
             'date' => 'date',
             'birth_date' => 'date',
+            'terms_accepted_at' => 'datetime',
             'rescheduled_at' => 'datetime',
         ];
     }

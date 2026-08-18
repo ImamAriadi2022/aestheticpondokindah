@@ -422,6 +422,7 @@ Route::prefix('public')->group(function () {
     Route::get('/promos', [ContentController::class, 'promos']);
     Route::get('/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
+    Route::get('/doctors', [UserController::class, 'publicDoctors']);
     Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/membership/tiers', [UserMembershipController::class, 'tiers']);
     Route::get('/download-apps', [ContentController::class, 'downloadApps']);

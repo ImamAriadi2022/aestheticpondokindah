@@ -1,5 +1,118 @@
 [
     {
+        "id": "act-217",
+        "date": "2026-08-18",
+        "time": "16:31",
+        "category": "Backend & Frontend | Dynamic Clinic Booking Services Management & Seeder Integration",
+        "type": "Database Migration, Model & Admin CRUD Feature Implementation",
+        "feature": "Integrasi Penuh Layanan Booking Klinik ke Database Backend & Manajemen CRUD Layanan oleh Admin",
+        "description": "Menghubungkan layanan booking klinik ke database backend dan melengkapi antarmuka admin untuk mengelola katalog layanan: 1) Menambahkan kolom `category`, `price`, `duration` pada tabel `clinic_services` melalui migrasi database, 2) Membuat seeder `ClinicServiceSeeder` yang memuat 22 layanan booking awal (Dental Whitening, Scaling & Polishing, Dental Implants, Invisalign, Porcelain Veneers, Root Canal, Pediatric Dentistry, dll.) dengan kategori dan estimasi harga/durasi lengkap, 3) Memperbarui Controller Admin & Publik untuk mendukung CRUD field booking, 4) Memperbarui modal admin `ServiceEditModal` dan halaman `ServicesManagePage` agar admin klinik dapat menginput/mengedit/menghapus layanan booking, dan 5) Memperbarui `NewBookingFlow` agar mengonsumsi data layanan langsung dari database.",
+        "notes": "1. Database Migration: Kolom `category`, `price`, `duration` berhasil ditambahkan pada tabel `clinic_services`.\n2. ClinicServiceSeeder: 22 layanan klinis awal telah di-seed dengan kategori (Estetik, Implan, Ortodonti, Umum, Bedah Mulut, Pediatrik), harga, dan durasi.\n3. Admin CRUD: Admin klinik dapat menambah, mengedit, dan menghapus layanan perawatan gigi secara leluasa.\n4. Verification: API endpoint `GET /api/public/services` teruji 200 OK (22 layanan aktif), `npm run build` sukses (0 errors).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna untuk mengkoneksikan booking service ke database backend, menyediakan form input admin, dan membuat seeder data awal.",
+        "files": [
+            "database/migrations/2026_08_18_160000_add_booking_fields_to_clinic_services_table.php",
+            "app/Models/Guest/Service/ClinicService.php",
+            "app/Http/Controllers/Api/Admin/PublicInfo/ClinicServiceAdminController.php",
+            "database/seeders/ClinicServiceSeeder.php",
+            "database/seeders/DatabaseSeeder.php",
+            "frontend-web/src/features/admin/public_info/services/publicInfoAdminApi.ts",
+            "frontend-web/src/features/admin/public_info/components/ServiceEditModal.tsx",
+            "frontend-web/src/features/admin/public_info/pages/ServicesManagePage.tsx",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-216",
+        "date": "2026-08-18",
+        "time": "15:05",
+        "category": "Frontend & Backend | Full End-to-End Real Data Integration in Reservation System",
+        "type": "Full Data Dynamic Integration & Dummy Clean-up",
+        "feature": "Pembersihan Seluruh Data Dummy & Integrasi Penuh Data Backend (Layanan, Dokter, Cabang, Jadwal, Profil & Riwayat)",
+        "description": "Menghapus seluruh mock data/dummy pada alur reservasi (NewBookingFlow) dan menghubungkan 100% data dinamis dari backend API: 1) Mengambil 21 data layanan klinik dinamis dari `GET /api/public/services`, 2) Mengambil daftar dokter aktif beserta spesialisasi, almamater, dan pengalaman klinis dari `GET /api/public/doctors`, 3) Mengambil daftar cabang klinik aktif dari `GET /api/public/branches` dengan switcher cabang pada konfirmasi booking, 4) Mengintegrasikan ketersediaan slot waktu dokter dari `GET /api/public/doctor-schedules`, 5) Mengambil profil pasien yang login dari `/api/auth/me` untuk sinkronisasi nama dan kontak WhatsApp, dan 6) Menghapus tiket dummy riwayat dan menampilkan riwayat asli pasien dari `GET /api/user/reservations`.",
+        "notes": "1. 100% Dynamic Backend: Layanan, dokter, cabang klinik, slot waktu, profil, dan riwayat reservasi tersinkronisasi langsung dengan API.\n2. Branch Location Selector: Pasien dapat melihat alamat cabang resmi klinik dan memilih cabang klinik tujuan.\n3. Dynamic Schedule Slots: Menghasilkan slot waktu praktik dokter sesuai jadwal kerja riil dari database.\n4. Clean Empty State: Riwayat pemesanan menampilkan data riil rekam booking tanpa mock dummy item.\n5. Verification: Frontend build `npm run build` sukses 100% (0 errors).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna agar seluruh data pada sistem booking tidak menggunakan data dummy melainkan 100% tersambung ke backend.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-215",
+        "date": "2026-08-18",
+        "time": "15:00",
+        "category": "Backend & Frontend | Doctor Profile Dynamic Backend Storage & Experience Years Integration",
+        "type": "Feature Implementation & Dynamic Database Integration",
+        "feature": "Dukungan Penuh Input Dinamis Pengalaman Kerja Dokter (`experience_years`) & Almamater dari Backend",
+        "description": "Menghilangkan hardcode data dokter dan mengintegrasikan seluruh data dokter (spesialisasi, almamater/pendidikan, dan tahun pengalaman kerja) secara dinamis dari database backend: 1) Menyediakan endpoint publik `GET /api/public/doctors` di backend yang menyajikan data dokter aktif, 2) Menyediakan seeder `DoctorProfileSeeder` untuk inisialisasi data profil dan pengalaman klinis dokter, 3) Memastikan Admin klinik dapat menginput/mengubah `experience_years` dan `education` dokter melalui `DoctorEditorModal` (`/api/doctors`), 4) Memastikan dokter dapat mengedit sendiri pengalaman kerjanya melalui `ProfileEditPage` (`/api/user/profile`), dan 5) Memperbarui `NewBookingFlow` di frontend agar memuat daftar dokter dan pengalaman kerja secara dinamis dari API.",
+        "notes": "1. Dynamic Backend Integration: Seluruh data dokter dimuat dari API backend `GET /api/public/doctors`.\n2. Admin & Doctor Inputs: Admin maupun akun dokter dapat mengelola pengalaman praktik (`experience_years`) dan universitas (`education`) langsung melalui antarmuka web.\n3. Seeder & Persistence: Dibuat `DoctorProfileSeeder` dan didaftarkan pada `DatabaseSeeder`.\n4. Verification: API endpoint `GET /api/public/doctors` teruji sukses 200 OK, `npm run build` sukses 100% (0 errors).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna agar experience year dokter tidak di-hardcode, melainkan disimpan di backend dan dapat diinputkan oleh admin atau akun dokter.",
+        "files": [
+            "database/seeders/DoctorProfileSeeder.php",
+            "database/seeders/DatabaseSeeder.php",
+            "routes/api.php",
+            "app/Http/Controllers/Api/Shared/User/UserController.php",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-214",
+        "date": "2026-08-18",
+        "time": "14:55",
+        "category": "Frontend UI/UX | Reservation Flow Form Refinement & Doctor Profile Clean-up",
+        "type": "UI/UX Refinement & Field Synchronization",
+        "feature": "Penyesuaian Input Nama Pasien (Read-Only/Disabled) & Penghapusan Tampilan Ulasan Khusus Dokter",
+        "description": "Menyempurnakan formulir konfirmasi booking reservasi: 1) Mengubah input 'Nama Lengkap Pasien' menjadi read-only/disabled dengan indikator 'Tersinkron dengan Biodata' demi keabsahan data rekam medis pasien, 2) Menghapus rating bintang dan jumlah ulasan dokter dari kartu dokter, ringkasan dokter, dan kartu detail reservasi karena fitur ulasan dokter belum tersedia di sistem.",
+        "notes": "1. Patient Name Lock: Input nama lengkap berstatus disabled dan tersinkronisasi otomatis dari profil/biodata akun pasien.\n2. Doctor Profile Clean-up: Menghapus bintang rating dan ulasan, hanya menampilkan nama dokter, spesialisasi resmi, almamater universitas, dan tahun pengalaman kerja.\n3. Build Verification: `npm run build` sukses 100% (Exit Code: 0, 0 errors).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna untuk mendisable input nama lengkap pasien agar sinkron dengan biodata dan menghapus tampilan ulasan/rating dokter.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-213",
+        "date": "2026-08-18",
+        "time": "14:52",
+        "category": "Frontend & Backend | Interactive Canvas Signature & Terms PDF Pop-up Modal",
+        "type": "Feature Enhancement & Database Schema Migration",
+        "feature": "Implementasi Pop-up Tanda Tangan Digital (Brush/Kuas Tool) & Pop-up Dokumen PDF Syarat Ketentuan Resmi",
+        "description": "Menyempurnakan alur konfirmasi reservasi dengan: 1) Pop-up modal Tanda Tangan Digital lengkap dengan tool Pulpen, Kuas/Brush (Halus, Sedang, Tebal, Kuas), Penghapus/Eraser, Palette Warna Tinta (Charcoal, Gold, Navy, Blue), dan preview tanda tangan yang tersimpan, 2) Migrasi dan persistensi database `signature_data` & `terms_accepted_at` pada tabel `reservations`, 3) Pop-up modal Dokumen PDF Resmi Syarat & Ketentuan yang tersinkronisasi dinamis dengan pengaturan admin klinik serta tombol cetak/PDF dan 'Saya Telah Membaca & Setuju'.",
+        "notes": "1. Digital Signature Modal: Menyediakan canvas beresolusi tinggi dengan penyesuaian kuas, ukuran goresan, dan palet warna tinta resmi.\n2. Database Migration: Menambahkan kolom `signature_data` (longtext) dan `terms_accepted_at` (timestamp) pada tabel `reservations`.\n3. Synchronized Terms Modal: Menampilkan dokumen informed consent dan kebijakan klinik yang tersinkron dengan database admin, dilengkapi fitur cetak/print PDF.\n4. Tests & Build: `npm run build` sukses 100%, API migration dan controller terverifikasi.\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna untuk membuat pop-up tanda tangan digital dengan kuas/brush, menyimpan tanda tangan ke database, dan menampilkan pop-up PDF syarat ketentuan yang sinkron dengan admin.",
+        "files": [
+            "database/migrations/2026_08_18_150000_add_signature_data_to_reservations_table.php",
+            "app/Models/Shared/Reservation/Reservation.php",
+            "app/Http/Controllers/Api/Patient/Reservation/ReservationController.php",
+            "app/Http/Controllers/Api/Guest/Reservation/ReservationController.php",
+            "frontend-web/src/features/patient/reservation/components/DigitalSignatureModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/TermsPdfModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-212",
         "date": "2026-08-18",
         "time": "14:38",

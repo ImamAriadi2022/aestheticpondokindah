@@ -28,6 +28,9 @@ class ClinicServiceAdminController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:clinic_services,slug'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'duration' => ['nullable', 'string', 'max:100'],
             'image' => ['nullable', 'string', 'max:500'],
             'intro' => ['required', 'string'],
             'paragraphs' => ['nullable', 'array'],
@@ -65,6 +68,9 @@ class ClinicServiceAdminController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:clinic_services,slug,' . $service->id],
+            'category' => ['nullable', 'string', 'max:100'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'duration' => ['nullable', 'string', 'max:100'],
             'image' => ['nullable', 'string', 'max:500'],
             'intro' => ['required', 'string'],
             'paragraphs' => ['nullable', 'array'],

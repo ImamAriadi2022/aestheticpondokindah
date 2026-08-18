@@ -22,6 +22,7 @@ import {
   CalendarDays,
   Loader2,
   ExternalLink,
+  PenTool,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -30,11 +31,22 @@ import { toast } from "@/shared/ui/toast";
 import { API_BASE } from "@/core/api/apiConfig";
 import { apiClient } from "@/core/api/apiClient";
 import DigitalSignaturePad from "./DigitalSignaturePad";
+import DigitalSignatureModal from "./DigitalSignatureModal";
+import TermsPdfModal from "./TermsPdfModal";
 import BookingSuccessModal from "./BookingSuccessModal";
 import ETicketModal from "./ETicketModal";
 import BookingHistoryList from "./BookingHistoryList";
 
-// Rich Services Catalog matching Screenshot 1
+// Branch Catalog Interface
+export interface BranchItem {
+  id: number | string;
+  name: string;
+  code?: string;
+  address: string;
+  phone?: string;
+}
+
+// Rich Services Catalog Initial Fallback
 export interface ServiceItem {
   id: string;
   name: string;
@@ -138,77 +150,99 @@ export const BOOKING_SERVICES: ServiceItem[] = [
   },
 ];
 
-// Rich Doctor Catalog matching Screenshot 2
+// Helper to map backend ClinicService into ServiceItem
+export function mapBackendService(item: any): ServiceItem {
+  const title = item.title || item.name || "Layanan Gigi";
+  const category = item.category || "Umum";
+  const price = Number(item.price ?? 500000);
+  const duration = item.duration || "45–60 mnt";
+  const priceFormatted =
+    item.price_formatted ||
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(price);
+
+  let image = item.image;
+  if (!image || !image.startsWith("http")) {
+    image = `/layanan/${title}.png`;
+  }
+
+  return {
+    id: item.slug || String(item.id),
+    name: title,
+    category,
+    categoryBadge: category.toUpperCase(),
+    description:
+      item.intro ||
+      (Array.isArray(item.paragraphs) && item.paragraphs.length > 0
+        ? item.paragraphs[0]
+        : "Perawatan dokter gigi profesional dengan standar klinis terbaik."),
+    duration,
+    price,
+    priceFormatted,
+    image,
+  };
+}
+
+// Doctor Catalog Interface
 export interface DoctorItem {
   id: string;
   userId?: string;
   name: string;
   specialization: string;
   university: string;
-  rating: number;
-  reviewsCount: number;
   experienceYears: number;
   photo: string;
 }
 
 export const BOOKING_DOCTORS: DoctorItem[] = [
   {
-    id: "doc-1",
+    id: "3",
     name: "drg. Yulita Dora",
-    specialization: "Aesthetic Dentistry",
+    specialization: "Aesthetic & Orthodontics",
     university: "Universitas Indonesia",
-    rating: 4.9,
-    reviewsCount: 142,
     experienceYears: 12,
     photo: "/dokter/drg. Yulita Dora.jpeg",
   },
   {
-    id: "doc-2",
+    id: "11",
     name: "drg. Sharah Syam, Sp. Ort",
     specialization: "Orthodontics",
     university: "Universitas Gadjah Mada",
-    rating: 4.9,
-    reviewsCount: 120,
     experienceYears: 10,
     photo: "/dokter/drg. Sharah Syam, Sp. Ort.jpeg",
   },
   {
-    id: "doc-3",
+    id: "7",
     name: "drg. Melati Putri, Sp. Pros",
     specialization: "Prosthodontics",
     university: "Universitas Padjadjaran",
-    rating: 5.0,
-    reviewsCount: 98,
     experienceYears: 15,
     photo: "/dokter/drg. Melati Putri, Sp. Pros.jpeg",
   },
   {
-    id: "doc-4",
+    id: "5",
     name: "drg. Ryan Jusuf",
     specialization: "Cosmetic & General Dentistry",
     university: "Universitas Indonesia",
-    rating: 4.8,
-    reviewsCount: 88,
     experienceYears: 8,
     photo: "/dokter/drg. Ryan Jusuf.jpeg",
   },
   {
-    id: "doc-5",
+    id: "12",
     name: "drg. Eric Sulistio, Sp. Perio",
     specialization: "Periodontics & Dental Implants",
     university: "Universitas Airlangga",
-    rating: 4.9,
-    reviewsCount: 110,
     experienceYears: 14,
     photo: "/dokter/drg. Eric Sulistio, Sp. Perio.jpeg",
   },
   {
-    id: "doc-6",
+    id: "13",
     name: "drg. Pramodanti Jiwanakusuma, Sp.KG",
     specialization: "Endodontics & Conservative Dentistry",
     university: "Universitas Indonesia",
-    rating: 4.9,
-    reviewsCount: 105,
     experienceYears: 11,
     photo: "/dokter/drg. Pramodanti Jiwanakusuma, Sp.KG.jpeg",
   },
@@ -262,6 +296,30 @@ export default function NewBookingFlow({
       ? 4
       : 1
   );
+
+  // Dynamic Backend Datasets
+  const [servicesList, setServicesList] = useState<ServiceItem[]>(BOOKING_SERVICES);
+  const [servicesLoading, setServicesLoading] = useState(false);
+
+  const [doctorsList, setDoctorsList] = useState<DoctorItem[]>(BOOKING_DOCTORS);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
+
+  const [branchesList, setBranchesList] = useState<BranchItem[]>([
+    {
+      id: 1,
+      name: "Aesthetic Pondok Indah Main Branch",
+      address: "Jl. Metro Pondok Indah No. 12, Kebayoran Lama, Jakarta Selatan 12310",
+      phone: "021-7654321",
+    },
+  ]);
+  const [selectedBranch, setSelectedBranch] = useState<BranchItem | null>({
+    id: 1,
+    name: "Aesthetic Pondok Indah Main Branch",
+    address: "Jl. Metro Pondok Indah No. 12, Kebayoran Lama, Jakarta Selatan 12310",
+    phone: "021-7654321",
+  });
+
+  const [doctorSchedules, setDoctorSchedules] = useState<any[]>([]);
 
   // Form selections
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(
@@ -322,7 +380,9 @@ export default function NewBookingFlow({
   );
   const [signatureData, setSignatureData] = useState<string | null>(null);
 
-  // Success & ETicket Modals
+  // Modals
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showETicketModal, setShowETicketModal] = useState(false);
   const [activeTicket, setActiveTicket] = useState<any>(null);
@@ -332,86 +392,175 @@ export default function NewBookingFlow({
   const [bookingsHistory, setBookingsHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  // Fetch History from Backend
+  // 1. Fetch Services from Backend
+  const fetchServices = async () => {
+    setServicesLoading(true);
+    try {
+      const res = await apiClient.get("/public/services");
+      const list = res.data;
+      if (Array.isArray(list) && list.length > 0) {
+        const mapped = list.map(mapBackendService);
+        setServicesList(mapped);
+        if (mapped.length > 0) {
+          setSelectedService((prev) => {
+            if (!prev) return mapped[0];
+            const found = mapped.find((m) => m.id === prev.id || m.name === prev.name);
+            return found || mapped[0];
+          });
+        }
+      }
+    } catch (e) {
+      // Graceful fallback
+    } finally {
+      setServicesLoading(false);
+    }
+  };
+
+  // 2. Fetch Doctors from Backend
+  const fetchDoctors = async () => {
+    setDoctorsLoading(true);
+    try {
+      const res = await apiClient.get("/public/doctors");
+      const list = res.data?.doctors;
+      if (Array.isArray(list) && list.length > 0) {
+        const mapped: DoctorItem[] = list.map((doc: any) => ({
+          id: String(doc.id || doc.userId),
+          userId: String(doc.userId || doc.id),
+          name: doc.name,
+          specialization: doc.specialization || "Dokter Gigi Spesialis",
+          university: doc.university || doc.education || "Universitas Indonesia",
+          experienceYears: Number(doc.experienceYears || doc.experience_years || 5),
+          photo: doc.photo || doc.avatar || `/dokter/${doc.name}.jpeg`,
+        }));
+        setDoctorsList(mapped);
+        if (mapped.length > 0) {
+          setSelectedDoctor((prev) => {
+            if (!prev) return mapped[0];
+            const found = mapped.find((m) => m.id === prev.id || m.name === prev.name);
+            return found || mapped[0];
+          });
+        }
+      }
+    } catch (e) {
+      // Graceful fallback
+    } finally {
+      setDoctorsLoading(false);
+    }
+  };
+
+  // 3. Fetch Branches from Backend
+  const fetchBranches = async () => {
+    try {
+      const res = await apiClient.get("/public/branches");
+      const list = res.data?.data || res.data;
+      if (Array.isArray(list) && list.length > 0) {
+        const mapped: BranchItem[] = list.map((b: any) => ({
+          id: b.id,
+          name: b.name,
+          code: b.code,
+          address: b.address || "Jl. Metro Pondok Indah No. 12, Jakarta Selatan",
+          phone: b.phone || "021-7654321",
+        }));
+        setBranchesList(mapped);
+        setSelectedBranch(mapped[0]);
+      }
+    } catch (e) {
+      // Graceful fallback
+    }
+  };
+
+  // 4. Fetch Doctor Schedules from Backend
+  const fetchDoctorSchedules = async () => {
+    try {
+      const res = await apiClient.get("/public/doctor-schedules");
+      const list = res.data?.data || res.data;
+      if (Array.isArray(list) && list.length > 0) {
+        setDoctorSchedules(list);
+      }
+    } catch (e) {
+      // Graceful fallback
+    }
+  };
+
+  // 5. Fetch Patient Profile
+  const fetchPatientProfile = async () => {
+    if (session?.token) {
+      try {
+        const res = await apiClient.get("/auth/me");
+        const u = res.data?.user || res.data;
+        if (u) {
+          if (u.name) setPatientName(u.name);
+          if (u.whatsapp || u.phone) setPatientPhone(u.whatsapp || u.phone);
+        }
+      } catch (e) {
+        if (session.name) setPatientName(session.name);
+        if ((session as any).whatsapp || (session as any).phone) {
+          setPatientPhone((session as any).whatsapp || (session as any).phone);
+        }
+      }
+    }
+  };
+
+  // 6. Fetch Real Patient Bookings History
   const fetchBookings = async () => {
     setHistoryLoading(true);
     try {
       if (session?.token) {
         const res = await apiClient.get("/user/reservations");
-        const list = res.data?.reservations || [];
-        if (Array.isArray(list) && list.length > 0) {
+        const list = res.data?.reservations || res.data?.data || [];
+        if (Array.isArray(list)) {
           setBookingsHistory(
             list.map((r: any) => ({
               id: r.id,
-              code: r.code,
-              doctorName: r.doctor_name || "drg. Sarah Wijaya, Sp.Ort",
-              doctorPhoto: "/dokter/drg. Sharah Syam, Sp. Ort.jpeg",
-              specialization: r.treatment_interest || "Spesialis Ortodonti",
-              serviceName: r.service_name || r.treatment_interest || "Pemasangan Braces Premium",
-              date: r.scheduled_date || r.date || "2026-10-15",
+              code: r.code || `#APP-${r.id}`,
+              doctorName: r.doctor_name || r.doctor?.name || "drg. Spesialis Klinik",
+              doctorPhoto: r.doctor?.avatar || `/dokter/${r.doctor_name || r.doctor?.name || 'drg. Yulita Dora'}.jpeg`,
+              specialization: r.treatment_interest || r.doctor?.specialization || "Dokter Gigi Spesialis",
+              serviceName: r.service_name || r.treatment_interest || "Pemeriksaan Gigi & Mulut",
+              date: r.scheduled_date || r.date,
               displayDate: r.scheduled_date || r.date,
-              time: r.scheduled_time || "10:00",
+              time: r.scheduled_time || r.preferred_time || "10:00",
               status: r.status || "confirmed",
-              totalAmount: r.total_amount || 650000,
-              locationName: "Pondok Indah Main Branch",
-              locationAddress: "Jl. Metro Pondok Indah Kav. IV, Jakarta Selatan",
-              examinationResult: r.admin_notes || r.notes,
+              totalAmount: r.total_amount || 500000,
+              locationName: r.branch?.name || "Aesthetic Pondok Indah Main Branch",
+              locationAddress: r.branch?.address || "Jl. Metro Pondok Indah No. 12, Jakarta Selatan",
+              examinationResult: r.admin_notes || r.notes || r.complaint,
             }))
           );
-          return;
+        } else {
+          setBookingsHistory([]);
         }
+      } else {
+        setBookingsHistory([]);
       }
-
-      // Default mock if none returned
-      setBookingsHistory([
-        {
-          id: "101",
-          code: "#APP-20261015-01",
-          doctorName: "drg. Sharah Syam, Sp. Ort",
-          doctorPhoto: "/dokter/drg. Sharah Syam, Sp. Ort.jpeg",
-          specialization: "Spesialis Ortodonti",
-          serviceName: "Pemasangan Braces Premium",
-          date: "2026-10-15",
-          displayDate: "15 Okt 2026",
-          time: "10:00",
-          status: "confirmed",
-          totalAmount: 650000,
-          locationName: "Pondok Indah Main Branch",
-          locationAddress: "Jl. Metro Pondok Indah Kav. IV, Jakarta Selatan, 12310",
-          examinationResult:
-            "Pasien datang untuk keluhan karang gigi ringan. Telah dilakukan tindakan scaling secara menyeluruh pada rahang atas dan bawah. Gusi tampak sehat, tidak ada indikasi gingivitis berat. Disarankan untuk menggunakan pasta gigi khusus gigi sensitif selama 3 hari ke depan.",
-        },
-        {
-          id: "102",
-          code: "#APP-20261022-02",
-          doctorName: "drg. Ryan Jusuf",
-          doctorPhoto: "/dokter/drg. Ryan Jusuf.jpeg",
-          specialization: "Dokter Gigi Umum",
-          serviceName: "Scaling & Polishing",
-          date: "2026-10-22",
-          displayDate: "22 Okt 2026",
-          time: "14:30",
-          status: "confirmed",
-          totalAmount: 450000,
-          locationName: "Pondok Indah Main Branch",
-          locationAddress: "Jl. Metro Pondok Indah Kav. IV, Jakarta Selatan, 12310",
-        },
-      ]);
     } catch (err) {
-      // Graceful fallback
+      setBookingsHistory([]);
     } finally {
       setHistoryLoading(false);
     }
   };
 
   useEffect(() => {
+    fetchServices();
+    fetchDoctors();
+    fetchBranches();
+    fetchDoctorSchedules();
+    fetchPatientProfile();
     fetchBookings();
   }, []);
 
-  // Filtered Services
-  const categories = ["Semua", "Estetik", "Implan", "Ortodonti", "Umum", "Bedah Mulut", "Pediatrik"];
+  // Dynamic categories extracted from servicesList
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    servicesList.forEach((s) => {
+      if (s.category) set.add(s.category);
+    });
+    return ["Semua", ...Array.from(set)];
+  }, [servicesList]);
+
+  // Filtered Services from Dynamic Backend
   const filteredServices = useMemo(() => {
-    return BOOKING_SERVICES.filter((s) => {
+    return servicesList.filter((s) => {
       const matchCat = selectedCategory === "Semua" || s.category === selectedCategory;
       const matchSearch =
         !serviceSearch.trim() ||
@@ -419,11 +568,11 @@ export default function NewBookingFlow({
         s.description.toLowerCase().includes(serviceSearch.toLowerCase());
       return matchCat && matchSearch;
     });
-  }, [selectedCategory, serviceSearch]);
+  }, [servicesList, selectedCategory, serviceSearch]);
 
-  // Filtered Doctors
+  // Filtered Doctors from Dynamic Backend
   const filteredDoctors = useMemo(() => {
-    return BOOKING_DOCTORS.filter((d) => {
+    return doctorsList.filter((d) => {
       return (
         !doctorSearch.trim() ||
         d.name.toLowerCase().includes(doctorSearch.toLowerCase()) ||
@@ -431,11 +580,47 @@ export default function NewBookingFlow({
         d.university.toLowerCase().includes(doctorSearch.toLowerCase())
       );
     });
-  }, [doctorSearch]);
+  }, [doctorsList, doctorSearch]);
 
   const selectedDateObj = useMemo(() => {
     return availableDates.find((d) => d.iso === selectedDate) || availableDates[0];
   }, [availableDates, selectedDate]);
+
+  // Dynamic Time Slots based on selected doctor & selected date
+  const timeSlots = useMemo(() => {
+    if (!selectedDoctor || !selectedDate) return TIME_SLOTS;
+
+    // Check if there is a specific doctor schedule for this doctor and date
+    const matched = doctorSchedules.find((s) => {
+      const matchDoc =
+        String(s.doctorId) === String(selectedDoctor.id) ||
+        String(s.doctorId) === String(selectedDoctor.userId) ||
+        (s.doctorName && s.doctorName.toLowerCase().includes(selectedDoctor.name.toLowerCase()));
+      const matchDate = s.date === selectedDate;
+      return matchDoc && matchDate;
+    });
+
+    if (matched && matched.timeRange) {
+      const parts = matched.timeRange.split("-").map((p: string) => p.trim());
+      if (parts.length === 2) {
+        const [startH] = parts[0].split(":").map(Number);
+        const [endH] = parts[1].split(":").map(Number);
+        if (!isNaN(startH) && !isNaN(endH) && endH > startH) {
+          const slots: string[] = [];
+          for (let h = startH; h < endH; h++) {
+            for (let m = 0; m < 60; m += 20) {
+              const hh = String(h).padStart(2, "0");
+              const mm = String(m).padStart(2, "0");
+              slots.push(`${hh}:${mm}`);
+            }
+          }
+          if (slots.length > 0) return slots;
+        }
+      }
+    }
+
+    return TIME_SLOTS;
+  }, [selectedDoctor, selectedDate, doctorSchedules]);
 
   // Handle Booking Submission
   const handleSubmitBooking = async () => {
@@ -461,7 +646,8 @@ export default function NewBookingFlow({
         name: patientName,
         phone: patientPhone,
         treatment_interest: selectedService.name,
-        doctor_id: selectedDoctor.userId || 1,
+        doctor_id: selectedDoctor.userId || selectedDoctor.id,
+        branch_id: selectedBranch?.id || 1,
         date: selectedDate,
         preferred_time: selectedTimeSlot,
         complaint: notes || `Reservasi ${selectedService.name} bersama ${selectedDoctor.name}`,
@@ -469,15 +655,22 @@ export default function NewBookingFlow({
         signature_data: signatureData,
       };
 
+      let resData: any = null;
       if (session?.token) {
-        await apiClient.post("/user/reservations", payload);
+        const res = await apiClient.post("/user/reservations", payload);
+        resData = res.data?.reservation || res.data?.data || res.data;
       } else {
-        await apiClient.post("/public/reservations", payload);
+        const res = await apiClient.post("/public/reservations", payload);
+        resData = res.data?.reservation || res.data?.data || res.data;
       }
 
+      const ticketCode =
+        resData?.code ||
+        `#APP-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`;
+
       const newTicket = {
-        id: Date.now(),
-        code: `#APP-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`,
+        id: resData?.id || Date.now(),
+        code: ticketCode,
         doctorName: selectedDoctor.name,
         specialization: selectedDoctor.specialization,
         serviceName: selectedService.name,
@@ -485,8 +678,8 @@ export default function NewBookingFlow({
         displayDate: selectedDateObj?.display || selectedDate,
         time: selectedTimeSlot,
         status: "confirmed",
-        locationName: "Pondok Indah Dental Aesthetic",
-        locationAddress: "Jl. Metro Pondok Indah Kav. IV, Jakarta Selatan, 12310",
+        locationName: selectedBranch?.name || "Aesthetic Pondok Indah Main Branch",
+        locationAddress: selectedBranch?.address || "Jl. Metro Pondok Indah No. 12, Jakarta Selatan",
         totalAmount: selectedService.price,
         patientName: patientName,
         phone: patientPhone,
@@ -496,7 +689,6 @@ export default function NewBookingFlow({
       setBookingsHistory((prev) => [newTicket, ...prev]);
       setShowSuccessModal(true);
     } catch (err: any) {
-      // If network offline or endpoint error, show simulated success for offline demo
       const fallbackTicket = {
         id: Date.now(),
         code: `#APP-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`,
@@ -507,8 +699,8 @@ export default function NewBookingFlow({
         displayDate: selectedDateObj?.display || selectedDate,
         time: selectedTimeSlot,
         status: "confirmed",
-        locationName: "Pondok Indah Dental Aesthetic",
-        locationAddress: "Jl. Metro Pondok Indah Kav. IV, Jakarta Selatan, 12310",
+        locationName: selectedBranch?.name || "Aesthetic Pondok Indah Main Branch",
+        locationAddress: selectedBranch?.address || "Jl. Metro Pondok Indah No. 12, Jakarta Selatan",
         totalAmount: selectedService.price,
         patientName: patientName,
         phone: patientPhone,
@@ -843,13 +1035,9 @@ export default function NewBookingFlow({
                               <GraduationCap className="w-3.5 h-3.5 shrink-0 text-[#8C8272]" />
                               <span className="truncate">{doc.university}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-[#7C7365] pt-0.5">
-                              <span className="flex items-center gap-1 font-semibold text-[#8C6B1C]">
-                                <Star className="w-3.5 h-3.5 fill-[#8C6B1C]" />
-                                {doc.rating.toFixed(1)}
-                              </span>
-                              <span>•</span>
-                              <span>{doc.experienceYears} Tahun Pengalaman</span>
+                            <div className="flex items-center gap-1.5 text-xs text-[#7C7365] pt-0.5">
+                              <Briefcase className="w-3.5 h-3.5 text-[#8C6B1C] shrink-0" />
+                              <span className="font-semibold text-[#8C6B1C]">{doc.experienceYears} Tahun Pengalaman</span>
                             </div>
                           </div>
                         </div>
@@ -878,16 +1066,14 @@ export default function NewBookingFlow({
                         <h3 className="text-base font-bold text-[#2C2416]">
                           {selectedDoctor.name}
                         </h3>
-                        <p className="text-xs text-[#8C8272]">
+                        <p className="text-xs font-semibold text-[#8C6B1C]">
                           {selectedDoctor.specialization}
                         </p>
-                        <div className="flex items-center gap-1 text-xs text-[#8C6B1C]">
-                          <div className="flex items-center">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="w-3 h-3 fill-[#8C6B1C]" />
-                            ))}
-                          </div>
-                          <span className="font-bold ml-1">{selectedDoctor.rating.toFixed(1)}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-[#7C7365]">
+                          <GraduationCap className="w-3.5 h-3.5 text-[#8C8272] shrink-0" />
+                          <span>{selectedDoctor.university}</span>
+                          <span>•</span>
+                          <span>{selectedDoctor.experienceYears} Thn Pengalaman</span>
                         </div>
                       </div>
                     </div>
@@ -942,7 +1128,7 @@ export default function NewBookingFlow({
 
                     {/* 3-Column Time Slot Grid */}
                     <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
-                      {TIME_SLOTS.map((slot) => {
+                      {timeSlots.map((slot) => {
                         const isSel = selectedTimeSlot === slot;
 
                         return (
@@ -999,9 +1185,10 @@ export default function NewBookingFlow({
                         <h4 className="text-base font-bold text-[#2C2416]">
                           {selectedDoctor?.name}
                         </h4>
-                        <div className="flex items-center gap-1 text-xs text-[#7C7365]">
-                          <Star className="w-3 h-3 fill-[#8C6B1C] text-[#8C6B1C]" />
-                          <span>4.9 ({selectedDoctor?.reviewsCount || 120} Ulasan) • {selectedDoctor?.specialization}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-[#7C7365]">
+                          <span className="font-semibold text-[#8C6B1C]">{selectedDoctor?.specialization}</span>
+                          <span>•</span>
+                          <span>{selectedDoctor?.university}</span>
                         </div>
                       </div>
                     </div>
@@ -1022,18 +1209,49 @@ export default function NewBookingFlow({
                     </div>
                   </div>
 
-                  {/* Card 2: Lokasi Klinik */}
-                  <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-1.5 shadow-xs">
-                    <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-[#8C6B1C]" />
-                      <span>Lokasi Klinik</span>
-                    </h3>
-                    <p className="text-sm font-semibold text-[#2C2416]">
-                      Pondok Indah Dental Aesthetic
+                  {/* Card 2: Lokasi Cabang Klinik */}
+                  <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-2.5 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-[#8C6B1C]" />
+                        <span>Lokasi Cabang Klinik</span>
+                      </h3>
+                      {branchesList.length > 1 && (
+                        <span className="text-[11px] font-semibold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-0.5 rounded-full border border-[#EADBBD]">
+                          {branchesList.length} Cabang Tersedia
+                        </span>
+                      )}
+                    </div>
+
+                    {branchesList.length > 1 ? (
+                      <select
+                        value={selectedBranch?.id || ""}
+                        onChange={(e) => {
+                          const found = branchesList.find((b) => String(b.id) === e.target.value);
+                          if (found) setSelectedBranch(found);
+                        }}
+                        className="w-full h-11 px-3.5 rounded-xl bg-[#FAF8F5] border border-[#D9D0BC] text-xs sm:text-sm text-[#2C2416] font-semibold focus:border-[#8C6B1C] focus:ring-2 focus:ring-[#8C6B1C]/20 outline-none cursor-pointer"
+                      >
+                        {branchesList.map((branch) => (
+                          <option key={branch.id} value={branch.id}>
+                            {branch.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-sm font-semibold text-[#2C2416]">
+                        {selectedBranch?.name || "Aesthetic Pondok Indah Main Branch"}
+                      </p>
+                    )}
+
+                    <p className="text-xs text-[#7C7365] leading-relaxed">
+                      {selectedBranch?.address || "Jl. Metro Pondok Indah No. 12, Kebayoran Lama, Jakarta Selatan, 12310"}
                     </p>
-                    <p className="text-xs text-[#7C7365]">
-                      Jl. Metro Pondok Indah Kav. IV, Jakarta Selatan, 12310
-                    </p>
+                    {selectedBranch?.phone && (
+                      <p className="text-[11px] text-[#8C6B1C] font-medium">
+                        Kontak Cabang: {selectedBranch.phone}
+                      </p>
+                    )}
                   </div>
 
                   {/* Card 3: Catatan Tambahan (Opsional) */}
@@ -1059,45 +1277,119 @@ export default function NewBookingFlow({
                     </h3>
 
                     {/* Checkbox S&K */}
-                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <label className="flex items-start gap-3 select-none cursor-pointer">
                       <input
                         type="checkbox"
                         checked={agreeTerms}
                         onChange={(e) => setAgreeTerms(e.target.checked)}
-                        className="w-5 h-5 rounded-md border-[#D9D0BC] text-[#8C6B1C] focus:ring-[#8C6B1C] shrink-0 mt-0.5"
+                        className="w-5 h-5 rounded-md border-[#D9D0BC] text-[#8C6B1C] focus:ring-[#8C6B1C] shrink-0 mt-0.5 cursor-pointer"
                       />
                       <span className="text-xs text-[#5C5546] leading-relaxed">
                         Saya menyetujui{" "}
-                        <span className="text-[#8C6B1C] font-semibold underline underline-offset-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setShowTermsModal(true);
+                          }}
+                          className="text-[#8C6B1C] font-bold underline underline-offset-2 hover:text-[#735614] inline cursor-pointer"
+                        >
                           Syarat dan Ketentuan
-                        </span>{" "}
+                        </button>{" "}
                         serta Kebijakan Pembatalan klinik Aesthetic Pondok Indah.
                       </span>
                     </label>
 
-                    {/* Nama Lengkap */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-[#5C5546]">
-                        Nama Lengkap Pasien *
-                      </label>
+                    {/* Nama Lengkap Pasien (Disabled & Synced with Biodata) */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-[#5C5546]">
+                          Nama Lengkap Pasien
+                        </label>
+                        <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5" /> Tersinkron dengan Biodata
+                        </span>
+                      </div>
                       <Input
                         type="text"
                         value={patientName}
-                        onChange={(e) => setPatientName(e.target.value)}
-                        placeholder="Masukkan nama lengkap Anda..."
-                        className="h-11 rounded-xl bg-[#FAF8F5] border border-[#D9D0BC] text-sm"
+                        disabled
+                        readOnly
+                        className="h-11 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-sm text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
                       />
+                      <p className="text-[10px] text-[#8C8272]">
+                        Nama diambil otomatis dari profil akun pasien untuk menjamin validitas berkas medis.
+                      </p>
                     </div>
 
-                    {/* Digital Signature Pad */}
+                    {/* Digital Signature Modal Trigger & Preview */}
                     <div className="space-y-1.5 pt-1">
-                      <label className="text-xs font-semibold text-[#5C5546]">
-                        Tanda Tangan Digital (Opsional / Persetujuan)
-                      </label>
-                      <DigitalSignaturePad
-                        onSignatureChange={(sig) => setSignatureData(sig)}
-                        initialSignature={signatureData}
-                      />
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-[#5C5546]">
+                          Tanda Tangan Digital (Opsional / Persetujuan)
+                        </label>
+                        {signatureData && (
+                          <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                            <Check className="w-3 h-3 stroke-[3]" /> Tersimpan
+                          </span>
+                        )}
+                      </div>
+
+                      {signatureData ? (
+                        <div className="bg-[#FAF8F5] border-2 border-[#8C6B1C] rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
+                          <div className="flex items-center gap-3">
+                            <div className="w-24 h-14 bg-white rounded-xl border border-[#D9D0BC] overflow-hidden flex items-center justify-center p-1 shadow-inner">
+                              <img
+                                src={signatureData}
+                                alt="Tanda Tangan Pasien"
+                                className="max-w-full max-h-full object-contain"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-[#2C2416]">
+                                Tanda Tangan Terverifikasi
+                              </p>
+                              <p className="text-[11px] text-[#7C7365]">
+                                {patientName}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setShowSignatureModal(true)}
+                              className="px-3 py-1.5 rounded-xl border border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold transition-all shadow-xs"
+                            >
+                              Ubah
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSignatureData(null)}
+                              className="px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-all shadow-xs"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setShowSignatureModal(true)}
+                          className="w-full h-32 bg-[#FAF8F5] border-2 border-dashed border-[#D9D0BC] hover:border-[#8C6B1C] rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-all group hover:bg-[#FAF5EA]/40 cursor-pointer shadow-xs"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-[#EFE9DC] group-hover:bg-[#8C6B1C] text-[#8C6B1C] group-hover:text-white flex items-center justify-center mb-2 transition-all shadow-xs">
+                            <PenTool className="w-5 h-5" />
+                          </div>
+                          <p className="text-xs sm:text-sm font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-all">
+                            Buka Canvas Tanda Tangan Digital
+                          </p>
+                          <p className="text-[11px] text-[#A0988A] mt-0.5">
+                            Klik di sini untuk menandatangani (Dilengkapi Kuas, Pulpen, & Pilihan Warna)
+                          </p>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1369,6 +1661,34 @@ export default function NewBookingFlow({
             totalAmount: selectedService?.price || 1500000,
           }
         }
+      />
+
+      {/* Digital Signature Pop-up Modal with Brush Tools */}
+      <DigitalSignatureModal
+        isOpen={showSignatureModal}
+        onClose={() => setShowSignatureModal(false)}
+        patientName={patientName}
+        initialSignature={signatureData}
+        onSaveSignature={(sig) => {
+          setSignatureData(sig);
+          toast({
+            title: "Tanda Tangan Disimpan",
+            message: "Tanda tangan digital Anda telah berhasil disimpan dan disematkan.",
+          });
+        }}
+      />
+
+      {/* Terms & Conditions Official PDF Document Modal */}
+      <TermsPdfModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={() => {
+          setAgreeTerms(true);
+          toast({
+            title: "Syarat & Ketentuan Disetujui",
+            message: "Persetujuan informed consent & kebijakan klinik telah dikonfirmasi.",
+          });
+        }}
       />
     </div>
   );

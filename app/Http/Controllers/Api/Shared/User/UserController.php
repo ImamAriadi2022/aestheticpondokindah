@@ -140,6 +140,46 @@ class UserController extends Controller
         return response()->json($doctors);
     }
 
+    /**
+     * Public doctors list for reservation and guest web
+     */
+    public function publicDoctors(): JsonResponse
+    {
+        $doctors = User::query()
+            ->where('role', 'doctor')
+            ->where('status', 'active')
+            ->orderBy('id')
+            ->get()
+            ->map(function (User $u) {
+                $photo = $this->formatMediaUrl($u->avatar);
+                if (!$photo || !str_starts_with($photo, 'http')) {
+                    $photo = '/dokter/' . $u->name . '.jpeg';
+                }
+
+                $exp = (int) ($u->experience_years ?: 5);
+
+                return [
+                    'id' => (string) $u->id,
+                    'userId' => (string) $u->id,
+                    'name' => $u->name,
+                    'specialization' => $u->specialization ?: ($u->job ?: 'Dokter Gigi Spesialis'),
+                    'university' => $u->education ?: 'Universitas Indonesia',
+                    'education' => $u->education ?: 'Universitas Indonesia',
+                    'experienceYears' => $exp,
+                    'experience_years' => $exp,
+                    'photo' => $photo,
+                    'avatar' => $photo,
+                    'bio' => $u->bio,
+                    'primary_branch' => $u->primary_branch ?: 'Aesthetic Pondok Indah Main Branch',
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'doctors' => $doctors,
+        ]);
+    }
+
     public function storeDoctor(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

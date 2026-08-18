@@ -12,8 +12,11 @@ class ClinicService extends Model
     protected $fillable = [
         'title',
         'slug',
+        'category',
         'image',
         'intro',
+        'price',
+        'duration',
         'paragraphs',
         'steps',
         'general_dentists',
@@ -24,6 +27,7 @@ class ClinicService extends Model
     ];
 
     protected $casts = [
+        'price' => 'decimal:2',
         'paragraphs' => 'array',
         'steps' => 'array',
         'general_dentists' => 'array',
@@ -31,6 +35,16 @@ class ClinicService extends Model
         'is_active' => 'boolean',
         'sort_order' => 'integer',
     ];
+
+    protected $appends = [
+        'price_formatted',
+    ];
+
+    public function getPriceFormattedAttribute(): string
+    {
+        $val = (float) ($this->price ?? 500000);
+        return 'Rp ' . number_format($val, 0, ',', '.');
+    }
 
     public function scopeActive($query)
     {

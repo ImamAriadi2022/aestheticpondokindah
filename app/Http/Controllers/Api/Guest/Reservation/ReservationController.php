@@ -83,6 +83,8 @@ class ReservationController extends Controller
                 'source' => $validated['source'] ?? 'guest_web',
                 'status' => 'Baru',
                 'payment_status' => 'Belum Bayar',
+                'signature_data' => $validated['signature_data'] ?? null,
+                'terms_accepted_at' => !empty($validated['signature_data']) ? now() : null,
             ]);
         });
 
@@ -100,6 +102,7 @@ class ReservationController extends Controller
             'date' => optional($reservation->date)->format('Y-m-d'),
             'preferred_time' => $reservation->preferred_time,
             'complaint' => $reservation->complaint,
+            'signature_data' => $reservation->signature_data,
             'status' => $reservation->status,
             'source' => $reservation->source,
             'message' => 'Reservasi Guest berhasil dibuat dan tersinkronisasi dengan jadwal dokter.',

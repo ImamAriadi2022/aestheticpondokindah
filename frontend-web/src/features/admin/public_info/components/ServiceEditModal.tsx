@@ -29,6 +29,9 @@ export default function ServiceEditModal({
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
+  const [category, setCategory] = useState("Umum");
+  const [price, setPrice] = useState<number>(500000);
+  const [duration, setDuration] = useState("45–60 mnt");
   const [image, setImage] = useState("");
   const [intro, setIntro] = useState("");
   const [paragraphs, setParagraphs] = useState<string[]>([]);
@@ -43,6 +46,9 @@ export default function ServiceEditModal({
     if (service) {
       setTitle(service.title || "");
       setSlug(service.slug || "");
+      setCategory(service.category || "Umum");
+      setPrice(service.price ?? 500000);
+      setDuration(service.duration || "45–60 mnt");
       setImage(service.image || "");
       setIntro(service.intro || "");
       setParagraphs(service.paragraphs || [""]);
@@ -55,6 +61,9 @@ export default function ServiceEditModal({
     } else {
       setTitle("");
       setSlug("");
+      setCategory("Umum");
+      setPrice(500000);
+      setDuration("45–60 mnt");
       setImage("");
       setIntro("");
       setParagraphs([""]);
@@ -74,6 +83,9 @@ export default function ServiceEditModal({
       await onSave({
         title,
         slug: slug || undefined,
+        category,
+        price: Number(price),
+        duration,
         image: image || null,
         intro,
         paragraphs: paragraphs.filter((p) => p.trim().length > 0),
@@ -116,6 +128,45 @@ export default function ServiceEditModal({
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 placeholder="cth: dental-whitening"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Kategori Booking *</Label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+              >
+                <option value="Estetik">Estetik</option>
+                <option value="Implan">Implan</option>
+                <option value="Ortodonti">Ortodonti</option>
+                <option value="Umum">Umum</option>
+                <option value="Bedah Mulut">Bedah Mulut</option>
+                <option value="Pediatrik">Pediatrik</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Estimasi Biaya / Harga (Rp) *</Label>
+              <Input
+                type="number"
+                min="0"
+                step="10000"
+                value={price}
+                onChange={(e) => setPrice(Number(e.target.value))}
+                placeholder="cth: 1500000"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Estimasi Durasi Tindakan *</Label>
+              <Input
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="cth: 60–90 mnt"
+                required
               />
             </div>
           </div>

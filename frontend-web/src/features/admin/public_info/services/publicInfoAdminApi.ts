@@ -4,6 +4,10 @@ export interface ClinicServiceItem {
   id: number | string;
   title: string;
   slug: string;
+  category?: string;
+  price?: number;
+  price_formatted?: string;
+  duration?: string;
   image?: string | null;
   intro: string;
   paragraphs?: string[];

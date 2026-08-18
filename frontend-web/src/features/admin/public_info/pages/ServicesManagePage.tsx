@@ -158,9 +158,29 @@ export default function ServicesManagePage() {
               </CardHeader>
 
               <CardContent className="space-y-3 flex-1 flex flex-col justify-between">
-                <p className="text-xs text-brand-warm-gray line-clamp-3 leading-relaxed">
-                  {item.intro}
-                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {item.category && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]">
+                        {item.category.toUpperCase()}
+                      </span>
+                    )}
+                    {item.duration && (
+                      <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md">
+                        ⏱️ {item.duration}
+                      </span>
+                    )}
+                    {item.price && (
+                      <span className="text-[11px] font-bold text-[#8C6B1C] ml-auto">
+                        {item.price_formatted || `Rp ${Number(item.price).toLocaleString("id-ID")}`}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-brand-warm-gray line-clamp-2 leading-relaxed">
+                    {item.intro}
+                  </p>
+                </div>
 
                 {item.specialist_names && item.specialist_names.length > 0 && (
                   <div className="text-[11px] bg-muted/40 p-2 rounded-lg text-muted-foreground flex items-center gap-1.5">
