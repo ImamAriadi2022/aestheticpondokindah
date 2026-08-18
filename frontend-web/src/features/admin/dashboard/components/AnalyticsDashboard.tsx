@@ -141,16 +141,16 @@ function useAnalyticsData(from: Date, to: Date) {
   const processed = useMemo(() => {
     if (!data) return null;
 
-    const visitors = data.totals.visitors;
-    const bookings = data.totals.bookings;
-    const conversionRate = ((bookings / Math.max(visitors, 1)) * 100);
+    const visitors = data.totals?.visitors ?? 0;
+    const bookings = data.totals?.bookings ?? 0;
+    const conversionRate = (bookings / Math.max(visitors, 1)) * 100;
 
     const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-    const dailyLabels = data.daily.labels.map((dateStr) => {
+    const dailyLabels = (data.daily?.labels || []).map((dateStr) => {
       const d = new Date(dateStr);
-      return `${dayNames[d.getDay()]} ${d.getDate()}`;
+      return isNaN(d.getTime()) ? dateStr : `${dayNames[d.getDay()]} ${d.getDate()}`;
     });
-    const dailyVisitors = data.daily.visitors;
+    const dailyVisitors = Array.isArray(data.daily?.visitors) ? data.daily.visitors : [];
 
     const sourceColors: Record<string, string> = {
       google: "#c9a24a",
@@ -164,15 +164,18 @@ function useAnalyticsData(from: Date, to: Date) {
       referral: "#f0daa0",
       unknown: "#d4b87a",
     };
-    const trafficSources = data.sources.map((s) => ({
-      label: s.label.charAt(0).toUpperCase() + s.label.slice(1),
-      value: s.value,
-      color: sourceColors[s.label.toLowerCase()] || "#c9a24a",
+    const trafficSources = (data.sources || []).map((s) => ({
+      label: (s.label || "Direct").charAt(0).toUpperCase() + (s.label || "Direct").slice(1),
+      value: s.value || 0,
+      color: sourceColors[(s.label || "").toLowerCase()] || "#c9a24a",
     }));
 
-    const topPages = data.top_pages;
+    const topPages = Array.isArray(data.top_pages) ? data.top_pages : [];
 
-    const bookingStatus = data.booking_status.map((item, index) => ({ ...item, color: ["bg-[#c9a24a]", "bg-blue-500", "bg-green-500", "bg-red-500"][index % 4] }));
+    const bookingStatus = (data.booking_status || []).map((item, index) => ({
+      ...item,
+      color: ["bg-[#c9a24a]", "bg-blue-500", "bg-green-500", "bg-red-500"][index % 4],
+    }));
 
     return {
       visitors,
@@ -190,8 +193,9 @@ function useAnalyticsData(from: Date, to: Date) {
   return { data: processed, loading, error, refetch: fetchData };
 }
 
-function DonutChart({ data, size = 140 }: { data: { label: string; value: number; color: string }[]; size?: number }) {
-  const total = data.reduce((s, d) => s + d.value, 0);
+function DonutChart({ data, size = 140 }: { data?: { label: string; value: number; color: string }[]; size?: number }) {
+  const safeData = Array.isArray(data) ? data : [];
+  const total = safeData.reduce((s, d) => s + (d?.value || 0), 0);
   const r = (size - 16) / 2;
   const c = 2 * Math.PI * r;
   let offset = 0;
@@ -199,8 +203,8 @@ function DonutChart({ data, size = 140 }: { data: { label: string; value: number
     <div className="flex items-center gap-4">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0">
         <g transform={`translate(${size / 2}, ${size / 2}) rotate(-90)`}>
-          {data.map((d, i) => {
-            const pct = total <= 0 ? 0 : d.value / total;
+          {safeData.map((d, i) => {
+            const pct = total <= 0 ? 0 : (d?.value || 0) / total;
             const dash = c * pct;
             const el = (
               <circle
@@ -222,12 +226,12 @@ function DonutChart({ data, size = 140 }: { data: { label: string; value: number
         </g>
       </svg>
       <div className="flex flex-col gap-1.5">
-        {data.map((d, i) => (
+        {safeData.map((d, i) => (
           <div key={i} className="flex items-center gap-2 text-sm">
             <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
             <span className="text-gray-600">{d.label}</span>
             <span className="font-medium text-gray-900 ml-auto">
-              {total <= 0 ? "0%" : `${Math.round((d.value / total) * 100)}%`}
+              {total <= 0 ? "0%" : `${Math.round(((d?.value || 0) / total) * 100)}%`}
             </span>
           </div>
         ))}
@@ -236,11 +240,13 @@ function DonutChart({ data, size = 140 }: { data: { label: string; value: number
   );
 }
 
-function BarChart({ labels, values, max, barColor = "#c9a24a" }: { labels: string[]; values: number[]; max: number; barColor?: string }) {
+function BarChart({ labels, values, max, barColor = "#c9a24a" }: { labels?: string[]; values?: number[]; max: number; barColor?: string }) {
+  const safeLabels = Array.isArray(labels) ? labels : [];
+  const safeValues = Array.isArray(values) ? values : [];
   return (
     <div className="space-y-3">
-      {labels.map((label, i) => {
-        const v = values[i] ?? 0;
+      {safeLabels.map((label, i) => {
+        const v = safeValues[i] ?? 0;
         const pct = max <= 0 ? 0 : Math.min((v / max) * 100, 100);
         return (
           <div key={i} className="flex items-center gap-3">

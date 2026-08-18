@@ -83,17 +83,34 @@ class NormalizeDoctorSchedulesAndReservationsSeeder extends Seeder
             21 => ['date' => '2026-08-02', 'time' => '14:00 - 17:00'],
         ];
 
-        foreach ($reservations as $r) {
+        $defaultServices = [
+            'Scaling & Polishing',
+            'Dental Whitening (Bleaching)',
+            'Invisalign & Clear Aligners',
+            'Porcelain Veneers',
+            'Orthodontic (Behel Gigi)',
+            'Penambalan Gigi Komposit',
+            'Pencabutan Gigi Bungsu (Odontektomi)',
+            'Perawatan Saluran Akar (Endodontik)',
+        ];
+
+        foreach ($reservations as $index => $r) {
             $norm = $normalizations[$r->id] ?? ['date' => '2026-08-26', 'time' => '15:00 - 17:00'];
             $targetDate = $norm['date'];
             $targetTime = $norm['time'];
 
             $schedule = $scheduleMap[$targetDate] ?? DoctorSchedule::where('user_id', $dora->id)->whereDate('date', $targetDate)->first();
 
-            $r->doctor_id = $dora->id;
-            $r->doctor_schedule_id = $schedule?->id;
-            $r->date = $targetDate;
-            $r->preferred_time = $targetTime;
+            $r->doctor_id = $r->doctor_id ?: $dora->id;
+            $r->doctor_schedule_id = $r->doctor_schedule_id ?: $schedule?->id;
+            $r->date = $r->date ?: $targetDate;
+            $r->preferred_time = $r->preferred_time ?: $targetTime;
+            if (empty($r->treatment_interest)) {
+                $r->treatment_interest = $defaultServices[$index % count($defaultServices)];
+            }
+            if (empty($r->branch_name)) {
+                $r->branch_name = 'Aesthetic Pondok Indah Main Branch';
+            }
             $r->save();
         }
 

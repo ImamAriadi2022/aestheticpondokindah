@@ -33,6 +33,7 @@ import DesktopClinicHome from "@/features/admin/dashboard/components/DesktopClin
 import { getAllConsultations } from "@/features/patient/consultation/services/consultationApi";
 import { getAdminDoctorSchedules } from "@/features/admin/doctors/services/adminDoctorScheduleApi";
 import { getAllComplaints } from "@/features/patient/consultation/services/complaintApi";
+import { getAnalyticsSummary, type AnalyticsSummaryResponse } from "@/core/api/analyticsApi";
 
 export default function ClinicDashboardPage() {
   const session = getSession();
@@ -40,14 +41,18 @@ export default function ClinicDashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const activeTab = searchParams.get("tab") || "dashboard";
-  const token = localStorage.getItem("apident:token");
+  const token =
+    (session as any)?.token ||
+    localStorage.getItem("apident:token") ||
+    localStorage.getItem("auth_token") ||
+    "";
 
   useEffect(() => {
-    if (!token) {
+    if (!token && !session) {
       toast({ title: "Authentication Required", message: "Silakan login untuk mengakses dashboard admin", variant: "error" });
       navigate("/klinik", { replace: true });
     }
-  }, [token, navigate]);
+  }, [token, session, navigate]);
 
   // Data States
   const summary = useMemo(() => getSummaryForRole((session?.role || "clinic") as any), [session?.role]);
@@ -66,140 +71,165 @@ export default function ClinicDashboardPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [consultations, setConsultations] = useState<any[]>([]);
   const [clinicSettings, setClinicSettings] = useState<any[]>([]);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsSummaryResponse | null>(null);
 
   // API Fetchers
+  const fetchAnalytics = async () => {
+    try {
+      const today = new Date();
+      const from = new Date(today);
+      from.setDate(today.getDate() - 30);
+      const fromStr = from.toISOString().split("T")[0];
+      const toStr = today.toISOString().split("T")[0];
+      const data = await getAnalyticsSummary(fromStr, toStr);
+      setAnalyticsData(data);
+    } catch (e) {
+      logger.error("Gagal memuat data analitik", e);
+    }
+  };
+
   const fetchUsers = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/users`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setUsers(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(Array.isArray(data) ? data : data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat pengguna", e); }
   };
 
   const fetchApiDoctors = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/doctors`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setApiDoctors(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setApiDoctors(Array.isArray(data) ? data : data?.doctors || data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat dokter", e); }
   };
 
   const fetchDoctorSchedules = async () => {
     try {
       const data = await getAdminDoctorSchedules();
-      setDoctorSchedules(data);
+      setDoctorSchedules(Array.isArray(data) ? data : (data as any)?.data || []);
     } catch (e) { logger.error("Gagal memuat jadwal dokter", e); }
   };
 
   const fetchApiPosts = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/posts`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setApiPosts(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setApiPosts(Array.isArray(data) ? data : data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat artikel", e); }
   };
 
   const fetchApiPopups = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/popups`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setApiPopups(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setApiPopups(Array.isArray(data) ? data : data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat pop-up", e); }
   };
 
   const fetchApiGallery = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/gallery-items`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setApiGalleryItems(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setApiGalleryItems(Array.isArray(data) ? data : data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat galeri", e); }
   };
 
   const fetchApiTestimonials = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/testimonials`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setApiTestimonials(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setApiTestimonials(Array.isArray(data) ? data : data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat testimoni", e); }
   };
 
   const fetchApiPromos = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/promos`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setApiPromos(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setApiPromos(Array.isArray(data) ? data : data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat promo", e); }
   };
 
   const fetchApiDownloadApps = async () => {
-    const defaultApps = [
-      {
-        id: "app-1",
-        title: "Aesthetic Mobile App (Android APK)",
-        description: "Rilis resmi aplikasi pasien Android untuk reservasi & rekam medis.",
-        version: "1.2.0",
-        platform: "android",
-        download_link: "https://aestheticpondokindah.id/download/apk/latest",
-        is_active: true,
-        is_development: false,
-        sort_order: 1,
-      },
-      {
-        id: "app-2",
-        title: "Aesthetic Mobile App (iOS App Store)",
-        description: "Tautan rilis aplikasi iOS resmi di Apple App Store.",
-        version: "1.1.0",
-        platform: "ios",
-        download_link: "https://apps.apple.com/app/aesthetic-pondok-indah/id123456789",
-        is_active: true,
-        is_development: false,
-        sort_order: 2,
-      },
-    ];
-
     try {
       const res = await fetch(`${API_BASE}/admin/download-apps`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok) {
         const data = await res.json();
-        setApiDownloadApps(Array.isArray(data) && data.length > 0 ? data : defaultApps);
-      } else {
-        setApiDownloadApps(defaultApps);
+        setApiDownloadApps(Array.isArray(data) ? data : data?.data || []);
       }
     } catch (e) {
       logger.error("Gagal memuat rilis aplikasi", e);
-      setApiDownloadApps(defaultApps);
     }
   };
 
   const fetchReservations = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/reservations`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setReservations(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setReservations(Array.isArray(data) ? data : data?.data || data?.reservations || []);
+      }
     } catch (e) { logger.error("Gagal memuat reservasi", e); }
   };
 
   const fetchBranches = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/branches`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setBranches(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setBranches(Array.isArray(data) ? data : data?.data || data?.branches || []);
+      }
     } catch (e) { logger.error("Gagal memuat cabang", e); }
   };
 
   const fetchComplaints = async () => {
     try {
       const res = await getAllComplaints({});
-      setComplaints(res.data || []);
+      setComplaints(Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : []);
     } catch (e) { logger.error("Gagal memuat pengaduan", e); }
   };
 
   const fetchConsultations = async () => {
     try {
       const data = await getAllConsultations({});
-      setConsultations(data || []);
+      setConsultations(Array.isArray(data) ? data : (data as any)?.data || (data as any)?.consultations || []);
     } catch (e) { logger.error("Gagal memuat konsultasi", e); }
   };
 
   const fetchClinicSettings = async () => {
     try {
       const res = await fetch(`${API_BASE}/admin/clinic-settings`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setClinicSettings(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setClinicSettings(Array.isArray(data) ? data : data?.data || []);
+      }
     } catch (e) { logger.error("Gagal memuat pengaturan klinik", e); }
   };
 
   useEffect(() => {
+    if (activeTab === "dashboard" || !activeTab) {
+      fetchUsers();
+      fetchApiPosts();
+      fetchDoctorSchedules();
+      fetchConsultations();
+      fetchComplaints();
+      fetchAnalytics();
+    }
     if (activeTab === "users") fetchUsers();
     if (activeTab === "doctors") { fetchApiDoctors(); fetchDoctorSchedules(); }
     if (activeTab === "content-blog") fetchApiPosts();
@@ -209,22 +239,25 @@ export default function ClinicDashboardPage() {
     if (activeTab === "content-promo") fetchApiPromos();
     if (activeTab === "content-download") fetchApiDownloadApps();
     if (activeTab === "branches") fetchBranches();
-    if (activeTab === "reservasi") fetchReservations();
+    if (activeTab === "reservasi") {
+      fetchReservations();
+      fetchApiDoctors();
+    }
     if (activeTab === "pengaduan") fetchComplaints();
     if (activeTab === "konsultasi") fetchConsultations();
     if (activeTab === "settings") fetchClinicSettings();
   }, [activeTab]);
 
   const stats = [
-    { title: "Total Pengguna", value: users.length || 0, subtitle: "Pengguna terdaftar" },
-    { title: "Artikel", value: apiPosts.length || 0, subtitle: "Konten terpublikasi" },
-    { title: "Jadwal Dokter", value: doctorSchedules.length || 0, subtitle: "Jadwal aktif" },
+    { title: "Total Pengguna", value: users.length, subtitle: "Pengguna terdaftar" },
+    { title: "Artikel", value: apiPosts.length, subtitle: "Konten terpublikasi" },
+    { title: "Jadwal Dokter", value: doctorSchedules.length, subtitle: "Jadwal aktif" },
+    { title: "Pengunjung", value: analyticsData?.totals?.visitors ?? 0, subtitle: "Pengunjung bulan ini" },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
       case "analytics":
-      case "dashboard":
         return <AnalyticsDashboard />;
 
       case "content-blog":
@@ -293,7 +326,14 @@ export default function ClinicDashboardPage() {
         return <ConsultationPage consultations={consultations} />;
 
       case "reservasi":
-        return <ReservationPage reservations={reservations} />;
+        return (
+          <ReservationPage
+            reservations={reservations}
+            doctors={apiDoctors}
+            token={token || ""}
+            onRefresh={fetchReservations}
+          />
+        );
 
       case "users":
         return <UsersPage users={users} />;
@@ -327,17 +367,15 @@ export default function ClinicDashboardPage() {
 
       default:
         return (
-          <div className="space-y-8">
-            <DesktopClinicHome
-              session={session}
-              stats={stats}
-              users={users}
-              doctorSchedules={doctorSchedules}
-              consultations={consultations}
-              complaints={complaints}
-            />
-            <AnalyticsDashboard />
-          </div>
+          <DesktopClinicHome
+            session={session}
+            stats={stats}
+            users={users}
+            doctorSchedules={doctorSchedules}
+            consultations={consultations}
+            complaints={complaints}
+            analyticsData={analyticsData}
+          />
         );
     }
   };

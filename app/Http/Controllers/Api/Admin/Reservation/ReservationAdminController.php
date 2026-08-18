@@ -69,6 +69,8 @@ class ReservationAdminController extends Controller
                     'Dalam Konsultasi' => 'Dikonfirmasi',
                     default => $r->status,
                 },
+                'signature_data' => $r->signature_data,
+                'terms_accepted_at' => optional($r->terms_accepted_at)->toISOString(),
                 'paymentStatus' => $r->payment_status ?? 'Belum Bayar',
                 'admin_notes' => $r->admin_notes,
                 'rescheduled_at' => optional($r->rescheduled_at)->toISOString(),

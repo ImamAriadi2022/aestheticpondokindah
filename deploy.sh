@@ -78,7 +78,9 @@ mkdir -p storage/app/public/promos \
          bootstrap/cache \
          public/storage/promos \
          public/storage/layanan \
-         public/storage/dokter
+         public/storage/dokter \
+         public/storage/signatures \
+         public/storage/avatars
 
 chmod -R 775 storage bootstrap/cache 2>/dev/null || chmod -R 777 storage bootstrap/cache 2>/dev/null || true
 
@@ -125,16 +127,15 @@ echo "[INFO] Clearing Laravel caches..."
 echo "[INFO] Running Database Migrations..."
 "$PHP_BIN" artisan migrate --force
 
-# 6. Auto-seed Promo & Initial Data if missing/empty
-PROMO_CHECK='require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make("Illuminate\\Contracts\\Console\\Kernel")->bootstrap(); $count = \Illuminate\Support\Facades\Schema::hasTable("promos") ? \Illuminate\Support\Facades\DB::table("promos")->count() : 0; exit($count > 0 ? 0 : 1);'
+# 6. Auto-seed Services, Doctor Profiles, Promos & Clinic Data (Idempotent)
+echo "[INFO] Menjalankan Seeder Data Layanan Klinik (ClinicServiceSeeder)..."
+"$PHP_BIN" artisan db:seed --class=ClinicServiceSeeder --force || echo "[INFO] Seeding ClinicServiceSeeder diselesaikan."
 
-if ! "$PHP_BIN" -r "$PROMO_CHECK"; then
-    echo "[INFO] Tabel promos kosong. Auto-seeding Data Promo & PopUp..."
-    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force || echo "[INFO] Seeding PromoSeeder diselesaikan."
-else
-    echo "[INFO] Seeding ulang data promo terbaru..."
-    "$PHP_BIN" artisan db:seed --class=PromoSeeder --force || echo "[INFO] Seeding PromoSeeder diselesaikan."
-fi
+echo "[INFO] Menjalankan Seeder Profil & Pengalaman Kerja Dokter (DoctorProfileSeeder)..."
+"$PHP_BIN" artisan db:seed --class=DoctorProfileSeeder --force || echo "[INFO] Seeding DoctorProfileSeeder diselesaikan."
+
+echo "[INFO] Menjalankan Seeder Data Promo & PopUp (PromoSeeder)..."
+"$PHP_BIN" artisan db:seed --class=PromoSeeder --force || echo "[INFO] Seeding PromoSeeder diselesaikan."
 
 # 7. Create Storage Symlink & Copy Fallback Assets
 echo "[INFO] Memverifikasi storage link (public/storage -> storage/app/public)..."

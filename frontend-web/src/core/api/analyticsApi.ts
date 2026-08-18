@@ -1,7 +1,14 @@
 import { API_BASE } from "@/core/api/apiConfig";
+import { getSession } from "@/core/auth/services/session";
 
 function getToken(): string | null {
-  return localStorage.getItem("apident:token");
+  const session = getSession();
+  return (
+    (session as any)?.token ||
+    localStorage.getItem("apident:token") ||
+    localStorage.getItem("auth_token") ||
+    null
+  );
 }
 
 function adminHeaders() {

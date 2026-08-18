@@ -59,97 +59,6 @@ export interface ServiceItem {
   image: string;
 }
 
-export const BOOKING_SERVICES: ServiceItem[] = [
-  {
-    id: "dental-whitening",
-    name: "Dental Whitening",
-    category: "Estetik",
-    categoryBadge: "ESTETIK GIGI",
-    description: "Perawatan pemutihan gigi profesional untuk senyum lebih cerah dan percaya diri.",
-    duration: "60–90 mnt",
-    price: 1500000,
-    priceFormatted: "Rp 1.500.000",
-    image: "/layanan/Dental Whitening.png",
-  },
-  {
-    id: "scaling-polishing",
-    name: "Scaling & Polishing",
-    category: "Umum",
-    categoryBadge: "UMUM",
-    description: "Pembersihan karang gigi menyeluruh dan pemolesan untuk mencegah masalah gusi.",
-    duration: "30–45 mnt",
-    price: 450000,
-    priceFormatted: "Rp 450.000",
-    image: "/layanan/Oral Care.png",
-  },
-  {
-    id: "dental-implant",
-    name: "Dental Implant",
-    category: "Implan",
-    categoryBadge: "IMPLAN",
-    description: "Solusi permanen untuk mengganti gigi yang hilang dengan teknologi implan titanium.",
-    duration: "120 mnt",
-    price: 12000000,
-    priceFormatted: "Rp 12.000.000",
-    image: "/layanan/Dental Implants.png",
-  },
-  {
-    id: "invisalign",
-    name: "Invisalign & Clear Aligners",
-    category: "Ortodonti",
-    categoryBadge: "ORTODONTI",
-    description: "Perataan gigi transparan tanpa behel konvensional, nyaman dan tak terlihat.",
-    duration: "45–60 mnt",
-    price: 18000000,
-    priceFormatted: "Rp 18.000.000",
-    image: "/layanan/Invisalign.png",
-  },
-  {
-    id: "porcelain-veneers",
-    name: "Porcelain Veneers",
-    category: "Estetik",
-    categoryBadge: "ESTETIK GIGI",
-    description: "Lapisan porselen tipis presisi tinggi untuk memperbaiki warna, bentuk, dan susunan gigi.",
-    duration: "90 mnt",
-    price: 4500000,
-    priceFormatted: "Rp 4.500.000",
-    image: "/layanan/Veneers.png",
-  },
-  {
-    id: "root-canal",
-    name: "Root Canal Treatment",
-    category: "Umum",
-    categoryBadge: "PERAWATAN SALURAN AKAR",
-    description: "Perawatan saraf gigi terinfeksi untuk menyelamatkan gigi alami tanpa pencabutan.",
-    duration: "60–90 mnt",
-    price: 2500000,
-    priceFormatted: "Rp 2.500.000",
-    image: "/layanan/Root Canal Treatments.png",
-  },
-  {
-    id: "pediatric-dentistry",
-    name: "Pediatric Dentistry",
-    category: "Pediatrik",
-    categoryBadge: "GIGI ANAK",
-    description: "Pemeriksaan dan penanganan gigi ramah anak dengan pendekatan edukatif yang menyenangkan.",
-    duration: "30–45 mnt",
-    price: 350000,
-    priceFormatted: "Rp 350.000",
-    image: "/layanan/Pediatric Dentistry.png",
-  },
-  {
-    id: "dental-extraction",
-    name: "Wisdom Tooth Removal",
-    category: "Bedah Mulut",
-    categoryBadge: "BEDAH MULUT",
-    description: "Pencabutan dan odontektomi gigi bungsu dengan pembiusan lokal yang aman dan minim trauma.",
-    duration: "45–60 mnt",
-    price: 2000000,
-    priceFormatted: "Rp 2.000.000",
-    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.png",
-  },
-];
-
 // Helper to map backend ClinicService into ServiceItem
 export function mapBackendService(item: any): ServiceItem {
   const title = item.title || item.name || "Layanan Gigi";
@@ -164,16 +73,20 @@ export function mapBackendService(item: any): ServiceItem {
       maximumFractionDigits: 0,
     }).format(price);
 
-  let image = item.image;
-  if (!image || !image.startsWith("http")) {
-    image = `/layanan/${title}.png`;
-  }
+  let image = item.image || `/layanan/${title}.png`;
+
+  let categoryBadge = category.toUpperCase();
+  if (category.toLowerCase() === "estetik") categoryBadge = "ESTETIK GIGI";
+  else if (category.toLowerCase() === "pediatrik") categoryBadge = "GIGI ANAK";
+  else if (category.toLowerCase() === "bedah mulut") categoryBadge = "BEDAH MULUT";
+  else if (category.toLowerCase() === "ortodonti") categoryBadge = "ORTODONTI";
+  else if (category.toLowerCase() === "implan") categoryBadge = "IMPLAN";
 
   return {
     id: item.slug || String(item.id),
     name: title,
     category,
-    categoryBadge: category.toUpperCase(),
+    categoryBadge,
     description:
       item.intro ||
       (Array.isArray(item.paragraphs) && item.paragraphs.length > 0
@@ -197,76 +110,18 @@ export interface DoctorItem {
   photo: string;
 }
 
-export const BOOKING_DOCTORS: DoctorItem[] = [
-  {
-    id: "3",
-    name: "drg. Yulita Dora",
-    specialization: "Aesthetic & Orthodontics",
-    university: "Universitas Indonesia",
-    experienceYears: 12,
-    photo: "/dokter/drg. Yulita Dora.jpeg",
-  },
-  {
-    id: "11",
-    name: "drg. Sharah Syam, Sp. Ort",
-    specialization: "Orthodontics",
-    university: "Universitas Gadjah Mada",
-    experienceYears: 10,
-    photo: "/dokter/drg. Sharah Syam, Sp. Ort.jpeg",
-  },
-  {
-    id: "7",
-    name: "drg. Melati Putri, Sp. Pros",
-    specialization: "Prosthodontics",
-    university: "Universitas Padjadjaran",
-    experienceYears: 15,
-    photo: "/dokter/drg. Melati Putri, Sp. Pros.jpeg",
-  },
-  {
-    id: "5",
-    name: "drg. Ryan Jusuf",
-    specialization: "Cosmetic & General Dentistry",
-    university: "Universitas Indonesia",
-    experienceYears: 8,
-    photo: "/dokter/drg. Ryan Jusuf.jpeg",
-  },
-  {
-    id: "12",
-    name: "drg. Eric Sulistio, Sp. Perio",
-    specialization: "Periodontics & Dental Implants",
-    university: "Universitas Airlangga",
-    experienceYears: 14,
-    photo: "/dokter/drg. Eric Sulistio, Sp. Perio.jpeg",
-  },
-  {
-    id: "13",
-    name: "drg. Pramodanti Jiwanakusuma, Sp.KG",
-    specialization: "Endodontics & Conservative Dentistry",
-    university: "Universitas Indonesia",
-    experienceYears: 11,
-    photo: "/dokter/drg. Pramodanti Jiwanakusuma, Sp.KG.jpeg",
-  },
-];
-
-// Time slots from 10:00 to 17:50 matching Screenshot 3
-export const TIME_SLOTS = [
-  "10:00", "10:10", "10:20",
-  "10:30", "10:40", "10:50",
-  "11:00", "11:10", "11:20",
-  "11:30", "11:40", "11:50",
-  "12:00", "12:10", "12:20",
-  "12:30", "12:40", "12:50",
-  "13:00", "13:10", "13:20",
-  "13:30", "13:40", "13:50",
-  "14:00", "14:10", "14:20",
-  "14:30", "14:40", "14:50",
-  "15:00", "15:10", "15:20",
-  "15:30", "15:40", "15:50",
-  "16:00", "16:10", "16:20",
-  "16:30", "16:40", "16:50",
-  "17:00", "17:10", "17:20",
-  "17:30", "17:40", "17:50",
-];
+// Helper to generate dynamic time slots between operational hours (09:00 - 18:00)
+export function generateDefaultTimeSlots(startH = 9, endH = 18): string[] {
+  const slots: string[] = [];
+  for (let h = startH; h < endH; h++) {
+    for (let m = 0; m < 60; m += 20) {
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      slots.push(`${hh}:${mm}`);
+    }
+  }
+  return slots;
+}
 
 interface NewBookingFlowProps {
   initialStep?: "layanan" | "dokter" | "jadwal" | "konfirmasi" | "history";
@@ -298,39 +153,23 @@ export default function NewBookingFlow({
   );
 
   // Dynamic Backend Datasets
-  const [servicesList, setServicesList] = useState<ServiceItem[]>(BOOKING_SERVICES);
-  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesList, setServicesList] = useState<ServiceItem[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
 
-  const [doctorsList, setDoctorsList] = useState<DoctorItem[]>(BOOKING_DOCTORS);
-  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [doctorsList, setDoctorsList] = useState<DoctorItem[]>([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
 
-  const [branchesList, setBranchesList] = useState<BranchItem[]>([
-    {
-      id: 1,
-      name: "Aesthetic Pondok Indah Main Branch",
-      address: "Jl. Metro Pondok Indah No. 12, Kebayoran Lama, Jakarta Selatan 12310",
-      phone: "021-7654321",
-    },
-  ]);
-  const [selectedBranch, setSelectedBranch] = useState<BranchItem | null>({
-    id: 1,
-    name: "Aesthetic Pondok Indah Main Branch",
-    address: "Jl. Metro Pondok Indah No. 12, Kebayoran Lama, Jakarta Selatan 12310",
-    phone: "021-7654321",
-  });
+  const [branchesList, setBranchesList] = useState<BranchItem[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<BranchItem | null>(null);
 
   const [doctorSchedules, setDoctorSchedules] = useState<any[]>([]);
 
   // Form selections
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(
-    BOOKING_SERVICES[0]
-  );
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
   const [serviceSearch, setServiceSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
 
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorItem | null>(
-    BOOKING_DOCTORS[0]
-  );
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorItem | null>(null);
   const [doctorSearch, setDoctorSearch] = useState("");
 
   // Dates generator (Next 14 days)
@@ -373,10 +212,10 @@ export default function NewBookingFlow({
   const [notes, setNotes] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [patientName, setPatientName] = useState(
-    (session as any)?.name || (session as any)?.user?.name || "Putra Pratama"
+    (session as any)?.name || (session as any)?.user?.name || ""
   );
   const [patientPhone, setPatientPhone] = useState(
-    (session as any)?.whatsapp || (session as any)?.phone || "+628123456789"
+    (session as any)?.whatsapp || (session as any)?.phone || ""
   );
   const [signatureData, setSignatureData] = useState<string | null>(null);
 
@@ -397,7 +236,7 @@ export default function NewBookingFlow({
     setServicesLoading(true);
     try {
       const res = await apiClient.get("/public/services");
-      const list = res.data;
+      const list = Array.isArray(res) ? res : res?.data || res?.services || [];
       if (Array.isArray(list) && list.length > 0) {
         const mapped = list.map(mapBackendService);
         setServicesList(mapped);
@@ -421,7 +260,11 @@ export default function NewBookingFlow({
     setDoctorsLoading(true);
     try {
       const res = await apiClient.get("/public/doctors");
-      const list = res.data?.doctors;
+      const list = Array.isArray(res?.doctors)
+        ? res.doctors
+        : Array.isArray(res)
+        ? res
+        : res?.data?.doctors || res?.data || [];
       if (Array.isArray(list) && list.length > 0) {
         const mapped: DoctorItem[] = list.map((doc: any) => ({
           id: String(doc.id || doc.userId),
@@ -452,7 +295,7 @@ export default function NewBookingFlow({
   const fetchBranches = async () => {
     try {
       const res = await apiClient.get("/public/branches");
-      const list = res.data?.data || res.data;
+      const list = Array.isArray(res) ? res : res?.data || res?.branches || [];
       if (Array.isArray(list) && list.length > 0) {
         const mapped: BranchItem[] = list.map((b: any) => ({
           id: b.id,
@@ -473,7 +316,7 @@ export default function NewBookingFlow({
   const fetchDoctorSchedules = async () => {
     try {
       const res = await apiClient.get("/public/doctor-schedules");
-      const list = res.data?.data || res.data;
+      const list = Array.isArray(res) ? res : res?.data || [];
       if (Array.isArray(list) && list.length > 0) {
         setDoctorSchedules(list);
       }
@@ -487,7 +330,7 @@ export default function NewBookingFlow({
     if (session?.token) {
       try {
         const res = await apiClient.get("/auth/me");
-        const u = res.data?.user || res.data;
+        const u = res?.user || res?.data?.user || res?.data || res;
         if (u) {
           if (u.name) setPatientName(u.name);
           if (u.whatsapp || u.phone) setPatientPhone(u.whatsapp || u.phone);
@@ -507,7 +350,9 @@ export default function NewBookingFlow({
     try {
       if (session?.token) {
         const res = await apiClient.get("/user/reservations");
-        const list = res.data?.reservations || res.data?.data || [];
+        const list = Array.isArray(res)
+          ? res
+          : res?.reservations || res?.data?.reservations || res?.data || [];
         if (Array.isArray(list)) {
           setBookingsHistory(
             list.map((r: any) => ({
@@ -588,7 +433,7 @@ export default function NewBookingFlow({
 
   // Dynamic Time Slots based on selected doctor & selected date
   const timeSlots = useMemo(() => {
-    if (!selectedDoctor || !selectedDate) return TIME_SLOTS;
+    if (!selectedDoctor || !selectedDate) return generateDefaultTimeSlots(9, 18);
 
     // Check if there is a specific doctor schedule for this doctor and date
     const matched = doctorSchedules.find((s) => {
@@ -606,20 +451,12 @@ export default function NewBookingFlow({
         const [startH] = parts[0].split(":").map(Number);
         const [endH] = parts[1].split(":").map(Number);
         if (!isNaN(startH) && !isNaN(endH) && endH > startH) {
-          const slots: string[] = [];
-          for (let h = startH; h < endH; h++) {
-            for (let m = 0; m < 60; m += 20) {
-              const hh = String(h).padStart(2, "0");
-              const mm = String(m).padStart(2, "0");
-              slots.push(`${hh}:${mm}`);
-            }
-          }
-          if (slots.length > 0) return slots;
+          return generateDefaultTimeSlots(startH, endH);
         }
       }
     }
 
-    return TIME_SLOTS;
+    return generateDefaultTimeSlots(9, 18);
   }, [selectedDoctor, selectedDate, doctorSchedules]);
 
   // Handle Booking Submission

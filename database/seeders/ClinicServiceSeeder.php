@@ -45,7 +45,7 @@ class ClinicServiceSeeder extends Seeder
                 'price' => 450000,
                 'duration' => '30–45 mnt',
                 'image' => '/layanan/Oral Care.png',
-                'intro' => 'Pembersihan karang gigi menyeluruh dan pemolesan untuk mencegah masalah gusi dan bau mulut.',
+                'intro' => 'Pembersihan karang gigi menyeluruh dan pemolesan untuk mencegah masalah gusi.',
                 'paragraphs' => [
                     'Karang gigi yang menumpuk tidak dapat dibersihkan hanya dengan sikat gigi biasa dan berisiko memicu radang gusi (gingivitis) hingga periodontitis.',
                     'Teknologi ultrasonic scaler kami mengangkat karang gigi dengan getaran halus yang nyaman dan aman bagi enamel gigi.',
@@ -63,13 +63,13 @@ class ClinicServiceSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'title' => 'Dental Implants',
-                'slug' => 'dental-implants',
+                'title' => 'Dental Implant',
+                'slug' => 'dental-implant',
                 'category' => 'Implan',
                 'price' => 12000000,
-                'duration' => '90–120 mnt',
+                'duration' => '120 mnt',
                 'image' => '/layanan/Dental Implants.png',
-                'intro' => 'Solusi permanen untuk mengganti gigi yang hilang dengan teknologi implan titanium presisi tinggi.',
+                'intro' => 'Solusi permanen untuk mengganti gigi yang hilang dengan teknologi implan titanium.',
                 'paragraphs' => [
                     'Implan gigi memberikan kekuatan gigitan dan estetika yang paling mendekati gigi alami Anda, mencegah penyusutan tulang rahang.',
                     'Prosedur dipandu oleh computed tomography (CBCT 3D) dan dikerjakan oleh dokter spesialis bedah mulut & periodonsia.',
@@ -93,7 +93,7 @@ class ClinicServiceSeeder extends Seeder
                 'price' => 18000000,
                 'duration' => '45–60 mnt',
                 'image' => '/layanan/Invisalign.png',
-                'intro' => 'Perataan gigi transparan tanpa behel kawat konvensional, nyaman, higienis, dan nyaris tak terlihat.',
+                'intro' => 'Perataan gigi transparan tanpa behel konvensional, nyaman dan tak terlihat.',
                 'paragraphs' => [
                     'Invisalign menggunakan rangkaian aligner transparan custom berteknologi SmartTrack yang dirancang dengan simulasi 3D ClinCheck.',
                     'Dapat dilepas saat makan dan menyikat gigi, menjaga kenyamanan dan gaya hidup aktif Anda.',
@@ -112,12 +112,12 @@ class ClinicServiceSeeder extends Seeder
             ],
             [
                 'title' => 'Porcelain Veneers',
-                'slug' => 'veneers',
+                'slug' => 'porcelain-veneers',
                 'category' => 'Estetik',
                 'price' => 4500000,
                 'duration' => '90 mnt',
                 'image' => '/layanan/Veneers.png',
-                'intro' => 'Lapisan porselen tipis presisi tinggi untuk memperbaiki warna, bentuk, dan susunan estetika gigi.',
+                'intro' => 'Lapisan porselen tipis presisi tinggi untuk memperbaiki warna, bentuk, dan susunan gigi.',
                 'paragraphs' => [
                     'Veneer porselen E-Max memberikan kilau alami, kekuatan tinggi, serta ketahanan luar biasa terhadap noda makanan dan minuman.',
                     'Dirancang secara artistik sesuai proporsi wajah dan karakter senyum pasien.',
@@ -135,13 +135,13 @@ class ClinicServiceSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'title' => 'Root Canal Treatments',
-                'slug' => 'root-canal-treatments',
+                'title' => 'Root Canal Treatment',
+                'slug' => 'root-canal',
                 'category' => 'Umum',
                 'price' => 2500000,
                 'duration' => '60–90 mnt',
                 'image' => '/layanan/Root Canal Treatments.png',
-                'intro' => 'Perawatan saluran akar untuk mengatasi infeksi saraf gigi dan menyelamatkan gigi asli dari pencabutan.',
+                'intro' => 'Perawatan saraf gigi terinfeksi untuk menyelamatkan gigi alami tanpa pencabutan.',
                 'paragraphs' => [
                     'Ketika infeksi mencapai pulpa gigi, perawatan endodontik mikroskopik adalah prosedur terbaik untuk meredakan nyeri dan mempertahankan gigi asli.',
                 ],
@@ -164,7 +164,7 @@ class ClinicServiceSeeder extends Seeder
                 'price' => 350000,
                 'duration' => '30–45 mnt',
                 'image' => '/layanan/Pediatric Dentistry.png',
-                'intro' => 'Pemeriksaan dan penanganan gigi ramah anak dengan pendekatan edukatif yang menyenangkan tanpa rasa takut.',
+                'intro' => 'Pemeriksaan dan penanganan gigi ramah anak dengan pendekatan edukatif yang menyenangkan.',
                 'paragraphs' => [
                     'Dokter gigi anak kami terlatih secara khusus untuk menciptakan suasana yang menyenangkan, ramah, dan bebas trauma bagi si kecil.',
                 ],
@@ -181,13 +181,13 @@ class ClinicServiceSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'title' => 'Dental Extraction and Wisdom Tooth Removal',
-                'slug' => 'dental-extraction-wisdom-tooth-removal',
+                'title' => 'Wisdom Tooth Removal',
+                'slug' => 'dental-extraction',
                 'category' => 'Bedah Mulut',
                 'price' => 2000000,
                 'duration' => '45–60 mnt',
                 'image' => '/layanan/Dental Extraction and Wisdom Teeth Removal.png',
-                'intro' => 'Pencabutan dan operasi odontektomi gigi bungsu dengan pembiusan lokal steril, minim rasa sakit, dan cepat pulih.',
+                'intro' => 'Pencabutan dan odontektomi gigi bungsu dengan pembiusan lokal yang aman dan minim trauma.',
                 'paragraphs' => [
                     'Gigi bungsu miring (impaksi) dapat menyebabkan kerusakan pada gigi tetangga, infeksi gusi, dan sakit kepala berulang.',
                 ],
