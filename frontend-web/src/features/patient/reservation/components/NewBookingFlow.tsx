@@ -488,18 +488,12 @@ export default function NewBookingFlow({
         date: selectedDate,
         preferred_time: selectedTimeSlot,
         complaint: notes || `Reservasi ${selectedService.name} bersama ${selectedDoctor.name}`,
-        source: session?.token ? "user_dashboard" : "guest_pwa",
+        source: "user_dashboard",
         signature_data: signatureData,
       };
 
-      let resData: any = null;
-      if (session?.token) {
-        const res = await apiClient.post("/user/reservations", payload);
-        resData = res.data?.reservation || res.data?.data || res.data;
-      } else {
-        const res = await apiClient.post("/public/reservations", payload);
-        resData = res.data?.reservation || res.data?.data || res.data;
-      }
+      const res = await apiClient.post("/user/reservations", payload);
+      const resData = res.data?.reservation || res.data?.data || res.data;
 
       const ticketCode =
         resData?.code ||
@@ -1138,7 +1132,7 @@ export default function NewBookingFlow({
                       </span>
                     </label>
 
-                    {/* Nama Lengkap Pasien (Disabled & Synced with Biodata) */}
+                    {/* Nama Lengkap Pasien (100% Locked & Synced with Profile Biodata) */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-[#5C5546]">
@@ -1157,6 +1151,28 @@ export default function NewBookingFlow({
                       />
                       <p className="text-[10px] text-[#8C8272]">
                         Nama diambil otomatis dari profil akun pasien untuk menjamin validitas berkas medis.
+                      </p>
+                    </div>
+
+                    {/* Nomor Telepon / WhatsApp (100% Locked & Synced with Profile) */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-[#5C5546]">
+                          Nomor Telepon / WhatsApp
+                        </label>
+                        <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5" /> Nomor WhatsApp Terverifikasi
+                        </span>
+                      </div>
+                      <Input
+                        type="tel"
+                        value={patientPhone}
+                        disabled
+                        readOnly
+                        className="h-11 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-sm text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
+                      />
+                      <p className="text-[10px] text-[#8C8272]">
+                        Nomor kontak akun terverifikasi untuk pengiriman tiket booking dan notifikasi jadwal dokter via WhatsApp.
                       </p>
                     </div>
 

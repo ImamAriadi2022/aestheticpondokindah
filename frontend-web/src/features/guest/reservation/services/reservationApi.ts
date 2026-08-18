@@ -13,6 +13,7 @@ export interface ReservationData {
   date?: string;
   preferred_time?: string;
   source?: string;
+  signature_data?: string | null;
 }
 
 export const WA_NUMBER = "6281990114949";
@@ -66,6 +67,7 @@ export const submitPublicReservation = async (data: ReservationData) => {
         date: data.date || null,
         preferred_time: data.preferred_time || "10:00",
         source: data.source || "guest_web",
+        signature_data: data.signature_data || null,
       }),
     });
 

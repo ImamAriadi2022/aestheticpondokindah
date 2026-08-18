@@ -31,7 +31,7 @@ export default function HeroSection() {
     }).catch(() => {});
   }, []);
 
-  const submitHeroBooking = async (source: string) => {
+  const submitHeroBooking = async (source: string, signatureData?: string | null) => {
     if (submitting) return;
 
     if (!appointment.fullName.trim() || !appointment.phone.trim()) {
@@ -51,6 +51,7 @@ export default function HeroSection() {
       date: appointment.date,
       preferred_time: appointment.time,
       source,
+      signature_data: signatureData,
     });
 
     if (res) {
@@ -440,7 +441,8 @@ export default function HeroSection() {
             open={termsOpen}
             onOpenChange={setTermsOpen}
             terms={bookingTerms}
-            onConfirm={() => void submitHeroBooking(mobileBookingOpen ? "hero_mobile" : "hero_desktop")}
+            patientName={appointment.fullName || "Pasien Guest"}
+            onConfirm={(sig) => void submitHeroBooking(mobileBookingOpen ? "hero_mobile" : "hero_desktop", sig)}
           />
         </div>
       </div>

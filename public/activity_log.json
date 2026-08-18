@@ -1,5 +1,150 @@
 [
     {
+        "id": "act-231",
+        "date": "2026-08-19",
+        "time": "00:26",
+        "category": "Admin Informed Consent & Signature Inspection | Full PDF Viewer",
+        "type": "UI/UX & Feature Enhancement",
+        "feature": "Modal Viewer Dokumen PDF Syarat Ketentuan & Tanda Tangan Digital Pasien pada Admin Dashboard",
+        "description": "Menambahkan fitur pratinjau dan inspeksi dokumen PDF persetujuan tindakan medis lengkap (`ReservationConsentPdfModal.tsx`) yang terintegrasi pada modal detail admin (`ReservationDetailModal.tsx`): 1) Admin dapat melihat dokumen PDF resmi Informed Consent lengkap dengan kop surat klinik, metadata pasien (guest/member), layanan, dokter, dan klausul persetujuan, 2) Blok tanda tangan digital memuat goresan tangan asli pasien (`signature_data`) beserta stempel legalitas medikolegal, 3) Tombol Cetak/Simpan PDF untuk mengunduh dokumen persetujuan secara resmi, 4) Tombol pintas 'Lihat Dokumen PDF Informed Consent' dan 'Buka PDF' langsung pada kartu tanda tangan, dan 5) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Full Document Preview: Menampilkan teks syarat ketentuan resmi + blok tanda tangan asli pasien.\n2. Print & PDF Export: Mendukung cetak dan ekspor file PDF informed consent.\n3. Verified: `npm run build` sukses 100% (`✓ built in 20.05s`).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar bagian 'Tanda Tangan Digital Pasien (Persetujuan Tindakan Medis)' di modal admin dapat melihat dokumen PDF syarat & ketentuannya serta tanda tangan digital pasien (baik guest maupun member).",
+        "files": [
+            "frontend-web/src/features/admin/reservation/components/ReservationConsentPdfModal.tsx",
+            "frontend-web/src/features/admin/reservation/components/ReservationDetailModal.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-230",
+        "date": "2026-08-19",
+        "time": "00:24",
+        "category": "Admin Doctor Assignment | Auto-Sync Doctor Practice Hours & Schedule Slots",
+        "type": "UI/UX & Data Synchronization",
+        "feature": "Sinkronisasi Otomatis Jam Praktik Resmi Dokter pada Modal Admin",
+        "description": "Menyempurnakan sinkronisasi jam praktik dokter pada modal admin (`ReservationDetailModal.tsx`): 1) Ketika admin memilih dokter atau tanggal, form jam praktik otomatis berubah menjadi dropdown jam praktik resmi yang terdaftar di database untuk dokter tersebut (`timeRange`), 2) Otomatis menetapkan `selectedScheduleId` dan `selectedTimeSlot` saat dokter dipilih tanpa perlu input manual, 3) Menampilkan tombol pintas tanggal praktik aktif lainnya milik dokter terkait jika dokter tidak praktik di tanggal yang sedang dipilih, dan 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Auto Snap Practice Hours: Jam praktik otomatis mengikuti jadwal resmi dokter (misal 09:00 - 12:00 WIB).\n2. Multi-slot Selector: Jika dokter memiliki beberapa sesi praktik di hari yang sama, admin dapat memilih langsung slot yang diinginkan.\n3. Smart Date Suggestions: Menampilkan tanggal praktik alternatif jika dokter bertugas di hari lain.\n4. Verified: `npm run build` sukses 100% (`✓ built in 33.90s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar sistem selalu memberikan dan menyinkronkan jam praktik yang sesuai dengan jadwal resmi dokter yang bersangkutan.",
+        "files": [
+            "frontend-web/src/features/admin/reservation/components/ReservationDetailModal.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-229",
+        "date": "2026-08-19",
+        "time": "00:22",
+        "category": "Admin Doctor Assignment | Live Schedule Verification & Anti-Conflict Matrix",
+        "type": "Data Pipeline & Strict Validation",
+        "feature": "Validasi Jadwal Praktik Dokter Real-Time & Pencegahan Jadwal Bentrok pada Modal Admin",
+        "description": "Menyempurnakan modal penanganan reservasi admin (`ReservationDetailModal.tsx`) dan controller backend (`ReservationAdminController.php`) dengan sistem verifikasi jadwal dokter real-time yang ketat: 1) Menghubungkan pemilihan dokter dengan data jadwal aktif (`doctor_schedules`) secara live, 2) Memberikan badge status ketersediaan pada dropdown dokter (misal `[✅ Ada Praktik: 09:00 - 12:00 (Sisa 4 Slot)]` vs `[⚠️ Tidak Praktik di Tgl Ini]` vs `[⚠️ Kuota Penuh]`), 3) Memberikan banner peringatan jadwal bentrok real-time jika admin memilih dokter yang tidak bertugas atau kuota penuh, 4) Menyediakan kartu pemilih cepat jadwal praktik aktif pada tanggal bersangkutan, 5) Menolak konfirmasi status jika jadwal dokter kuota penuh (`is_full`), dan 6) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Anti-Conflict Engine: Validasi langsung terhadap tabel `doctor_schedules` mencegah dokter double-booked atau ditugaskan saat tidak praktik.\n2. Visual Availability Badges: Admin langsung melihat jam praktik dan sisa kuota tiap dokter pada tanggal yang dipilih.\n3. Quick Pick Schedule: 1-klik memilih slot praktik aktif yang otomatis menyinkronkan dokter, jadwal, dan tanggal.\n4. Verified: `npm run build` sukses 100% (`✓ built in 23.64s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi kritik dan instruksi pengguna agar pemilihan dokter khususnya untuk penanganan reservasi Guest diperketat dan disinkronkan langsung dengan jadwal praktik dokter di database guna mencegah jadwal bentrok.",
+        "files": [
+            "frontend-web/src/features/admin/reservation/components/ReservationDetailModal.tsx",
+            "app/Http/Controllers/Api/Admin/Reservation/ReservationAdminController.php",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-228",
+        "date": "2026-08-19",
+        "time": "00:18",
+        "category": "Guest Booking Terms & Signature | Complete PDF & Canvas Integration",
+        "type": "UI/UX & Feature Enhancement",
+        "feature": "Integrasi Pop-Up PDF Syarat Ketentuan & Kanvas Tanda Tangan Goresan Tangan pada Guest Booking",
+        "description": "Mengganti dialog sederhana syarat ketentuan lama pada `GuestBookingTermsDialog.tsx` (yang dipicu dari Hero Section di Beranda dan Tombol Reservasi di Header) dengan: 1) Tampilan Surat Persetujuan & Kebijakan format PDF resmi yang rapi ber-kop klinik dengan tombol Cetak/Simpan PDF dan klausul Pasal 1-4, 2) Kanvas Tanda Tangan Digital goresan tangan interaktif (`canvas`) yang mendukung layar sentuh/mouse dengan fitur hapus goresan, 3) Menghubungkan goresan tanda tangan guest (`signature_data`) agar terkirim utuh ke API `POST /public/reservations`, dan 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Upgraded Dialog: Mengganti list sederhana dengan PDF Informed Consent + Digital Signature Canvas.\n2. Touch & Mouse Canvas: Goresan tangan asli terekam dan terkirim ke backend.\n3. Complete Coverage: Berlaku di Beranda (`HeroSection.tsx`), Header (`Header.tsx`), dan `/booking/new` (`GuestBookingFlow.tsx`).\n4. Verified: `npm run build` sukses 100% (`✓ built in 22.31s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk mengadopsi tampilan dokumen PDF syarat ketentuan yang rapi serta kanvas tanda tangan goresan tangan pada alur Guest Booking.",
+        "files": [
+            "frontend-web/src/features/guest/reservation/components/GuestBookingTermsDialog.tsx",
+            "frontend-web/src/features/guest/reservation/services/reservationApi.ts",
+            "frontend-web/src/features/guest/home/components/HeroSection.tsx",
+            "frontend-web/src/core/layouts/Header.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-227",
+        "date": "2026-08-19",
+        "time": "00:13",
+        "category": "Admin & Reservation Alignment | WhatsApp Automation & Flow Distinction",
+        "type": "Feature Implementation & Workflow Standardization",
+        "feature": "Standarisasi Alur Reservasi Pasien (Member & Guest) & Integrasi Komunikasi WhatsApp Admin",
+        "description": "Menyelaraskan alur penanganan reservasi janji temu klinik sesuai arahan bisnis: 1) Mempertahankan alur Patient User Login yang telah tersinkron otomatis dengan akun biodata dan PDF Syarat Ketentuan serta Canvas Tanda Tangan Goresan Tangan, 2) Menyelaraskan alur Guest Booking di `GuestBookingFlow.tsx` dengan modal PDF Syarat Ketentuan (`TermsPdfModal.tsx`) dan kanvas tanda tangan digital goresan tangan (`DigitalSignatureModal.tsx`), 3) Memperkaya modal detail admin `ReservationDetailModal.tsx` dengan 3 tombol aksi WhatsApp 1-klik (Konfirmasi ke Pasien/Guest, Notifikasi Jadwal ke Dokter Bertugas, dan Pengingat Hadir Hari-H/H-1 Jam), 4) Menyediakan selektor pemilihan dokter bagi admin saat menangani reservasi Guest yang tersinkronisasi 1 tabel database (`doctor_schedules`) untuk mencegah jadwal bentrok, dan 5) Menampilkan kanvas tanda tangan goresan tangan asli dan seluruh data input pasien/guest secara utuh di admin modal.",
+        "notes": "1. Member Flow: Locked biodata, PDF terms, canvas signature, auto-schedule.\n2. Guest Flow: Input identitas leluasa, PDF terms, canvas signature, WhatsApp direct booking.\n3. Admin WhatsApp Action: 3 Tombol WhatsApp Cepat (Konfirmasi Pasien, Notifikasi Dokter, Pengingat H-1 Jam).\n4. Doctor Schedule Sync: Terhubung ke 1 tabel database `doctor_schedules` bebas bentrok.\n5. Verified: `npm run build` sukses 100% (`✓ built in 28.70s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi detail pengguna mengenai standardisasi alur penanganan reservasi untuk Member dan Guest serta integrasi komunikasi WhatsApp ke dokter dan pasien.",
+        "files": [
+            "frontend-web/src/features/admin/reservation/components/ReservationDetailModal.tsx",
+            "frontend-web/src/features/guest/reservation/components/GuestBookingFlow.tsx",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-226",
+        "date": "2026-08-19",
+        "time": "00:06",
+        "category": "Architecture Separation | Patient Login vs Guest Booking",
+        "type": "Architecture Separation & Refactoring",
+        "feature": "Pemisahan Mutlak Antara Halaman User Login & Halaman Guest Booking",
+        "description": "Memisahkan arsitektur dan file implementasi antara Halaman Booking Pasien Login (Member) dan Halaman Booking Pengunjung (Guest): 1) Mengunci 100% komponen `NewBookingFlow.tsx` pada Dashboard Pasien (`/dashboard/user?tab=reservasi` dan `UserReservation.tsx`) agar selalu tersinkronisasi penuh dengan profil biodata pasien (Nama Lengkap Pasien & Nomor WhatsApp berstatus 'Tersinkron dengan Biodata' dan 'Nomor WhatsApp Terverifikasi' tanpa opsi edit/tulisan guest), 2) Membuat komponen mandiri `GuestBookingFlow.tsx` khusus untuk halaman publik `/booking/new` (`BookingNew.tsx`) di mana pengunjung umum dapat memasukkan nama lengkap dan nomor kontak mereka secara leluasa, dan 3) Memverifikasi build frontend berjalan sempurna tanpa error.",
+        "notes": "1. Patient Dashboard Reservation: 100% tersinkron otomatis dengan akun pasien (readOnly/disabled) dan bebas dari unsur Guest.\n2. Guest Booking Page: Memiliki file dan alur tersendiri (`GuestBookingFlow.tsx`) di `/booking/new`.\n3. Verified: `npm run build` sukses 100% (`✓ built in 21.91s`).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar halaman user login difokuskan 100% pada data pribadi akun pasien yang tersinkronisasi otomatis tanpa editable input maupun label guest.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/patient/reservation/pages/UserReservation.tsx",
+            "frontend-web/src/features/guest/reservation/components/GuestBookingFlow.tsx",
+            "frontend-web/src/features/guest/reservation/pages/BookingNew.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-225",
+        "date": "2026-08-18",
+        "time": "23:54",
+        "category": "Guest Booking & Admin Monitoring | Complete Patient Identity Pipeline",
+        "type": "Data Pipeline & Feature Refinement",
+        "feature": "Sinkronisasi Identitas Lengkap Pasien Guest & Member ke Admin Monitoring",
+        "description": "Menyempurnakan alur penginputan dan penayangan identitas pasien baik dari alur Guest Booking maupun Member Login: 1) Memperbaiki form Step 4 pada `NewBookingFlow.tsx` agar input 'Nama Lengkap Pasien' dan 'Nomor WhatsApp' aktif (editable) untuk pengguna Guest (belum login) sementara tetap terkunci dan tersinkronisasi otomatis dengan biodata profil untuk Member login, 2) Menampilkan identitas pasien guest secara lengkap dan terstruktur di `ReservationTable.tsx` dan `ReservationDetailModal.tsx` (Nama lengkap, No. WhatsApp dengan link chat 1-klik, Email, Gender, Tanggal Lahir, Tanda Tangan Digital, Layanan Perawatan, Dokter, Jadwal, dan Lokasi Cabang), dan 3) Memverifikasi payload `POST /public/reservations` dan `POST /user/reservations` tersimpan utuh di database.",
+        "notes": "1. Guest Identity Editable: Form booking guest dapat menginputkan nama lengkap & nomor HP secara leluasa.\n2. Member Auto-Sync: Tetap mengunci sinkronisasi biodata untuk akun member terdaftar.\n3. Admin Full Visibility: Seluruh data identitas pasien guest tampil utuh di tabel dan pop-up modal detail.\n4. Verified: `npm run build` sukses 100% (`✓ built in 20.19s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Menjawab kebutuhan pengguna agar identitas lengkap yang diinputkan oleh pasien saat Guest Booking ditampilkan seutuhnya di dashboard admin.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/admin/reservation/components/ReservationTable.tsx",
+            "frontend-web/src/features/admin/reservation/components/ReservationDetailModal.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-224",
         "date": "2026-08-18",
         "time": "23:37",

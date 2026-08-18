@@ -51,7 +51,7 @@ export default function Header() {
   });
   const location = useLocation();
 
-  const submitBooking = async () => {
+  const submitBooking = async (signatureData?: string | null) => {
     const res = await submitPublicReservation({
       name: formData.name,
       phone: formData.phone,
@@ -59,6 +59,7 @@ export default function Header() {
       date: formData.date,
       preferred_time: formData.time,
       source: "header_book_now",
+      signature_data: signatureData,
     });
 
     if (res) {
@@ -399,7 +400,8 @@ export default function Header() {
         open={termsOpen}
         onOpenChange={setTermsOpen}
         terms={bookingTerms}
-        onConfirm={() => void submitBooking()}
+        patientName={formData.name || "Pasien Guest"}
+        onConfirm={(sig) => void submitBooking(sig)}
       />
     </header>
   );

@@ -141,6 +141,16 @@ class ReservationAdminController extends Controller
 
         // DOCTOR SCHEDULE BOOKED SLOTS SYNCHRONIZATION
         $oldScheduleId = $reservation->doctor_schedule_id;
+
+        if ($newScheduleId) {
+            $newSchedule = DoctorSchedule::find($newScheduleId);
+            if ($newSchedule && $newSchedule->is_full && ($oldScheduleId !== $newScheduleId || $currentStatus !== 'Dikonfirmasi') && $targetStatus === 'Dikonfirmasi') {
+                return response()->json([
+                    'message' => 'Jadwal dokter yang dipilih sudah penuh (kuota habis). Silakan pilih dokter atau jadwal praktik lain.'
+                ], 422);
+            }
+        }
+
         $reservation->doctor_schedule_id = $newScheduleId;
 
         if ($currentStatus !== $targetStatus || $oldScheduleId !== $newScheduleId) {
