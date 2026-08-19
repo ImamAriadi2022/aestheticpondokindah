@@ -268,8 +268,8 @@ export default function AdminTreatmentManagement() {
               className="h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl px-2.5 text-xs font-semibold text-[#3D332A] focus:outline-hidden"
             >
               <option value="Semua">Semua Status</option>
-              <option value="Aktif">🟢 Aktif (Muncul di Booking)</option>
-              <option value="Nonaktif">🔴 Non-Aktif (Disembunyikan)</option>
+              <option value="Aktif">Aktif (Tersedia di Booking)</option>
+              <option value="Nonaktif">Non-Aktif (Disembunyikan)</option>
             </select>
           </div>
         </div>

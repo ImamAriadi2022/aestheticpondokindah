@@ -20,6 +20,8 @@ import {
   AlertCircle,
   FileCheck,
   CheckCircle2,
+  ChevronDown,
+  CalendarOff,
 } from "lucide-react";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
@@ -109,6 +111,7 @@ export default function GuestBookingFlow() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTicket, setActiveTicket] = useState<any>(null);
+  const [doctorSchedules, setDoctorSchedules] = useState<any[]>([]);
 
   // Load Services
   useEffect(() => {
@@ -168,6 +171,111 @@ export default function GuestBookingFlow() {
     };
     fetchDoctors();
   }, []);
+
+  // Load Doctor Schedules
+  useEffect(() => {
+    const fetchDoctorSchedules = async () => {
+      try {
+        const res = await apiClient.get("/public/doctor-schedules");
+        const list = Array.isArray(res) ? res : res?.data || [];
+        if (Array.isArray(list)) {
+          setDoctorSchedules(list);
+        }
+      } catch {
+        // fallback
+      }
+    };
+    fetchDoctorSchedules();
+  }, []);
+
+  // Helper to parse time_range string into 20-minute slots
+  const parseTimeRangeToSlots = (timeRange: string, intervalMinutes: number = 20): string[] => {
+    if (!timeRange) return [];
+    const ranges = timeRange.split(/[,;/]/).map((r) => r.trim()).filter(Boolean);
+    const allSlots: string[] = [];
+
+    for (const range of ranges) {
+      const parts = range.split(/[-–—]/).map((p) => p.trim().replace(".", ":"));
+      if (parts.length === 2) {
+        const [startH, startM = 0] = parts[0].split(":").map(Number);
+        const [endH, endM = 0] = parts[1].split(":").map(Number);
+        if (!isNaN(startH) && !isNaN(endH)) {
+          let currentTotalM = startH * 60 + (isNaN(startM) ? 0 : startM);
+          const endTotalM = endH * 60 + (isNaN(endM) ? 0 : endM);
+          while (currentTotalM < endTotalM) {
+            const hh = String(Math.floor(currentTotalM / 60)).padStart(2, "0");
+            const mm = String(currentTotalM % 60).padStart(2, "0");
+            const slotStr = `${hh}:${mm}`;
+            if (!allSlots.includes(slotStr)) {
+              allSlots.push(slotStr);
+            }
+            currentTotalM += intervalMinutes;
+          }
+        }
+      }
+    }
+
+    return allSlots.sort();
+  };
+
+  // Helper to get schedules for a specific date and selected doctor
+  const getDoctorSchedulesForDate = (dateIso: string) => {
+    if (!selectedDoctor) return [];
+    return doctorSchedules.filter((s) => {
+      const matchDoc =
+        String(s.doctorId) === String(selectedDoctor.id) ||
+        String(s.doctorId) === String(selectedDoctor.userId) ||
+        (s.doctorName &&
+          selectedDoctor.name &&
+          (s.doctorName.toLowerCase().includes(selectedDoctor.name.toLowerCase()) ||
+            selectedDoctor.name.toLowerCase().includes(s.doctorName.toLowerCase())));
+      const matchDate = s.date === dateIso;
+      return matchDoc && matchDate;
+    });
+  };
+
+  // Dynamic Time Slots based on selected doctor & selected date
+  const currentDaySchedules = useMemo(() => {
+    return getDoctorSchedulesForDate(selectedDate);
+  }, [selectedDoctor, selectedDate, doctorSchedules]);
+
+  const isDoctorAvailableOnSelectedDate = currentDaySchedules.length > 0;
+
+  const timeSlots = useMemo(() => {
+    if (!selectedDoctor || !selectedDate || !isDoctorAvailableOnSelectedDate) return [];
+
+    const slots: string[] = [];
+    currentDaySchedules.forEach((s) => {
+      if (s.timeRange) {
+        const generated = parseTimeRangeToSlots(s.timeRange, 20);
+        generated.forEach((slot) => {
+          if (!slots.includes(slot)) slots.push(slot);
+        });
+      }
+    });
+
+    return slots.sort();
+  }, [selectedDoctor, selectedDate, currentDaySchedules, isDoctorAvailableOnSelectedDate]);
+
+  const nextAvailableDate = useMemo(() => {
+    if (!selectedDoctor) return null;
+    return availableDates.find((d) => getDoctorSchedulesForDate(d.iso).length > 0) || null;
+  }, [selectedDoctor, availableDates, doctorSchedules]);
+
+  // Auto-select first available date if current selected date has no schedule
+  useEffect(() => {
+    if (selectedDoctor && doctorSchedules.length > 0) {
+      const currentAvailable = getDoctorSchedulesForDate(selectedDate).length > 0;
+      if (!currentAvailable) {
+        const firstAvail = availableDates.find(
+          (d) => getDoctorSchedulesForDate(d.iso).length > 0
+        );
+        if (firstAvail) {
+          setSelectedDate(firstAvail.iso);
+        }
+      }
+    }
+  }, [selectedDoctor, doctorSchedules]);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -348,34 +456,34 @@ export default function GuestBookingFlow() {
                 <p className="text-xs text-[#8A7B6B]">Pilih perawatan dental yang ingin Anda lakukan di klinik.</p>
               </div>
 
-              {/* Search */}
-              <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A89F91]" />
-                <input
-                  type="text"
-                  value={searchService}
-                  onChange={(e) => setSearchService(e.target.value)}
-                  placeholder="Cari layanan..."
-                  className="w-full bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-9 pr-3 py-2 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
-                />
-              </div>
-            </div>
+              {/* Search & Category Filter Dropdown */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91]" />
+                  <input
+                    type="text"
+                    value={searchService}
+                    onChange={(e) => setSearchService(e.target.value)}
+                    placeholder="Cari layanan..."
+                    className="w-full h-10 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-9 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+                  />
+                </div>
 
-            {/* Category Filter */}
-            <div className="flex flex-wrap gap-1.5 pt-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                    selectedCategory === cat
-                      ? "bg-[#C9A24A] text-white shadow-xs"
-                      : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+                <div className="relative w-full sm:w-52">
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full h-10 pl-3 pr-8 rounded-xl bg-[#FAF8F5] border border-[#E8DFC8] text-xs font-semibold text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] cursor-pointer appearance-none"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat === "Semua" ? "Semua Kategori Layanan" : cat}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-[#8C8272] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
             </div>
 
             {/* Service Grid */}
@@ -385,11 +493,14 @@ export default function GuestBookingFlow() {
                 return (
                   <div
                     key={svc.id}
-                    onClick={() => setSelectedService(svc)}
-                    className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                    onClick={() => {
+                      setSelectedService(svc);
+                      setCurrentStep("dokter");
+                    }}
+                    className={`group p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between hover:border-[#C9A24A] hover:shadow-md hover:-translate-y-0.5 ${
                       isSelected
                         ? "bg-[#FDF8F0] border-[#C9A24A] shadow-md ring-2 ring-[#C9A24A]/20"
-                        : "bg-white border-[#F0E6D3] hover:border-[#C9A24A]/50 hover:bg-[#FAF8F5]"
+                        : "bg-white border-[#F0E6D3] hover:bg-[#FAF8F5]"
                     }`}
                   >
                     <div>
@@ -399,17 +510,16 @@ export default function GuestBookingFlow() {
                             <Sparkles className="w-4 h-4" />
                           </div>
                           <div>
-                            <h4 className="text-sm font-bold text-[#3D332A]">{svc.name}</h4>
+                            <h4 className="text-sm font-bold text-[#3D332A] group-hover:text-[#8A6B2B] transition-colors">{svc.name}</h4>
                             <span className="text-[10px] font-semibold text-[#8A6B2B] bg-[#FAF4E8] px-2 py-0.5 rounded-md border border-[#E8D4A2]/40">
                               {svc.category}
                             </span>
                           </div>
                         </div>
-                        {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-[#C9A24A] text-white flex items-center justify-center">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                        )}
+                        <span className="text-[11px] font-semibold text-[#8A6B2B] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span>Pilih</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
                       </div>
                       <p className="text-xs text-[#7A6E60] mt-3 line-clamp-2 leading-relaxed">
                         {svc.description}
@@ -424,16 +534,6 @@ export default function GuestBookingFlow() {
                 );
               })}
             </div>
-
-            <div className="flex justify-end pt-4">
-              <Button
-                onClick={() => setCurrentStep("dokter")}
-                disabled={!selectedService}
-                className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl px-6 py-2.5 text-xs font-bold flex items-center gap-2 shadow-sm"
-              >
-                Lanjut: Pilih Dokter <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
           </div>
         </div>
       )}
@@ -441,9 +541,18 @@ export default function GuestBookingFlow() {
       {/* STEP 2: PILIH DOKTER */}
       {currentStep === "dokter" && (
         <div className="bg-white rounded-3xl p-6 border border-[#F0E6D3] shadow-xs space-y-6">
-          <div>
-            <h3 className="text-lg font-bold text-[#3D332A]">Pilih Dokter Spesialis</h3>
-            <p className="text-xs text-[#8A7B6B]">Pilih dokter yang akan menangani perawatan {selectedService?.name}.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#3D332A]">Pilih Dokter Spesialis</h3>
+              <p className="text-xs text-[#8A7B6B]">Pilih dokter yang akan menangani perawatan {selectedService?.name}.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCurrentStep("layanan")}
+              className="text-xs font-semibold text-[#8A6B2B] hover:underline"
+            >
+              Ganti Layanan
+            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -452,18 +561,21 @@ export default function GuestBookingFlow() {
               return (
                 <div
                   key={doc.id}
-                  onClick={() => setSelectedDoctor(doc)}
-                  className={`p-5 rounded-2xl border transition-all cursor-pointer flex flex-col items-center text-center ${
+                  onClick={() => {
+                    setSelectedDoctor(doc);
+                    setCurrentStep("jadwal");
+                  }}
+                  className={`group p-5 rounded-2xl border transition-all cursor-pointer flex flex-col items-center text-center hover:border-[#C9A24A] hover:shadow-md hover:-translate-y-0.5 ${
                     isSelected
                       ? "bg-[#FDF8F0] border-[#C9A24A] shadow-md ring-2 ring-[#C9A24A]/20"
-                      : "bg-white border-[#F0E6D3] hover:border-[#C9A24A]/50 hover:bg-[#FAF8F5]"
+                      : "bg-white border-[#F0E6D3] hover:bg-[#FAF8F5]"
                   }`}
                 >
                   <div className="relative">
                     <img
                       src={doc.avatar}
                       alt={doc.name}
-                      className="w-20 h-20 rounded-2xl object-cover border-2 border-[#E8DFC8] shadow-xs"
+                      className="w-20 h-20 rounded-2xl object-cover border-2 border-[#E8DFC8] shadow-xs group-hover:scale-105 transition-transform"
                     />
                     {isSelected && (
                       <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-[#C9A24A] text-white flex items-center justify-center shadow-xs">
@@ -472,36 +584,25 @@ export default function GuestBookingFlow() {
                     )}
                   </div>
 
-                  <h4 className="text-sm font-bold text-[#3D332A] mt-3">{doc.name}</h4>
+                  <h4 className="text-sm font-bold text-[#3D332A] mt-3 group-hover:text-[#8A6B2B] transition-colors">{doc.name}</h4>
                   <p className="text-xs text-[#8A6B2B] font-medium">{doc.specialization}</p>
 
-                  <div className="flex items-center gap-3 mt-3 text-[11px] text-[#7A6E60]">
-                    <span className="flex items-center gap-1 text-amber-600 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                      {doc.rating}
-                    </span>
-                    <span>•</span>
-                    <span>{doc.experienceYears} th pengalaman</span>
+                  <div className="flex items-center gap-1 mt-2 text-[11px] text-amber-600 font-bold">
+                    <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    <span>{doc.rating}</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-[#F5ECE0]">
+          <div className="flex items-center justify-start pt-4 border-t border-[#F5ECE0]">
             <Button
               onClick={() => setCurrentStep("layanan")}
               variant="outline"
-              className="rounded-xl border-[#E8DFC8] text-xs font-semibold px-5 py-2.5 h-auto flex items-center gap-1.5"
+              className="rounded-xl border-[#E8DFC8] text-xs font-semibold px-5 py-2.5 h-auto flex items-center gap-1.5 cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" /> Kembali
-            </Button>
-            <Button
-              onClick={() => setCurrentStep("jadwal")}
-              disabled={!selectedDoctor}
-              className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl px-6 py-2.5 text-xs font-bold flex items-center gap-2 shadow-sm"
-            >
-              Lanjut: Pilih Jadwal <ChevronRight className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" /> Kembali ke Pilih Layanan
             </Button>
           </div>
         </div>
@@ -510,33 +611,61 @@ export default function GuestBookingFlow() {
       {/* STEP 3: PILIH JADWAL */}
       {currentStep === "jadwal" && (
         <div className="bg-white rounded-3xl p-6 border border-[#F0E6D3] shadow-xs space-y-6">
-          <div>
-            <h3 className="text-lg font-bold text-[#3D332A]">Pilih Tanggal & Waktu Kunjungan</h3>
-            <p className="text-xs text-[#8A7B6B]">Pilih jadwal ketersediaan konsultasi bersama {selectedDoctor?.name}.</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#3D332A]">Pilih Tanggal & Waktu Kunjungan</h3>
+              <p className="text-xs text-[#8A7B6B]">Klik salah satu jam untuk langsung lanjut ke formulir data pasien.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCurrentStep("dokter")}
+              className="text-xs font-semibold text-[#8A6B2B] hover:underline"
+            >
+              Ganti Dokter
+            </button>
           </div>
 
           {/* Date Picker Grid */}
           <div>
-            <label className="block text-xs font-bold text-[#3D332A] mb-2">Tanggal Tersedia (14 Hari Kedepan)</label>
+            <label className="block text-xs font-bold text-[#3D332A] mb-2">1. Pilih Tanggal Tersedia</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
               {availableDates.map((d) => {
                 const isSelected = selectedDate === d.iso;
+                const daySchedules = getDoctorSchedulesForDate(d.iso);
+                const isAvailable = daySchedules.length > 0;
+
                 return (
                   <button
                     key={d.iso}
                     onClick={() => setSelectedDate(d.iso)}
-                    className={`p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center ${
-                      isSelected
-                        ? "bg-[#C9A24A] border-[#C9A24A] text-white shadow-md"
-                        : "bg-[#FAF8F5] border-[#E8DFC8] text-[#3D332A] hover:bg-[#F5ECE0]"
+                    className={`p-3 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center relative ${
+                      isAvailable
+                        ? isSelected
+                          ? "bg-[#C9A24A] border-[#C9A24A] text-white shadow-md"
+                          : "bg-[#FAF8F5] border-[#E8DFC8] text-[#3D332A] hover:bg-[#F5ECE0]"
+                        : isSelected
+                        ? "bg-rose-600 border-rose-600 text-white shadow-md ring-2 ring-rose-300"
+                        : "bg-[#FFF5F5] border-rose-200 text-rose-700 hover:border-rose-400 hover:bg-[#FFEBEB]"
                     }`}
                   >
-                    <span className={`text-[10px] font-semibold uppercase ${isSelected ? "text-white/80" : "text-[#8A7B6B]"}`}>
+                    <span
+                      className={`text-[10px] font-semibold uppercase ${
+                        isSelected ? "text-white/80" : isAvailable ? "text-[#8A7B6B]" : "text-rose-500"
+                      }`}
+                    >
                       {d.dayName}
                     </span>
                     <span className="text-lg font-bold mt-0.5">{d.dayNum}</span>
-                    <span className={`text-[9px] ${isSelected ? "text-white/80" : "text-[#8A7B6B]"}`}>
-                      {d.monthName.slice(0, 3)}
+                    <span
+                      className={`text-[9px] font-semibold mt-1 px-1.5 py-0.2 rounded-md ${
+                        isSelected
+                          ? "bg-white/20 text-white"
+                          : isAvailable
+                          ? "bg-[#FAF4E8] text-[#8A6B2B]"
+                          : "bg-rose-100 text-rose-600"
+                      }`}
+                    >
+                      {isAvailable ? "Praktik" : "Libur"}
                     </span>
                   </button>
                 );
@@ -544,44 +673,87 @@ export default function GuestBookingFlow() {
             </div>
           </div>
 
-          {/* Time Slot Picker */}
-          <div>
-            <label className="block text-xs font-bold text-[#3D332A] mb-2">Pilih Jam Kunjungan</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {["09:00", "10:30", "11:30", "13:30", "15:00", "16:30", "18:30"].map((slot) => {
-                const isSelected = selectedTimeSlot === slot;
-                return (
-                  <button
-                    key={slot}
-                    onClick={() => setSelectedTimeSlot(slot)}
-                    className={`py-3 px-4 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                      isSelected
-                        ? "bg-[#C9A24A] border-[#C9A24A] text-white shadow-xs"
-                        : "bg-[#FAF8F5] border-[#E8DFC8] text-[#3D332A] hover:bg-[#F5ECE0]"
-                    }`}
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{slot} WIB</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* Conditional: Dynamic Time Slots OR Off-Duty Notice */}
+          {isDoctorAvailableOnSelectedDate ? (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-[#3D332A]">2. Pilih Jam Kunjungan (Klik Jam)</label>
+                <span className="text-[11px] font-semibold text-[#8A6B2B] bg-[#FAF4E8] px-2 py-0.5 rounded-md border border-[#E8D4A2]/40">
+                  {timeSlots.length} Sesi Tersedia
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                {timeSlots.map((slot) => {
+                  const isSelected = selectedTimeSlot === slot;
+                  return (
+                    <button
+                      key={slot}
+                      onClick={() => {
+                        setSelectedTimeSlot(slot);
+                        setCurrentStep("konfirmasi");
+                      }}
+                      className={`py-3 px-4 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-105 ${
+                        isSelected
+                          ? "bg-[#C9A24A] border-[#C9A24A] text-white shadow-xs"
+                          : "bg-[#FAF8F5] border-[#E8DFC8] text-[#3D332A] hover:border-[#C9A24A] hover:bg-white"
+                      }`}
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{slot} WIB</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-          <div className="flex items-center justify-between pt-4 border-t border-[#F5ECE0]">
+              {currentDaySchedules.length > 0 && (
+                <p className="text-[11px] text-[#8A7B6B] mt-2 flex items-center gap-1">
+                  <Info className="w-3.5 h-3.5 text-[#C9A24A]" />
+                  <span>Jadwal dokter: {currentDaySchedules.map((s) => s.timeRange).join(", ")} WIB</span>
+                </p>
+              )}
+            </div>
+          ) : (
+            /* Off-duty notice box */
+            <div className="bg-[#FFF5F5] border border-rose-200 rounded-2xl p-5 text-left space-y-3">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
+                  <CalendarOff className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-rose-900">
+                    Tidak Ada Jadwal Praktik Dokter
+                  </h4>
+                  <p className="text-xs text-rose-800 leading-relaxed">
+                    <span className="font-bold">{selectedDoctor?.name}</span> tidak memiliki jadwal praktik atau sedang libur pada tanggal yang dipilih.
+                  </p>
+                  <p className="text-[11px] text-rose-700">
+                    Silakan pilih tanggal lain bertanda <strong>"Praktik"</strong> di atas.
+                  </p>
+                </div>
+              </div>
+
+              {nextAvailableDate && (
+                <div className="pt-2 border-t border-rose-200/80 flex items-center justify-between">
+                  <span className="text-xs text-rose-800 font-medium">Jadwal dokter berikutnya:</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDate(nextAvailableDate.iso)}
+                    className="text-xs font-bold text-[#8A6B2B] bg-white px-3 py-1 rounded-lg border border-[#E8DFC8] hover:bg-[#FAF8F5]"
+                  >
+                    Pilih {nextAvailableDate.dayName}, {nextAvailableDate.dayNum} {nextAvailableDate.monthName} →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-start pt-4 border-t border-[#F5ECE0]">
             <Button
               onClick={() => setCurrentStep("dokter")}
               variant="outline"
-              className="rounded-xl border-[#E8DFC8] text-xs font-semibold px-5 py-2.5 h-auto flex items-center gap-1.5"
+              className="rounded-xl border-[#E8DFC8] text-xs font-semibold px-5 py-2.5 h-auto flex items-center gap-1.5 cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" /> Kembali
-            </Button>
-            <Button
-              onClick={() => setCurrentStep("konfirmasi")}
-              disabled={!selectedDate || !selectedTimeSlot}
-              className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl px-6 py-2.5 text-xs font-bold flex items-center gap-2 shadow-sm"
-            >
-              Lanjut: Data Pasien & Konfirmasi <ChevronRight className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" /> Kembali ke Pilih Dokter
             </Button>
           </div>
         </div>

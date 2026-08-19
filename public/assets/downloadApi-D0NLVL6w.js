@@ -1,0 +1,1 @@
+import{A as t}from"./index-D4k7u54L.js";async function n(){try{const a=await fetch(`${t}/public/download-apps`);if(!a.ok)return[];const r=await a.json();return Array.isArray(r)?r:[]}catch{return[]}}export{n as g};

@@ -256,7 +256,7 @@ export default function ReservationPage({
                       : "text-[#8A7B6B] hover:text-blue-700"
                   }`}
                 >
-                  🌐 Guest
+                  Guest
                 </button>
                 <button
                   onClick={() => setSourceFilter("member")}
@@ -266,7 +266,7 @@ export default function ReservationPage({
                       : "text-[#8A7B6B] hover:text-emerald-700"
                   }`}
                 >
-                  👤 Member
+                  Member
                 </button>
               </div>
             </div>

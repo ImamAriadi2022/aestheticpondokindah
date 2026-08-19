@@ -1,5 +1,229 @@
 [
     {
+        "id": "act-244",
+        "date": "2026-08-19",
+        "time": "15:09",
+        "category": "Patient Reservation Submit Button | Copywriting Simplification",
+        "type": "Frontend UX Polish",
+        "feature": "Penyederhanaan Teks Tombol Konfirmasi Pasien Menjadi 'Konfirmasi'",
+        "description": "Menyederhanakan teks tombol submit pada Step 4 Konfirmasi Reservasi Pasien di folder patient (`NewBookingFlow.tsx`): 1) Mengubah teks tombol desktop dan mobile sticky bar menjadi murni 'Konfirmasi' tanpa kata tambahan lainnya, 2) Memastikan interaktivitas dan status loading tetap halus, dan 3) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Button Copy: 'Konfirmasi' (murni tanpa tambahan kata).\n2. Scope: Eksklusif pada folder patient (`NewBookingFlow.tsx`).\n3. Verified: `npm run build` sukses 100% (`✓ built in 27.34s`).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk memastikan teks tombol konfirmasi baik di PWA mobile maupun web desktop hanya tertulis 'Konfirmasi' tanpa kata lainnya pada folder patient.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-243",
+        "date": "2026-08-19",
+        "time": "15:05",
+        "category": "Patient E-Ticket Standardization | Wording & Visual Unification",
+        "type": "Frontend UX Polish",
+        "feature": "Standardisasi E-Tiket Pasien Pasca Booking (Menghilangkan Penamaan Invoice)",
+        "description": "Menyelaraskan alur konfirmasi booking dan pasca booking pasien (`ETicketModal.tsx`, `BookingSuccessModal.tsx`, `NewBookingFlow.tsx`): 1) Mengubah dan memastikan tidak ada penamaan 'Invoice' atau 'Tagihan', menggantikannya secara konsisten menjadi 'E-Tiket Reservasi Pasien', 2) Memastikan seluruh elemen dan tampilan setelah pop-up sukses langsung merujuk ke E-Tiket ber-Kop Surat Resmi Aesthetic Pondok Indah, Status Terkonfirmasi, QR Code, dan Data Medis Lengkap, 3) Melengkapi tombol aksi utama 'Lihat E-Tiket' dan 'Cetak E-Tiket', dan 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Wording Unification: Semua penamaan 'Invoice' diubah menjadi 'E-Tiket Reservasi Pasien'.\n2. Consistent Experience: Setelah pop-up booking berhasil, aksi langsung membuka E-Tiket resmi.\n3. Single Official Letterhead & Branch: Aesthetic Pondok Indah.\n4. Verified: `npm run build` sukses 100% (`✓ built in 34.70s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk menyamakan tampilan dan teks setelah pop-up booking berhasil agar murni menjadi E-Tiket (bukan Invoice) dengan tata letak dan data yang seragam.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/ETicketModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/BookingSuccessModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-242",
+        "date": "2026-08-19",
+        "time": "15:01",
+        "category": "Patient Reservation History | Backend Integration & Desktop Grid UI",
+        "type": "Full-Stack Feature & UX Refinement",
+        "feature": "Integrasi Riwayat Booking Pasien dengan Real Backend API & Grid Desktop Mewah",
+        "description": "Menghubungkan fitur Riwayat Booking Pasien dengan real backend API (`GET /api/user/reservations`) serta menyempurnakan tampilan desktop dan mobile (`BookingHistoryList.tsx` & `NewBookingFlow.tsx`): 1) Menghapus pembacaan token lokal manual pada `fetchBookings()` dan memanfaatkan otorisasi otomatis `apiClient`, 2) Mengganti data dummy menjadi data riil dari database (ID, Kode RSV-#, Dokter, Layanan, Tanggal, Jam WIB, Status Terkonfirmasi/Selesai/Menunggu/Dibatalkan, dan Alamat Cabang Tunggal 'Aesthetic Pondok Indah'), 3) Mengoptimalkan layout desktop menjadi 2 kolom grid yang elegan dan responsif, 4) Menyematkan integrasi langsung 'Lihat E-Tiket' (membuka `ETicketModal` dengan data pasien) dan tombol cepat 'Hubungi Admin' via WhatsApp, dan 5) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Real Backend Integration: `GET /api/user/reservations` tersinkronisasi.\n2. Desktop Responsive Grid: 2 kolom di desktop (`md:grid-cols-2`) & 1 kolom di mobile.\n3. Single Official Branch: 'Aesthetic Pondok Indah'.\n4. E-Ticket & WhatsApp Direct Actions: Interaktif membuka e-tiket ber-kop surat resmi.\n5. Verified: `npm run build` sukses 100% (`✓ built in 36.19s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk menghubungkan riwayat booking pasien ke backend (bukan dummy) dan mengimplementasikan tampilan tersebut pada website desktop tanpa mengubah fitur lainnya.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/BookingHistoryList.tsx",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-241",
+        "date": "2026-08-19",
+        "time": "14:55",
+        "category": "Patient Booking Success & E-Ticket Modal | Desktop & PWA Parity",
+        "type": "Full-Stack Feature & UX Refinement",
+        "feature": "Standardisasi Pop-up Sukses Booking & E-Tiket Resmi pada Website Desktop",
+        "description": "Menyempurnakan dan menyamakan pengalaman booking selesai serta e-tiket pasien di website desktop dengan standar PWA mobile (`BookingSuccessModal.tsx` & `ETicketModal.tsx`): 1) Menampilkan pop-up 'Reservasi Berhasil Dibuat!' di desktop dengan kode booking, detail dokter, layanan, tanggal, jam, dan lokasi cabang resmi 'Aesthetic Pondok Indah', 2) Menghadirkan pop-up 'E-Tiket Reservasi Pasien' yang elegan dengan Kop Surat Resmi, status Terkonfirmasi, QR Code, dan verifikasi tanda tangan digital medikolegal, 3) Melengkapi fungsi 'Cetak E-Tiket' terisolasi yang menghasilkan dokumen A4 resmi tanpa background/chrome website, 4) Memastikan viewport centering dinamis di seluruh resolusi layar, dan 5) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Booking Success Modal: Pop-up sukses di desktop (`BookingSuccessModal.tsx`).\n2. Official E-Ticket Modal: E-tiket resmi ber-kop surat lengkap & QR code (`ETicketModal.tsx`).\n3. Isolated PDF Printing: Cetak e-tiket 1 lembar A4 bersih tanpa elemen website.\n4. Desktop & Mobile Parity: Sinkron 100% antara PWA Mobile dan Web Desktop.\n5. Verified: `npm run build` sukses 100% (`✓ built in 31.50s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk memastikan pop-up selesai booking dan melihat e-tiket yang ada di mobile PWA juga tampil sempurna di website desktop.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/BookingSuccessModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/ETicketModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-240",
+        "date": "2026-08-19",
+        "time": "14:52",
+        "category": "Digital Signature Modal Streamline | Canvas Simplification",
+        "type": "Frontend UX Polish",
+        "feature": "Penyederhanaan Canvas Tanda Tangan Digital Pasien & Perlebar Modal",
+        "description": "Menyederhanakan dan memperlebar modal tanda tangan digital pasien (`DigitalSignatureModal.tsx`): 1) Memperlebar modal menjadi `max-w-2xl lg:max-w-3xl` dengan area canvas yang jauh lebih leluasa, 2) Menghapus mode Kuas sehingga hanya menyisakan mode Pulpen dan Penghapus serta Reset Canvas, 3) Menghapus pilihan warna tinta dan menguncinya ke tinta resmi hitam pekat (`#1A1A1A`), 4) Menghapus pengatur ketebalan dan menguncinya ke ukuran sedang standar, dan 5) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Modal Width: Diperlebar menjadi `max-w-2xl lg:max-w-3xl`.\n2. Mode: Hanya Pulpen & Penghapus.\n3. Warna: Tinta hitam resmi (`#1A1A1A`).\n4. Ketebalan: Default sedang (`size: 3`).\n5. Verified: `npm run build` sukses 100% (`✓ built in 23.42s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk memperlebar pop-up tanda tangan digital, menghapus fitur kuas (hanya pulpen dan penghapus), menghapus palet warna (default hitam), serta menghapus pengatur ketebalan (default sedang).",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/DigitalSignatureModal.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-239",
+        "date": "2026-08-19",
+        "time": "14:50",
+        "category": "Patient Booking Step 4 Refinements | Terms PDF & Signature Polish",
+        "type": "Full-Stack Feature & UX Refinement",
+        "feature": "Standardisasi Step 4 Konfirmasi Pasien, Single Branch, PDF Kop Surat Resmi & Tanda Tangan Wajib",
+        "description": "Menyempurnakan alur konfirmasi reservasi pasien (`NewBookingFlow.tsx`, `TermsPdfModal.tsx`, `DigitalSignatureModal.tsx`): 1) Mengunci dan membersihkan data cabang menjadi hanya 1 cabang resmi 'Aesthetic Pondok Indah' (termasuk di database), 2) Menjadikan tanda tangan digital bersifat wajib sebelum submit reservasi, 3) Menghapus seluruh copywriting di dalam kurung dan menggantinya dengan penanda bintang (*) untuk field wajib, 4) Membuat posisi pop-up persetujuan S&K dinamis mengikuti viewport pengguna tanpa perlu scroll manual serta memperlebar ukuran modal (+1/3 lebih lebar di desktop), 5) Mengisolasi ekspor/print PDF S&K menjadi dokumen resmi lengkap dengan Kop Surat Resmi (Aesthetic Pondok Indah), menghilangkan seluruh UI chrome/background website, dan 6) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Database cleaned: Hanya tersisa 1 cabang resmi 'Aesthetic Pondok Indah'.\n2. Mandatory Signature: Validasi ketat jika belum bertanda tangan.\n3. Anti-AI Slop Clean Copy: Tidak ada copywriting dalam kurung, diganti (*).\n4. Viewport Dynamic & Wider Modal: Modal S&K selalu pas di tengah layar dan lebih lebar.\n5. Official Letterhead Print: Print PDF rapi tanpa website chrome.\n6. Verified: `npm run build` sukses 100% (`✓ built in 22.86s`).\n7. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk standardisasi konfirmasi booking pasien (single branch Aesthetic Pondok Indah, tanda tangan wajib, pembersihan copywriting dalam kurung, pop-up dinamis & lebih lebar, serta export PDF rapi dengan kop surat).",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/patient/reservation/components/TermsPdfModal.tsx",
+            "frontend-web/src/features/patient/reservation/components/DigitalSignatureModal.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-238",
+        "date": "2026-08-19",
+        "time": "14:40",
+        "category": "Doctor Schedule Sync | Availability Driven Date Selector",
+        "type": "Full-Stack Feature & UX Refinement",
+        "feature": "Sinkronisasi Jadwal Dokter Backend & Penanda Tanggal Libur/Aktif",
+        "description": "Menyinkronkan pemilihan tanggal & jam reservasi dengan jadwal dokter nyata dari backend (`DoctorScheduleController.php`, `NewBookingFlow.tsx`, `GuestBookingFlow.tsx`): 1) Menarik data jadwal dokter `/public/doctor-schedules` dan mencocokkan jadwal dokter terpilih per tanggal, 2) Menandai tanggal libur (tidak ada jadwal praktik) dengan styling warna merah/rose ('Libur') yang kontras dan jelas, 3) Menyembunyikan seluruh slot jam pada tanggal libur dan menampilkan banner notifikasi off-duty elegan bergaya Aesthetic Pondok Indah lengkap dengan rekomendasi tanggal praktik terdekat, 4) Menampilkan slot jam dinamis yang terurai otomatis (interval 20 menit) hanya pada tanggal bertugas dokter, dan 5) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Real Backend Schedule Sync: Jam praktik berasal dari `time_range` tabel `doctor_schedules`.\n2. Visual Red Indicator: Tanggal tanpa jadwal dokter diberi warna merah dan badge 'Libur'.\n3. Luxury Off-Duty Alert: Sesuai Design System Aesthetic Pondok Indah (`ui skill.md`).\n4. Verified: `npm run build` sukses 100% (`✓ built in 22.62s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar pemilihan tanggal menarik data dari backend untuk sinkronisasi dengan jadwal dokter, menyembunyikan jam jika dokter tidak bertugas di tanggal tersebut, mengubah tanggal libur menjadi warna merah, dan menampilkan notifikasi off-duty yang sesuai dengan skill UI.",
+        "files": [
+            "app/Http/Controllers/Api/Doctor/Schedule/DoctorScheduleController.php",
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/guest/reservation/components/GuestBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-237",
+        "date": "2026-08-19",
+        "time": "14:27",
+        "category": "Patient & Guest Booking UX | Doctor Card Simplification",
+        "type": "UI Simplification",
+        "feature": "Penyederhanaan Card Dokter (Hapus Universitas & Pengalaman)",
+        "description": "Menyederhanakan card dokter pada Step 2 (Pilih Dokter Spesialis) dan kartu ringkasan dokter (`NewBookingFlow.tsx` & `GuestBookingFlow.tsx`): 1) Menghapus baris Universitas/Almamater dan baris Tahun Pengalaman pada setiap card dokter, 2) Menampilkan kartu dokter yang lebih ringkas, elegan, dan fokus (Foto, Nama Lengkap Dokter, dan Spesialisasi Medis), 3) Menyesuaikan ringkasan dokter di Step 3 dan Step 4 agar selaras dan konsisten, dan 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Minimalist & Focused: Card dokter sekarang hanya menampilkan Foto, Nama Lengkap, dan Spesialisasi.\n2. Clean Step Summary: Tidak ada lagi teks universitas & pengalaman di Step 3 header & Step 4 confirmation.\n3. Verified: `npm run build` sukses 100% (`✓ built in 25.03s`).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar pada pemilihan dokter tidak perlu menampilkan pengalaman dan universitas.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/guest/reservation/components/GuestBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-236",
+        "date": "2026-08-19",
+        "time": "14:22",
+        "category": "Brand UI/UX Standardization | Anti-AI Slop Clean Typography",
+        "type": "Design System Refinement",
+        "feature": "Pembersihan Emoticon/Emoji pada Dropdown Kategori & Komponen Form",
+        "description": "Menghapus seluruh emoji/emoticon generik ('✨', '🌐', '👤', dll) pada dropdown opsi kategori dan label form sesuai panduan Brand Design System Aesthetic Pondok Indah (`NewBookingFlow.tsx`, `GuestBookingFlow.tsx`, `ReservationPage.tsx`, `AdminTreatmentManagement.tsx`): 1) Mengganti teks opsi '✨ Semua Kategori Layanan' menjadi teks bersih profesional 'Semua Kategori Layanan', 2) Menghilangkan unicode emoji pada filter tombol admin dan dropdown status, 3) Menjaga tipografi bersih, mewah, dan terpercaya khas klinik premium tanpa unsur AI slop, dan 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Anti-AI Slop: Menghapus emoji unicode yang tidak profesional pada form select/option.\n2. Aligned with UI Skill: Menggunakan font Inter & Playfair Display dengan tata letak bersih dan mewah.\n3. Verified: `npm run build` sukses 100% (`✓ built in 30.63s`).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk tidak menggunakan emot/icon emoji pada dropdown kategori layanan demi menghindari kesan UI AI slop dan mengikuti standar desain sistem klinik.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/guest/reservation/components/GuestBookingFlow.tsx",
+            "frontend-web/src/features/admin/reservation/pages/ReservationPage.tsx",
+            "frontend-web/src/features/admin/treatments/pages/AdminTreatmentManagement.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-235",
+        "date": "2026-08-19",
+        "time": "14:20",
+        "category": "Patient & Guest Booking UX | Dropdown Category Selector",
+        "type": "UI Modernization",
+        "feature": "Dropdown Filter Kategori Layanan Perawatan Gigi",
+        "description": "Mengubah filtering kategori layanan dari deretan tombol horizontal menjadi Dropdown Selector yang rapi dan elegan (`NewBookingFlow.tsx` & `GuestBookingFlow.tsx`): 1) Menggabungkan bilah pencarian layanan dan dropdown kategori secara berdampingan yang responsif, 2) Menampilkan opsi kategori lengkap ('Semua Kategori', 'Orthodontics', 'Estetik', 'Umum', 'Implan', 'Ortodonti', 'Pediatrik', 'Bedah Mulut', dll), 3) Mengoptimalkan kerapian layout di desktop dan mobile tanpa horizontal button scroll, dan 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Modern Dropdown UI: Menggantikan button menyamping dengan selector dropdown bergaya Aesthetic Pondok Indah.\n2. Responsive: Berdampingan di Desktop dan tersusun rapi di Mobile.\n3. Verified: `npm run build` sukses 100% (`✓ built in 26.52s`).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar filtering kategori layanan dibuat menggunakan dropdown dan bukan button menyamping.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/guest/reservation/components/GuestBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-234",
+        "date": "2026-08-19",
+        "time": "14:18",
+        "category": "Patient & Guest Booking UX | Instant Card Progression",
+        "type": "UX Refinement & Responsive Flow",
+        "feature": "Alur Booking Instan tanpa Sidebar Summary pada Step 1-3 & Responsif Mobile",
+        "description": "Menyempurnakan alur booking reservasi pasien & guest (`NewBookingFlow.tsx` & `GuestBookingFlow.tsx`): 1) Menghilangkan sidebar Ringkasan Booking dan tombol 'Lanjut' pada Step 1 (Pilih Layanan), Step 2 (Pilih Dokter), dan Step 3 (Pilih Jadwal), 2) Menjadikan setiap klik/tap card layanan, dokter, dan jam praktik langsung berpindah instan (auto-advance) ke step berikutnya, 3) Memusatkan tampilan Step 1-3 dalam container yang luas, bersih, dan immersive baik di desktop maupun mobile, 4) Menampilkan ringkasan penuh dan tombol submit konfirmasi reservasi hanya pada Step 4 (Konfirmasi, Persetujuan S&K PDF, & Tanda Tangan Digital), 5) Menghilangkan bottom bar mengambang pada mobile di step 1-3, dan 6) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Instant 1-Tap Progression: Klik card layanan -> otomatis ke dokter -> klik dokter -> otomatis ke jadwal -> klik jam -> otomatis ke konfirmasi.\n2. Clean Layout: Tidak ada sidebar summary yang mengganggu pada step 1, 2, dan 3.\n3. Mobile Optimized: Tidak ada floating bar di step 1-3, navigasi cepat dan mulus.\n4. Verified: `npm run build` sukses 100% (`✓ built in 56.27s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar pada pemilihan layanan, dokter, dan tanggal/jam tidak perlu ada ringkasan booking dan tombol lanjut, melainkan langsung berpindah ke step selanjutnya saat card ditekan, baik di desktop maupun mobile.",
+        "files": [
+            "frontend-web/src/features/patient/reservation/components/NewBookingFlow.tsx",
+            "frontend-web/src/features/guest/reservation/components/GuestBookingFlow.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-233",
         "date": "2026-08-19",
         "time": "00:35",

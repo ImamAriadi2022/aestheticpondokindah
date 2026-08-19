@@ -1,0 +1,1 @@
+import{A as e}from"./index-Cjs9r4rU.js";async function r(){const o=await fetch(`${e}/public/doctor-schedules`,{headers:{Accept:"application/json"}});if(!o.ok)throw new Error("Gagal memuat jadwal dokter");return o.json()}export{r as g};

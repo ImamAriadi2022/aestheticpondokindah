@@ -91,11 +91,26 @@ class DoctorScheduleController extends Controller
 
     public function publicIndex(Request $request): JsonResponse
     {
-        $items = DoctorSchedule::query()
+        $doctorId = $request->query('doctorId') ?? $request->query('doctor_id');
+        $date = $request->query('date');
+        $startDate = $request->query('startDate') ?? $request->query('start_date');
+
+        $query = DoctorSchedule::query()
             ->with('user')
             ->orderBy('date')
-            ->orderBy('time_range')
-            ->get()
+            ->orderBy('time_range');
+
+        if ($doctorId) {
+            $query->where('user_id', $doctorId);
+        }
+
+        if ($date) {
+            $query->whereDate('date', $date);
+        } elseif ($startDate) {
+            $query->whereDate('date', '>=', $startDate);
+        }
+
+        $items = $query->get()
             ->filter(function (DoctorSchedule $s) {
                 return !$s->is_full;
             })
