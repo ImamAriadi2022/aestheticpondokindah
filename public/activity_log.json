@@ -1,5 +1,49 @@
 [
     {
+        "id": "act-233",
+        "date": "2026-08-19",
+        "time": "00:35",
+        "category": "Admin Treatment Management | Naming Standard & Folder Refactoring",
+        "type": "Code Refactoring & Standardization",
+        "feature": "Standarisasi Penamaan Fitur Layanan Klinik (Treatments)",
+        "description": "Merefaktor dan menstandarisasi penamaan modul layanan menjadi 'treatments' dan label antarmuka menjadi 'Layanan Klinik': 1) Memindahkan modul ke folder bersih `frontend-web/src/features/admin/treatments` (`treatmentApi.ts`, `TreatmentEditorModal.tsx`, `AdminTreatmentManagement.tsx`), 2) Menghapus folder lama `services` untuk mencegah kebingungan penamaan nested `services/services`, 3) Menyesuaikan label sub-tab pada `ReservationPage.tsx` menjadi '🦷 Layanan Klinik (Treatments)', dan 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Standardized Naming: Menggunakan istilah klinis 'Treatments' (1 kata) dan 'Layanan Klinik' di UI.\n2. Clean Directory Structure: Menghilangkan nested services/services folder.\n3. Verified: `npm run build` sukses 100% (`✓ built in 23.55s`).\n4. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna agar penamaan fitur tidak menggunakan 'services' yang membingungkan, melainkan menggunakan 'Layanan Klinik' atau 'Treatments' (1 kata bahasa Inggris).",
+        "files": [
+            "frontend-web/src/features/admin/treatments/pages/AdminTreatmentManagement.tsx",
+            "frontend-web/src/features/admin/treatments/components/TreatmentEditorModal.tsx",
+            "frontend-web/src/features/admin/treatments/services/treatmentApi.ts",
+            "frontend-web/src/features/admin/reservation/pages/ReservationPage.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-232",
+        "date": "2026-08-19",
+        "time": "00:32",
+        "category": "Admin Service Management | Clinic Services Sub-Tab",
+        "type": "New Feature & Data Management",
+        "feature": "Tab Kelola Layanan (Services) pada Menu Reservasi Admin",
+        "description": "Menambahkan tab baru khusus untuk mengelola layanan/services yang tersedia pada menu Reservasi Admin (`ReservationPage.tsx`, `AdminServiceManagement.tsx`, `ServiceEditorModal.tsx`, `adminClinicServiceApi.ts`): 1) Sub-tab switcher elegan di bagian atas (📅 Janji Temu & Alur Reservasi vs 🦷 Kelola Layanan / Services), 2) Tabel manajemen layanan lengkap dengan gambar, kategori, estimasi biaya, durasi tindakan, dokter spesialis penanggung jawab, dan sakelar status aktif/non-aktif, 3) Modal tambah dan edit layanan yang tersinkronisasi langsung ke database `clinic_services`, 4) Fitur pencarian real-time dan filter berdasarkan kategori & ketersediaan di form reservasi, 5) Dialog konfirmasi hapus layanan dengan penanganan error aman, dan 6) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Two Main Sub-Tabs: 'Janji Temu & Alur Reservasi' dan 'Kelola Layanan / Services'.\n2. Full Service CRUD: Tambah, edit harga/durasi/kategori/deskripsi, toggle visibility, dan hapus layanan.\n3. Reservation Sync: Layanan aktif langsung tersinkronisasi ke formulir booking pasien dan tamu.\n4. Verified: `npm run build` sukses 100% (`✓ built in 32.67s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk membuat tab baru pada menu reservasi admin yang berfungsi untuk mengelola service atau layanan klinik yang tersedia.",
+        "files": [
+            "frontend-web/src/features/admin/services/pages/AdminServiceManagement.tsx",
+            "frontend-web/src/features/admin/services/components/ServiceEditorModal.tsx",
+            "frontend-web/src/features/admin/services/services/adminClinicServiceApi.ts",
+            "frontend-web/src/features/admin/reservation/pages/ReservationPage.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-231",
         "date": "2026-08-19",
         "time": "00:26",
