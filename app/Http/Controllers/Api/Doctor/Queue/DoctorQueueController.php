@@ -18,8 +18,14 @@ class DoctorQueueController extends Controller
             ->with(['doctor', 'doctorSchedule', 'user'])
             ->where(function ($q) use ($doctor) {
                 $q->where('doctor_id', $doctor->id)
+                  ->orWhereHas('doctor', function ($dq) use ($doctor) {
+                      $dq->where('name', $doctor->name);
+                  })
                   ->orWhereHas('doctorSchedule', function ($sq) use ($doctor) {
-                      $sq->where('user_id', $doctor->id);
+                      $sq->where('user_id', $doctor->id)
+                         ->orWhereHas('user', function ($uq) use ($doctor) {
+                             $uq->where('name', $doctor->name);
+                         });
                   });
             })
             ->orderByDesc('date')
@@ -48,7 +54,9 @@ class DoctorQueueController extends Controller
 
         // Doctor Access Check
         $isAssigned = (int) $reservation->doctor_id === (int) $doctor->id
-            || ($reservation->doctorSchedule && (int) $reservation->doctorSchedule->user_id === (int) $doctor->id);
+            || ($reservation->doctorSchedule && (int) $reservation->doctorSchedule->user_id === (int) $doctor->id)
+            || ($reservation->doctor && $reservation->doctor->name === $doctor->name)
+            || ($reservation->doctorSchedule?->user && $reservation->doctorSchedule->user->name === $doctor->name);
 
         if (!$isAssigned) {
             return response()->json(['message' => 'Anda tidak memiliki akses ke reservasi dokter ini.'], 403);
@@ -67,7 +75,9 @@ class DoctorQueueController extends Controller
         }
 
         $isAssigned = (int) $reservation->doctor_id === (int) $doctor->id
-            || ($reservation->doctorSchedule && (int) $reservation->doctorSchedule->user_id === (int) $doctor->id);
+            || ($reservation->doctorSchedule && (int) $reservation->doctorSchedule->user_id === (int) $doctor->id)
+            || ($reservation->doctor && $reservation->doctor->name === $doctor->name)
+            || ($reservation->doctorSchedule?->user && $reservation->doctorSchedule->user->name === $doctor->name);
 
         if (!$isAssigned) {
             return response()->json(['message' => 'Anda tidak memiliki akses ke reservasi dokter ini.'], 403);
@@ -117,7 +127,9 @@ class DoctorQueueController extends Controller
         }
 
         $isAssigned = (int) $reservation->doctor_id === (int) $doctor->id
-            || ($reservation->doctorSchedule && (int) $reservation->doctorSchedule->user_id === (int) $doctor->id);
+            || ($reservation->doctorSchedule && (int) $reservation->doctorSchedule->user_id === (int) $doctor->id)
+            || ($reservation->doctor && $reservation->doctor->name === $doctor->name)
+            || ($reservation->doctorSchedule?->user && $reservation->doctorSchedule->user->name === $doctor->name);
 
         if (!$isAssigned) {
             return response()->json(['message' => 'Anda tidak memiliki akses ke reservasi dokter ini.'], 403);

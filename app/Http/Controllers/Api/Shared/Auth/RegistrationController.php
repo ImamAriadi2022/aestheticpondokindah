@@ -65,7 +65,7 @@ class RegistrationController extends Controller
             'insurance_provider' => $request->insuranceProvider,
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addDays(10))->plainTextToken;
 
         $user->loadMissing('profile');
 

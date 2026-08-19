@@ -77,8 +77,7 @@ export const MENU: AppMenu = {
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },
       { label: "Jadwal Praktik", icon: Calendar, href: "/dashboard/doctor?tab=jadwal" },
-      { label: "Reservasi Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi" },
-      { label: "Konsultasi Online", icon: MessageSquare, href: "/dashboard/doctor?tab=konsultasi" },
+      { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi" },
     ],
   },
 };

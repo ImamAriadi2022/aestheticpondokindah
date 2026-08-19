@@ -2,6 +2,7 @@ import { API_BASE } from "@/core/api/apiConfig";
 import { ApiError, getErrorMessage } from "@/core/api/apiError";
 import { toast } from "@/shared/ui/toast";
 import { logger } from "@/core/utils/logger";
+import { touchSessionLastActive, clearSessionStorage } from "@/core/auth/services/sessionTtl";
 
 export interface RequestOptions extends RequestInit {
   timeoutMs?: number;
@@ -29,9 +30,7 @@ const getAuthToken = (): string | null => {
 };
 
 const handleUnauthorized = () => {
-  localStorage.removeItem("apident:user");
-  localStorage.removeItem("auth_token");
-  sessionStorage.removeItem("auth_token");
+  clearSessionStorage();
   
   if (typeof window !== "undefined" && !window.location.hash.includes("/login")) {
     toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
@@ -97,6 +96,7 @@ export const apiClient = {
         logger.response(fetchOptions.method || "GET", url, response.status, data);
 
         if (response.ok) {
+          touchSessionLastActive();
           return data as T;
         }
 

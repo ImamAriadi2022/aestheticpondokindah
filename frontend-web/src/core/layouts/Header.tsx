@@ -207,12 +207,12 @@ export default function Header() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="rounded-xl border-brand-gold/40 text-brand-charcoal hover:text-brand-gold hover:bg-brand-gold-light/60 font-semibold px-5 h-10 text-sm transition-all flex items-center"
+                  className="rounded-xl border-brand-gold/40 text-brand-charcoal hover:text-brand-gold hover:bg-brand-gold-light/60 font-semibold px-5 h-10 text-sm transition-all flex items-center shadow-2xs cursor-pointer"
                 >
                   {isLoggedIn ? (
                     <>
                       <User className="w-4 h-4 mr-2 text-brand-gold" />
-                      Dashboard
+                      Masuk Dashboard
                     </>
                   ) : (
                     <>
@@ -262,24 +262,24 @@ export default function Header() {
                   setBookingOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="w-full bg-gradient-gold text-white font-semibold rounded-xl mt-4 font-body"
+                className="w-full bg-gradient-gold text-white font-semibold rounded-xl mt-4 font-body cursor-pointer"
               >
                 Book Now
               </Button>
-              <Button asChild variant="outline" className="w-full rounded-xl mt-3 font-body">
+              <Button asChild variant="outline" className="w-full rounded-xl mt-3 font-body cursor-pointer">
                 <Link
                   to={isLoggedIn ? "/dashboard" : "/login"}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {isLoggedIn ? (
                     <>
-                      <User className="w-4 h-4 mr-2" />
-                      Profil
+                      <User className="w-4 h-4 mr-2 text-brand-gold" />
+                      Masuk Dashboard
                     </>
                   ) : (
                     <>
-                      <LogIn className="w-4 h-4 mr-2" />
-                      Sign In
+                      <LogIn className="w-4 h-4 mr-2 text-brand-gold" />
+                      Login
                     </>
                   )}
                 </Link>

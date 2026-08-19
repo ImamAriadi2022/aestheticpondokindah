@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 import { getSession } from "@/core/auth/services/session";
 import { getMenuItems } from "@/core/permissions/index";
-import { ChevronRight, LogOut, User, Pencil, Settings, Download } from "lucide-react";
+import { ChevronRight, LogOut, User, Settings, Download } from "lucide-react";
 
 interface DoctorSidebarProps {
   onLogout: () => void;
@@ -287,15 +287,6 @@ export default function DoctorSidebar({ onLogout }: DoctorSidebarProps) {
                   >
                     <User className="w-4 h-4 text-[#C9A24A]" />
                     Detail Profil
-                  </Link>
-
-                  <Link
-                    to="/profile/edit"
-                    onClick={handleMenuClick}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all"
-                  >
-                    <Pencil className="w-4 h-4 text-[#C9A24A]" />
-                    Edit Profil (Foto)
                   </Link>
 
                   <Link

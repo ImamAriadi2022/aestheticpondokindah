@@ -96,6 +96,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [RegistrationController::class, 'register']);
     Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
+    Route::middleware('auth:sanctum')->post('/refresh', [AuthController::class, 'refresh']);
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 });
 

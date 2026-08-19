@@ -1,17 +1,4 @@
-import { API_BASE } from "@/core/api/apiConfig";
-
-function getToken(): string | null {
-  return localStorage.getItem("apident:token");
-}
-
-function headers() {
-  const token = getToken();
-  return {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
+import { apiClient } from "@/core/api/apiClient";
 
 export interface DoctorScheduleItem {
   id: string;
@@ -35,58 +22,35 @@ export interface CreateDoctorScheduleInput {
 }
 
 export async function getDoctorSchedules(): Promise<DoctorScheduleItem[]> {
-  const res = await fetch(`${API_BASE}/doctor/schedules`, {
-    headers: headers(),
-  });
-  if (!res.ok) throw new Error("Gagal memuat jadwal");
-  return res.json();
+  const data = await apiClient.get<DoctorScheduleItem[]>("/doctor/schedules");
+  return Array.isArray(data) ? data : [];
 }
 
 export async function createDoctorSchedule(
   input: CreateDoctorScheduleInput
 ): Promise<DoctorScheduleItem> {
-  const res = await fetch(`${API_BASE}/doctor/schedules`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(input),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw err;
-  }
-  const data = await res.json();
-  return data.schedule;
+  const res = await apiClient.post<{ message: string; schedule: DoctorScheduleItem }>(
+    "/doctor/schedules",
+    input
+  );
+  return res.schedule;
 }
 
 export async function getDoctorSchedule(id: string): Promise<DoctorScheduleItem> {
-  const res = await fetch(`${API_BASE}/doctor/schedules/${id}`, {
-    headers: headers(),
-  });
-  if (!res.ok) throw new Error("Gagal memuat jadwal");
-  return res.json();
+  return apiClient.get<DoctorScheduleItem>(`/doctor/schedules/${id}`);
 }
 
 export async function updateDoctorSchedule(
   id: string,
   input: Partial<CreateDoctorScheduleInput>
 ): Promise<DoctorScheduleItem> {
-  const res = await fetch(`${API_BASE}/doctor/schedules/${id}`, {
-    method: "PUT",
-    headers: headers(),
-    body: JSON.stringify(input),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw err;
-  }
-  const data = await res.json();
-  return data.schedule;
+  const res = await apiClient.put<{ message: string; schedule: DoctorScheduleItem }>(
+    `/doctor/schedules/${id}`,
+    input
+  );
+  return res.schedule;
 }
 
 export async function deleteDoctorSchedule(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/doctor/schedules/${id}`, {
-    method: "DELETE",
-    headers: headers(),
-  });
-  if (!res.ok) throw new Error("Gagal menghapus jadwal");
+  await apiClient.delete(`/doctor/schedules/${id}`);
 }

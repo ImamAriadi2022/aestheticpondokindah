@@ -120,16 +120,10 @@ export default function LoginPage() {
       touchSessionLastActive();
 
       setSuccess("Login berhasil! Mengalihkan...");
-
-      let targetRole = data.user.role;
-      if (targetRole === "clinic_admin") targetRole = "clinic";
-      if (targetRole === "patient") targetRole = "user";
-
-      const targetPath = getDefaultDashboardPath(targetRole);
       
       setTimeout(() => {
-        navigate(targetPath, { replace: true });
-      }, 1000);
+        navigate("/", { replace: true });
+      }, 800);
 
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat login.");
@@ -156,12 +150,12 @@ export default function LoginPage() {
           email: registerForm.email || null,
           whatsapp: registerForm.phone,
           password: registerForm.password,
-          province: registerForm.province,
-          city: registerForm.city,
-          district: registerForm.district,
-          gender: registerForm.gender,
-          blood_type: registerForm.bloodType,
-          job: registerForm.job,
+          gender: registerForm.gender || null,
+          blood_type: registerForm.bloodType || null,
+          job: registerForm.job || null,
+          province: registerForm.province || null,
+          city: registerForm.city || null,
+          district: registerForm.district || null,
         }),
       });
 
@@ -180,10 +174,10 @@ export default function LoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      setSuccess("Pendaftaran berhasil! Mengalihkan ke dashboard...");
+      setSuccess("Pendaftaran berhasil! Mengalihkan...");
       setTimeout(() => {
-        navigate("/dashboard/user", { replace: true });
-      }, 1500);
+        navigate("/", { replace: true });
+      }, 800);
 
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat mendaftar.");

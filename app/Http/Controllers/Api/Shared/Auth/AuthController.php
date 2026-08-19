@@ -35,7 +35,29 @@ class AuthController extends Controller
         }
 
         $deviceName = $request->input('device_name') ?: 'web';
-        $token = $user->createToken($deviceName)->plainTextToken;
+        $token = $user->createToken($deviceName, ['*'], now()->addDays(10))->plainTextToken;
+
+        $user->loadMissing('profile');
+
+        return response()->json([
+            'token' => $token,
+            'user' => $this->serializeUser($user),
+        ]);
+    }
+
+    public function refresh(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
+        // Delete current token and issue a fresh one valid for 10 days
+        $user->currentAccessToken()?->delete();
+
+        $deviceName = $request->input('device_name') ?: 'web';
+        $token = $user->createToken($deviceName, ['*'], now()->addDays(10))->plainTextToken;
 
         $user->loadMissing('profile');
 

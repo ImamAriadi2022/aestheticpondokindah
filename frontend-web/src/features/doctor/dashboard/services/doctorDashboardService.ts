@@ -29,13 +29,5 @@ export async function getDoctorQueue(): Promise<DoctorQueueItem[]> {
 }
 
 export async function getDoctorVisitDetail(id: string): Promise<any> {
-  const token = localStorage.getItem("apident:token");
-  const res = await fetch(`${API_BASE}/doctor/visits/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-    },
-  });
-  if (!res.ok) throw new Error("Gagal memuat rekam medis kunjungan");
-  return res.json();
+  return apiClient.get(`/doctor/visits/${id}`);
 }

@@ -4,7 +4,6 @@ import DashboardLayout from "@/core/layouts/DashboardLayout";
 import DesktopDoctorHome from "../components/DesktopDoctorHome";
 import { getSession } from "@/core/auth/services/session";
 import { toast } from "@/shared/ui/toast";
-import { getDoctorScheduledConsultations, type ConsultationItem } from "@/features/patient/consultation/services/consultationApi";
 import {
   getDoctorSchedules,
   type DoctorScheduleItem,
@@ -12,7 +11,6 @@ import {
 import { getDoctorQueue, type DoctorQueueItem } from "../services/doctorDashboardService";
 import DoctorSchedulePage from "@/features/doctor/schedule/pages/DoctorSchedulePage";
 import DoctorReservationPage from "@/features/doctor/reservation/pages/DoctorReservationPage";
-import DoctorConsultationPage from "@/features/doctor/consultation/pages/DoctorConsultationPage";
 
 export default function DoctorDashboardPage() {
   const session = getSession()!;
@@ -20,7 +18,6 @@ export default function DoctorDashboardPage() {
   const navigate = useNavigate();
   const activeTab = searchParams.get("tab") || "dashboard";
 
-  const [consultations, setConsultations] = useState<ConsultationItem[]>([]);
   const [reservations, setReservations] = useState<DoctorQueueItem[]>([]);
   const [schedules, setSchedules] = useState<DoctorScheduleItem[]>([]);
   const [loadingSchedules, setLoadingSchedules] = useState(true);
@@ -35,6 +32,12 @@ export default function DoctorDashboardPage() {
       .finally(() => setLoadingSchedules(false));
   };
 
+  const fetchReservations = () => {
+    getDoctorQueue()
+      .then((queue) => setReservations(queue || []))
+      .catch(() => setReservations([]));
+  };
+
   useEffect(() => {
     if (activeTab === "jadwal" || activeTab === "dashboard") {
       fetchSchedules();
@@ -42,19 +45,12 @@ export default function DoctorDashboardPage() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === "dashboard") {
-      getDoctorScheduledConsultations()
-        .then((data) => setConsultations(data))
-        .catch(() => {});
-
-      getDoctorQueue()
-        .then((queue) => setReservations(queue))
-        .catch(() => setReservations([]));
+    if (activeTab === "reservasi" || activeTab === "pasien" || activeTab === "klien" || activeTab === "dashboard") {
+      fetchReservations();
     }
   }, [activeTab]);
 
   const mySchedules = schedules;
-  const myClients = consultations;
 
   const myReservations = useMemo(() => {
     return [...reservations].sort((a, b) => {
@@ -66,10 +62,8 @@ export default function DoctorDashboardPage() {
   }, [reservations]);
 
   const completedCount = useMemo(
-    () =>
-      myReservations.filter((r) => r.status === "Selesai").length +
-      myClients.filter((c) => c.status === "Selesai").length,
-    [myReservations, myClients]
+    () => myReservations.filter((r) => r.status === "Selesai").length,
+    [myReservations]
   );
 
   const renderContent = () => {
@@ -78,14 +72,11 @@ export default function DoctorDashboardPage() {
       case "jadwal":
         return <DoctorSchedulePage schedules={mySchedules} onRefresh={fetchSchedules} />;
 
-      // Tab 2: Reservasi Pasien Dokter (Tindakan & Periksa Medis)
+      // Tab 2: Pasien Saya / Reservasi Perawatan Medis
       case "reservasi":
+      case "pasien":
       case "klien":
         return <DoctorReservationPage />;
-
-      // Tab 3: Konsultasi Online Dokter
-      case "konsultasi":
-        return <DoctorConsultationPage />;
 
       // Tab Utama: Dashboard Home Dokter
       default:
@@ -93,7 +84,7 @@ export default function DoctorDashboardPage() {
           <DesktopDoctorHome
             session={session}
             schedules={mySchedules}
-            clients={myClients}
+            reservations={myReservations}
             completedCount={completedCount}
             onAddSchedule={() => navigate("/dashboard/doctor/schedule/new")}
           />

@@ -14,13 +14,51 @@ import ForbiddenPage from "@/shared/pages/ForbiddenPage";
 import { getSession } from "@/core/auth/services/session";
 import { getDefaultDashboardPath } from "@/core/permissions/index";
 
+import { isSessionExpired, touchSessionLastActive, clearSessionStorage } from "@/core/auth/services/sessionTtl";
+import { apiClient } from "@/core/api/apiClient";
+
 function PublicRouteRedirect({ children }: { children: React.ReactNode }) {
   const session = getSession();
   if (session && session.role && (session.role as string) !== "guest") {
-    const targetPath = getDefaultDashboardPath(session.role);
-    return <Navigate to={targetPath} replace />;
+    return <Navigate to="/" replace />;
   }
   return <>{children}</>;
+}
+
+function SessionManager() {
+  useEffect(() => {
+    // 1. Check if session has exceeded 10 days of inactivity
+    if (isSessionExpired()) {
+      clearSessionStorage();
+      return;
+    }
+
+    const token = localStorage.getItem("apident:token") || localStorage.getItem("auth_token");
+    if (!token) return;
+
+    // 2. Mark session as active
+    touchSessionLastActive();
+
+    // 3. Silently refresh token in background to extend sliding 10-day validity
+    apiClient
+      .post("/auth/refresh", {}, { skipToast: true })
+      .then((res) => {
+        if (res?.token) {
+          localStorage.setItem("apident:token", res.token);
+          if (res?.user) {
+            localStorage.setItem("apident:user", JSON.stringify(res.user));
+          }
+          touchSessionLastActive();
+        }
+      })
+      .catch((err) => {
+        if (err?.status === 401) {
+          clearSessionStorage();
+        }
+      });
+  }, []);
+
+  return null;
 }
 
 const HomePage = lazy(() => import("@/features/guest/home/pages/Home"));
@@ -145,13 +183,14 @@ export default function App() {
   return (
     <GuestSessionProvider>
       <Router>
+      <SessionManager />
       <VisitTracker />
       <ScrollToTop />
       <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-gray-500">Loading...</div>}>
         <ErrorBoundary>
           <RouteTransition>
             <Routes>
-              <Route path="/" element={<PublicRouteRedirect><HomePage /></PublicRouteRedirect>} />
+              <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/doctors" element={<DoctorsPage />} />
               <Route path="/cerita" element={<CeritaPage />} />
@@ -199,11 +238,7 @@ export default function App() {
               />
               <Route
                 path="/dashboard/doctor/consultation/:id"
-                element={
-                  <ProtectedRoute allow={["doctor"]}>
-                    <DoctorConsultationChatPage />
-                  </ProtectedRoute>
-                }
+                element={<Navigate to="/dashboard/doctor" replace />}
               />
               <Route
                 path="/dashboard/doctor/schedule/new"

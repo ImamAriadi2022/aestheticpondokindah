@@ -77,14 +77,9 @@ export default function MobileLoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      // Map role
-      let targetRole = data.user.role;
-      if (targetRole === "clinic_admin") targetRole = "clinic";
-      if (targetRole === "patient") targetRole = "user";
-
       toast({ title: "Login Berhasil", message: "Selamat datang kembali!", variant: "success" });
       
-      navigate(getDefaultDashboardPath(targetRole), { replace: true });
+      navigate("/", { replace: true });
     } catch (err: any) {
       setLoginError(err.message || "Terjadi kesalahan saat login");
     } finally {
@@ -127,7 +122,7 @@ export default function MobileLoginPage() {
       touchSessionLastActive();
 
       toast({ title: "Pendaftaran Berhasil", message: "Selamat datang!", variant: "success" });
-      navigate("/dashboard/user", { replace: true });
+      navigate("/", { replace: true });
     } catch (err: any) {
       setRegisterError(err.message || "Terjadi kesalahan saat mendaftar");
     } finally {

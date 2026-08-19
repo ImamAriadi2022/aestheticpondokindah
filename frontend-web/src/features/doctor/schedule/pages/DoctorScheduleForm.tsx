@@ -50,18 +50,19 @@ export default function DoctorScheduleFormPage() {
     apiClient
       .get<BranchItem[]>("/branches")
       .then((data) => {
-        const activeBranches = Array.isArray(data) ? data : [];
+        const activeBranches = Array.isArray(data) && data.length > 0 ? data : [
+          { id: 1, name: "Aesthetic Pondok Indah", address: "Jakarta Selatan" }
+        ];
         setBranches(activeBranches);
-        if (activeBranches.length > 0 && !location) {
+        if (!location) {
           setLocation(activeBranches[0].name);
         }
       })
       .catch(() => {
         setBranches([
-          { id: 1, name: "Aesthetic Pondok Indah Main Branch", address: "Jakarta Selatan" },
-          { id: 2, name: "Aesthetic Clinic Senayan Branch", address: "Jakarta Pusat" },
+          { id: 1, name: "Aesthetic Pondok Indah", address: "Jakarta Selatan" },
         ]);
-        if (!location) setLocation("Aesthetic Pondok Indah Main Branch");
+        if (!location) setLocation("Aesthetic Pondok Indah");
       })
       .finally(() => setLoadingBranches(false));
   }, []);

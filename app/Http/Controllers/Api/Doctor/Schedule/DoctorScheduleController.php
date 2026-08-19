@@ -138,7 +138,12 @@ class DoctorScheduleController extends Controller
     {
         $user = $request->user();
         $schedules = DoctorSchedule::query()
-            ->where('user_id', $user->id)
+            ->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhereHas('user', function ($uq) use ($user) {
+                      $uq->where('name', $user->name);
+                  });
+            })
             ->orderBy('date')
             ->orderBy('time_range')
             ->get()
@@ -149,7 +154,7 @@ class DoctorScheduleController extends Controller
                     'date' => $s->date->format('Y-m-d'),
                     'displayDate' => $s->date->format('d F Y'),
                     'timeRange' => $s->time_range,
-                    'location' => $s->location,
+                    'location' => $s->location ?? 'Aesthetic Pondok Indah',
                     'totalSlots' => $s->total_slots,
                     'bookedSlots' => $s->booked_slots,
                     'slotsLeft' => $s->slots_left,
@@ -170,6 +175,9 @@ class DoctorScheduleController extends Controller
         }
         if (!isset($data['totalSlots']) && isset($data['total_slots'])) {
             $data['totalSlots'] = $data['total_slots'];
+        }
+        if (empty($data['location'])) {
+            $data['location'] = 'Aesthetic Pondok Indah';
         }
 
         $validator = Validator::make($data, [
@@ -212,7 +220,11 @@ class DoctorScheduleController extends Controller
 
     public function show(Request $request, DoctorSchedule $schedule): JsonResponse
     {
-        if ($schedule->user_id !== $request->user()->id) {
+        $user = $request->user();
+        $hasAccess = (int) $schedule->user_id === (int) $user->id
+            || ($schedule->user && $schedule->user->name === $user->name);
+
+        if (!$hasAccess) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -233,7 +245,11 @@ class DoctorScheduleController extends Controller
 
     public function update(Request $request, DoctorSchedule $schedule): JsonResponse
     {
-        if ($schedule->user_id !== $request->user()->id) {
+        $user = $request->user();
+        $hasAccess = (int) $schedule->user_id === (int) $user->id
+            || ($schedule->user && $schedule->user->name === $user->name);
+
+        if (!$hasAccess) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -279,7 +295,11 @@ class DoctorScheduleController extends Controller
 
     public function destroy(Request $request, DoctorSchedule $schedule): JsonResponse
     {
-        if ($schedule->user_id !== $request->user()->id) {
+        $user = $request->user();
+        $hasAccess = (int) $schedule->user_id === (int) $user->id
+            || ($schedule->user && $schedule->user->name === $user->name);
+
+        if (!$hasAccess) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

@@ -22,6 +22,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (!class_exists('App\Models\User', false)) {
+            class_alias(\App\Models\Shared\User\User::class, 'App\Models\User');
+        }
+
+        \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
+            'App\Models\User' => \App\Models\Shared\User\User::class,
+            'App\Models\Shared\User\User' => \App\Models\Shared\User\User::class,
+            'user' => \App\Models\Shared\User\User::class,
+        ]);
+
         \Illuminate\Support\Facades\Event::listen(
             \App\Events\PaymentSettled::class,
             \App\Listeners\ProcessMembershipActivation::class
