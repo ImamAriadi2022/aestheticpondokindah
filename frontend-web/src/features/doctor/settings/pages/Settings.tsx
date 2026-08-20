@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import DashboardLayout from "@/core/layouts/DashboardLayout";
 import { toast } from "@/shared/ui/toast";
-import { clearSession, getSession } from "@/core/auth/services/session";
+import { clearSession, getSession, updateSessionProfile } from "@/core/auth/services/session";
 import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
 import {
   Settings,
@@ -22,7 +22,12 @@ import {
   DoctorChangeEmailModal,
   DoctorDeleteAccountModal,
 } from "../components/DoctorSecurityModals";
-import { changeDoctorPassword } from "../services/doctorSettingsService";
+import {
+  changeDoctorPassword,
+  changeDoctorEmail,
+  logoutAllDoctorDevices,
+  deleteDoctorAccount,
+} from "../services/doctorSettingsService";
 
 export default function DoctorSettingsPage() {
   const navigate = useNavigate();
@@ -96,21 +101,37 @@ export default function DoctorSettingsPage() {
     }
   };
 
-  const handleChangeEmail = (e: React.FormEvent) => {
+  const handleChangeEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail) return;
-    toast({
-      title: "Permintaan Ganti Email Dikirim",
-      message: `Link verifikasi telah dikirimkan ke ${newEmail}.`,
-      variant: "info",
-    });
-    setChangeEmailOpen(false);
-    setNewEmail("");
+    try {
+      await changeDoctorEmail(newEmail);
+      updateSessionProfile({ email: newEmail });
+      toast({
+        title: "Email Berhasil Diubah",
+        message: `Email akun praktik telah berhasil diubah menjadi ${newEmail}.`,
+        variant: "info",
+      });
+      setChangeEmailOpen(false);
+      setNewEmail("");
+    } catch (err: any) {
+      toast({
+        title: "Gagal Mengubah Email",
+        message: err.message || "Gagal memperbarui alamat email.",
+        variant: "error",
+      });
+    }
   };
 
-  const handleLogoutAllDevices = () => {
+  const handleLogoutAllDevices = async () => {
+    try {
+      await logoutAllDoctorDevices();
+    } catch {
+      // Continue clearing local session even if network call has issue
+    }
     clearSession();
     clearSessionStorage();
+    localStorage.removeItem("apident:token");
     toast({
       title: "Logout Berhasil",
       message: "Sesi Anda pada semua perangkat telah diakhiri.",
@@ -119,7 +140,7 @@ export default function DoctorSettingsPage() {
     navigate("/login");
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "HAPUS") {
       toast({
         title: "Konfirmasi Gagal",
@@ -128,14 +149,24 @@ export default function DoctorSettingsPage() {
       });
       return;
     }
-    clearSession();
-    clearSessionStorage();
-    toast({
-      title: "Akun Dihapus",
-      message: "Akun Anda telah dinonaktifkan.",
-      variant: "error",
-    });
-    navigate("/");
+    try {
+      await deleteDoctorAccount();
+      clearSession();
+      clearSessionStorage();
+      localStorage.removeItem("apident:token");
+      toast({
+        title: "Akun Dihapus",
+        message: "Akun praktik Anda telah berhasil dihapus.",
+        variant: "info",
+      });
+      navigate("/login");
+    } catch (err: any) {
+      toast({
+        title: "Gagal Menghapus Akun",
+        message: err.message || "Terjadi kesalahan saat menghapus akun.",
+        variant: "error",
+      });
+    }
   };
 
   const session = getSession();

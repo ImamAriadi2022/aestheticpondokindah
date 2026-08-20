@@ -98,6 +98,7 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
     Route::middleware('auth:sanctum')->post('/refresh', [AuthController::class, 'refresh']);
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
+    Route::middleware('auth:sanctum')->post('/logout-all', [AuthController::class, 'logoutAll']);
 });
 
 // =========================================================================
@@ -260,7 +261,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Profile (Shared User entity)
     Route::get('/user/profile', [UserController::class, 'showProfile']);
-    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::match(['PUT', 'POST'], '/user/profile', [UserController::class, 'updateProfile']);
+    Route::put('/user/password', [UserController::class, 'updatePassword']);
+    Route::put('/user/email', [UserController::class, 'updateEmail']);
+    Route::put('/user/preferences', [UserController::class, 'updatePreferences']);
+    Route::delete('/user/account', [UserController::class, 'deleteAccount']);
 
     // Consultations (Patient)
     Route::get('/user/consultations', [UserConsultationController::class, 'index']);

@@ -126,4 +126,15 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Logout berhasil.']);
     }
+
+    public function logoutAll(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user) {
+            $user->tokens()->delete();
+        }
+
+        return response()->json(['message' => 'Semua sesi login berhasil diakhiri.']);
+    }
 }

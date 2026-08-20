@@ -47,38 +47,58 @@ export default function DoctorSecurityPage() {
     setPhoneSecurity({ ...phoneSecurity, otpVerified: true });
   };
 
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+
+  const handleUpdatePassword = async () => {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword) {
+      toast({
+        title: "Gagal",
+        message: "Silakan lengkapi kolom password saat ini dan password baru.",
+        variant: "error",
+      });
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast({
+        title: "Gagal",
+        message: "Password baru dan konfirmasi password tidak cocok.",
+        variant: "error",
+      });
+      return;
+    }
+    try {
+      setUpdatingPassword(true);
+      const { changeDoctorPassword } = await import("../services/doctorSettingsService");
+      await changeDoctorPassword(passwordForm.currentPassword, passwordForm.newPassword);
+      toast({
+        title: "Berhasil",
+        message: "Kata sandi berhasil diperbarui.",
+        variant: "success",
+      });
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (e: any) {
+      toast({
+        title: "Gagal",
+        message: e?.message || "Gagal mengubah kata sandi.",
+        variant: "error",
+      });
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (deletingAccount) return;
 
-    const token = localStorage.getItem("apident:token");
-    const rawUser = localStorage.getItem("apident:user");
-    const currentUser = rawUser ? JSON.parse(rawUser) : null;
-    const userId = currentUser?.id || (session as any)?.id;
-
-    if (!token || !userId) {
-      toast({
-        title: "Gagal",
-        message: "Gagal menghapus akun: sesi tidak ditemukan. Silakan login ulang.",
-        variant: "error",
-      });
-      setShowDeleteDialog(false);
-      return;
-    }
-
     try {
       setDeletingAccount(true);
-      const res = await fetch(`${API_BASE}/admin/users/${userId}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Accept": "application/json",
-        },
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.message || "Gagal menghapus akun");
-      }
+      const { deleteDoctorAccount } = await import("../services/doctorSettingsService");
+      await deleteDoctorAccount();
 
       localStorage.removeItem("apident:token");
       localStorage.removeItem("apident:user");
@@ -196,6 +216,8 @@ export default function DoctorSecurityPage() {
                   <Input
                     type="password"
                     placeholder="••••••••"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                     className="h-10 rounded-lg text-sm border-gray-200 focus:ring-[#c9a24a] font-medium"
                   />
                 </div>
@@ -205,6 +227,8 @@ export default function DoctorSecurityPage() {
                     <Input
                       type="password"
                       placeholder="Min. 8 karakter"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                       className="h-10 rounded-lg text-sm border-gray-200 focus:ring-[#c9a24a] font-medium"
                     />
                   </div>
@@ -213,6 +237,8 @@ export default function DoctorSecurityPage() {
                     <Input
                       type="password"
                       placeholder="Ulangi sandi baru"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                       className="h-10 rounded-lg text-sm border-gray-200 focus:ring-[#c9a24a] font-medium"
                     />
                   </div>
@@ -220,8 +246,12 @@ export default function DoctorSecurityPage() {
               </div>
 
               <div className="flex justify-end pt-2">
-                <Button className="h-12 px-8 rounded-xl bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-bold text-xs shadow-lg hover:scale-[1.01] active:scale-95 transition-all">
-                  Update Sandi
+                <Button
+                  onClick={handleUpdatePassword}
+                  disabled={updatingPassword}
+                  className="h-12 px-8 rounded-xl bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-bold text-xs shadow-lg hover:scale-[1.01] active:scale-95 transition-all"
+                >
+                  {updatingPassword ? "Menyimpan..." : "Update Sandi"}
                 </Button>
               </div>
             </CardContent>

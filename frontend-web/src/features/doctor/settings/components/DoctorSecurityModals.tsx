@@ -118,7 +118,7 @@ export function DoctorChangeEmailModal({
             Ganti Email Akun
           </DialogTitle>
           <DialogDescription className="text-xs text-gray-500">
-            Kami akan mengirimkan tautan konfirmasi ke email baru Anda.
+            Perbarui alamat email utama yang terhubung dengan akun praktik Anda.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4 py-2">
@@ -146,7 +146,7 @@ export function DoctorChangeEmailModal({
               type="submit"
               className="bg-[#C9A24A] hover:bg-[#B8943F] text-white font-semibold rounded-xl text-xs"
             >
-              Kirim Verifikasi
+              Simpan Email
             </Button>
           </DialogFooter>
         </form>

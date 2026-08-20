@@ -859,4 +859,82 @@ class UserController extends Controller
 
         return $avatarInput;
     }
+
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        if (!Hash::check($request->string('current_password')->toString(), $user->password)) {
+            return response()->json([
+                'message' => 'Password saat ini tidak sesuai.',
+                'errors' => [
+                    'current_password' => ['Password saat ini tidak sesuai.'],
+                ],
+            ], 422);
+        }
+
+        $user->password = Hash::make($request->string('password')->toString());
+        $user->save();
+
+        return response()->json(['message' => 'Password berhasil diubah.']);
+    }
+
+    public function updateEmail(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user->email = $request->string('email')->toString();
+        $user->save();
+
+        return response()->json([
+            'message' => 'Email berhasil diubah.',
+            'user' => $this->serialize($user),
+        ]);
+    }
+
+    public function deleteAccount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user) {
+            $user->tokens()->delete();
+            $user->status = 'inactive';
+            $user->save();
+            $user->delete();
+        }
+
+        return response()->json(['message' => 'Akun berhasil dihapus.']);
+    }
+
+    public function updatePreferences(Request $request): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Preferensi berhasil disimpan.',
+            'preferences' => $request->input('preferences', []),
+        ]);
+    }
 }
+

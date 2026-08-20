@@ -9,6 +9,7 @@ import { API_BASE } from "@/core/api/apiConfig";
 import { logger } from "@/core/utils/logger";
 import { toast } from "@/shared/ui/toast";
 import { updateDoctorProfile } from "../services/doctorProfileService";
+import { compressImageToWebP } from "@/core/utils/imageCompressor";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,7 @@ import {
   Save,
   Activity,
   Stethoscope,
+  Loader2,
 } from "lucide-react";
 
 const SPECIALIZATION_OPTIONS = [
@@ -41,6 +43,7 @@ export default function DoctorProfileEditPage() {
   const navigate = useNavigate();
 
   const [saving, setSaving] = useState(false);
+  const [compressing, setCompressing] = useState(false);
 
   const [profile, setProfile] = useState<any>({
     name: session?.name || "Pengguna",
@@ -57,24 +60,47 @@ export default function DoctorProfileEditPage() {
     bio: (session as any)?.bio || "Praktisi kedokteran gigi profesional yang berdedikasi memberikan perawatan kesehatan gigi dan mulut terbaik untuk pasien.",
   });
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 15 * 1024 * 1024) {
       toast({
         title: "File Terlalu Besar",
-        message: "Ukuran foto profil maksimal 2MB.",
+        message: "Ukuran file asli maksimal 15MB.",
         variant: "error",
       });
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfile((prev: any) => ({ ...prev, avatar: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    try {
+      setCompressing(true);
+      const result = await compressImageToWebP(file, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.85,
+      });
+
+      setProfile((prev: any) => ({ ...prev, avatar: result.dataUrl }));
+
+      const kbOriginal = Math.round(result.originalSize / 1024);
+      const kbCompressed = Math.round(result.compressedSize / 1024);
+
+      toast({
+        title: "Foto Berhasil Dikompres ke WebP",
+        message: `Ukuran foto berhasil dioptimasi (${kbOriginal} KB → ${kbCompressed} KB) dalam format WebP jernih.`,
+        variant: "info",
+      });
+    } catch (err: any) {
+      logger.error("Failed to compress avatar image:", err);
+      toast({
+        title: "Gagal Mengompres Foto",
+        message: err.message || "Terjadi kesalahan saat memproses gambar.",
+        variant: "error",
+      });
+    } finally {
+      setCompressing(false);
+    }
   };
 
   const handleSave = async () => {
@@ -159,7 +185,11 @@ export default function DoctorProfileEditPage() {
               {/* Foto Avatar Upload */}
               <div className="flex items-center gap-4 bg-amber-50/40 p-4 rounded-2xl border border-amber-100/60">
                 <div className="relative shrink-0">
-                  {profile.avatar ? (
+                  {compressing ? (
+                    <div className="w-16 h-16 rounded-full bg-[#c9a24a]/20 flex items-center justify-center border-2 border-[#c9a24a] shadow-md animate-pulse">
+                      <Loader2 className="w-6 h-6 text-[#c9a24a] animate-spin" />
+                    </div>
+                  ) : profile.avatar ? (
                     <img
                       src={profile.avatar}
                       alt="Foto Profil Dokter"
@@ -170,19 +200,24 @@ export default function DoctorProfileEditPage() {
                       {profile.name ? profile.name.charAt(0).toUpperCase() : "D"}
                     </div>
                   )}
-                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm cursor-pointer hover:bg-gray-50">
+                  <label className={`absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm cursor-pointer hover:bg-gray-50 ${compressing ? "pointer-events-none opacity-50" : ""}`}>
                     <Camera className="w-3.5 h-3.5 text-[#c9a24a]" />
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleAvatarChange}
+                      disabled={compressing}
                       className="hidden"
                     />
                   </label>
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Foto Profil Dokter</h4>
-                  <p className="text-xs text-gray-500">Klik ikon kamera untuk unggah foto pas dokter (maks 2MB)</p>
+                  <p className="text-xs text-gray-500">
+                    {compressing
+                      ? "Sedang mengompres & mengonversi foto ke WebP..."
+                      : "Foto otomatis dikompres ke format WebP agar tajam & cepat dimuat"}
+                  </p>
                 </div>
               </div>
 
