@@ -104,7 +104,7 @@ export default function ServiceEditModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[92vw] max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-brand-charcoal">
             {service ? "Edit Layanan Klinik" : "Tambah Layanan Baru"}

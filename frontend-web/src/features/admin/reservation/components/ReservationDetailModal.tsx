@@ -32,6 +32,7 @@ import { toast } from "@/shared/ui/toast";
 import { updateAdminReservation, type ReservationItem } from "../services/reservationService";
 import { getAdminDoctorSchedules, type AdminDoctorScheduleItem } from "@/features/admin/doctors/services/adminDoctorScheduleApi";
 import ReservationConsentPdfModal from "./ReservationConsentPdfModal";
+import TermsPdfModal from "@/features/patient/reservation/components/TermsPdfModal";
 
 interface Props {
   isOpen: boolean;
@@ -60,6 +61,7 @@ export default function ReservationDetailModal({
   const [adminNotes, setAdminNotes] = useState(reservation.admin_notes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isTermsPdfModalOpen, setIsTermsPdfModalOpen] = useState(false);
 
   // Live Doctor Schedules from DB
   const [dbSchedules, setDbSchedules] = useState<AdminDoctorScheduleItem[]>([]);
@@ -414,10 +416,11 @@ export default function ReservationDetailModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl">
-        {/* Header */}
-        <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-5 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8]">
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="w-[95vw] max-w-5xl lg:max-w-5xl xl:max-w-6xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl">
+          {/* Header */}
+          <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-5 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8]">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] flex items-center justify-center text-[#8A6B2B] shadow-inner">
               <Calendar className="w-5 h-5 text-[#8A6B2B]" />
@@ -712,36 +715,76 @@ export default function ReservationDetailModal({
               </div>
             )}
 
-            {/* Digital Signature & Persetujuan Tindakan (Informed Consent PDF) */}
-            <div className="pt-3 border-t border-[#F0E6D3] space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-[#3D332A]">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Tanda Tangan Digital Pasien (Persetujuan Tindakan Medis)</span>
+            </div>
+
+          {/* Card 3: 2 Langkah Verifikasi Dokumen & Tanda Tangan Pasien */}
+          <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-[#F0E6D3] pb-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
+                <FileCheck className="w-4 h-4 text-[#8C6B1C]" />
+                Verifikasi Dokumen Legal & Persetujuan Pasien
+              </h4>
+              <span className="text-[10px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-0.5 rounded-full border border-[#EADBBD]">
+                2 Dokumen Terdaftar
+              </span>
+            </div>
+
+            {/* Verifikasi 1: Syarat & Ketentuan Layanan Pasien */}
+            <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#3D332A]">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>1. Syarat & Ketentuan Layanan Pasien</span>
                 </div>
                 <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    ✓ Disetujui via Ceklis
+                  </span>
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setIsPdfModalOpen(true)}
-                    className="h-7 px-2.5 rounded-lg border-[#C9A24A] text-[#8A6B2B] hover:bg-[#FDF8F0] text-[11px] font-bold flex items-center gap-1.5 shadow-xs"
+                    onClick={() => setIsTermsPdfModalOpen(true)}
+                    className="h-7 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    <span>Lihat Dokumen PDF Informed Consent</span>
+                    <span>Lihat PDF Syarat & Ketentuan</span>
                   </Button>
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    ✓ Disetujui
+                </div>
+              </div>
+              <p className="text-[11px] text-[#7A6E60] leading-relaxed">
+                Pasien telah menyetujui seluruh ketentuan operasional klinik, aturan penjadwalan & reschedule, garansi perawatan, hak & kewajiban pasien, serta kebijakan rekam medis.
+              </p>
+            </div>
+
+            {/* Verifikasi 2: Surat Pernyataan & Persetujuan Pasien (Informed Consent + Tanda Tangan Digital) */}
+            <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#3D332A]">
+                  <ShieldCheck className="w-4 h-4 text-[#8C6B1C] shrink-0" />
+                  <span>2. Surat Pernyataan & Persetujuan Pasien (Informed Consent)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    ✓ Bertanda Tangan Digital
                   </span>
+                  <Button
+                    type="button"
+                    onClick={() => setIsPdfModalOpen(true)}
+                    className="h-7 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Lihat PDF Surat Persetujuan</span>
+                  </Button>
                 </div>
               </div>
 
               {reservation.signature_data ? (
-                <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
+                <div className="bg-white border border-[#EADBBD] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-center gap-3">
                     <div
                       onClick={() => setIsPdfModalOpen(true)}
-                      className="w-44 h-20 bg-white border border-[#D9D0BC] rounded-xl p-1.5 flex items-center justify-center shadow-inner cursor-pointer hover:border-[#C9A24A] transition-all group"
-                      title="Klik untuk melihat dokumen PDF resmi & tanda tangan lengkap"
+                      className="w-36 h-16 bg-[#FAF8F5] border border-[#D9D0BC] rounded-lg p-1 flex items-center justify-center cursor-pointer hover:border-[#8C6B1C] transition-all group"
+                      title="Klik untuk melihat dokumen PDF Surat Persetujuan Pasien"
                     >
                       <img
                         src={reservation.signature_data}
@@ -759,28 +802,10 @@ export default function ReservationDetailModal({
                       </p>
                     </div>
                   </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsPdfModalOpen(true)}
-                    className="h-8 px-3 rounded-xl border-[#D9D0BC] text-[#4A3F35] hover:bg-white text-xs font-semibold shrink-0 flex items-center gap-1"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                    <span>Buka PDF</span>
-                  </Button>
                 </div>
               ) : (
-                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-dashed border-[#D9D0BC] flex items-center justify-between text-xs text-[#8A7B6B]">
-                  <span>Pasien menyetujui syarat & ketentuan digital saat reservasi.</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsPdfModalOpen(true)}
-                    className="h-7 text-xs text-[#8C6B1C] font-semibold flex items-center gap-1 hover:bg-[#F5ECE0]"
-                  >
-                    <FileText className="w-3.5 h-3.5" /> Buka PDF
-                  </Button>
+                <div className="p-3 bg-white rounded-xl border border-dashed border-[#D9D0BC] flex items-center justify-between text-xs text-[#8A7B6B]">
+                  <span>Persetujuan medis elektronik telah terkonfirmasi.</span>
                 </div>
               )}
             </div>
@@ -935,23 +960,28 @@ export default function ReservationDetailModal({
             Tutup
           </Button>
         </div>
-
-        {/* Modal Viewer Dokumen PDF Syarat Ketentuan & Tanda Tangan Lengkap */}
-        <ReservationConsentPdfModal
-          isOpen={isPdfModalOpen}
-          onClose={() => setIsPdfModalOpen(false)}
-          bookingCode={bookingCode}
-          patientName={patientName}
-          patientPhone={reservation.phone || ""}
-          isGuest={Boolean(isGuest)}
-          serviceName={serviceName}
-          doctorName={doctorName}
-          dateStr={dateStr}
-          timeStr={timeStr}
-          signatureData={reservation.signature_data}
-          acceptedAt={reservation.terms_accepted_at || reservation.createdAt}
-        />
       </DialogContent>
     </Dialog>
+
+    {/* Modal Viewer Dokumen PDF Syarat Ketentuan & Tanda Tangan Lengkap */}
+    <ReservationConsentPdfModal
+      isOpen={isPdfModalOpen}
+      onClose={() => setIsPdfModalOpen(false)}
+      bookingCode={bookingCode}
+      patientName={patientName}
+      patientPhone={reservation.phone || ""}
+      isGuest={Boolean(isGuest)}
+      serviceName={serviceName}
+      doctorName={doctorName}
+      dateStr={dateStr}
+      timeStr={timeStr}
+      signatureData={reservation.signature_data}
+      acceptedAt={reservation.terms_accepted_at || reservation.createdAt}
+    />
+    <TermsPdfModal
+        isOpen={isTermsPdfModalOpen}
+        onClose={() => setIsTermsPdfModalOpen(false)}
+      />
+    </>
   );
 }

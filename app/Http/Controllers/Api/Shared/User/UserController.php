@@ -180,6 +180,45 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Get list of unique dental specializations from doctors and clinic services
+     */
+    public function specializations(): JsonResponse
+    {
+        $fromDoctors = User::query()
+            ->where('role', 'doctor')
+            ->whereNotNull('specialization')
+            ->where('specialization', '!=', '')
+            ->pluck('specialization')
+            ->toArray();
+
+        $fromServices = \App\Models\Guest\Service\ClinicService::query()
+            ->whereNotNull('specialist_label')
+            ->where('specialist_label', '!=', '')
+            ->pluck('specialist_label')
+            ->toArray();
+
+        $defaults = [
+            'Dokter Gigi Spesialis Konservasi Gigi (Sp.KG)',
+            'Dokter Gigi Spesialis Ortodonti (Sp.Ort)',
+            'Dokter Gigi Spesialis Periodonsia (Sp.Perio)',
+            'Dokter Gigi Spesialis Prostodonsia (Sp.Pros)',
+            'Dokter Gigi Spesialis Bedah Mulut & Maksilofasial (Sp.BMM)',
+            'Dokter Gigi Spesialis Kedokteran Gigi Anak (Sp.KGA)',
+            'Dokter Gigi Spesialis Penyakit Mulut (Sp.PM)',
+            'Dokter Gigi Spesialis Radiologi Kedokteran Gigi (Sp.RKG)',
+            'Dokter Gigi Umum (General Practitioner)',
+            'Aesthetic & Cosmetic Dentistry',
+            'Restorative & Implants Specialist',
+        ];
+
+        $all = array_values(array_unique(array_filter(array_merge($defaults, $fromDoctors, $fromServices))));
+
+        return response()->json([
+            'specializations' => $all,
+        ]);
+    }
+
     public function storeDoctor(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

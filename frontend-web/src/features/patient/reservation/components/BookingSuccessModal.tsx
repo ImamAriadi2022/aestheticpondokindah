@@ -31,7 +31,7 @@ export default function BookingSuccessModal({
 
   const formattedCode =
     bookingData.code ||
-    `#APP-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`;
+    `#RSV-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">

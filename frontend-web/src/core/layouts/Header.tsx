@@ -401,6 +401,10 @@ export default function Header() {
         onOpenChange={setTermsOpen}
         terms={bookingTerms}
         patientName={formData.name || "Pasien Guest"}
+        serviceName={formData.complaint || "Konsultasi & Perawatan Gigi"}
+        dateStr={formData.date || "Hari Ini"}
+        timeStr={`${formData.time || "10:00"} WIB`}
+        phone={formData.phone || "-"}
         onConfirm={(sig) => void submitBooking(sig)}
       />
     </header>

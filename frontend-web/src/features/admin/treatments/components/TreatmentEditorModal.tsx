@@ -12,11 +12,16 @@ import {
   Loader2,
   Plus,
   Trash2,
+  Upload,
+  Camera,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { toast } from "@/shared/ui/toast";
+import { getSession } from "@/core/auth/services/session";
+import { API_BASE } from "@/core/api/apiConfig";
+import { compressImageToWebP } from "@/core/utils/imageCompressor";
 import {
   createAdminTreatment,
   updateAdminTreatment,
@@ -47,6 +52,8 @@ export default function TreatmentEditorModal({
   onSaved,
 }: TreatmentEditorModalProps) {
   const isEditing = Boolean(treatment);
+  const session = getSession();
+  const token = session?.token || "";
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Aesthetic Dentistry");
@@ -56,10 +63,70 @@ export default function TreatmentEditorModal({
   const [intro, setIntro] = useState("");
   const [specialistLabel, setSpecialistLabel] = useState("");
   const [specialistNames, setSpecialistNames] = useState<string[]>([]);
-  const [newSpecialistName, setNewSpecialistName] = useState("");
-  const [sortOrder, setSortOrder] = useState<number>(0);
+  const [selectedDoctorDropdown, setSelectedDoctorDropdown] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Live Doctors & Specializations from DB
+  const [dbDoctors, setDbDoctors] = useState<any[]>([]);
+  const [dbSpecializations, setDbSpecializations] = useState<string[]>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
+
+  // Fetch doctors & specializations list for synchronized dropdown
+  useEffect(() => {
+    if (isOpen) {
+      setLoadingDoctors(true);
+      
+      // 1. Fetch Doctors
+      const headers: Record<string, string> = {
+        Accept: "application/json",
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      fetch(`${API_BASE}/admin/doctors`, { headers })
+        .then((res) => {
+          if (!res.ok) {
+            return fetch(`${API_BASE}/doctors`, { headers: { Accept: "application/json" } });
+          }
+          return res;
+        })
+        .then((res) => res.json())
+        .then((data) => {
+          const list = Array.isArray(data) ? data : data?.doctors || data?.data || [];
+          setDbDoctors(list);
+        })
+        .catch(() => {
+          // Fallback fetch from public endpoint
+          fetch(`${API_BASE}/public/doctors`, { headers: { Accept: "application/json" } })
+            .then((r) => r.json())
+            .then((d) => setDbDoctors(d?.doctors || []))
+            .catch(() => {});
+        })
+        .finally(() => setLoadingDoctors(false));
+
+      // 2. Fetch Specializations from Database
+      fetch(`${API_BASE}/specializations`, { headers: { Accept: "application/json" } })
+        .then((res) => {
+          if (!res.ok) {
+            return fetch(`${API_BASE}/public/specializations`, { headers: { Accept: "application/json" } });
+          }
+          return res;
+        })
+        .then((res) => res.json())
+        .then((data) => {
+          const specs = Array.isArray(data?.specializations)
+            ? data.specializations
+            : Array.isArray(data)
+            ? data
+            : [];
+          setDbSpecializations(specs);
+        })
+        .catch(() => {});
+    }
+  }, [isOpen, token]);
 
   useEffect(() => {
     if (treatment) {
@@ -71,8 +138,8 @@ export default function TreatmentEditorModal({
       setIntro(treatment.intro || "");
       setSpecialistLabel(treatment.specialist_label || "");
       setSpecialistNames(Array.isArray(treatment.specialist_names) ? treatment.specialist_names : []);
-      setSortOrder(treatment.sort_order ?? 0);
       setIsActive(treatment.is_active !== false);
+      setSelectedDoctorDropdown("");
     } else {
       setTitle("");
       setCategory("Aesthetic Dentistry");
@@ -82,19 +149,62 @@ export default function TreatmentEditorModal({
       setIntro("");
       setSpecialistLabel("");
       setSpecialistNames([]);
-      setSortOrder(0);
       setIsActive(true);
+      setSelectedDoctorDropdown("");
     }
   }, [treatment, isOpen]);
 
-  const handleAddSpecialist = () => {
-    if (!newSpecialistName.trim()) return;
-    setSpecialistNames([...specialistNames, newSpecialistName.trim()]);
-    setNewSpecialistName("");
+  // Handle adding doctor from synchronized dropdown
+  const handleAddDoctorFromDropdown = () => {
+    if (!selectedDoctorDropdown) return;
+    if (specialistNames.includes(selectedDoctorDropdown)) {
+      toast({ title: "Dokter Sudah Ada", message: "Dokter ini sudah terdaftar di tim layanan.", variant: "warning" });
+      return;
+    }
+    setSpecialistNames([...specialistNames, selectedDoctorDropdown]);
+    
+    // Auto-suggest specialist label if still empty
+    if (!specialistLabel) {
+      const docObj = dbDoctors.find((d) => d.name === selectedDoctorDropdown);
+      if (docObj?.specialization) {
+        setSpecialistLabel(docObj.specialization);
+      }
+    }
+    setSelectedDoctorDropdown("");
   };
 
   const handleRemoveSpecialist = (idx: number) => {
     setSpecialistNames(specialistNames.filter((_, i) => i !== idx));
+  };
+
+  // Handle image upload with auto compression
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const result = await compressImageToWebP(file, {
+        maxWidth: 600,
+        maxHeight: 600,
+        quality: 0.88,
+      });
+
+      setImage(result.dataUrl);
+      toast({
+        title: "Logo Berhasil Dipilih",
+        message: "Logo layanan siap disimpan ke direktori /layanan.",
+        variant: "info",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Gagal Mengunggah Logo",
+        message: err.message || "Gagal memproses gambar logo",
+        variant: "error",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,7 +229,7 @@ export default function TreatmentEditorModal({
         intro: intro.trim(),
         specialist_label: specialistLabel.trim() || null,
         specialist_names: specialistNames.length > 0 ? specialistNames : null,
-        sort_order: Number(sortOrder) || 0,
+        sort_order: treatment?.sort_order ?? 0,
         is_active: isActive,
       };
 
@@ -154,7 +264,7 @@ export default function TreatmentEditorModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl text-left">
+      <DialogContent className="w-[92vw] max-w-4xl lg:max-w-4xl xl:max-w-5xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl text-left">
         {/* Header */}
         <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8]">
           <div className="flex items-center gap-3">
@@ -266,93 +376,144 @@ export default function TreatmentEditorModal({
             />
           </div>
 
-          {/* 4. Specialist Team Config */}
+          {/* 4. Dokter Spesialis Penanggung Jawab (Dropdown Sinkron API) */}
           <div className="bg-white p-4 rounded-2xl border border-[#EDE5D6] space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
                 <Stethoscope className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                Dokter Spesialis Penanggung Jawab Layanan
+                Dokter Penanggung Jawab Layanan
               </label>
-              <span className="text-[10px] text-[#8A7B6B]">Opsional</span>
-            </div>
-
-            <Input
-              value={specialistLabel}
-              onChange={(e) => setSpecialistLabel(e.target.value)}
-              placeholder="Label Spesialis (contoh: Dokter Spesialis Konservasi Gigi / Sp.KG)"
-              className="h-9 text-xs bg-[#FAF8F5] border-[#E8DFC8] rounded-xl"
-            />
-
-            <div className="flex gap-2">
-              <Input
-                value={newSpecialistName}
-                onChange={(e) => setNewSpecialistName(e.target.value)}
-                placeholder="Tambah nama dokter (contoh: drg. Yulita Dora, Sp.KG)"
-                className="h-9 text-xs bg-[#FAF8F5] border-[#E8DFC8] rounded-xl"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddSpecialist();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                onClick={handleAddSpecialist}
-                size="sm"
-                className="h-9 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shrink-0"
-              >
-                <Plus className="w-3.5 h-3.5 mr-1" /> Tambah
-              </Button>
-            </div>
-
-            {specialistNames.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {specialistNames.map((name, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FAF5EA] border border-[#EADBBD] text-xs font-medium text-[#4A3F35]"
-                  >
-                    <span>{name}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSpecialist(idx)}
-                      className="text-rose-500 hover:text-rose-700"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 5. Image URL & Sort Order & Visibility Toggle */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-            <div className="sm:col-span-2 space-y-1.5">
-              <label className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
-                <ImageIcon className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                URL Gambar / Ilustrasi Layanan
-              </label>
-              <Input
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                placeholder="Contoh: /layanan/Dental Whitening.png"
-                className="h-10 text-xs bg-white border-[#E8DFC8] rounded-xl text-[#3D332A]"
-              />
+              <span className="text-[10px] text-[#8A7B6B]">Sinkron Database Dokter</span>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#3D332A] block">
-                Urutan Tampil (Sort Order)
+              <label className="text-[11px] font-semibold text-[#6B5E4F]">
+                Pilih Dokter yang Bertugas untuk Layanan Ini:
               </label>
-              <Input
-                type="number"
-                value={sortOrder}
-                onChange={(e) => setSortOrder(Number(e.target.value))}
-                placeholder="0"
-                className="h-10 text-xs bg-white border-[#E8DFC8] rounded-xl font-bold text-[#3D332A]"
-              />
+              <div className="flex gap-2">
+                <select
+                  value={selectedDoctorDropdown}
+                  onChange={(e) => setSelectedDoctorDropdown(e.target.value)}
+                  className="flex-1 h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl px-3 text-xs font-semibold text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+                  disabled={loadingDoctors}
+                >
+                  <option value="">
+                    {loadingDoctors ? "-- Memuat data dokter... --" : "-- Pilih Dokter dari Database --"}
+                  </option>
+                  {dbDoctors.map((doc: any) => (
+                    <option key={doc.id} value={doc.name}>
+                      {doc.name} {doc.specialization ? `— ${doc.specialization}` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                <Button
+                  type="button"
+                  onClick={handleAddDoctorFromDropdown}
+                  disabled={!selectedDoctorDropdown}
+                  size="sm"
+                  className="h-9 px-4 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shrink-0 disabled:opacity-50"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" /> Tambah
+                </Button>
+              </div>
+            </div>
+
+            {/* List Dokter Terpilih */}
+            {specialistNames.length > 0 ? (
+              <div className="pt-2 border-t border-[#F5ECE0] space-y-1.5">
+                <span className="text-[10px] font-bold text-[#8A6B2B] uppercase tracking-wider block">
+                  Dokter Penanggung Jawab Terdaftar:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {specialistNames.map((name, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] text-xs font-semibold text-[#3D332A] shadow-2xs"
+                    >
+                      <Stethoscope className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                      <span>{name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSpecialist(idx)}
+                        className="text-rose-500 hover:text-rose-700 p-0.5 rounded-md hover:bg-rose-50 transition-colors"
+                        title="Hapus dokter ini"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-[#A89F91] italic pt-1">
+                Belum ada dokter spesialis yang dipilih. Silakan pilih dokter dari dropdown di atas.
+              </p>
+            )}
+          </div>
+
+          {/* 5. Upload Logo Layanan */}
+          <div className="bg-white p-4 rounded-2xl border border-[#EDE5D6] space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                Upload Logo Layanan
+              </label>
+              <span className="text-[10px] text-[#8A7B6B]">Disimpan di folder <code>/layanan</code></span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-4 bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#E8DFC8]">
+              {/* Preview Box */}
+              <div className="w-20 h-20 bg-white rounded-2xl border border-[#D9D0BC] flex items-center justify-center p-2 shadow-inner shrink-0 relative group">
+                {uploadingImage ? (
+                  <Loader2 className="w-6 h-6 text-[#C9A24A] animate-spin" />
+                ) : image ? (
+                  <img
+                    src={image}
+                    alt="Logo Layanan"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-gray-400 text-center">
+                    <ImageIcon className="w-7 h-7 stroke-1" />
+                    <span className="text-[9px] mt-0.5 font-medium">Belum ada</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Controls */}
+              <div className="flex-1 space-y-2 text-center sm:text-left">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="h-9 px-4 rounded-xl bg-white hover:bg-[#F5ECE0] border border-[#D9D0BC] text-xs font-bold text-[#4A3F35] flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all">
+                    <Upload className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                    <span>{image ? "Ganti Logo Layanan" : "Pilih File Logo"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={uploadingImage}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {image && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setImage("")}
+                      className="h-9 px-3 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" /> Hapus Logo
+                    </Button>
+                  )}
+                </div>
+                <p className="text-[11px] text-[#7A6E60]">
+                  {image
+                    ? `Logo terpilih (${image.startsWith("data:") ? "Siap disimpan" : image}). Format otomatis dioptimasi ke WebP / PNG.`
+                    : "Pilih file gambar logo (PNG, JPG, SVG, WebP). Otomatis disimpan dan disinkronkan ke folder /layanan."}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -389,7 +550,7 @@ export default function TreatmentEditorModal({
             </Button>
             <Button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || uploadingImage}
               className="h-10 px-6 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-md flex items-center gap-1.5"
             >
               {submitting ? (
@@ -407,3 +568,4 @@ export default function TreatmentEditorModal({
     </Dialog>
   );
 }
+

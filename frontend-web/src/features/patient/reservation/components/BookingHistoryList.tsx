@@ -275,7 +275,7 @@ export default function BookingHistoryList({
                         {item.serviceName}
                       </span>
                       <span className="font-mono text-[11px] font-bold text-[#8C6B1C] bg-white px-2 py-0.5 rounded-md border border-[#E6DECB]">
-                        {item.code || `#APP-${item.id}`}
+                        {item.code || `#RSV-${String(item.id).padStart(6, "0")}`}
                       </span>
                     </div>
 

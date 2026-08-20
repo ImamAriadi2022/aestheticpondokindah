@@ -117,6 +117,7 @@ Route::prefix('admin')->group(function () {
 
         // Doctor Management
         Route::get('/doctors', [UserController::class, 'doctors']);
+        Route::get('/specializations', [UserController::class, 'specializations']);
         Route::get('/doctors/{user}', [UserController::class, 'show']);
         Route::post('/doctors', [UserController::class, 'storeDoctor']);
         Route::put('/doctors/{user}', [UserController::class, 'update']);
@@ -429,6 +430,7 @@ Route::prefix('public')->group(function () {
     Route::get('/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
     Route::get('/doctors', [UserController::class, 'publicDoctors']);
+    Route::get('/specializations', [UserController::class, 'specializations']);
     Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/membership/tiers', [UserMembershipController::class, 'tiers']);
     Route::get('/download-apps', [ContentController::class, 'downloadApps']);
@@ -443,6 +445,12 @@ Route::prefix('public')->group(function () {
     Route::get('/about', [AboutPublicController::class, 'show']);
     Route::get('/legal/{type}', [LegalPublicController::class, 'show']);
 });
+
+// Top-level Public Aliases (direct without /public prefix)
+Route::get('/doctors', [UserController::class, 'publicDoctors']);
+Route::get('/specializations', [UserController::class, 'specializations']);
+Route::get('/services', [ClinicServicePublicController::class, 'index']);
+Route::get('/branches', [BranchController::class, 'index']);
 
 // =========================================================================
 // 7. WEBHOOKS & EXTERNAL CALLBACKS

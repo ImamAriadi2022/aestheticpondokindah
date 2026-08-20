@@ -29,6 +29,7 @@ import { toast } from "@/shared/ui/toast";
 import { apiClient } from "@/core/api/apiClient";
 import DigitalSignatureModal from "@/features/patient/reservation/components/DigitalSignatureModal";
 import TermsPdfModal from "@/features/patient/reservation/components/TermsPdfModal";
+import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 
 interface ServiceItem {
   id: string | number;
@@ -109,6 +110,7 @@ export default function GuestBookingFlow() {
   // Modals & States
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showConsentPdfModal, setShowConsentPdfModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTicket, setActiveTicket] = useState<any>(null);
   const [doctorSchedules, setDoctorSchedules] = useState<any[]>([]);
@@ -846,76 +848,100 @@ export default function GuestBookingFlow() {
               />
             </div>
 
-            {/* Digital Signature */}
-            <div className="space-y-1.5 pt-2">
-              <label className="text-xs font-bold text-[#3D332A] block">
-                Tanda Tangan Digital (Persetujuan Tindakan)
-              </label>
-
-              {signatureData ? (
-                <div className="bg-[#FAF8F5] border-2 border-[#C9A24A] rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="w-24 h-14 bg-white rounded-xl border border-[#D9D0BC] overflow-hidden flex items-center justify-center p-1 shadow-inner">
-                      <img src={signatureData} alt="Tanda Tangan Pasien" className="max-w-full max-h-full object-contain" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-[#2C2416]">Tanda Tangan Tersimpan</p>
-                      <p className="text-[11px] text-[#7C7365]">{patientName || "Pasien Guest"}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setShowSignatureModal(true)}
-                      className="px-3 py-1.5 rounded-xl border border-[#C9A24A] text-[#8A6B2B] hover:bg-[#FAF5EA] text-xs font-semibold"
-                    >
-                      Ubah
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSignatureData(null)}
-                      className="px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold"
-                    >
-                      Hapus
-                    </button>
-                  </div>
+            {/* 2 Langkah Verifikasi Dokumen & Tanda Tangan Pasien */}
+            <div className="space-y-4 pt-2">
+              {/* Langkah 1: Syarat & Ketentuan Layanan Pasien */}
+              <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-2.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Langkah 1: Syarat & Ketentuan Layanan Pasien</span>
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowTermsModal(true)}
+                    className="h-7 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                  >
+                    <FileCheck className="w-3.5 h-3.5" />
+                    <span>Lihat Dokumen PDF S&K</span>
+                  </Button>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowSignatureModal(true)}
-                  className="w-full h-28 bg-[#FAF8F5] border-2 border-dashed border-[#D9D0BC] hover:border-[#C9A24A] rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-all group hover:bg-[#FAF5EA]/40 cursor-pointer shadow-xs"
-                >
-                  <PenTool className="w-5 h-5 text-[#8A6B2B] mb-1.5" />
-                  <p className="text-xs font-bold text-[#3D332A] group-hover:text-[#8A6B2B]">
-                    Klik di Sini untuk Tanda Tangan Digital
-                  </p>
-                  <p className="text-[10px] text-[#A89F91]">Dilengkapi kuas tanda tangan interaktif</p>
-                </button>
-              )}
-            </div>
 
-            {/* Checkbox Terms */}
-            <div className="pt-2">
-              <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="mt-1 rounded border-gray-300 text-[#C9A24A] focus:ring-[#C9A24A]"
-                />
-                <span className="text-xs text-[#5C5546] leading-relaxed">
-                  Saya menyetujui{" "}
+                <label className="flex items-start gap-2.5 cursor-pointer select-none pt-1">
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#C9A24A] focus:ring-[#C9A24A]"
+                  />
+                  <span className="text-xs text-[#5C5546] leading-relaxed">
+                    Saya telah membaca, memahami, dan menyetujui seluruh{" "}
+                    <strong className="text-[#8C6B1C]">Syarat & Ketentuan Layanan Pasien</strong>{" "}
+                    serta Kebijakan Pembatalan klinik Aesthetic Pondok Indah. *
+                  </span>
+                </label>
+              </div>
+
+              {/* Langkah 2: Surat Pernyataan & Persetujuan Pasien (Informed Consent) */}
+              <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
+                    <PenTool className="w-4 h-4 text-[#8C6B1C] shrink-0" />
+                    <span>Langkah 2: Surat Pernyataan & Persetujuan Pasien (Informed Consent)</span>
+                  </span>
+                  <Button
+                    type="button"
+                    onClick={() => setShowConsentPdfModal(true)}
+                    className="h-7 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Lihat Dokumen PDF Surat Persetujuan</span>
+                  </Button>
+                </div>
+
+                {signatureData ? (
+                  <div className="bg-white border-2 border-[#C9A24A] rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-24 h-14 bg-[#FAF8F5] rounded-xl border border-[#D9D0BC] overflow-hidden flex items-center justify-center p-1 shadow-inner">
+                        <img src={signatureData} alt="Tanda Tangan Pasien" className="max-w-full max-h-full object-contain" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#2C2416]">Tanda Tangan Tersimpan</p>
+                        <p className="text-[11px] text-[#7C7365]">{patientName || "Pasien Guest"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setShowSignatureModal(true)}
+                        className="px-3 py-1.5 rounded-xl border border-[#C9A24A] text-[#8A6B2B] hover:bg-[#FAF5EA] text-xs font-semibold cursor-pointer"
+                      >
+                        Ubah
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSignatureData(null)}
+                        className="px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  </div>
+                ) : (
                   <button
                     type="button"
-                    onClick={() => setShowTermsModal(true)}
-                    className="text-[#8C6B1C] font-bold underline hover:text-[#735614]"
+                    onClick={() => setShowSignatureModal(true)}
+                    className="w-full h-24 bg-white border-2 border-dashed border-[#D9D0BC] hover:border-[#C9A24A] rounded-2xl flex flex-col items-center justify-center text-center p-3 transition-all group hover:bg-[#FAF5EA]/40 cursor-pointer shadow-xs"
                   >
-                    Syarat & Ketentuan
-                  </button>{" "}
-                  serta Kebijakan Pembatalan klinik Aesthetic Pondok Indah.
-                </span>
-              </label>
+                    <PenTool className="w-4 h-4 text-[#8A6B2B] mb-1" />
+                    <p className="text-xs font-bold text-[#3D332A] group-hover:text-[#8A6B2B]">
+                      Buka Canvas Tanda Tangan Digital *
+                    </p>
+                    <p className="text-[10px] text-[#A89F91]">Bubuhkan tanda tangan sebagai bukti persetujuan tindakan medis</p>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-[#F5ECE0]">
@@ -947,6 +973,22 @@ export default function GuestBookingFlow() {
           patientName={patientName || "Pasien Guest"}
         />
       )}
+
+      {/* Consent PDF Modal */}
+      <ReservationConsentPdfModal
+        isOpen={showConsentPdfModal}
+        onClose={() => setShowConsentPdfModal(false)}
+        bookingCode="DRAFT-GUEST"
+        patientName={patientName || "Pasien Tamu"}
+        patientPhone={patientPhone || "-"}
+        isGuest={true}
+        serviceName={selectedService?.name || "Layanan Gigi"}
+        doctorName={selectedDoctor?.name || "Dokter Gigi"}
+        dateStr={selectedDate || "-"}
+        timeStr={`${selectedTimeSlot} WIB`}
+        signatureData={signatureData}
+        acceptedAt={new Date().toISOString()}
+      />
 
       {/* Terms Modal */}
       {showTermsModal && (

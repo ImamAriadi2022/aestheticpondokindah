@@ -14,6 +14,9 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { FileText, ExternalLink } from "lucide-react";
+import TermsPdfModal from "./TermsPdfModal";
+import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 
 interface ETicketModalProps {
   isOpen: boolean;
@@ -44,6 +47,9 @@ export default function ETicketModal({
   onBookAgain,
   ticketData,
 }: ETicketModalProps) {
+  const [showTermsModal, setShowTermsModal] = React.useState(false);
+  const [showConsentModal, setShowConsentModal] = React.useState(false);
+
   if (!isOpen) return null;
 
   const rawStatus = (ticketData.status || "confirmed").toLowerCase();
@@ -70,10 +76,11 @@ export default function ETicketModal({
   );
 
   const formattedCode =
-    ticketData.code ||
-    (ticketData.id
-      ? `#APP-${String(ticketData.id).padStart(6, "0")}`
-      : `#APP-${new Date().getFullYear()}84920`);
+    ticketData.code
+      ? (ticketData.code.startsWith("#") ? ticketData.code : `#${ticketData.code}`)
+      : (ticketData.id
+          ? `#RSV-${String(ticketData.id).padStart(6, "0")}`
+          : `#RSV-000001`);
 
   const formattedPrice =
     typeof ticketData.totalAmount === "number"
@@ -475,26 +482,70 @@ export default function ETicketModal({
           </div>
         </div>
 
-        {/* Bottom Action Buttons */}
-        <div className="p-4 sm:px-6 border-t border-[#EDE5D6] bg-white flex flex-col sm:flex-row items-center justify-end gap-2.5">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            className="w-full sm:w-auto h-11 px-5 rounded-xl border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] text-xs sm:text-sm font-semibold cursor-pointer"
-          >
-            Tutup
-          </Button>
+        {/* Bottom Action Buttons & PDF Viewers */}
+        <div className="p-4 sm:px-6 border-t border-[#EDE5D6] bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowTermsModal(true)}
+              className="flex-1 sm:flex-none h-10 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>PDF S&K</span>
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setShowConsentModal(true)}
+              className="flex-1 sm:flex-none h-10 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>PDF Surat Persetujuan</span>
+            </Button>
+          </div>
 
-          <Button
-            type="button"
-            onClick={onBookAgain}
-            className="w-full sm:w-auto h-11 px-6 rounded-xl bg-[#8C6B1C] hover:bg-[#735716] text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer"
-          >
-            Buat Reservasi Baru
-          </Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="flex-1 sm:flex-none h-10 px-4 rounded-xl border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] text-xs font-semibold cursor-pointer"
+            >
+              Tutup
+            </Button>
+
+            <Button
+              type="button"
+              onClick={onBookAgain}
+              className="flex-1 sm:flex-none h-10 px-5 rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+            >
+              Reservasi Baru
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* PDF Modal 1: Syarat & Ketentuan */}
+      <TermsPdfModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
+
+      {/* PDF Modal 2: Surat Pernyataan & Persetujuan Pasien */}
+      <ReservationConsentPdfModal
+        isOpen={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        bookingCode={ticketData.code || `#RSV-${ticketData.id || "000001"}`}
+        patientName={ticketData.patientName || "Pasien Terdaftar"}
+        patientPhone={ticketData.phone || "-"}
+        isGuest={false}
+        serviceName={ticketData.serviceName}
+        doctorName={ticketData.doctorName}
+        dateStr={ticketData.displayDate || ticketData.date}
+        timeStr={`${ticketData.time} WIB`}
+        signatureData={(ticketData as any)?.signatureData || (ticketData as any)?.signature_data || null}
+        acceptedAt={new Date().toISOString()}
+      />
     </div>
   );
 }

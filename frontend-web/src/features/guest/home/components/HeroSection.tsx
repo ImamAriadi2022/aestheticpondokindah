@@ -442,6 +442,10 @@ export default function HeroSection() {
             onOpenChange={setTermsOpen}
             terms={bookingTerms}
             patientName={appointment.fullName || "Pasien Guest"}
+            serviceName={appointment.complaint || "Konsultasi & Perawatan Gigi"}
+            dateStr={appointment.date || "Hari Ini"}
+            timeStr={`${appointment.time || "10:00"} WIB`}
+            phone={appointment.phone || "-"}
             onConfirm={(sig) => void submitHeroBooking(mobileBookingOpen ? "hero_mobile" : "hero_desktop", sig)}
           />
         </div>

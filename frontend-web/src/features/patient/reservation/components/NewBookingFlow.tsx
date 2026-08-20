@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from "react-router";
 import {
   ArrowLeft,
   Search,
-  SlidersHorizontal,
   Sparkles,
   Clock,
   Check,
@@ -35,6 +34,7 @@ import { apiClient } from "@/core/api/apiClient";
 import DigitalSignaturePad from "./DigitalSignaturePad";
 import DigitalSignatureModal from "./DigitalSignatureModal";
 import TermsPdfModal from "./TermsPdfModal";
+import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 import BookingSuccessModal from "./BookingSuccessModal";
 import ETicketModal from "./ETicketModal";
 import BookingHistoryList from "./BookingHistoryList";
@@ -59,6 +59,8 @@ export interface ServiceItem {
   price: number;
   priceFormatted: string;
   image: string;
+  specialistNames?: string[];
+  specialistLabel?: string;
 }
 
 // Helper to map backend ClinicService into ServiceItem
@@ -98,6 +100,8 @@ export function mapBackendService(item: any): ServiceItem {
     price,
     priceFormatted,
     image,
+    specialistNames: Array.isArray(item.specialist_names) ? item.specialist_names : [],
+    specialistLabel: item.specialist_label || "",
   };
 }
 
@@ -254,6 +258,7 @@ export default function NewBookingFlow({
   // Modals
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showConsentPdfModal, setShowConsentPdfModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showETicketModal, setShowETicketModal] = useState(false);
   const [activeTicket, setActiveTicket] = useState<any>(null);
@@ -406,7 +411,7 @@ export default function NewBookingFlow({
         setBookingsHistory(
           list.map((r: any) => ({
             id: r.id,
-            code: r.code || `#APP-${String(r.id).padStart(6, "0")}`,
+            code: r.code || `#RSV-${String(r.id).padStart(6, "0")}`,
             doctorName: r.doctor_name || r.doctor?.name || "drg. Yulita Dora",
             doctorPhoto: r.doctor?.avatar || `/dokter/${r.doctor_name || r.doctor?.name || "drg. Yulita Dora"}.jpeg`,
             specialization: r.treatment_interest || r.doctor?.specialization || "Dokter Gigi Spesialis",
@@ -587,7 +592,9 @@ export default function NewBookingFlow({
 
       const ticketCode =
         resData?.code ||
-        `#APP-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`;
+        res?.data?.code ||
+        res?.reservation?.code ||
+        (resData?.id ? `#RSV-${String(resData.id).padStart(6, "0")}` : `#RSV-${new Date().getFullYear()}0001`);
 
       const newTicket = {
         id: resData?.id || Date.now(),
@@ -612,7 +619,7 @@ export default function NewBookingFlow({
     } catch (err: any) {
       const fallbackTicket = {
         id: Date.now(),
-        code: `#APP-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`,
+        code: `#RSV-${new Date().getFullYear()}0001`,
         doctorName: selectedDoctor.name,
         specialization: selectedDoctor.specialization,
         serviceName: selectedService.name,
@@ -908,72 +915,94 @@ export default function NewBookingFlow({
                     </div>
                   )}
 
-                  {/* Search Input & Filter */}
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8272]" />
-                      <Input
-                        type="text"
-                        placeholder="Cari nama dokter atau spesialisasi..."
-                        value={doctorSearch}
-                        onChange={(e) => setDoctorSearch(e.target.value)}
-                        className="h-12 pl-11 pr-4 rounded-2xl bg-white border border-[#D9D0BC] focus:border-[#8C6B1C] focus:ring-2 focus:ring-[#8C6B1C]/20 text-sm shadow-xs"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      className="w-12 h-12 rounded-2xl bg-white border border-[#D9D0BC] flex items-center justify-center text-[#2C2416] hover:bg-[#EFE9DC] transition-all shadow-xs"
-                      title="Filter Spesialisasi"
-                    >
-                      <SlidersHorizontal className="w-5 h-5" />
-                    </button>
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8C8272]" />
+                    <Input
+                      type="text"
+                      placeholder="Cari nama dokter atau spesialisasi..."
+                      value={doctorSearch}
+                      onChange={(e) => setDoctorSearch(e.target.value)}
+                      className="h-12 pl-11 pr-4 rounded-2xl bg-white border border-[#D9D0BC] focus:border-[#8C6B1C] focus:ring-2 focus:ring-[#8C6B1C]/20 text-sm shadow-xs"
+                    />
                   </div>
 
                   {/* Doctor Cards List with Instant Next Step on Click */}
                   <div className="space-y-3 pt-1">
-                    {filteredDoctors.map((doc) => {
-                      const isSelected = selectedDoctor?.id === doc.id;
+                    {doctorsLoading ? (
+                      <div className="py-12 flex flex-col items-center justify-center gap-3 bg-white rounded-3xl border border-[#E6DECB]">
+                        <Loader2 className="w-8 h-8 text-[#8C6B1C] animate-spin" />
+                        <p className="text-xs font-semibold text-[#8C8272]">
+                          Memuat data dokter dari database klinik...
+                        </p>
+                      </div>
+                    ) : filteredDoctors.length === 0 ? (
+                      <div className="py-12 flex flex-col items-center justify-center gap-2 bg-white rounded-3xl border border-[#E6DECB] text-center px-4">
+                        <AlertCircle className="w-8 h-8 text-[#8C8272]" />
+                        <p className="text-sm font-bold text-[#2C2416]">Tidak Ada Dokter Ditemukan</p>
+                        <p className="text-xs text-[#8C8272]">
+                          Coba cari dengan kata kunci nama atau spesialisasi yang berbeda.
+                        </p>
+                      </div>
+                    ) : (
+                      filteredDoctors.map((doc) => {
+                        const isSelected = selectedDoctor?.id === doc.id;
+                        const isServiceSpecialist =
+                          selectedService?.specialistNames &&
+                          selectedService.specialistNames.length > 0 &&
+                          selectedService.specialistNames.some((sn: string) =>
+                            doc.name.toLowerCase().includes(sn.toLowerCase()) ||
+                            sn.toLowerCase().includes(doc.name.toLowerCase())
+                          );
 
-                      return (
-                        <div
-                          key={doc.id}
-                          onClick={() => {
-                            setSelectedDoctor(doc);
-                            setCurrentStep(3);
-                          }}
-                          className={`group p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer flex items-center gap-4 relative hover:border-[#8C6B1C] hover:shadow-md hover:-translate-y-0.5 ${
-                            isSelected
-                              ? "bg-white border-2 border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/10"
-                              : "bg-white border-[#E6DECB] shadow-xs"
-                          }`}
-                        >
-                          {/* Photo */}
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#EFE9DC] overflow-hidden shrink-0 border border-[#D9D0BC] group-hover:scale-105 transition-transform">
-                            <img
-                              src={doc.photo}
-                              alt={doc.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-
-                          {/* Details */}
-                          <div className="flex-1 min-w-0 text-left space-y-1 pr-6">
-                            <div className="flex items-center justify-between gap-2">
-                              <h3 className="text-base sm:text-lg font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-colors">
-                                {doc.name}
-                              </h3>
-                              <span className="text-[11px] font-semibold text-[#8C6B1C] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                <span>Pilih Dokter</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
-                              </span>
+                        return (
+                          <div
+                            key={doc.id}
+                            onClick={() => {
+                              setSelectedDoctor(doc);
+                              setCurrentStep(3);
+                            }}
+                            className={`group p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer flex items-center gap-4 relative hover:border-[#8C6B1C] hover:shadow-md hover:-translate-y-0.5 ${
+                              isSelected
+                                ? "bg-white border-2 border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/10"
+                                : "bg-white border-[#E6DECB] shadow-xs"
+                            }`}
+                          >
+                            {/* Photo */}
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#EFE9DC] overflow-hidden shrink-0 border border-[#D9D0BC] group-hover:scale-105 transition-transform">
+                              <img
+                                src={doc.photo}
+                                alt={doc.name}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
-                            <p className="text-xs sm:text-sm font-semibold text-[#8C6B1C]">
-                              {doc.specialization}
-                            </p>
+
+                            {/* Details */}
+                            <div className="flex-1 min-w-0 text-left space-y-1 pr-6">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-base sm:text-lg font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-colors">
+                                    {doc.name}
+                                  </h3>
+                                  {isServiceSpecialist && (
+                                    <span className="px-2 py-0.5 rounded-lg bg-[#FAF5EA] border border-[#EADBBD] text-[10px] font-bold text-[#8C6B1C]">
+                                      Penanggung Jawab
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[11px] font-semibold text-[#8C6B1C] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                  <span>Pilih Dokter</span>
+                                  <ChevronRight className="w-3.5 h-3.5" />
+                                </span>
+                              </div>
+                              <p className="text-xs sm:text-sm font-semibold text-[#8C6B1C]">
+                                {doc.specialization}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               )}
@@ -1284,149 +1313,164 @@ export default function NewBookingFlow({
                     />
                   </div>
 
-                  {/* Card 4: Persetujuan & Tanda Tangan (Mandatory *) */}
+                  {/* Card 4: 2 Langkah Verifikasi Dokumen & Tanda Tangan Pasien */}
                   <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-4 shadow-xs">
-                    <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-[#8C6B1C]" />
-                      <span>Persetujuan & Tanda Tangan Digital *</span>
-                    </h3>
-
-                    {/* Checkbox S&K */}
-                    <label className="flex items-start gap-3 select-none cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={agreeTerms}
-                        onChange={(e) => setAgreeTerms(e.target.checked)}
-                        className="w-5 h-5 rounded-md border-[#D9D0BC] text-[#8C6B1C] focus:ring-[#8C6B1C] shrink-0 mt-0.5 cursor-pointer"
-                      />
-                      <span className="text-xs text-[#5C5546] leading-relaxed">
-                        Saya menyetujui{" "}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setShowTermsModal(true);
-                          }}
-                          className="text-[#8C6B1C] font-bold underline underline-offset-2 hover:text-[#735614] inline cursor-pointer"
-                        >
-                          Syarat dan Ketentuan
-                        </button>{" "}
-                        serta Kebijakan Pembatalan klinik Aesthetic Pondok Indah. *
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
+                        <ShieldCheck className="w-5 h-5 text-[#8C6B1C]" />
+                        <span>Verifikasi Persetujuan & Tanda Tangan Digital *</span>
+                      </h3>
+                      <span className="text-[10px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-1 rounded-full border border-[#EADBBD]">
+                        2 Langkah Wajib
                       </span>
-                    </label>
-
-                    {/* Nama Lengkap Pasien (100% Locked & Synced with Profile Biodata) */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-[#5C5546]">
-                          Nama Lengkap Pasien *
-                        </label>
-                        <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5" /> Tersinkron dengan Biodata
-                        </span>
-                      </div>
-                      <Input
-                        type="text"
-                        value={patientName}
-                        disabled
-                        readOnly
-                        className="h-11 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-sm text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
-                      />
-                      <p className="text-[10px] text-[#8C8272]">
-                        Nama diambil otomatis dari profil akun pasien untuk menjamin validitas berkas medis.
-                      </p>
                     </div>
 
-                    {/* Nomor Telepon / WhatsApp (100% Locked & Synced with Profile) */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-[#5C5546]">
-                          Nomor Telepon / WhatsApp *
-                        </label>
-                        <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5" /> Nomor WhatsApp Terverifikasi
+                    {/* Langkah 1: Syarat dan Ketentuan Layanan Pasien (Ceklis) */}
+                    <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Langkah 1: Syarat & Ketentuan Layanan Pasien</span>
                         </span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowTermsModal(true)}
+                          className="h-7 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Lihat Dokumen PDF S&K</span>
+                        </Button>
                       </div>
-                      <Input
-                        type="tel"
-                        value={patientPhone}
-                        disabled
-                        readOnly
-                        className="h-11 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-sm text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
-                      />
-                      <p className="text-[10px] text-[#8C8272]">
-                        Nomor kontak akun terverifikasi untuk pengiriman tiket booking dan notifikasi jadwal dokter via WhatsApp.
-                      </p>
+
+                      <label className="flex items-start gap-3 select-none cursor-pointer pt-1">
+                        <input
+                          type="checkbox"
+                          checked={agreeTerms}
+                          onChange={(e) => setAgreeTerms(e.target.checked)}
+                          className="w-5 h-5 rounded-md border-[#D9D0BC] text-[#8C6B1C] focus:ring-[#8C6B1C] shrink-0 mt-0.5 cursor-pointer"
+                        />
+                        <span className="text-xs text-[#5C5546] leading-relaxed">
+                          Saya telah membaca, memahami, dan menyetujui seluruh{" "}
+                          <strong className="text-[#8C6B1C]">Syarat dan Ketentuan Layanan Pasien</strong>{" "}
+                          serta Kebijakan Penjadwalan klinik Aesthetic Pondok Indah. *
+                        </span>
+                      </label>
                     </div>
 
-                    {/* Digital Signature Modal Trigger & Preview (Mandatory *) */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-[#5C5546]">
-                          Tanda Tangan Digital Pasien *
+                    {/* Langkah 2: Surat Pernyataan & Persetujuan Pasien (Tanda Tangan Digital) */}
+                    <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
+                          <PenTool className="w-4 h-4 text-[#8C6B1C] shrink-0" />
+                          <span>Langkah 2: Surat Pernyataan & Persetujuan Pasien (Informed Consent)</span>
+                        </span>
+                        <Button
+                          type="button"
+                          onClick={() => setShowConsentPdfModal(true)}
+                          className="h-7 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Lihat Dokumen PDF Surat Persetujuan</span>
+                        </Button>
+                      </div>
+
+                      {/* Nama Lengkap Pasien */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#5C5546]">
+                          Nama Lengkap Pasien:
                         </label>
-                        {signatureData && (
-                          <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
-                            <Check className="w-3 h-3 stroke-[3]" /> Tersimpan
-                          </span>
+                        <Input
+                          type="text"
+                          value={patientName}
+                          disabled
+                          readOnly
+                          className="h-9 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-xs text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
+                        />
+                      </div>
+
+                      {/* Nomor Telepon / WhatsApp */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-[#5C5546]">
+                          Nomor WhatsApp Pasien:
+                        </label>
+                        <Input
+                          type="tel"
+                          value={patientPhone}
+                          disabled
+                          readOnly
+                          className="h-9 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-xs text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
+                        />
+                      </div>
+
+                      {/* Canvas Tanda Tangan */}
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-semibold text-[#5C5546]">
+                            Tanda Tangan Digital Pasien *
+                          </label>
+                          {signatureData && (
+                            <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                              <Check className="w-3 h-3 stroke-[3]" /> Tersimpan
+                            </span>
+                          )}
+                        </div>
+
+                        {signatureData ? (
+                          <div className="bg-white border-2 border-[#8C6B1C] rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
+                            <div className="flex items-center gap-3">
+                              <div className="w-24 h-14 bg-[#FAF8F5] rounded-xl border border-[#D9D0BC] overflow-hidden flex items-center justify-center p-1 shadow-inner">
+                                <img
+                                  src={signatureData}
+                                  alt="Tanda Tangan Pasien"
+                                  className="max-w-full max-h-full object-contain"
+                                />
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-[#2C2416]">
+                                  Tanda Tangan Terverifikasi
+                                </p>
+                                <p className="text-[11px] text-[#7C7365]">
+                                  {patientName}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setShowSignatureModal(true)}
+                                className="px-3 py-1.5 rounded-xl border border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                              >
+                                Ubah
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSignatureData(null)}
+                                className="px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setShowSignatureModal(true)}
+                            className="w-full h-28 bg-white border-2 border-dashed border-[#D9D0BC] hover:border-[#8C6B1C] rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-all group hover:bg-[#FAF5EA]/40 cursor-pointer shadow-xs"
+                          >
+                            <div className="w-10 h-10 rounded-full bg-[#EFE9DC] group-hover:bg-[#8C6B1C] text-[#8C6B1C] group-hover:text-white flex items-center justify-center mb-1.5 transition-all shadow-xs">
+                              <PenTool className="w-4 h-4" />
+                            </div>
+                            <p className="text-xs font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-all">
+                              Buka Canvas Tanda Tangan Digital *
+                            </p>
+                            <p className="text-[10px] text-[#7C7365] mt-0.5">
+                              Bubuhkan tanda tangan digital Anda sebagai persetujuan medis resmi
+                            </p>
+                          </button>
                         )}
                       </div>
-
-                      {signatureData ? (
-                        <div className="bg-[#FAF8F5] border-2 border-[#8C6B1C] rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
-                          <div className="flex items-center gap-3">
-                            <div className="w-24 h-14 bg-white rounded-xl border border-[#D9D0BC] overflow-hidden flex items-center justify-center p-1 shadow-inner">
-                              <img
-                                src={signatureData}
-                                alt="Tanda Tangan Pasien"
-                                className="max-w-full max-h-full object-contain"
-                              />
-                            </div>
-                            <div>
-                              <p className="text-xs font-bold text-[#2C2416]">
-                                Tanda Tangan Terverifikasi
-                              </p>
-                              <p className="text-[11px] text-[#7C7365]">
-                                {patientName}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setShowSignatureModal(true)}
-                              className="px-3 py-1.5 rounded-xl border border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold transition-all shadow-xs cursor-pointer"
-                            >
-                              Ubah
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setSignatureData(null)}
-                              className="px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-all shadow-xs cursor-pointer"
-                            >
-                              Hapus
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setShowSignatureModal(true)}
-                          className="w-full h-32 bg-[#FAF8F5] border-2 border-dashed border-[#D9D0BC] hover:border-[#8C6B1C] rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-all group hover:bg-[#FAF5EA]/40 cursor-pointer shadow-xs"
-                        >
-                          <div className="w-12 h-12 rounded-full bg-[#EFE9DC] group-hover:bg-[#8C6B1C] text-[#8C6B1C] group-hover:text-white flex items-center justify-center mb-2 transition-all shadow-xs">
-                            <PenTool className="w-5 h-5" />
-                          </div>
-                          <p className="text-xs sm:text-sm font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-all">
-                            Buka Canvas Tanda Tangan Digital *
-                          </p>
-                          <p className="text-[11px] text-[#7C7365] mt-0.5">
-                            Wajib dibubuhi sebagai bukti persetujuan tindakan medis klinis
-                          </p>
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -1588,7 +1632,7 @@ export default function NewBookingFlow({
         ticketData={
           activeTicket || {
             id: 1,
-            code: "#APP-20261015-01",
+            code: "#RSV-000053",
             doctorName: selectedDoctor?.name || "drg. Sharah Syam, Sp. Ort",
             specialization: selectedDoctor?.specialization || "Spesialis Ortodonti",
             serviceName: selectedService?.name || "Pemasangan Braces Premium",
@@ -1614,6 +1658,22 @@ export default function NewBookingFlow({
             message: "Tanda tangan digital Anda telah berhasil disimpan dan disematkan.",
           });
         }}
+      />
+
+      {/* Medical Informed Consent Official PDF Document Modal */}
+      <ReservationConsentPdfModal
+        isOpen={showConsentPdfModal}
+        onClose={() => setShowConsentPdfModal(false)}
+        bookingCode="DRAFT-RESERVASI"
+        patientName={patientName}
+        patientPhone={patientPhone}
+        isGuest={false}
+        serviceName={selectedService?.name || "Layanan Gigi"}
+        doctorName={selectedDoctor?.name || "Dokter Gigi"}
+        dateStr={selectedDateObj?.display || selectedDate}
+        timeStr={`${selectedTimeSlot} WIB`}
+        signatureData={signatureData}
+        acceptedAt={new Date().toISOString()}
       />
 
       {/* Terms & Conditions Official PDF Document Modal */}
