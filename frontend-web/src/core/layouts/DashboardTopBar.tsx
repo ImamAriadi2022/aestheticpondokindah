@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import {
   Bell,
   CheckCircle2,
@@ -9,24 +9,18 @@ import {
   ShieldCheck,
   Sparkles,
   Stethoscope,
-  Volume2,
-  VolumeX,
   X,
   Trash2,
-  Check,
-  AlertCircle,
   Calendar,
 } from "lucide-react";
-import { Button } from "@/shared/ui/button";
 import {
   subscribeToPushNotifications,
   playNotificationChime,
-  dispatchDeviceSystemNotification,
   triggerPushNotification,
   type PushNotificationPayload,
 } from "@/core/services/pushNotificationService";
 import { getSession } from "@/core/auth/services/session";
-import { subscribeToWebPush, sendTestBackgroundPush } from "@/core/services/webPushManager";
+import { subscribeToWebPush } from "@/core/services/webPushManager";
 import { apiClient } from "@/core/api/apiClient";
 
 interface DashboardTopBarProps {
@@ -37,6 +31,10 @@ interface DashboardTopBarProps {
 export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarProps) {
   const session = getSession();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "";
+  const pathname = location.pathname;
 
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
     typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default"
@@ -59,11 +57,97 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  
-  // Fetch real notifications from database on mount & sync
+  // Determine Page Title & Subtitle based on Route / Tab
+  const getPageInfo = () => {
+    if (role === "clinic") {
+      switch (activeTab) {
+        case "reservasi":
+          return { title: "Daftar Reservasi & Antrean", subtitle: "Kelola data reservasi dan antrean pasien klinik" };
+        case "konsultasi":
+          return { title: "Layanan Konsultasi", subtitle: "Pantau dan kelola konsultasi medis pasien" };
+        case "pengaduan":
+          return { title: "Pengaduan & Masukan Pasien", subtitle: "Tindak lanjut keluhan dan aspirasi pasien" };
+        case "dokter":
+          return { title: "Manajemen Tim Dokter", subtitle: "Kelola profil dan spesialisasi dokter" };
+        case "jadwal-dokter":
+          return { title: "Kelola Jadwal Praktik", subtitle: "Atur ketersediaan dan sesi praktik dokter" };
+        case "membership":
+          return { title: "Manajemen Keanggotaan", subtitle: "Kelola program loyalty dan tier membership" };
+        case "analytics":
+          return { title: "Analitik & Statistik Klinik", subtitle: "Ringkasan data operasional dan pengunjung" };
+        case "content-blog":
+          return { title: "Manajemen Artikel Blog", subtitle: "Kelola publikasi edukasi kesehatan gigi" };
+        case "content-promo":
+          return { title: "Manajemen Promo & Diskon", subtitle: "Kelola program promo dan penawaran spesial" };
+        case "content-gallery":
+          return { title: "Galeri & Dokumentasi", subtitle: "Kelola foto fasilitas dan hasil perawatan" };
+        case "content-testimonials":
+          return { title: "Ulasan & Testimoni", subtitle: "Kelola testimoni resmi pasien klinik" };
+        case "content-popup":
+          return { title: "Banner Promo & Pengumuman", subtitle: "Kelola banner popup publik" };
+        case "content-download":
+          return { title: "File & Aplikasi Mobile", subtitle: "Kelola file unduhan aplikasi mobile" };
+        case "settings":
+          return { title: "Pengaturan Sistem Klinik", subtitle: "Konfigurasi operasional dan preferensi klinik" };
+        default:
+          return { title: "Dashboard Utama Klinik", subtitle: "Ringkasan operasional klinik hari ini" };
+      }
+    }
+
+    if (role === "doctor") {
+      switch (activeTab) {
+        case "reservasi":
+          return { title: "Jadwal & Antrean Pasien", subtitle: "Daftar pasien terkonfirmasi dan jadwal tindakan" };
+        case "konsultasi":
+          return { title: "Konsultasi Medis Online", subtitle: "Sesi tanya jawab medis bersama pasien" };
+        case "pengaduan":
+          return { title: "Tinjauan Pengaduan Pasien", subtitle: "Evaluasi dan umpan balik layanan dokter" };
+        case "jadwal":
+          return { title: "Pengaturan Jadwal Praktik", subtitle: "Atur hari dan jam ketersediaan praktik" };
+        case "settings":
+          return { title: "Pengaturan Akun Dokter", subtitle: "Preferensi akun dan keamanan" };
+        default:
+          return { title: "Dashboard Dokter Spesialis", subtitle: "Ringkasan jadwal dan antrean pasien hari ini" };
+      }
+    }
+
+    // Patient / User role
+    if (pathname.startsWith("/profile")) {
+      return { title: "Detail Profil Pasien", subtitle: "Informasi data pribadi dan riwayat medis" };
+    }
+    if (pathname.startsWith("/settings")) {
+      return { title: "Pengaturan Akun & Keamanan", subtitle: "Preferensi akun dan kata sandi" };
+    }
+    if (pathname.startsWith("/membership")) {
+      return { title: "Status & Program Membership", subtitle: "Keuntungan dan tingkatan loyalty member" };
+    }
+
+    switch (activeTab) {
+      case "reservasi":
+        return { title: "Pemesanan & Jadwal Reservasi", subtitle: "Buat janji temu dan pantau riwayat perawatan gigi" };
+      case "konsultasi":
+        return { title: "Konsultasi Dokter Gigi", subtitle: "Tanya jawab langsung dengan dokter spesialis" };
+      case "pengaduan":
+        return { title: "Pusat Bantuan & Pengaduan", subtitle: "Sampaikan pertanyaan atau kendala layanan" };
+      default:
+        return { title: "Dashboard Pasien", subtitle: "Ringkasan janji temu dan riwayat perawatan gigi Anda" };
+    }
+  };
+
+  const { title: pageTitle, subtitle: pageSubtitle } = getPageInfo();
+
+  // Determine Login As text
+  const getLoginAsText = () => {
+    if (role === "clinic") return "Admin Klinik";
+    if (role === "doctor") {
+      return session?.name ? `${session.name} (Dokter Spesialis)` : "Dokter Spesialis";
+    }
+    return session?.name ? `${session.name} (Pasien Member)` : "Pasien Member";
+  };
+
+  // Fetch real notifications from database
   const fetchDatabaseNotifications = async () => {
     try {
       const res: any = await apiClient.get("/user/notifications", { skipToast: true });
@@ -143,7 +227,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       }
     }
 
-    // For clinic/admin, periodically re-check database notifications
     if (role === "clinic") {
       const interval = setInterval(() => {
         if (typeof document !== "undefined" && !document.hidden) {
@@ -164,27 +247,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const handleRequestPermission = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      try {
-        const perm = await Notification.requestPermission();
-        setNotificationPermission(perm);
-        if (perm === "granted") {
-          await subscribeToWebPush(role);
-          triggerPushNotification({
-            title: "🔔 Notifikasi Device Aktif!",
-            message: "Notifikasi akan muncul di bilah status HP dan Action Center Laptop Anda bahkan saat web ditutup.",
-            sender: "Aesthetic Pondok Indah",
-            type: "reservation_confirmed",
-            url: window.location.hash ? `/${window.location.hash}` : "/#/dashboard/clinic?tab=reservasi",
-          });
-        }
-      } catch (e) {
-        console.warn("Failed to request permission:", e);
-      }
-    }
-  };
 
   const handleClearAll = async () => {
     setNotifications([]);
@@ -217,71 +279,25 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
-      {/* Left: Branding & Role Context */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#8C6B1C] to-[#C9A24A] flex items-center justify-center text-white font-bold text-sm shadow-xs">
-            A
-          </div>
-          <div>
-            <h1 className="text-xs sm:text-sm font-bold text-[#2C2416] flex items-center gap-1.5 leading-tight">
-              <span>Aesthetic Pondok Indah</span>
-              <span className="hidden sm:inline-block text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]">
-                {role === "clinic" ? "Admin Klinik" : role === "doctor" ? "Dokter Spesialis" : "Pasien Member"}
-              </span>
-            </h1>
-            <p className="text-[10px] text-[#8C8272] hidden sm:block">
-              {navbarLabel || "Sistem Manajemen Klinik & Reservasi Terpadu"}
-            </p>
-          </div>
-        </div>
-
-        {/* Live Realtime Pulse Badge */}
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold shadow-2xs">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
+      {/* Left: Penjelasan Halaman & Status Login (Tanpa Logo & Profil) */}
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-xs sm:text-sm font-bold text-[#2C2416] tracking-tight truncate">
+            {pageTitle}
+          </h1>
+          <span className="text-[10px] font-semibold text-[#8C6B1C] bg-[#FAF5EA] border border-[#EADBBD] px-2 py-0.5 rounded-full flex items-center gap-1">
+            <span className="text-[#8C8272] font-normal">Login sebagai:</span>
+            <span className="font-bold">{getLoginAsText()}</span>
           </span>
-          <span className="hidden md:inline">{role === "clinic" || role === "doctor" ? "Realtime Aktif (1s)" : "Notifikasi Aktif"}</span>
         </div>
+        <p className="text-[10px] text-[#8C8272] hidden sm:block truncate">
+          {pageSubtitle}
+        </p>
       </div>
 
-      {/* Right: Actions & Notification Bell */}
-      <div className="flex items-center gap-2 sm:gap-3" ref={dropdownRef}>
-        {/* Permission Request Prompt Button (If not granted) */}
-        {notificationPermission !== "granted" && (
-          <button
-            type="button"
-            onClick={handleRequestPermission}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-[11px] font-bold shadow-xs transition-all cursor-pointer animate-pulse"
-            title="Klik untuk mengaktifkan notifikasi popup desktop & suara"
-          >
-            <Bell className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Izinkan Notifikasi Push</span>
-            <span className="sm:hidden">Notif ON</span>
-          </button>
-        )}
-
-        {/* Sound Test / Toggle */}
-        <button
-          type="button"
-          onClick={() => {
-            triggerPushNotification({
-              title: "🔔 Uji Coba Notifikasi Device",
-              message: "Notifikasi berhasil terhubung ke Bilah Notifikasi Perangkat (HP / Laptop).",
-              sender: "Aesthetic Pondok Indah",
-              type: "general",
-              url: window.location.hash ? `/${window.location.hash}` : "/#/dashboard/clinic?tab=reservasi",
-            });
-          }}
-          className="w-9 h-9 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] hover:bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center transition-colors cursor-pointer"
-          title="Uji Suara Notifikasi (Chime Sound)"
-        >
-          <Volume2 className="w-4 h-4" />
-        </button>
-
-        {/* Notification Bell Dropdown Button */}
+      {/* Right: Ikon Notifikasi Saja */}
+      <div className="flex items-center gap-2" ref={dropdownRef}>
         <div className="relative">
           <button
             type="button"
@@ -291,16 +307,16 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                 handleMarkAllAsRead();
               }
             }}
-            className={`relative w-9 h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+            className={`relative w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
               isDropdownOpen
                 ? "bg-[#8C6B1C] text-white border-[#8C6B1C] shadow-md"
-                : "bg-white border-[#D9D0BC] hover:border-[#8C6B1C] text-[#3D332A] shadow-xs"
+                : "bg-white border-[#D9D0BC] hover:border-[#8C6B1C] text-[#3D332A] shadow-xs hover:bg-[#FAF8F5]"
             }`}
-            title="Pusat Notifikasi Realtime"
+            title="Pusat Notifikasi"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold flex items-center justify-center border-2 border-white shadow-xs animate-bounce">
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-extrabold flex items-center justify-center border-2 border-white shadow-xs animate-bounce">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
@@ -308,12 +324,12 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
           {/* Notification Center Dropdown Drawer */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[92vw] sm:w-96 max-w-sm bg-white rounded-3xl border border-[#E8DFC8] shadow-2xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-200 text-left">
+            <div className="absolute right-0 mt-2 w-[92vw] sm:w-96 max-w-sm bg-white rounded-2xl border border-[#E8DFC8] shadow-2xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-200 text-left">
               {/* Drawer Header */}
-              <div className="px-4 py-3.5 bg-[#FAF8F5] border-b border-[#EDE5D6] flex items-center justify-between">
+              <div className="px-4 py-3 bg-[#FAF8F5] border-b border-[#EDE5D6] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-[#8C6B1C]" />
-                  <h3 className="text-xs font-bold text-[#2C2416]">Pusat Notifikasi Realtime</h3>
+                  <h3 className="text-xs font-bold text-[#2C2416]">Pusat Notifikasi</h3>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EADBBD] text-[#5C4510]">
                     {notifications.length}
                   </span>
@@ -333,23 +349,23 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                   <button
                     type="button"
                     onClick={() => setIsDropdownOpen(false)}
-                    className="w-6 h-6 rounded-full bg-white hover:bg-gray-100 text-gray-500 flex items-center justify-center cursor-pointer ml-1"
+                    className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
 
-              {/* Drawer Body: Notification List */}
-              <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F5EFE6]">
+              {/* Notification List Drawer Content */}
+              <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F0EBE1]">
                 {notifications.length === 0 ? (
-                  <div className="p-8 text-center space-y-2 text-[#8C8272]">
-                    <div className="w-12 h-12 rounded-full bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center mx-auto">
-                      <Bell className="w-6 h-6 opacity-60" />
+                  <div className="py-10 px-4 text-center">
+                    <div className="w-10 h-10 rounded-full bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center mx-auto mb-2 border border-[#EADBBD]">
+                      <Bell className="w-5 h-5 opacity-60" />
                     </div>
-                    <p className="text-xs font-semibold text-[#3D332A]">Belum Ada Notifikasi Baru</p>
-                    <p className="text-[11px] leading-relaxed">
-                      Setiap ada booking dari Guest, Pasien, atau konfirmasi dokter, notifikasi akan otomatis muncul di sini secara realtime.
+                    <p className="text-xs font-bold text-[#2C2416]">Belum Ada Notifikasi</p>
+                    <p className="text-[11px] text-[#8C8272] mt-0.5">
+                      Pemberitahuan terkait reservasi dan jadwal akan muncul di sini.
                     </p>
                   </div>
                 ) : (
@@ -359,33 +375,34 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                       onClick={() => handleItemClick(item)}
                       className="p-3.5 hover:bg-[#FAF8F5] transition-colors cursor-pointer flex items-start gap-3 group"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] shrink-0 shadow-2xs group-hover:scale-105 transition-transform mt-0.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] flex-shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
                         {item.type === "reservation_confirmed" ? (
                           <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         ) : item.type === "doctor_assigned" ? (
-                          <Stethoscope className="w-4 h-4 text-[#8C6B1C]" />
-                        ) : (
+                          <Stethoscope className="w-4 h-4 text-blue-600" />
+                        ) : item.type === "reservation_new" ? (
                           <Calendar className="w-4 h-4 text-[#8C6B1C]" />
+                        ) : (
+                          <Info className="w-4 h-4 text-[#8C6B1C]" />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0 space-y-0.5">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <span className="text-[10px] font-bold text-[#8C6B1C] truncate">
-                            {item.sender || "Sistem Reservasi"}
-                          </span>
-                          <span className="text-[9px] text-[#A0988A] shrink-0 flex items-center gap-0.5">
-                            <Clock className="w-2.5 h-2.5" />
-                            {item.dateStr || "Baru saja"}
-                          </span>
+                          <h4 className="text-[11px] font-bold text-[#2C2416] truncate">
+                            {item.title}
+                          </h4>
+                          {item.dateStr && (
+                            <span className="text-[9px] text-[#A89F91] flex-shrink-0 flex items-center gap-0.5">
+                              <Clock className="w-2.5 h-2.5" />
+                              {item.dateStr}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-xs font-bold text-[#2C2416] line-clamp-1 group-hover:text-[#8C6B1C]">
-                          {item.title}
-                        </p>
-                        <p className="text-[11px] text-[#5C5546] line-clamp-2 leading-relaxed">
+                        <p className="text-[11px] text-[#5C5346] leading-relaxed mt-0.5 line-clamp-2">
                           {item.message}
                         </p>
                         {item.bookingCode && (
-                          <span className="inline-block text-[9px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2 py-0.5 rounded-md border border-[#EADBBD] mt-1">
+                          <span className="inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
                             {item.bookingCode}
                           </span>
                         )}
@@ -396,7 +413,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
               </div>
 
               {/* Drawer Footer */}
-              <div className="p-3 bg-[#FAF8F5] border-t border-[#EDE5D6] text-center">
+              <div className="p-2.5 bg-[#FAF8F5] border-t border-[#EDE5D6] text-center">
                 <button
                   type="button"
                   onClick={() => {
@@ -405,7 +422,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                     else if (role === "doctor") navigate("/dashboard/doctor?tab=reservasi");
                     else navigate("/dashboard/user?tab=reservasi");
                   }}
-                  className="text-xs font-bold text-[#8C6B1C] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] font-bold text-[#8C6B1C] hover:text-[#735614] flex items-center justify-center gap-1 mx-auto transition-colors cursor-pointer"
                 >
                   <span>Buka Semua Data Reservasi</span>
                   <ExternalLink className="w-3 h-3" />
