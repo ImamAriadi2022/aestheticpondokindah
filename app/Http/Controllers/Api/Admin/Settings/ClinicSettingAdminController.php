@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api\Admin\Settings;
+namespace AppHttpControllersApiAdminSettings;
 
-use App\Http\Controllers\Controller;
-use App\Models\Admin\Settings\ClinicSetting;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use AppHttpControllersController;
+use AppModelsAdminSettingsClinicSetting;
+use IlluminateHttpJsonResponse;
+use IlluminateHttpRequest;
 
 class ClinicSettingAdminController extends Controller
 {
@@ -25,31 +25,67 @@ class ClinicSettingAdminController extends Controller
      */
     public function show(string $key): JsonResponse
     {
-        $setting = ClinicSetting::where('key', $key)->firstOrFail();
+        $setting = ClinicSetting::where('key', $key)->first();
+        if (!$setting) {
+            return response()->json(['key' => $key, 'value' => null]);
+        }
         return response()->json($setting);
     }
 
     /**
      * PUT /api/admin/clinic-settings/{key}
-     * Update a setting value by key.
+     * Update or create a setting value by key.
      */
     public function update(Request $request, string $key): JsonResponse
     {
-        $setting = ClinicSetting::where('key', $key)->first();
-
-        if (!$setting) {
-            return response()->json(['message' => 'Setting tidak ditemukan.'], 404);
+        $value = $request->input('value', $request->all());
+        if ($request->has('value')) {
+            $value = $request->input('value');
         }
 
-        $validated = $request->validate([
-            'value' => ['nullable', 'string', 'max:10000'],
-        ]);
+        $type = is_array($value) ? 'json' : 'text';
 
-        $setting->update(['value' => $validated['value'] ?? null]);
+        $setting = ClinicSetting::updateOrCreate(
+            ['key' => $key],
+            [
+                'value' => $value,
+                'type' => $type,
+                'label' => $request->input('label', ucwords(str_replace('_', ' ', $key))),
+                'description' => $request->input('description', null),
+            ]
+        );
 
         return response()->json([
-            'message' => 'Setting berhasil diperbarui.',
+            'message' => 'Pengaturan ' . $key . ' berhasil disimpan ke database.',
             'setting' => $setting->fresh(),
+        ]);
+    }
+
+    /**
+     * POST /api/admin/clinic-settings/batch
+     * Save multiple settings at once.
+     */
+    public function saveBatch(Request $request): JsonResponse
+    {
+        $settings = $request->input('settings', []);
+        $updated = [];
+
+        foreach ($settings as $key => $val) {
+            $type = is_array($val) ? 'json' : 'text';
+            $setting = ClinicSetting::updateOrCreate(
+                ['key' => $key],
+                [
+                    'value' => $val,
+                    'type' => $type,
+                    'label' => ucwords(str_replace('_', ' ', $key)),
+                ]
+            );
+            $updated[$key] = $setting->value;
+        }
+
+        return response()->json([
+            'message' => 'Seluruh pengaturan klinik berhasil disimpan ke database.',
+            'data' => $updated,
         ]);
     }
 }

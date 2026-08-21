@@ -167,7 +167,7 @@ export default function AdminSidebar({ activeTab }: Props) {
           {
             id: "settings",
             label: "Pengaturan Klinik",
-            icon: Settings,
+            icon: FileText,
             href: "/dashboard/clinic?tab=settings",
           },
         ],

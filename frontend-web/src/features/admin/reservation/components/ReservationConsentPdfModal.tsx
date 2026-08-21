@@ -45,12 +45,16 @@ export default function ReservationConsentPdfModal({
   signatureData,
   acceptedAt,
 }: ReservationConsentPdfModalProps) {
-  const [adminTerms, setAdminTerms] = useState<string | null>(null);
+      const [adminTerms, setAdminTerms] = useState<string | null>(null);
+  const [customConsent, setCustomConsent] = useState<any>(null);
 
   useEffect(() => {
     if (isOpen) {
       getPublicClinicSettings()
-        .then((settings) => {
+        .then((settings: any) => {
+          if (settings.pdf_informed_consent) {
+            setCustomConsent(settings.pdf_informed_consent);
+          }
           if (settings.booking_terms && settings.booking_terms.trim().length > 0) {
             setAdminTerms(settings.booking_terms);
           }
@@ -71,7 +75,7 @@ export default function ReservationConsentPdfModal({
       })
     : `${dateStr}, ${timeStr}`;
 
-  const handlePrint = () => {
+    const handlePrint = () => {
     const printFrame = document.createElement("iframe");
     printFrame.style.position = "fixed";
     printFrame.style.right = "0";
@@ -87,16 +91,41 @@ export default function ReservationConsentPdfModal({
       return;
     }
 
+    const w = customConsent?.kop?.logoWidth || 75;
+    const h = customConsent?.kop?.logoHeight || 75;
+
+    const clausesHtml = customConsent?.clausuls && customConsent.clausuls.length > 0
+      ? customConsent.clausuls.map((c: any) => `
+          <div class="section-title">${c.title}</div>
+          <p>${c.content}</p>
+        `).join('')
+      : `
+          <div class="section-title">1. Ketentuan Kedatangan & Registrasi Pasien</div>
+          <p>Pasien diwajibkan hadir di klinik sekurang-kurangnya 15 (lima belas) menit sebelum waktu jadwal reservasi yang telah disepakati untuk keperluan verifikasi identitas, registrasi ulang, dan anamnesis awal.</p>
+
+          <div class="section-title">2. Kebijakan Keterlambatan & Penjadwalan Ulang (Reschedule)</div>
+          <p>Apabila pasien mengalami keterlambatan lebih dari 15 menit tanpa pemberitahuan sebelumnya, pihak klinik berhak mengalihkan antrean demi kelancaran operasional. Penjadwalan ulang dapat dilakukan bebas biaya dengan menghubungi petugas administrasi selambat-lambatnya 1 x 24 jam sebelum jadwal tindakan.</p>
+
+          <div class="section-title">3. Persetujuan Tindakan Medis (Informed Consent)</div>
+          <p>Dengan menyetujui dan menandatangani lembar ini, pasien memberikan persetujuan kepada dokter gigi spesialis Aesthetic Pondok Indah untuk melakukan pemeriksaan klinis, tindakan diagnostik (termasuk foto rontgen gigi bila diperlukan), serta prosedur perawatan yang telah dijelaskan manfaat dan risikonya.</p>
+
+          <div class="section-title">4. Kerahasiaan Rekam Medis & Privasi Pasien</div>
+          <p>Seluruh data rekam medis elektronik (EMR), riwayat kesehatan, dan hasil pemeriksaan gigi pasien dilindungi kerahasiaannya sesuai dengan regulasi perundang-undangan kesehatan Republik Indonesia.</p>
+
+          <div class="section-title">5. Pembayaran & Kebijakan Pembatalan</div>
+          <p>Pembayaran biaya tindakan dapat dilakukan secara tunai, kartu debit/kredit, QRIS, atau transfer bank kasir klinik. Pembatalan sepihak saat hari H tanpa alasan darurat medis dapat memengaruhi kuota prioritas reservasi berikutnya.</p>
+        `;
+
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Surat Persetujuan Tindakan Medis - ${bookingCode}</title>
+          <title>${customConsent?.docTitle || "Surat Persetujuan Tindakan Medis"} - ${patientName}</title>
           <style>
             @page {
               size: A4 portrait;
-              margin: 16mm 14mm 16mm 14mm;
+              margin: 16mm 14mm;
             }
             * {
               box-sizing: border-box;
@@ -105,143 +134,142 @@ export default function ReservationConsentPdfModal({
             }
             body {
               font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-              color: #1a1a1a;
+              color: #111;
               line-height: 1.5;
               margin: 0;
               padding: 0;
-              font-size: 10pt;
+              font-size: 9.5pt;
               background: #fff;
             }
-            .letterhead {
-              border-bottom: 2.5px solid #8C6B1C;
+            .kop-header {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 16px;
               padding-bottom: 10px;
               margin-bottom: 14px;
-              text-align: center;
+              border-bottom: 3px double #111;
             }
-            .letterhead-title {
-              font-size: 15pt;
-              font-weight: 800;
-              color: #8C6B1C;
-              letter-spacing: 1.5px;
-              text-transform: uppercase;
-              margin-bottom: 2px;
-            }
-            .letterhead-subtitle {
-              font-size: 10.5pt;
-              font-weight: 700;
-              color: #2C2416;
-              margin-bottom: 3px;
-              letter-spacing: 0.5px;
-            }
-            .letterhead-contact {
-              font-size: 8.5pt;
-              color: #555;
-              line-height: 1.35;
-            }
+            .kop-logo { flex-shrink: 0; }
+            .kop-logo img { width: ${w}px; height: ${h}px; object-fit: contain; }
+            .kop-details { text-align: center; flex: 1; }
+            .kop-title { font-size: 13.5pt; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
+            .kop-contact { font-size: 8.5pt; font-weight: 500; color: #222; margin-bottom: 2px; }
+            .kop-contact a { color: #0056b3; text-decoration: underline; }
+            .kop-address { font-size: 8pt; color: #333; line-height: 1.3; }
+
             .doc-header {
               text-align: center;
               margin-bottom: 14px;
             }
             .doc-title {
-              font-size: 11.5pt;
+              font-size: 11pt;
               font-weight: 800;
-              text-transform: uppercase;
               color: #111;
-              margin-bottom: 3px;
+              text-transform: uppercase;
               letter-spacing: 0.5px;
             }
             .doc-ref {
               font-size: 8.5pt;
-              color: #777;
-              font-family: monospace;
+              color: #555;
+              margin-top: 1px;
             }
             .meta-box {
               background: #faf8f5;
               border: 1px solid #eadbbd;
-              border-radius: 8px;
-              padding: 10px 14px;
-              margin-bottom: 14px;
+              border-radius: 6px;
+              padding: 8px 12px;
+              margin-bottom: 12px;
               display: grid;
               grid-template-columns: 1fr 1fr;
-              gap: 8px;
-              font-size: 9pt;
+              gap: 8px 16px;
+              font-size: 8.5pt;
             }
             .meta-item {
-              margin-bottom: 3px;
+              display: flex;
+              gap: 6px;
             }
             .meta-label {
-              color: #666;
               font-weight: 600;
+              color: #6b5e4f;
+              min-width: 95px;
             }
             .meta-value {
               font-weight: 700;
               color: #2c2416;
             }
             .section-title {
-              font-weight: 700;
               font-size: 9.5pt;
-              margin-top: 10px;
-              margin-bottom: 2px;
+              font-weight: 700;
               color: #111;
+              margin: 10px 0 2px 0;
             }
             p {
               margin: 0 0 6px 0;
               text-align: justify;
-              font-size: 9pt;
               color: #333;
+              font-size: 8.8pt;
+              line-height: 1.4;
             }
-            .custom-terms {
-              background: #faf8f5;
-              border: 1px solid #eadbbd;
-              border-radius: 6px;
+            .custom-statement {
+              margin: 14px 0;
               padding: 8px 12px;
-              margin: 10px 0;
+              background: #fafafa;
+              border-left: 3px solid #111;
               font-size: 8.5pt;
-              white-space: pre-line;
+              font-style: italic;
             }
             .footer-grid {
-              margin-top: 16px;
+              margin-top: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
               padding-top: 10px;
-              border-top: 1.5px solid #2C2416;
-              display: grid;
-              grid-template-columns: 1fr 200px;
-              gap: 16px;
-              align-items: end;
             }
             .seal-box {
-              font-size: 8.5pt;
+              font-size: 8pt;
               color: #555;
             }
             .seal-badge {
-              font-weight: 700;
-              color: #047857;
+              display: inline-block;
+              padding: 2px 6px;
+              background: #ecfdf5;
+              border: 1px solid #a7f3d0;
+              color: #065f46;
+              border-radius: 4px;
+              font-weight: bold;
+              font-size: 7.5pt;
+              margin-bottom: 4px;
             }
             .signature-box {
-              border: 1px solid #d9d0bc;
-              border-radius: 8px;
+              width: 220px;
+              border: 1px solid #e0d7c4;
+              border-radius: 6px;
               padding: 8px;
-              background: #faf8f5;
               text-align: center;
+              background: #fff;
             }
             .signature-box img {
               max-height: 55px;
-              max-width: 100%;
-              object-contain: contain;
+              max-width: 170px;
+              object-fit: contain;
+              display: block;
+              margin: 4px auto;
             }
           </style>
         </head>
         <body>
-          <div class="letterhead">
-            <div class="letterhead-title">Aesthetic Pondok Indah</div>
-            <div class="letterhead-subtitle">Klinik Gigi & Estetika Medis</div>
-            <div class="letterhead-contact">
-              Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br/>
-              Telepon: (021) 765-4321 • WhatsApp: +62 811-9876-5432 • Web: aestheticpondokindah.com
+          <div class="kop-header">
+            ${customConsent?.kop?.logoUrl ? `<div class="kop-logo"><img src="${customConsent.kop.logoUrl}" alt="Logo" /></div>` : ''}
+            <div class="kop-details">
+              <div class="kop-title">${customConsent?.kop?.clinicName || 'PT NAVENA INTERNATIONAL GROUP'}</div>
+              <div class="kop-contact">Phone: ${customConsent?.kop?.phone || '+62 21 555 1900'} &nbsp; E-mail: <a>${customConsent?.kop?.email || 'navenainternationalgroup@gmail.com'}</a></div>
+              <div class="kop-address">${customConsent?.kop?.address || 'Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan'}</div>
             </div>
           </div>
 
           <div class="doc-header">
-            <div class="doc-title">Surat Persetujuan Tindakan Medis & Kebijakan Reservasi</div>
+            <div class="doc-title">${customConsent?.docTitle || "SURAT PERSETUJUAN TINDAKAN KEDOKTERAN GIGI (INFORMED CONSENT)"}</div>
             <div class="doc-ref">Nomor Dokumen: SK-CONSENT-${bookingCode} • Lembar Informed Consent Resmi</div>
           </div>
 
@@ -258,45 +286,27 @@ export default function ReservationConsentPdfModal({
             </div>
           </div>
 
-          ${adminTerms ? `
-            <div class="custom-terms">
-              <strong>Ketentuan Khusus Operasional Klinik:</strong><br/>
-              ${adminTerms}
-            </div>
-          ` : ''}
+          ${clausesHtml}
 
-          <div class="section-title">1. Ketentuan Kedatangan & Registrasi Pasien</div>
-          <p>Pasien diwajibkan hadir di klinik sekurang-kurangnya 15 (lima belas) menit sebelum waktu jadwal reservasi yang telah disepakati untuk keperluan verifikasi identitas, registrasi ulang, dan anamnesis awal.</p>
-
-          <div class="section-title">2. Kebijakan Keterlambatan & Penjadwalan Ulang (Reschedule)</div>
-          <p>Apabila pasien mengalami keterlambatan lebih dari 15 menit tanpa pemberitahuan sebelumnya, pihak klinik berhak mengalihkan antrean demi kelancaran operasional. Penjadwalan ulang dapat dilakukan bebas biaya dengan menghubungi petugas administrasi selambat-lambatnya 1 x 24 jam sebelum jadwal tindakan.</p>
-
-          <div class="section-title">3. Persetujuan Tindakan Medis (Informed Consent)</div>
-          <p>Dengan menyetujui dan menandatangani lembar ini, pasien memberikan persetujuan kepada dokter gigi spesialis Aesthetic Pondok Indah untuk melakukan pemeriksaan klinis, tindakan diagnostik (termasuk foto rontgen gigi bila diperlukan), serta prosedur perawatan yang telah dijelaskan manfaat dan risikonya.</p>
-
-          <div class="section-title">4. Kerahasiaan Rekam Medis & Privasi Pasien</div>
-          <p>Seluruh data rekam medis elektronik (EMR), riwayat kesehatan, dan hasil pemeriksaan gigi pasien dilindungi kerahasiaannya sesuai dengan regulasi perundang-undangan kesehatan Republik Indonesia.</p>
-
-          <div class="section-title">5. Pembayaran & Kebijakan Pembatalan</div>
-          <p>Pembayaran biaya tindakan dapat dilakukan secara tunai, kartu debit/kredit, QRIS, atau transfer bank kasir klinik. Pembatalan sepihak saat hari H tanpa alasan darurat medis dapat memengaruhi kuota prioritas reservasi berikutnya.</p>
+          <div class="custom-statement">${customConsent?.closingStatement || "Demikian surat persetujuan tindakan medis ini dibuat dengan sebenar-benarnya untuk dipergunakan sebagaimana mestinya."}</div>
 
           <div class="footer-grid">
             <div class="seal-box">
               <span class="seal-badge">✓ Dokumen Digital Tersertifikasi & Sah Secara Medikolegal</span><br/>
               Klinik Utama Aesthetic Pondok Indah — Jakarta Selatan<br/>
-              <span style="font-size: 8pt; color: #888;">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB</span>
+              <span style="font-size: 7.5pt; color: #888;">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB</span>
             </div>
 
             <div class="signature-box">
-              <div style="font-size: 8pt; font-weight: 700; color: #8C6B1C; margin-bottom: 4px; text-transform: uppercase;">
-                Tanda Tangan Pasien
+              <div style="font-size: 7.5pt; font-weight: 700; color: #8C6B1C; margin-bottom: 2px; text-transform: uppercase;">
+                Tanda Tangan Pasien / Wali
               </div>
               ${signatureData ? `
                 <img src="${signatureData}" alt="Tanda Tangan ${patientName}" />
               ` : `
-                <div style="font-size: 8pt; font-weight: 700; color: #047857; padding: 12px 0;">✓ Disetujui Digital</div>
+                <div style="font-size: 8pt; font-weight: 700; color: #047857; padding: 10px 0;">✓ Disetujui Secara Digital</div>
               `}
-              <div style="font-size: 8.5pt; font-weight: 700; text-decoration: underline; margin-top: 4px;">${patientName}</div>
+              <div style="font-size: 8.5pt; font-weight: 700; text-decoration: underline; margin-top: 2px;">${patientName}</div>
               <div style="font-size: 7.5pt; color: #666;">${isGuest ? "Guest User" : "Pasien Terdaftar"}</div>
             </div>
           </div>
@@ -366,19 +376,38 @@ export default function ReservationConsentPdfModal({
         {/* Scrollable Formal PDF Document View */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 bg-[#FAF8F5]">
           <div className="bg-white border border-[#E6DECB] rounded-2xl p-6 sm:p-10 shadow-xs space-y-6 text-[#2C2416]">
-            {/* Official Letterhead Header */}
-            <div className="border-b-2 border-[#8C6B1C] pb-4 text-center space-y-1">
-              <div className="flex items-center justify-center gap-2 text-[#8C6B1C] font-bold text-xs uppercase tracking-widest">
-                <Building2 className="w-4 h-4" />
-                <span>Aesthetic Pondok Indah Dental Clinic</span>
+                        {/* Dynamic Formal Kop Surat */}
+            <div className="flex items-center justify-center gap-4 pb-3 text-center border-b-2" style={{ borderBottom: "3px double #111" }}>
+              {customConsent?.kop?.logoUrl ? (
+                <div
+                  className="flex-shrink-0 flex items-center justify-center border border-gray-200 rounded-lg p-1 bg-white shadow-2xs overflow-hidden"
+                  style={{
+                    width: `${customConsent.kop.logoWidth || 75}px`,
+                    height: `${customConsent.kop.logoHeight || 75}px`,
+                  }}
+                >
+                  <img src={customConsent.kop.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+              ) : null}
+              <div className="flex-1 text-center">
+                <h2 className="text-sm sm:text-base font-black text-black tracking-wide uppercase">
+                  {customConsent?.kop?.clinicName || "PT NAVENA INTERNATIONAL GROUP"}
+                </h2>
+                <p className="text-[10px] sm:text-xs text-gray-800 font-medium mt-0.5">
+                  Phone: {customConsent?.kop?.phone || "+62 21 555 1900"} &nbsp; E-mail: <span className="text-blue-600 underline">{customConsent?.kop?.email || "navenainternationalgroup@gmail.com"}</span>
+                </p>
+                <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 leading-tight">
+                  {customConsent?.kop?.address || "Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan, Provinsi DKI Jakarta, 12310"}
+                </p>
               </div>
-              <h2 className="text-lg sm:text-xl font-bold font-display tracking-tight text-[#2C2416]">
+            </div>
+
+            {/* Document Sub-Header */}
+            <div className="text-center space-y-1">
+              <h3 className="text-base sm:text-lg font-bold font-display tracking-tight text-[#2C2416]">
                 SURAT PERSETUJUAN & KEBIJAKAN RESERVASI KLINIK
-              </h2>
-              <p className="text-xs text-[#7C7365]">
-                Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310 • Telp: (021) 765-4321 • WhatsApp: +62 811-9876-5432
-              </p>
-              <div className="text-[11px] text-[#8C8272] pt-1 flex items-center justify-center gap-4">
+              </h3>
+              <div className="text-[11px] text-[#8C8272] pt-0.5 flex items-center justify-center gap-3">
                 <span>Ref. Dokumen: <strong className="font-mono font-semibold">SK-CONSENT-{bookingCode}</strong></span>
                 <span>•</span>
                 <span>Status: <strong className="text-emerald-700">Tersertifikasi Digital</strong></span>

@@ -143,6 +143,7 @@ Route::prefix('admin')->group(function () {
 
         // Clinic Settings (T&C, WA number, etc.)
         Route::get('/clinic-settings', [ClinicSettingAdminController::class, 'index']);
+        Route::post('/clinic-settings/batch', [ClinicSettingAdminController::class, 'saveBatch']);
         Route::get('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'show']);
         Route::put('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'update']);
 

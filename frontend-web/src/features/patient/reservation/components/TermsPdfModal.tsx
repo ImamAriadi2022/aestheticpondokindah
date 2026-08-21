@@ -24,14 +24,18 @@ export default function TermsPdfModal({
   onAccept,
   showAcceptButton = false,
 }: TermsPdfModalProps) {
-  const [adminTerms, setAdminTerms] = useState<string | null>(null);
+      const [adminTerms, setAdminTerms] = useState<string | null>(null);
+  const [customTerms, setCustomTerms] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
       getPublicClinicSettings()
-        .then((settings) => {
+        .then((settings: any) => {
+          if (settings.pdf_terms_and_conditions) {
+            setCustomTerms(settings.pdf_terms_and_conditions);
+          }
           if (settings.booking_terms && settings.booking_terms.trim().length > 0) {
             setAdminTerms(settings.booking_terms);
           }
@@ -41,7 +45,7 @@ export default function TermsPdfModal({
     }
   }, [isOpen]);
 
-  const handlePrint = () => {
+    const handlePrint = () => {
     const printFrame = document.createElement("iframe");
     printFrame.style.position = "fixed";
     printFrame.style.right = "0";
@@ -57,16 +61,35 @@ export default function TermsPdfModal({
       return;
     }
 
+    const w = customTerms?.kop?.logoWidth || 75;
+    const h = customTerms?.kop?.logoHeight || 75;
+
+    const sectionsHtml = customTerms?.sections && customTerms.sections.length > 0
+      ? customTerms.sections.map((s: any) => `
+          <div class="section-title">${s.title}</div>
+          <p>${s.content}</p>
+        `).join('')
+      : `
+          <div class="section-title">1. Ketentuan Umum & Pendaftaran Layanan</div>
+          <p>Seluruh reservasi konsultasi dan tindakan medis gigi di Aesthetic Pondok Indah Dental Clinic wajib didaftarkan melalui platform resmi klinik.</p>
+          <div class="section-title">2. Ketentuan Penjadwalan, Kedatangan & Reschedule</div>
+          <p>Pasien diharapkan hadir di klinik minimal 10 menit sebelum waktu janji temu yang telah dikonfirmasi.</p>
+          <div class="section-title">3. Standar Pelayanan Medis & Keselamatan Pasien</div>
+          <p>Seluruh tindakan perawatan gigi dan estetik dilakukan oleh dokter gigi spesialis berizin praktik resmi.</p>
+          <div class="section-title">4. Kebijakan Pembayaran & Garansi Layanan</div>
+          <p>Biaya tindakan disesuaikan dengan jenis perawatan dan bahan medis yang disetujui pasien sebelum tindakan.</p>
+        `;
+
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>Syarat dan Ketentuan Layanan Pasien - Aesthetic Pondok Indah</title>
+          <title>${customTerms?.docTitle || "Syarat dan Ketentuan Layanan Pasien"} - Aesthetic Pondok Indah</title>
           <style>
             @page {
               size: A4 portrait;
-              margin: 18mm 16mm 18mm 16mm;
+              margin: 16mm 14mm;
             }
             * {
               box-sizing: border-box;
@@ -75,151 +98,90 @@ export default function TermsPdfModal({
             }
             body {
               font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-              color: #1a1a1a;
-              line-height: 1.6;
+              color: #111;
+              line-height: 1.5;
               margin: 0;
               padding: 0;
-              font-size: 10pt;
+              font-size: 9.5pt;
               background: #fff;
             }
-            .letterhead {
-              border-bottom: 2.5px solid #8C6B1C;
-              padding-bottom: 12px;
-              margin-bottom: 18px;
-              text-align: center;
+            .kop-header {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 16px;
+              padding-bottom: 10px;
+              margin-bottom: 14px;
+              border-bottom: 3px double #111;
             }
-            .letterhead-title {
-              font-size: 16pt;
-              font-weight: 800;
-              color: #8C6B1C;
-              letter-spacing: 1.5px;
-              text-transform: uppercase;
-              margin-bottom: 2px;
-            }
-            .letterhead-subtitle {
-              font-size: 11pt;
-              font-weight: 700;
-              color: #2C2416;
-              margin-bottom: 4px;
-              letter-spacing: 0.5px;
-            }
-            .letterhead-contact {
-              font-size: 8.5pt;
-              color: #555;
-              line-height: 1.35;
-            }
+            .kop-logo { flex-shrink: 0; }
+            .kop-logo img { width: ${w}px; height: ${h}px; object-fit: contain; }
+            .kop-details { text-align: center; flex: 1; }
+            .kop-title { font-size: 13.5pt; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
+            .kop-contact { font-size: 8.5pt; font-weight: 500; color: #222; margin-bottom: 2px; }
+            .kop-contact a { color: #0056b3; text-decoration: underline; }
+            .kop-address { font-size: 8pt; color: #333; line-height: 1.3; }
+
             .doc-header {
               text-align: center;
-              margin-bottom: 18px;
-            }
-            .doc-title {
-              font-size: 12pt;
-              font-weight: 800;
-              text-transform: uppercase;
-              color: #111;
-              margin-bottom: 3px;
-              letter-spacing: 0.5px;
-            }
-            .doc-number {
-              font-size: 8.5pt;
-              color: #666;
-            }
-            .section {
               margin-bottom: 14px;
             }
+            .doc-title {
+              font-size: 11pt;
+              font-weight: 800;
+              color: #111;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            .doc-sub {
+              font-size: 8.5pt;
+              color: #555;
+              font-style: italic;
+              margin-top: 1px;
+            }
             .section-title {
-              font-weight: 700;
-              font-size: 10.5pt;
-              color: #8C6B1C;
-              border-bottom: 1px solid #E8DFC8;
-              padding-bottom: 3px;
-              margin-bottom: 6px;
-            }
-            .section p, .section li {
               font-size: 9.5pt;
-              color: #333;
-              margin: 4px 0;
-              text-align: justify;
+              font-weight: 700;
+              color: #111;
+              margin: 10px 0 2px 0;
             }
-            ol {
-              padding-left: 18px;
-              margin: 4px 0;
+            p {
+              margin: 0 0 6px 0;
+              text-align: justify;
+              color: #333;
+              font-size: 8.8pt;
+              line-height: 1.4;
             }
             .footer-info {
-              margin-top: 24px;
-              border-top: 1px dashed #ccc;
-              padding-top: 10px;
-              font-size: 8pt;
-              color: #777;
+              margin-top: 20px;
+              border-top: 1px dashed #bbb;
+              padding-top: 8px;
+              font-size: 7.5pt;
+              color: #666;
               text-align: center;
             }
           </style>
         </head>
         <body>
-          <div class="letterhead">
-            <div class="letterhead-title">AESTHETIC PONDOK INDAH</div>
-            <div class="letterhead-subtitle">DENTAL CLINIC & IMPLANT CENTER</div>
-            <div class="letterhead-contact">
-              Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br/>
-              Telepon: (021) 765-4321 | WhatsApp Layanan Pasien: 0812-3456-7890 | Website: https://aestheticpondokindah.web.id
+          <div class="kop-header">
+            ${customTerms?.kop?.logoUrl ? `<div class="kop-logo"><img src="${customTerms.kop.logoUrl}" alt="Logo" /></div>` : ''}
+            <div class="kop-details">
+              <div class="kop-title">${customTerms?.kop?.clinicName || 'PT NAVENA INTERNATIONAL GROUP'}</div>
+              <div class="kop-contact">Phone: ${customTerms?.kop?.phone || '+62 21 555 1900'} &nbsp; E-mail: <a>${customTerms?.kop?.email || 'navenainternationalgroup@gmail.com'}</a></div>
+              <div class="kop-address">${customTerms?.kop?.address || 'Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan'}</div>
             </div>
           </div>
 
           <div class="doc-header">
-            <div class="doc-title">SYARAT DAN KETENTUAN LAYANAN PASIEN</div>
-            <div class="doc-number">DOKUMEN KEBIJAKAN OPERASIONAL & PERJANJIAN LAYANAN KLINIK</div>
+            <div class="doc-title">${customTerms?.docTitle || "SYARAT DAN KETENTUAN LAYANAN & PERAWATAN GIGI"}</div>
+            <div class="doc-sub">${customTerms?.docSubtitle || "Pedoman Resmi Pasien Aesthetic Pondok Indah"} (${customTerms?.docVersion || "Versi 2.4 - Berlaku Resmi 2026"})</div>
           </div>
 
-          <div class="section">
-            <div class="section-title">1. KETENTUAN UMUM & PENDAFTARAN LAYANAN</div>
-            <ol>
-              <li>Seluruh reservasi konsultasi dan tindakan medis gigi di Aesthetic Pondok Indah Dental Clinic wajib didaftarkan melalui platform reservasi resmi klinik atau bagian resepsionis.</li>
-              <li>Pasien atau wali sah wajib memberikan data identitas diri, nomor kontak aktif, serta riwayat medis yang akurat dan dapat dipertanggungjawabkan.</li>
-              <li>Klinik berhak memverifikasi identitas pasien saat kedatangan untuk keperluan administrasi dan rekam medis elektronik.</li>
-            </ol>
-          </div>
-
-          <div class="section">
-            <div class="section-title">2. KETENTUAN PENJADWALAN, KEDATANGAN & RESCHEDULE</div>
-            <ol>
-              <li>Pasien diharapkan hadir di klinik minimal 15 (lima belas) menit sebelum estimasi jam tindakan untuk proses registrasi dan pengecekan awal.</li>
-              <li>Keterlambatan lebih dari 20 menit dari waktu jadwal yang telah dikonfirmasi dapat mengakibatkan penyesuaian durasi perawatan atau penjadwalan ulang (*reschedule*) demi kenyamanan antrean pasien berikutnya.</li>
-              <li>Permohonan perubahan jadwal (*reschedule*) dapat dilakukan maksimal 4 (empat) jam sebelum jadwal tindakan melalui sistem atau staf klinik.</li>
-            </ol>
-          </div>
-
-          <div class="section">
-            <div class="section-title">3. TATA TERTIB & PROSEDUR MEDIS KLINIK</div>
-            <ol>
-              <li>Sebelum tindakan medis dilakukan, dokter gigi yang bertugas akan melakukan pemeriksaan klinis dan menjelaskan rencana perawatan, indikasi, serta estimasi biaya.</li>
-              <li>Tindakan medis invasif, bedah minor, restorasi lanjutan, dan estetik memerlukan penandatanganan <strong>Surat Pernyataan dan Persetujuan Pasien (Informed Consent)</strong> yang sah.</li>
-              <li>Pasien wajib mematuhi seluruh instruksi pra-tindakan dan pasca-tindakan yang diberikan oleh dokter gigi demi efektivitas dan keamanan hasil perawatan.</li>
-            </ol>
-          </div>
-
-          <div class="section">
-            <div class="section-title">4. KEBIJAKAN PEMBAYARAN & JAMINAN LAYANAN</div>
-            <ol>
-              <li>Pembayaran tagihan tindakan dapat dilakukan secara tunai, kartu debit/kredit, transfer bank, maupun metode pembayaran digital resmi yang disediakan klinik.</li>
-              <li>Setiap perawatan bergaransi (seperti pemasangan veneer porselen atau implan tertentu) tunduk pada syarat kontrol berkala sesuai rekomendasi dokter penanggung jawab.</li>
-            </ol>
-          </div>
-
-          <div class="section">
-            <div class="section-title">5. KERAHASIAAN DATA PRIBADI & REKAM MEDIS</div>
-            <ol>
-              <li>Aesthetic Pondok Indah menjamin kerahasiaan data pribadi dan rekam medis pasien sesuai dengan peraturan perundang-undangan kesehatan yang berlaku di Republik Indonesia.</li>
-              <li>Dokumentasi klinis (foto gigi intraoral/ekstraoral dan rontgen panoramic) digunakan secara ketat untuk kepentingan diagnosis medis dan rekam jejak kesehatan gigi pasien.</li>
-            </ol>
-          </div>
+          ${sectionsHtml}
 
           <div class="footer-info">
-            Dokumen Syarat dan Ketentuan Layanan Pasien ini berlaku secara resmi di seluruh unit layanan Aesthetic Pondok Indah Dental Clinic.<br/>
-            Dicetak secara elektronik pada: ${new Date().toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })} | Dokumen Resmi Sistem Reservasi Terpadu
+            ${customTerms?.footerNote || "Dokumen ini sah dan diterbitkan secara digital oleh Aesthetic Pondok Indah Dental Clinic."}<br/>
+            Dicetak pada: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })} WIB
           </div>
         </body>
       </html>

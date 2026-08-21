@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\Guest\Settings;
+namespace AppHttpControllersApiGuestSettings;
 
-use App\Http\Controllers\Controller;
-use App\Models\Admin\Settings\ClinicSetting;
-use Illuminate\Http\JsonResponse;
+use AppHttpControllersController;
+use AppModelsAdminSettingsClinicSetting;
+use IlluminateHttpJsonResponse;
 
 class ClinicSettingPublicController extends Controller
 {
@@ -17,6 +17,12 @@ class ClinicSettingPublicController extends Controller
         $allowedKeys = [
             'booking_terms',
             'booking_whatsapp_number',
+            'clinic_general_info',
+            'pdf_terms_and_conditions',
+            'pdf_informed_consent',
+            'clinic_about_profile',
+            'clinic_legal_privacy_policy',
+            'clinic_legal_terms_of_service',
         ];
 
         $settings = ClinicSetting::whereIn('key', $allowedKeys)

@@ -72,7 +72,7 @@ export const MENU: AppMenu = {
         submenu: USER_MANAGEMENT_SUBMENU,
       },
       { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
-      { label: "Pengaturan Klinik", icon: Settings, href: "/dashboard/clinic?tab=settings" },
+      { label: "Pengaturan Klinik", icon: FileText, href: "/dashboard/clinic?tab=settings" },
     ],
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },
