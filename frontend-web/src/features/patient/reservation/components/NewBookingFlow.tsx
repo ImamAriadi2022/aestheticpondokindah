@@ -31,7 +31,7 @@ import { getSession } from "@/core/auth/services/session";
 import { toast } from "@/shared/ui/toast";
 import { API_BASE } from "@/core/api/apiConfig";
 import { apiClient } from "@/core/api/apiClient";
-import { triggerPushNotification } from "@/core/services/pushNotificationService";
+import { triggerPushNotification, subscribeToPushNotifications } from "@/core/services/pushNotificationService";
 import { broadcastRealtimeReservationEvent } from "@/core/services/GlobalNotificationManager";
 import { useRef } from "react";
 import DigitalSignaturePad from "./DigitalSignaturePad";
@@ -107,6 +107,194 @@ export function mapBackendService(item: any): ServiceItem {
     specialistLabel: item.specialist_label || "",
   };
 }
+
+
+// Rich Default Services Catalog (Ensures 0ms instant display without empty blank states)
+export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
+  {
+    id: "dental-whitening",
+    name: "Dental Whitening",
+    category: "Estetik",
+    categoryBadge: "ESTETIK GIGI",
+    description: "Perawatan pemutihan gigi profesional untuk senyum lebih cerah dan percaya diri.",
+    duration: "60–90 mnt",
+    price: 1500000,
+    priceFormatted: "Rp 1.500.000",
+    image: "/layanan/Dental Whitening.png",
+    specialistNames: ["drg. Yulita Dora"],
+    specialistLabel: "Aesthetic Dentist"
+  },
+  {
+    id: "scaling-polishing",
+    name: "Scaling & Polishing",
+    category: "Umum",
+    categoryBadge: "PERAWATAN UMUM",
+    description: "Pembersihan karang gigi menyeluruh dan pemolesan untuk mencegah masalah gusi.",
+    duration: "30–45 mnt",
+    price: 450000,
+    priceFormatted: "Rp 450.000",
+    image: "/layanan/Oral Care.png",
+    specialistNames: ["drg. Eric Sulistio, Sp. Perio"],
+    specialistLabel: "Periodontics & Preventive Dentist"
+  },
+  {
+    id: "porcelain-veneers",
+    name: "Porcelain Veneers",
+    category: "Estetik",
+    categoryBadge: "ESTETIK GIGI",
+    description: "Lapisan porselen tipis presisi tinggi untuk memperbaiki warna, bentuk, dan susunan gigi.",
+    duration: "90 mnt",
+    price: 4500000,
+    priceFormatted: "Rp 4.500.000",
+    image: "/layanan/Veneers.png",
+    specialistNames: ["drg. Melati Putri, Sp. Pros", "drg. Yulita Dora"],
+    specialistLabel: "Prosthodontist & Aesthetic Specialist"
+  },
+  {
+    id: "dental-implant",
+    name: "Dental Implant",
+    category: "Implan",
+    categoryBadge: "IMPLAN GIGI",
+    description: "Solusi permanen untuk mengganti gigi yang hilang dengan teknologi implan titanium.",
+    duration: "120 mnt",
+    price: 12000000,
+    priceFormatted: "Rp 12.000.000",
+    image: "/layanan/Dental Implants.png",
+    specialistNames: ["drg. Yudy Ardila Utomo, Sp.BMM", "drg. Eric Sulistio, Sp. Perio"],
+    specialistLabel: "Oral Surgeon & Periodontist"
+  },
+  {
+    id: "root-canal",
+    name: "Root Canal Treatment",
+    category: "Umum",
+    categoryBadge: "PERAWATAN SALURAN AKAR",
+    description: "Perawatan saraf gigi terinfeksi untuk menyelamatkan gigi alami tanpa pencabutan.",
+    duration: "60–90 mnt",
+    price: 2500000,
+    priceFormatted: "Rp 2.500.000",
+    image: "/layanan/Root Canal Treatments.png",
+    specialistNames: ["drg. Pramodanti Jiwanakusuma, Sp.KG", "drg. Riesta Paluvi, Sp.KG"],
+    specialistLabel: "Endodontic Specialist"
+  },
+  {
+    id: "dental-extraction",
+    name: "Wisdom Tooth Removal",
+    category: "Bedah Mulut",
+    categoryBadge: "BEDAH MULUT",
+    description: "Pencabutan dan odontektomi gigi bungsu dengan pembiusan lokal yang aman dan minim trauma.",
+    duration: "45–60 mnt",
+    price: 2000000,
+    priceFormatted: "Rp 2.000.000",
+    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.png",
+    specialistNames: ["drg. Yudy Ardila Utomo, Sp.BMM"],
+    specialistLabel: "Oral & Maxillofacial Surgeon"
+  },
+  {
+    id: "invisalign",
+    name: "Invisalign Clear Aligners",
+    category: "Ortodonti",
+    categoryBadge: "ORTODONTI ESTETIK",
+    description: "Perataan gigi transparan tanpa kawat dengan teknologi 3D SmartTrack digital.",
+    duration: "45 mnt",
+    price: 25000000,
+    priceFormatted: "Rp 25.000.000",
+    image: "/layanan/Invisalign and Clear Aligners.png",
+    specialistNames: ["drg. Nadia Safira, Sp.Ort"],
+    specialistLabel: "Orthodontist Specialist"
+  },
+  {
+    id: "dental-filling",
+    name: "Tambal Gigi Komposit Estetik",
+    category: "Umum",
+    categoryBadge: "PERAWATAN UMUM",
+    description: "Penambalan gigi berlubang menggunakan resin komposit sewarna gigi asli.",
+    duration: "30–45 mnt",
+    price: 600000,
+    priceFormatted: "Rp 600.000",
+    image: "/layanan/Oral Care.png",
+    specialistNames: ["drg. Achmad Riwandy", "drg. Della Sparringa"],
+    specialistLabel: "General Dentist"
+  },
+  {
+    id: "pediatric-cleaning",
+    name: "Pemeriksaan & Fluoride Anak",
+    category: "Pediatrik",
+    categoryBadge: "GIGI ANAK",
+    description: "Perawatan pencegahan gigi berlubang dan aplikasi topical fluoride khusus anak.",
+    duration: "30 mnt",
+    price: 500000,
+    priceFormatted: "Rp 500.000",
+    image: "/layanan/Pediatric Dentistry.png",
+    specialistNames: ["drg. Anindita Putri, Sp.KGA"],
+    specialistLabel: "Pediatric Dentist"
+  }
+];
+
+export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
+  {
+    id: "3",
+    userId: "3",
+    name: "drg. Yulita Dora",
+    specialization: "Aesthetic & Cosmetic Dentistry",
+    university: "Universitas Indonesia",
+    experienceYears: 8,
+    photo: "/dokter/drg. Yulita Dora.jpeg"
+  },
+  {
+    id: "4",
+    userId: "4",
+    name: "drg. Achmad Riwandy",
+    specialization: "General Dentistry & Restorative",
+    university: "Universitas Gadjah Mada",
+    experienceYears: 6,
+    photo: "/dokter/drg. Achmad Riwandy.jpeg"
+  },
+  {
+    id: "5",
+    userId: "5",
+    name: "drg. Della Sparringa",
+    specialization: "General Dentistry & Preventive",
+    university: "Universitas Airlangga",
+    experienceYears: 5,
+    photo: "/dokter/drg. Della Sparringa.jpeg"
+  },
+  {
+    id: "6",
+    userId: "6",
+    name: "drg. Eric Sulistio, Sp. Perio",
+    specialization: "Spesialis Periodonsia & Implan",
+    university: "Universitas Indonesia",
+    experienceYears: 11,
+    photo: "/dokter/drg. Eric Sulistio, Sp. Perio.jpeg"
+  },
+  {
+    id: "7",
+    userId: "7",
+    name: "drg. Melati Putri, Sp. Pros",
+    specialization: "Spesialis Prostodonsia & Veneer",
+    university: "Universitas Indonesia",
+    experienceYears: 10,
+    photo: "/dokter/drg. Melati Putri, Sp. Pros.jpeg"
+  },
+  {
+    id: "8",
+    userId: "8",
+    name: "drg. Yudy Ardila Utomo, Sp.BMM",
+    specialization: "Spesialis Bedah Mulut & Maksilofasial",
+    university: "Universitas Padjadjaran",
+    experienceYears: 14,
+    photo: "/dokter/drg. Yudy Ardila Utomo, Sp.BMM.jpeg"
+  },
+  {
+    id: "9",
+    userId: "9",
+    name: "drg. Pramodanti Jiwanakusuma, Sp.KG",
+    specialization: "Spesialis Konservasi Gigi & Endodontik",
+    university: "Universitas Indonesia",
+    experienceYears: 9,
+    photo: "/dokter/drg. Pramodanti Jiwanakusuma, Sp.KG.jpeg"
+  }
+];
 
 // Doctor Catalog Interface
 export interface DoctorItem {
@@ -192,10 +380,10 @@ export default function NewBookingFlow({
   );
 
   // Dynamic Backend Datasets
-  const [servicesList, setServicesList] = useState<ServiceItem[]>([]);
+  const [servicesList, setServicesList] = useState<ServiceItem[]>(INITIAL_SERVICES_CATALOG);
   const [servicesLoading, setServicesLoading] = useState(true);
 
-  const [doctorsList, setDoctorsList] = useState<DoctorItem[]>([]);
+  const [doctorsList, setDoctorsList] = useState<DoctorItem[]>(INITIAL_DOCTORS_CATALOG);
   const [doctorsLoading, setDoctorsLoading] = useState(true);
 
   const [branchesList, setBranchesList] = useState<BranchItem[]>([]);
@@ -275,8 +463,12 @@ export default function NewBookingFlow({
   const fetchServices = async () => {
     setServicesLoading(true);
     try {
-      const res = await apiClient.get("/public/services");
-      const list = Array.isArray(res) ? res : res?.data || res?.services || [];
+      let res = await apiClient.get("/public/services", { skipToast: true });
+      let list = Array.isArray(res) ? res : res?.data || res?.services || [];
+      if (!Array.isArray(list) || list.length === 0) {
+        res = await apiClient.get("/services", { skipToast: true });
+        list = Array.isArray(res) ? res : res?.data || res?.services || [];
+      }
       if (Array.isArray(list) && list.length > 0) {
         const mapped = list.map(mapBackendService);
         setServicesList(mapped);
@@ -289,7 +481,7 @@ export default function NewBookingFlow({
         }
       }
     } catch (e) {
-      // Graceful fallback
+      // Retain INITIAL_SERVICES_CATALOG on network error
     } finally {
       setServicesLoading(false);
     }
@@ -405,10 +597,13 @@ export default function NewBookingFlow({
   // 6. Fetch Real Patient Bookings History with 1s Realtime Silent Polling
   const prevReservationStatusesRef = useRef<Map<string | number, string>>(new Map());
 
+  const isFetchingBookingsRef = useRef(false);
   const fetchBookings = async (silent = false) => {
+    if (isFetchingBookingsRef.current && silent) return;
+    isFetchingBookingsRef.current = true;
     if (!silent) setHistoryLoading(true);
     try {
-      const res = await apiClient.get("/user/reservations");
+      const res = await apiClient.get("/user/reservations", { skipToast: true });
       const list = Array.isArray(res)
         ? res
         : res?.reservations || res?.data?.reservations || res?.data || [];
@@ -431,6 +626,9 @@ export default function NewBookingFlow({
           examinationResult: r.admin_notes || r.notes || r.complaint,
           patientName: r.patient_name || r.name || patientName,
           phone: r.phone || patientPhone,
+          signatureData: r.signature_data || r.signature || r.signatureData || null,
+          signature_data: r.signature_data || r.signature || r.signatureData || null,
+          termsAcceptedAt: r.terms_accepted_at || r.created_at || null,
         }));
 
         // Detect status transition to 'confirmed' / 'Dikonfirmasi'
@@ -466,11 +664,13 @@ export default function NewBookingFlow({
         setBookingsHistory([]);
       }
     } finally {
+      isFetchingBookingsRef.current = false;
       if (!silent) setHistoryLoading(false);
     }
   };
 
   useEffect(() => {
+    // 1. Initial database fetch on load (Once, connected directly to MySQL via REST API)
     fetchServices();
     fetchDoctors();
     fetchBranches();
@@ -478,12 +678,25 @@ export default function NewBookingFlow({
     fetchPatientProfile();
     fetchBookings(false);
 
-    // 1-second silent polling for patient status updates
-    const interval = setInterval(() => {
-      fetchBookings(true);
-    }, 1000);
+    // 2. Event-Driven Trigger: Refetch data only when a push notification or status trigger occurs (No continuous polling)
+    const unsubscribe = subscribeToPushNotifications((payload) => {
+      if (payload.type === "reservation_confirmed" || payload.type === "reservation_new" || payload.bookingCode) {
+        fetchBookings(true);
+      }
+    });
 
-    return () => clearInterval(interval);
+    // 3. Window focus / visibility change trigger (Re-verify if user returns after notification click)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchBookings(true);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   // Dynamic categories extracted from servicesList

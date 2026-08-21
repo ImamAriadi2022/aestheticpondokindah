@@ -122,8 +122,9 @@ export default function LoginPage() {
       setSuccess("Login berhasil! Mengalihkan...");
       
       setTimeout(() => {
-        navigate("/", { replace: true });
-      }, 800);
+        const dest = getDefaultDashboardPath(data.user?.role) || "/";
+        navigate(dest, { replace: true });
+      }, 500);
 
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat login.");
@@ -176,8 +177,9 @@ export default function LoginPage() {
 
       setSuccess("Pendaftaran berhasil! Mengalihkan...");
       setTimeout(() => {
-        navigate("/", { replace: true });
-      }, 800);
+        const dest = getDefaultDashboardPath(data.user?.role) || "/dashboard/user";
+        navigate(dest, { replace: true });
+      }, 500);
 
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat mendaftar.");

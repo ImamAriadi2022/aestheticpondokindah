@@ -19,7 +19,7 @@ class NotificationService
             return null;
         }
 
-        return Notification::create([
+        $notification = Notification::create([
             'user_id' => $userId,
             'title' => $title,
             'body' => $body,
@@ -27,18 +27,57 @@ class NotificationService
             'deep_link' => $deepLink,
             'data' => $data,
         ]);
+
+        // Automatically dispatch Web Push to User's devices (HP, Laptop) in the background
+        try {
+            WebPushNotificationService::sendToUser(
+                $userId,
+                $title,
+                $body,
+                $deepLink,
+                [
+                    'type' => $type,
+                    'bookingCode' => $data['code'] ?? $data['bookingCode'] ?? null,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking
+        }
+
+        return $notification;
     }
 
     /**
      * Notify every active clinic admin (optionally excluding one user).
      */
-    public static function sendToAdmins(string $title, string $body, string $type = 'consultation', ?string $deepLink = null, array $data = [], ?int $exceptUserId = null): void
-    {
+    public static function sendToAdmins(
+        string $title,
+        string $body,
+        string $type = 'consultation',
+        ?string $deepLink = null,
+        array $data = [],
+        ?int $exceptUserId = null
+    ): void {
         User::query()
             ->whereIn('role', ['admin', 'clinic_admin', 'clinic'])
             ->where('status', 'active')
             ->when($exceptUserId, fn ($q) => $q->where('id', '!=', $exceptUserId))
             ->pluck('id')
             ->each(fn (int $adminId) => self::send($adminId, $title, $body, $type, $deepLink, $data));
+
+        // Also dispatch to any admin device subscription (including unlinked role-based sessions)
+        try {
+            WebPushNotificationService::sendToAdmins(
+                $title,
+                $body,
+                $deepLink,
+                [
+                    'type' => $type,
+                    'bookingCode' => $data['code'] ?? $data['bookingCode'] ?? null,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking
+        }
     }
 }

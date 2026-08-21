@@ -141,3 +141,97 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 });
+
+
+// =========================================================================
+// 5. NATIVE MULTI-OS CLOUD WEB PUSH ENGINE (Android, iOS, macOS, Windows)
+// =========================================================================
+
+// Handle Push Message received from Google FCM / Apple APNs / Mozilla Push Cloud
+self.addEventListener('push', (event) => {
+  let data = {
+    title: '🔔 Aesthetic Pondok Indah',
+    body: 'Pembaruan reservasi & antrean klinik.',
+    url: '/',
+  };
+
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data.body = event.data.text();
+    }
+  }
+
+  const title = data.title || '🔔 Aesthetic Pondok Indah';
+  const options = {
+    body: data.message || data.body || 'Pembaruan data reservasi pasien.',
+    icon: data.icon || '/logo/logo.png',
+    badge: data.badge || '/logo/logo.png',
+    vibrate: data.vibrate || [200, 100, 200],
+    tag: data.tag || ('apig-push-' + Date.now()),
+    renotify: true,
+    requireInteraction: true,
+    data: {
+      url: data.url || (data.data && data.data.url) || '/',
+      time: Date.now(),
+      bookingCode: data.bookingCode || (data.data && data.data.bookingCode),
+    },
+    actions: [
+      {
+        action: 'open_url',
+        title: 'Lihat Detail',
+        icon: '/logo/logo.png'
+      }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Handle user clicking the notification sitting in the OS / Mobile device bar
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = (event.notification.data && event.notification.data.url)
+    ? event.notification.data.url
+    : '/';
+  const fullTargetUrl = new URL(targetUrl, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // 1. Focus existing open window if any
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.navigate(fullTargetUrl);
+          return client.focus();
+        }
+      }
+      // 2. Open new window if none is open
+      if (clients.openWindow) {
+        return clients.openWindow(fullTargetUrl);
+      }
+    })
+  );
+});
+
+// Direct client message dispatcher
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_DEVICE_NOTIFICATION') {
+    const { title, options } = event.data;
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body: options.body || '',
+        icon: options.icon || '/logo/logo.png',
+        badge: options.badge || '/logo/logo.png',
+        vibrate: options.vibrate || [200, 100, 200],
+        tag: options.tag || ('apig-notif-' + Date.now()),
+        renotify: true,
+        requireInteraction: true,
+        data: options.data || {},
+      })
+    );
+  }
+});

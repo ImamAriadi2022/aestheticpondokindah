@@ -543,8 +543,8 @@ export default function ETicketModal({
         doctorName={ticketData.doctorName}
         dateStr={ticketData.displayDate || ticketData.date}
         timeStr={`${ticketData.time} WIB`}
-        signatureData={(ticketData as any)?.signatureData || (ticketData as any)?.signature_data || null}
-        acceptedAt={new Date().toISOString()}
+        signatureData={(ticketData as any)?.signatureData || (ticketData as any)?.signature_data || (ticketData as any)?.signature || null}
+        acceptedAt={(ticketData as any)?.termsAcceptedAt || (ticketData as any)?.terms_accepted_at || (ticketData as any)?.acceptedAt || new Date().toISOString()}
       />
     </div>
   );

@@ -24,7 +24,6 @@ const listeners = new Set<PushListener>();
 
 /**
  * Play a high-quality, pleasant two-tone notification chime using Web Audio API
- * No external .mp3 download required; works reliably in modern browsers.
  */
 export function playNotificationChime(type: "new_booking" | "confirmed" | "general" = "new_booking") {
   try {
@@ -44,7 +43,7 @@ export function playNotificationChime(type: "new_booking" | "confirmed" | "gener
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = "sine";
-      osc1.frequency.setValueAtTime(587.33, now); // D5
+      osc1.frequency.setValueAtTime(587.33, now);
       gain1.gain.setValueAtTime(0, now);
       gain1.gain.linearRampToValueAtTime(0.4, now + 0.03);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
@@ -56,7 +55,7 @@ export function playNotificationChime(type: "new_booking" | "confirmed" | "gener
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = "sine";
-      osc2.frequency.setValueAtTime(880.0, now + 0.12); // A5
+      osc2.frequency.setValueAtTime(880.0, now + 0.12);
       gain2.gain.setValueAtTime(0, now + 0.12);
       gain2.gain.linearRampToValueAtTime(0.45, now + 0.15);
       gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
@@ -93,15 +92,43 @@ export function playNotificationChime(type: "new_booking" | "confirmed" | "gener
       osc.stop(now + 0.5);
     }
 
-    // Optional device vibration pattern (100ms vibrate, 50ms pause, 100ms vibrate)
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate([100, 50, 100]);
       } catch (e) {}
     }
   } catch (e) {
-    console.warn("[PushAudio] Audio synthesis not permitted yet by user interaction", e);
+    console.warn("[PushAudio] Audio synthesis error:", e);
   }
+}
+
+/**
+ * Register Service Worker for Native Device Push Notifications
+ */
+let swRegistrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
+
+export function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistration | null> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+    return Promise.resolve(null);
+  }
+
+  if (!swRegistrationPromise) {
+    swRegistrationPromise = navigator.serviceWorker.register("/sw.js", { scope: "/" })
+      .then(() => navigator.serviceWorker.ready)
+      .catch((err) => {
+        console.warn("[ServiceWorker] Registration failed:", err);
+        return null;
+      });
+  }
+
+  return swRegistrationPromise;
+}
+
+// Automatically register service worker on load
+if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    getServiceWorkerRegistration();
+  });
 }
 
 /**
@@ -117,6 +144,86 @@ export async function requestPushPermission(): Promise<NotificationPermission> {
     }
   }
   return "denied";
+}
+
+/**
+ * Dispatch notification directly into Android / iOS Notification Bar & Windows / macOS Action Center
+ */
+export function dispatchDeviceSystemNotification(payload: PushNotificationPayload) {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    console.warn("[DeviceNotification] Notification API not supported in this browser.");
+    return;
+  }
+
+  const targetUrl = payload.url || (
+    payload.role === "doctor"
+      ? "/#/dashboard/doctor?tab=reservasi"
+      : payload.role === "admin"
+      ? "/#/dashboard/clinic?tab=reservasi"
+      : "/#/dashboard/user?tab=reservasi"
+  );
+
+  const origin = window.location.origin || "";
+  const iconUrl = `${origin}/logo/logo.png`;
+  const uniqueTag = payload.bookingCode
+    ? `apig-${payload.bookingCode}-${Date.now()}`
+    : `apig-notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+  const triggerActualNotifications = () => {
+    // 1. Direct Native Window Desktop Notification (Instant Pop-up Banner on Windows/macOS)
+    try {
+      const notif = new Notification(payload.title, {
+        body: payload.message,
+        icon: iconUrl,
+        badge: iconUrl,
+        tag: uniqueTag,
+        requireInteraction: true,
+      } as any);
+
+      notif.onclick = () => {
+        window.focus();
+        if (payload.onClick) payload.onClick();
+        else if (payload.url) window.location.href = payload.url;
+        notif.close();
+      };
+    } catch (e) {
+      console.warn("[DeviceNotification] Window Notification constructor fallback:", e);
+    }
+
+    // 2. Service Worker Notification (Ensures Mobile Android Shade & PWA Tray delivery)
+    try {
+      getServiceWorkerRegistration().then((swReg) => {
+        if (swReg && "showNotification" in swReg) {
+          swReg.showNotification(payload.title, {
+            body: payload.message,
+            icon: iconUrl,
+            badge: iconUrl,
+            vibrate: [200, 100, 200],
+            tag: uniqueTag,
+            renotify: true,
+            requireInteraction: true,
+            data: {
+              url: targetUrl,
+              bookingCode: payload.bookingCode,
+              time: Date.now()
+            },
+          } as any).catch(() => {});
+        }
+      }).catch(() => {});
+    } catch (e) {
+      console.warn("[DeviceNotification] ServiceWorker notification error:", e);
+    }
+  };
+
+  if (Notification.permission === "granted") {
+    triggerActualNotifications();
+  } else if (Notification.permission !== "denied") {
+    Notification.requestPermission().then((permission) => {
+      if (permission === "granted") {
+        triggerActualNotifications();
+      }
+    });
+  }
 }
 
 /**
@@ -153,26 +260,8 @@ export function triggerPushNotification(payload: PushNotificationPayload) {
     }
   });
 
-  // 2. Dispatch to Native Browser Notification API if permitted
-  if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-    try {
-      const notif = new Notification(payload.title, {
-        body: payload.message,
-        icon: payload.avatar || "/logo/logo.png",
-        badge: "/logo/logo.png",
-        tag: payload.bookingCode || `apig-notif-${Date.now()}`,
-      });
-
-      notif.onclick = () => {
-        window.focus();
-        if (payload.onClick) payload.onClick();
-        else if (payload.url) window.location.href = payload.url;
-        notif.close();
-      };
-    } catch (e) {
-      console.warn("[PushNotification] Browser notification error:", e);
-    }
-  }
+  // 2. Dispatch to Native Device OS Notification Bar (Mobile Notification Shade & Desktop Action Center)
+  dispatchDeviceSystemNotification(payload);
 }
 
 /**

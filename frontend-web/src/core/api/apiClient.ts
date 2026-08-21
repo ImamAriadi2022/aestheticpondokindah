@@ -102,7 +102,9 @@ export const apiClient = {
 
         // Handle Status Codes
         if (response.status === 401) {
-          handleUnauthorized();
+          if (!skipToast && !skipAuth) {
+            handleUnauthorized();
+          }
           throw new ApiError("Sesi Anda telah berakhir.", 401);
         }
 

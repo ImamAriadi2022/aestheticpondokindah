@@ -506,12 +506,12 @@ export default function ReservationConsentPdfModal({
                   Tanda Tangan Pasien / Wali Sah
                 </p>
 
-                <div className="w-full h-24 bg-white border border-[#D9D0BC] rounded-xl flex items-center justify-center p-2 shadow-inner">
-                  {signatureData ? (
+                <div className="w-full h-24 bg-white border border-[#D9D0BC] rounded-xl flex items-center justify-center p-2 shadow-inner overflow-hidden">
+                  {signatureData && signatureData.trim().length > 10 ? (
                     <img
                       src={signatureData}
                       alt={`Tanda Tangan ${patientName}`}
-                      className="max-h-full max-w-full object-contain"
+                      className="max-h-full max-w-full object-contain filter contrast-125"
                     />
                   ) : (
                     <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">

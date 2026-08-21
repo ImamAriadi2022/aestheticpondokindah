@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Shared\Reservation\ReservationChangesController;
+use App\Http\Controllers\Api\Shared\Notification\WebPushSubscriptionController;
 
 // =========================================================================
 // 1. SHARED CONTROLLERS (Multi-Actor Interaction)
@@ -462,3 +463,11 @@ Route::post('/membership/payment/webhook', [UserMembershipPaymentController::cla
 
 
 Route::get('/guest/reservations/changes', [ReservationChangesController::class, 'changes']);
+
+
+// Web Push VAPID Background Notifications (Multi-OS: Android, iOS, macOS, Windows)
+Route::get('/push/vapid-public-key', [WebPushSubscriptionController::class, 'getVapidPublicKey']);
+Route::post('/push/subscribe', [WebPushSubscriptionController::class, 'subscribe']);
+Route::post('/push/unsubscribe', [WebPushSubscriptionController::class, 'unsubscribe']);
+Route::post('/push/test', [WebPushSubscriptionController::class, 'testPush']);
+

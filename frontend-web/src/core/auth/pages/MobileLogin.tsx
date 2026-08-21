@@ -79,7 +79,8 @@ export default function MobileLoginPage() {
 
       toast({ title: "Login Berhasil", message: "Selamat datang kembali!", variant: "success" });
       
-      navigate("/", { replace: true });
+      const dest = getDefaultDashboardPath(data.user?.role) || "/";
+      navigate(dest, { replace: true });
     } catch (err: any) {
       setLoginError(err.message || "Terjadi kesalahan saat login");
     } finally {
@@ -122,7 +123,8 @@ export default function MobileLoginPage() {
       touchSessionLastActive();
 
       toast({ title: "Pendaftaran Berhasil", message: "Selamat datang!", variant: "success" });
-      navigate("/", { replace: true });
+      const dest = getDefaultDashboardPath(data.user?.role) || "/dashboard/user";
+      navigate(dest, { replace: true });
     } catch (err: any) {
       setRegisterError(err.message || "Terjadi kesalahan saat mendaftar");
     } finally {

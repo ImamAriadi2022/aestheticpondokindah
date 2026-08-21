@@ -21,9 +21,13 @@ import { Button } from "@/shared/ui/button";
 import {
   subscribeToPushNotifications,
   playNotificationChime,
+  dispatchDeviceSystemNotification,
+  triggerPushNotification,
   type PushNotificationPayload,
 } from "@/core/services/pushNotificationService";
 import { getSession } from "@/core/auth/services/session";
+import { subscribeToWebPush, sendTestBackgroundPush } from "@/core/services/webPushManager";
+import { apiClient } from "@/core/api/apiClient";
 
 interface DashboardTopBarProps {
   role: "user" | "clinic" | "doctor";
@@ -58,6 +62,46 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   const [soundEnabled, setSoundEnabled] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  
+  // Fetch real notifications from database on mount & sync
+  const fetchDatabaseNotifications = async () => {
+    try {
+      const res: any = await apiClient.get("/user/notifications", { skipToast: true });
+      const list = res?.notifications || res?.data?.notifications || res?.data || (Array.isArray(res) ? res : []);
+      if (Array.isArray(list) && list.length > 0) {
+        const mapped: PushNotificationPayload[] = list.map((item: any) => ({
+          id: String(item.id),
+          title: item.title || "🔔 Notifikasi Klinik",
+          message: item.body || item.message || "",
+          sender: item.type === "appointment" ? "Sistem Reservasi" : "Aesthetic Pondok Indah",
+          type: item.type || "general",
+          url: item.deep_link || (role === "clinic" ? "/#/dashboard/clinic?tab=reservasi" : role === "doctor" ? "/#/dashboard/doctor?tab=reservasi" : "/#/dashboard/user?tab=reservasi"),
+          bookingCode: item.data?.code || item.data?.bookingCode,
+          dateStr: item.created_at ? new Date(item.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "",
+        }));
+
+        setNotifications((prev) => {
+          const prevMap = new Map(prev.map((p) => [p.id || p.title + p.dateStr, p]));
+          mapped.forEach((m) => prevMap.set(m.id || m.title + m.dateStr, m));
+          const combined = Array.from(prevMap.values()).slice(0, 50);
+          try {
+            localStorage.setItem("apig_recent_push_notifications", JSON.stringify(combined));
+          } catch {}
+          return combined;
+        });
+
+        if (typeof res?.unread_count === "number") {
+          setUnreadCount(res.unread_count);
+          try {
+            localStorage.setItem("apig_push_unread_count", String(res.unread_count));
+          } catch {}
+        }
+      }
+    } catch (e) {
+      // Graceful fallback
+    }
+  };
+
   // Subscribe to real-time push notification dispatcher
   useEffect(() => {
     const unsubscribe = subscribeToPushNotifications((payload) => {
@@ -88,12 +132,27 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     return () => unsubscribe();
   }, []);
 
-  // Sync notification permission status
+  // Sync notification permission status, auto-register WebPush & load DB notifications
   useEffect(() => {
+    fetchDatabaseNotifications();
+
     if (typeof window !== "undefined" && "Notification" in window) {
       setNotificationPermission(Notification.permission);
+      if (Notification.permission === "granted") {
+        subscribeToWebPush(role).catch(() => {});
+      }
     }
-  }, []);
+
+    // For clinic/admin, periodically re-check database notifications
+    if (role === "clinic") {
+      const interval = setInterval(() => {
+        if (typeof document !== "undefined" && !document.hidden) {
+          fetchDatabaseNotifications();
+        }
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [role]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -112,10 +171,13 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         const perm = await Notification.requestPermission();
         setNotificationPermission(perm);
         if (perm === "granted") {
-          playNotificationChime("confirmed");
-          new Notification("🔔 Notifikasi Berhasil Diaktifkan", {
-            body: "Anda akan menerima notifikasi instan untuk setiap reservasi baru dan update status pasien.",
-            icon: "/logo/logo.png",
+          await subscribeToWebPush(role);
+          triggerPushNotification({
+            title: "🔔 Notifikasi Device Aktif!",
+            message: "Notifikasi akan muncul di bilah status HP dan Action Center Laptop Anda bahkan saat web ditutup.",
+            sender: "Aesthetic Pondok Indah",
+            type: "reservation_confirmed",
+            url: window.location.hash ? `/${window.location.hash}` : "/#/dashboard/clinic?tab=reservasi",
           });
         }
       } catch (e) {
@@ -124,11 +186,14 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     }
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     setNotifications([]);
     setUnreadCount(0);
     localStorage.removeItem("apig_recent_push_notifications");
     localStorage.setItem("apig_push_unread_count", "0");
+    try {
+      await apiClient.delete("/user/notifications", { skipToast: true });
+    } catch {}
   };
 
   const handleMarkAllAsRead = () => {
@@ -178,7 +243,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
-          <span className="hidden md:inline">Realtime Aktif (1s)</span>
+          <span className="hidden md:inline">{role === "clinic" || role === "doctor" ? "Realtime Aktif (1s)" : "Notifikasi Aktif"}</span>
         </div>
       </div>
 
@@ -202,7 +267,13 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         <button
           type="button"
           onClick={() => {
-            playNotificationChime("new_booking");
+            triggerPushNotification({
+              title: "🔔 Uji Coba Notifikasi Device",
+              message: "Notifikasi berhasil terhubung ke Bilah Notifikasi Perangkat (HP / Laptop).",
+              sender: "Aesthetic Pondok Indah",
+              type: "general",
+              url: window.location.hash ? `/${window.location.hash}` : "/#/dashboard/clinic?tab=reservasi",
+            });
           }}
           className="w-9 h-9 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] hover:bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center transition-colors cursor-pointer"
           title="Uji Suara Notifikasi (Chime Sound)"
