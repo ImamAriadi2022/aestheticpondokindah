@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 import {
   subscribeToPushNotifications,
-  playNotificationChime,
-  triggerPushNotification,
   type PushNotificationPayload,
+  markNotificationAsRead,
+  clearNotificationHistory,
 } from "@/core/services/pushNotificationService";
 import { getSession } from "@/core/auth/services/session";
 import { subscribeToWebPush } from "@/core/services/webPushManager";
@@ -190,10 +190,16 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   useEffect(() => {
     const unsubscribe = subscribeToPushNotifications((payload) => {
       setNotifications((prev) => {
+        const notifId = payload.id || `notif_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        // Deduplicate in list
+        if (prev.some((p) => p.id === notifId || (p.bookingCode && p.bookingCode === payload.bookingCode && p.type === payload.type))) {
+          return prev;
+        }
+
         const updated = [
           {
             ...payload,
-            id: payload.id || `notif_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            id: notifId,
             dateStr: payload.dateStr || new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
           },
           ...prev.slice(0, 49),
@@ -216,7 +222,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     return () => unsubscribe();
   }, []);
 
-  // Sync notification permission status, auto-register WebPush & load DB notifications
+  // Sync notification permission status, auto-register WebPush & load DB notifications on mount
   useEffect(() => {
     fetchDatabaseNotifications();
 
@@ -225,15 +231,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       if (Notification.permission === "granted") {
         subscribeToWebPush(role).catch(() => {});
       }
-    }
-
-    if (role === "clinic") {
-      const interval = setInterval(() => {
-        if (typeof document !== "undefined" && !document.hidden) {
-          fetchDatabaseNotifications();
-        }
-      }, 5000);
-      return () => clearInterval(interval);
     }
   }, [role]);
 
@@ -251,20 +248,37 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   const handleClearAll = async () => {
     setNotifications([]);
     setUnreadCount(0);
-    localStorage.removeItem("apig_recent_push_notifications");
-    localStorage.setItem("apig_push_unread_count", "0");
+    clearNotificationHistory();
     try {
       await apiClient.delete("/user/notifications", { skipToast: true });
     } catch {}
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
     setUnreadCount(0);
     localStorage.setItem("apig_push_unread_count", "0");
+    notifications.forEach((n) => {
+      if (n.id) markNotificationAsRead(`id_${n.id}`);
+      if (n.bookingCode) markNotificationAsRead(`code_${n.type || 'gen'}_${n.bookingCode}`);
+    });
+    try {
+      await apiClient.post("/user/notifications/read-all", {}, { skipToast: true });
+    } catch {}
   };
 
-  const handleItemClick = (item: PushNotificationPayload) => {
+  const handleItemClick = async (item: PushNotificationPayload) => {
     setIsDropdownOpen(false);
+    if (item.id) markNotificationAsRead(`id_${item.id}`);
+    if (item.bookingCode) markNotificationAsRead(`code_${item.type || 'gen'}_${item.bookingCode}`);
+
+    if (item.id) {
+      try {
+        await apiClient.post(`/user/notifications/${item.id}/read`, {}, { skipToast: true });
+      } catch {}
+    }
+
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+
     if (item.onClick) {
       item.onClick();
     } else if (item.url) {
@@ -301,132 +315,91 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         <div className="relative">
           <button
             type="button"
-            onClick={() => {
-              setIsDropdownOpen((prev) => !prev);
-              if (!isDropdownOpen) {
-                handleMarkAllAsRead();
-              }
-            }}
-            className={`relative w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
-              isDropdownOpen
-                ? "bg-[#8C6B1C] text-white border-[#8C6B1C] shadow-md"
-                : "bg-white border-[#D9D0BC] hover:border-[#8C6B1C] text-[#3D332A] shadow-xs hover:bg-[#FAF8F5]"
-            }`}
-            title="Pusat Notifikasi"
+            onClick={() => setIsDropdownOpen((prev) => !prev)}
+            className="relative p-2 rounded-xl text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs"
+            title="Lihat Notifikasi"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-600 text-white text-[9px] font-extrabold flex items-center justify-center border-2 border-white shadow-xs animate-bounce">
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-in zoom-in-50">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
           </button>
 
-          {/* Notification Center Dropdown Drawer */}
+          {/* Notification Dropdown Panel */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-[92vw] sm:w-96 max-w-sm bg-white rounded-2xl border border-[#E8DFC8] shadow-2xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-200 text-left">
-              {/* Drawer Header */}
-              <div className="px-4 py-3 bg-[#FAF8F5] border-b border-[#EDE5D6] flex items-center justify-between">
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-[#E8DFC8] rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-150 text-left">
+              {/* Dropdown Header */}
+              <div className="px-4 py-3 bg-[#FAF8F5] border-b border-[#E8DFC8] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-[#8C6B1C]" />
-                  <h3 className="text-xs font-bold text-[#2C2416]">Pusat Notifikasi</h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EADBBD] text-[#5C4510]">
-                    {notifications.length}
-                  </span>
+                  <span className="text-xs font-bold text-[#2C2416]">Notifikasi Masuk</span>
+                  {unreadCount > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-md bg-[#8C6B1C] text-white text-[9px] font-bold">
+                      {unreadCount} baru
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllAsRead}
+                      className="text-[10px] text-[#8C6B1C] hover:underline font-semibold cursor-pointer"
+                    >
+                      Tandai Dibaca
+                    </button>
+                  )}
                   {notifications.length > 0 && (
                     <button
                       type="button"
                       onClick={handleClearAll}
-                      className="text-[10px] text-rose-600 hover:text-rose-700 font-semibold p-1 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                      title="Bersihkan Semua"
+                      className="text-[10px] text-rose-600 hover:text-rose-700 font-semibold cursor-pointer ml-1"
                     >
-                      <Trash2 className="w-3 h-3" />
-                      <span>Hapus</span>
+                      Hapus
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setIsDropdownOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
 
-              {/* Notification List Drawer Content */}
-              <div className="max-h-[380px] overflow-y-auto divide-y divide-[#F0EBE1]">
+              {/* Notification List */}
+              <div className="max-h-80 overflow-y-auto divide-y divide-[#F0EAE1]">
                 {notifications.length === 0 ? (
-                  <div className="py-10 px-4 text-center">
-                    <div className="w-10 h-10 rounded-full bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center mx-auto mb-2 border border-[#EADBBD]">
-                      <Bell className="w-5 h-5 opacity-60" />
-                    </div>
-                    <p className="text-xs font-bold text-[#2C2416]">Belum Ada Notifikasi</p>
-                    <p className="text-[11px] text-[#8C8272] mt-0.5">
-                      Pemberitahuan terkait reservasi dan jadwal akan muncul di sini.
-                    </p>
+                  <div className="py-8 text-center px-4 space-y-1">
+                    <CheckCircle2 className="w-7 h-7 text-emerald-500 mx-auto stroke-1" />
+                    <p className="text-xs font-semibold text-[#2C2416]">Tidak Ada Notifikasi Baru</p>
+                    <p className="text-[10px] text-[#8C8272]">Semua notifikasi dan janji temu telah ditinjau.</p>
                   </div>
                 ) : (
                   notifications.map((item, idx) => (
                     <div
                       key={item.id || idx}
                       onClick={() => handleItemClick(item)}
-                      className="p-3.5 hover:bg-[#FAF8F5] transition-colors cursor-pointer flex items-start gap-3 group"
+                      className="p-3.5 hover:bg-[#FAF8F5] transition-colors cursor-pointer space-y-1"
                     >
-                      <div className="w-8 h-8 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] flex-shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                        {item.type === "reservation_confirmed" ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        ) : item.type === "doctor_assigned" ? (
-                          <Stethoscope className="w-4 h-4 text-blue-600" />
-                        ) : item.type === "reservation_new" ? (
-                          <Calendar className="w-4 h-4 text-[#8C6B1C]" />
-                        ) : (
-                          <Info className="w-4 h-4 text-[#8C6B1C]" />
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-[#2C2416] flex items-center gap-1.5 truncate">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#8C6B1C] shrink-0" />
+                          {item.title}
+                        </span>
+                        {item.dateStr && (
+                          <span className="text-[9px] text-[#8C8272] shrink-0">{item.dateStr}</span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <h4 className="text-[11px] font-bold text-[#2C2416] truncate">
-                            {item.title}
-                          </h4>
-                          {item.dateStr && (
-                            <span className="text-[9px] text-[#A89F91] flex-shrink-0 flex items-center gap-0.5">
-                              <Clock className="w-2.5 h-2.5" />
-                              {item.dateStr}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-[#5C5346] leading-relaxed mt-0.5 line-clamp-2">
-                          {item.message}
-                        </p>
-                        {item.bookingCode && (
-                          <span className="inline-block mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <p className="text-[11px] text-[#5C5346] leading-snug line-clamp-2">
+                        {item.message}
+                      </p>
+                      {item.bookingCode && (
+                        <div className="pt-0.5">
+                          <span className="text-[9px] font-mono font-bold bg-[#FAF5EA] text-[#8C6B1C] px-1.5 py-0.5 rounded border border-[#EADBBD]">
                             {item.bookingCode}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
-              </div>
-
-              {/* Drawer Footer */}
-              <div className="p-2.5 bg-[#FAF8F5] border-t border-[#EDE5D6] text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    if (role === "clinic") navigate("/dashboard/clinic?tab=reservasi");
-                    else if (role === "doctor") navigate("/dashboard/doctor?tab=reservasi");
-                    else navigate("/dashboard/user?tab=reservasi");
-                  }}
-                  className="text-[11px] font-bold text-[#8C6B1C] hover:text-[#735614] flex items-center justify-center gap-1 mx-auto transition-colors cursor-pointer"
-                >
-                  <span>Buka Semua Data Reservasi</span>
-                  <ExternalLink className="w-3 h-3" />
-                </button>
               </div>
             </div>
           )}

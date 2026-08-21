@@ -1,5 +1,5 @@
 // Realtime Push Notification & Web Audio Chime Synthesizer
-// Providing WhatsApp / Gojek-like instant notification experience
+// Providing WhatsApp / Gojek-like instant notification experience with strict anti-spam deduplication
 
 export interface PushNotificationPayload {
   id?: string;
@@ -8,7 +8,7 @@ export interface PushNotificationPayload {
   sender?: string;
   avatar?: string;
   role?: "admin" | "doctor" | "patient" | "guest" | "all";
-  type?: "reservation_new" | "reservation_confirmed" | "reservation_cancelled" | "doctor_assigned" | "general";
+  type?: "reservation_new" | "reservation_confirmed" | "reservation_cancelled" | "doctor_assigned" | "general" | string;
   bookingCode?: string;
   patientName?: string;
   doctorName?: string;
@@ -22,8 +22,72 @@ export interface PushNotificationPayload {
 type PushListener = (payload: PushNotificationPayload) => void;
 const listeners = new Set<PushListener>();
 
+// -------------------------------------------------------------------------
+// ANTI-SPAM DEDUPLICATION & READ-STATE ENGINE
+// -------------------------------------------------------------------------
+const SEEN_NOTIFS_KEY = "apid_seen_notification_keys";
+const READ_NOTIFS_KEY = "apid_read_notification_keys";
+
+function getStoredKeys(key: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveStoredKeys(key: string, set: Set<string>) {
+  try {
+    const arr = Array.from(set).slice(-300); // Keep last 300 to prevent growth
+    localStorage.setItem(key, JSON.stringify(arr));
+  } catch {}
+}
+
+export function generateNotificationKey(payload: PushNotificationPayload): string {
+  if (payload.id && String(payload.id).trim().length > 0) {
+    return `id_${payload.id}`;
+  }
+  const code = (payload.bookingCode || "").trim().toLowerCase();
+  const type = (payload.type || "gen").trim().toLowerCase();
+  const title = (payload.title || "").trim().toLowerCase();
+  if (code) {
+    return `code_${type}_${code}`;
+  }
+  return `text_${type}_${title}_${(payload.message || "").substring(0, 30)}`;
+}
+
+export function isNotificationAlreadyDelivered(key: string): boolean {
+  const seen = getStoredKeys(SEEN_NOTIFS_KEY);
+  const read = getStoredKeys(READ_NOTIFS_KEY);
+  return seen.has(key) || read.has(key);
+}
+
+export function markNotificationAsDelivered(key: string) {
+  const seen = getStoredKeys(SEEN_NOTIFS_KEY);
+  seen.add(key);
+  saveStoredKeys(SEEN_NOTIFS_KEY, seen);
+}
+
+export function markNotificationAsRead(key: string) {
+  const read = getStoredKeys(READ_NOTIFS_KEY);
+  read.add(key);
+  saveStoredKeys(READ_NOTIFS_KEY, read);
+}
+
+export function clearNotificationHistory() {
+  try {
+    localStorage.removeItem(SEEN_NOTIFS_KEY);
+    localStorage.removeItem(READ_NOTIFS_KEY);
+    localStorage.removeItem("apig_recent_push_notifications");
+    localStorage.setItem("apig_push_unread_count", "0");
+  } catch {}
+}
+
 /**
- * Play a high-quality, pleasant two-tone notification chime using Web Audio API
+ * Play pleasant Web Audio chime once
  */
 export function playNotificationChime(type: "new_booking" | "confirmed" | "general" = "new_booking") {
   try {
@@ -31,7 +95,6 @@ export function playNotificationChime(type: "new_booking" | "confirmed" | "gener
     if (!AudioContextClass) return;
 
     const ctx = new AudioContextClass();
-
     if (ctx.state === "suspended") {
       ctx.resume().catch(() => {});
     }
@@ -39,71 +102,54 @@ export function playNotificationChime(type: "new_booking" | "confirmed" | "gener
     const now = ctx.currentTime;
 
     if (type === "new_booking") {
-      // Pleasant dual bell chime (D5 -> A5)
       const osc1 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       osc1.type = "sine";
       osc1.frequency.setValueAtTime(587.33, now);
       gain1.gain.setValueAtTime(0, now);
-      gain1.gain.linearRampToValueAtTime(0.4, now + 0.03);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      gain1.gain.linearRampToValueAtTime(0.35, now + 0.03);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
       osc1.connect(gain1);
       gain1.connect(ctx.destination);
       osc1.start(now);
-      osc1.stop(now + 0.6);
+      osc1.stop(now + 0.5);
 
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.type = "sine";
       osc2.frequency.setValueAtTime(880.0, now + 0.12);
       gain2.gain.setValueAtTime(0, now + 0.12);
-      gain2.gain.linearRampToValueAtTime(0.45, now + 0.15);
-      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+      gain2.gain.linearRampToValueAtTime(0.4, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
       osc2.connect(gain2);
       gain2.connect(ctx.destination);
       osc2.start(now + 0.12);
-      osc2.stop(now + 0.85);
-    } else if (type === "confirmed") {
-      // Bright ascending harp chime (G5 -> B5 -> E6)
-      const notes = [783.99, 987.77, 1318.51];
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(freq, now + idx * 0.1);
-        gain.gain.setValueAtTime(0, now + idx * 0.1);
-        gain.gain.linearRampToValueAtTime(0.35, now + idx * 0.1 + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.7);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + idx * 0.1);
-        osc.stop(now + idx * 0.1 + 0.7);
-      });
+      osc2.stop(now + 0.7);
     } else {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(659.25, now);
       gain.gain.setValueAtTime(0.25, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.start(now);
-      osc.stop(now + 0.5);
+      osc.stop(now + 0.4);
     }
 
     if (typeof navigator !== "undefined" && navigator.vibrate) {
       try {
         navigator.vibrate([100, 50, 100]);
-      } catch (e) {}
+      } catch {}
     }
   } catch (e) {
-    console.warn("[PushAudio] Audio synthesis error:", e);
+    console.warn("[PushAudio] Audio error:", e);
   }
 }
 
 /**
- * Register Service Worker for Native Device Push Notifications
+ * Register Service Worker for Native Push
  */
 let swRegistrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
 
@@ -124,16 +170,12 @@ export function getServiceWorkerRegistration(): Promise<ServiceWorkerRegistratio
   return swRegistrationPromise;
 }
 
-// Automatically register service worker on load
 if (typeof window !== "undefined" && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     getServiceWorkerRegistration();
   });
 }
 
-/**
- * Request notification permission from browser
- */
 export async function requestPushPermission(): Promise<NotificationPermission> {
   if (typeof window !== "undefined" && "Notification" in window) {
     try {
@@ -147,11 +189,10 @@ export async function requestPushPermission(): Promise<NotificationPermission> {
 }
 
 /**
- * Dispatch notification directly into Android / iOS Notification Bar & Windows / macOS Action Center
+ * Dispatch OS notification to Windows Action Center / Android Notification Shade with Anti-Duplicate Tag
  */
-export function dispatchDeviceSystemNotification(payload: PushNotificationPayload) {
+export function dispatchDeviceSystemNotification(payload: PushNotificationPayload, notifKey: string) {
   if (typeof window === "undefined" || !("Notification" in window)) {
-    console.warn("[DeviceNotification] Notification API not supported in this browser.");
     return;
   }
 
@@ -165,19 +206,38 @@ export function dispatchDeviceSystemNotification(payload: PushNotificationPayloa
 
   const origin = window.location.origin || "";
   const iconUrl = `${origin}/logo/logo.png`;
-  const uniqueTag = payload.bookingCode
-    ? `apig-${payload.bookingCode}-${Date.now()}`
-    : `apig-notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  // Stable tag without timestamp so the OS collapses/replaces identical items
+  const stableTag = `apid_${notifKey}`;
 
-  const triggerActualNotifications = () => {
-    // 1. Direct Native Window Desktop Notification (Instant Pop-up Banner on Windows/macOS)
+  const triggerActualNotifications = async () => {
+    try {
+      const swReg = await getServiceWorkerRegistration();
+      if (swReg && "showNotification" in swReg) {
+        // Preferred: ServiceWorker Notification
+        await swReg.showNotification(payload.title, {
+          body: payload.message,
+          icon: iconUrl,
+          badge: iconUrl,
+          vibrate: [200, 100, 200],
+          tag: stableTag,
+          renotify: false, // DO NOT spam sound/renotify if tag is identical
+          requireInteraction: false,
+          data: {
+            url: targetUrl,
+            bookingCode: payload.bookingCode,
+          },
+        } as any);
+        return;
+      }
+    } catch {}
+
+    // Fallback: Direct Window Notification (Only if SW is not ready)
     try {
       const notif = new Notification(payload.title, {
         body: payload.message,
         icon: iconUrl,
         badge: iconUrl,
-        tag: uniqueTag,
-        requireInteraction: true,
+        tag: stableTag,
       } as any);
 
       notif.onclick = () => {
@@ -187,85 +247,46 @@ export function dispatchDeviceSystemNotification(payload: PushNotificationPayloa
         notif.close();
       };
     } catch (e) {
-      console.warn("[DeviceNotification] Window Notification constructor fallback:", e);
-    }
-
-    // 2. Service Worker Notification (Ensures Mobile Android Shade & PWA Tray delivery)
-    try {
-      getServiceWorkerRegistration().then((swReg) => {
-        if (swReg && "showNotification" in swReg) {
-          swReg.showNotification(payload.title, {
-            body: payload.message,
-            icon: iconUrl,
-            badge: iconUrl,
-            vibrate: [200, 100, 200],
-            tag: uniqueTag,
-            renotify: true,
-            requireInteraction: true,
-            data: {
-              url: targetUrl,
-              bookingCode: payload.bookingCode,
-              time: Date.now()
-            },
-          } as any).catch(() => {});
-        }
-      }).catch(() => {});
-    } catch (e) {
-      console.warn("[DeviceNotification] ServiceWorker notification error:", e);
+      console.warn("[DeviceNotification] Notification fallback error:", e);
     }
   };
 
   if (Notification.permission === "granted") {
     triggerActualNotifications();
   } else if (Notification.permission !== "denied") {
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") {
-        triggerActualNotifications();
-      }
+    Notification.requestPermission().then((perm) => {
+      if (perm === "granted") triggerActualNotifications();
     });
   }
 }
 
 /**
- * Trigger an app-like push notification banner + chime + browser notification
+ * Trigger Realtime Push Notification (With Strict Spam Protection)
  */
 export function triggerPushNotification(payload: PushNotificationPayload) {
-  const soundType = payload.type === "reservation_confirmed" ? "confirmed" : "new_booking";
-  playNotificationChime(soundType);
+  const notifKey = generateNotificationKey(payload);
 
-  // Save to persistent storage history
-  try {
-    const cached = localStorage.getItem("apig_recent_push_notifications");
-    const list: PushNotificationPayload[] = cached ? JSON.parse(cached) : [];
-    const updated = [
-      {
-        ...payload,
-        id: payload.id || `notif_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        dateStr: payload.dateStr || new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }),
-      },
-      ...list.slice(0, 49),
-    ];
-    localStorage.setItem("apig_recent_push_notifications", JSON.stringify(updated));
+  // 1. Anti-Spam Check: If already seen/read, DO NOT re-trigger!
+  if (isNotificationAlreadyDelivered(notifKey)) {
+    return;
+  }
 
-    const currentUnread = Number(localStorage.getItem("apig_push_unread_count") || 0);
-    localStorage.setItem("apig_push_unread_count", String(currentUnread + 1));
-  } catch (e) {}
+  // 2. Mark as delivered immediately to block duplicate concurrent events
+  markNotificationAsDelivered(notifKey);
 
-  // 1. Dispatch to all active in-app banner listeners
-  listeners.forEach((listener) => {
-    try {
-      listener(payload);
-    } catch (e) {
-      console.warn("[PushNotification] Error in listener:", e);
-    }
-  });
+  // 3. Play chime sound once
+  const chimeType = payload.type === "reservation_new" ? "new_booking" : "confirmed";
+  playNotificationChime(chimeType);
 
-  // 2. Dispatch to Native Device OS Notification Bar (Mobile Notification Shade & Desktop Action Center)
-  dispatchDeviceSystemNotification(payload);
+  // 4. Dispatch to OS Desktop / Mobile Notification Bar
+  dispatchDeviceSystemNotification(payload, notifKey);
+
+  // 5. Notify in-app TopBar UI listeners
+  listeners.forEach((listener) => listener(payload));
 }
 
 /**
- * Subscribe to in-app push notifications
+ * Subscribe in-app components to notification stream
  */
 export function subscribeToPushNotifications(listener: PushListener): () => void {
   listeners.add(listener);

@@ -67,11 +67,8 @@ class ReservationSyncEngine {
     this.isHydrated = true;
     this.notifyListeners();
 
-    // 3. Periodic Background Polling (3 seconds) with Mutex Lock
-    if (this.pollIntervalId) clearInterval(this.pollIntervalId);
-    this.pollIntervalId = setInterval(() => {
-      this.pollChanges();
-    }, 3000);
+    // 3. Event-Driven Sync (Zero Infinite Polling Loops)
+    if (this.pollIntervalId) { clearInterval(this.pollIntervalId); this.pollIntervalId = null; }
   }
 
   /**
