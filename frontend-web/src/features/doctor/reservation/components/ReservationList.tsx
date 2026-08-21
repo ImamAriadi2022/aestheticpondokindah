@@ -15,31 +15,19 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { useRealtimeReservations } from "@/core/services/reservationSyncEngine";
 import { toast } from "@/shared/ui/toast";
 import { apiClient } from "@/core/api/apiClient";
+import { triggerPushNotification } from "@/core/services/pushNotificationService";
+import { useRef } from "react";
 
 export default function DoctorReservationList() {
-  const [reservations, setReservations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { reservations, loading, refresh: refreshReservations } = useRealtimeReservations();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
 
-  const loadQueue = () => {
-    setLoading(true);
-    apiClient
-      .get<{ queue: any[] }>("/doctor/queue")
-      .then((res) => setReservations(res.queue || []))
-      .catch(() => {
-        toast({ title: "Gagal", message: "Gagal memuat data pasien dokter", variant: "error" });
-        setReservations([]);
-      })
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    loadQueue();
-  }, []);
+  // Doctor reservations are powered by Incremental Change Polling & IndexedDB Persistent Cache
 
   useEffect(() => {
     if (selectedPatient) {
@@ -60,23 +48,21 @@ export default function DoctorReservationList() {
   const filteredReservations = useMemo(() => {
     return reservations
       .filter((r) => {
-        if (statusFilter === "pending") {
-          return r.status === "Baru" || r.status === "Menunggu";
+        const s = (r.status || "").toLowerCase();
+        if (statusFilter === "in_progress" || statusFilter === "confirmed") {
+          return s === "dikonfirmasi" || s === "dalam konsultasi" || s === "confirmed" || s === "in_progress";
         }
-        if (statusFilter === "in_progress") {
-          return r.status === "Dikonfirmasi" || r.status === "Dalam Konsultasi";
-        }
-        if (statusFilter === "completed") {
-          return r.status === "Selesai";
+        if (statusFilter === "completed" || statusFilter === "selesai") {
+          return s === "selesai" || s === "completed";
         }
         return true;
       })
       .filter((r) => {
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
-        const name = (r.patient_name || "").toLowerCase();
+        const name = (r.patient_name || r.name || "").toLowerCase();
         const code = (r.code || "").toLowerCase();
-        const phone = (r.patient_phone || "").toLowerCase();
+        const phone = (r.patient_phone || r.phone || "").toLowerCase();
         const treatment = (r.treatment_interest || "").toLowerCase();
         const complaint = (r.complaint || "").toLowerCase();
         return (
@@ -98,11 +84,14 @@ export default function DoctorReservationList() {
   const counts = useMemo(() => {
     return {
       all: reservations.length,
-      pending: reservations.filter((r) => r.status === "Baru" || r.status === "Menunggu").length,
-      in_progress: reservations.filter(
-        (r) => r.status === "Dikonfirmasi" || r.status === "Dalam Konsultasi"
-      ).length,
-      completed: reservations.filter((r) => r.status === "Selesai").length,
+      in_progress: reservations.filter((r) => {
+        const s = (r.status || "").toLowerCase();
+        return s === "dikonfirmasi" || s === "dalam konsultasi" || s === "confirmed" || s === "in_progress";
+      }).length,
+      completed: reservations.filter((r) => {
+        const s = (r.status || "").toLowerCase();
+        return s === "selesai" || s === "completed";
+      }).length,
     };
   }, [reservations]);
 
@@ -136,7 +125,7 @@ export default function DoctorReservationList() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={loadQueue}
+            onClick={() => refreshReservations()}
             disabled={loading}
             className="rounded-xl border-[#EADBBD] text-[#8C6B1C] hover:bg-[#FAF5EA] font-semibold h-10 px-4 text-xs cursor-pointer"
           >
@@ -148,7 +137,7 @@ export default function DoctorReservationList() {
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
-        {/* Status Filter Tabs */}
+        {/* Status Filter Tabs (Hanya Dikonfirmasi Admin & Selesai) */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           <button
             type="button"
@@ -163,17 +152,6 @@ export default function DoctorReservationList() {
           </button>
           <button
             type="button"
-            onClick={() => setStatusFilter("pending")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-              statusFilter === "pending"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "bg-amber-50 text-amber-800 hover:bg-amber-100"
-            }`}
-          >
-            Menunggu ({counts.pending})
-          </button>
-          <button
-            type="button"
             onClick={() => setStatusFilter("in_progress")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
               statusFilter === "in_progress"
@@ -181,7 +159,7 @@ export default function DoctorReservationList() {
                 : "bg-blue-50 text-blue-800 hover:bg-blue-100"
             }`}
           >
-            Dikonfirmasi ({counts.in_progress})
+            Dikonfirmasi Admin ({counts.in_progress})
           </button>
           <button
             type="button"

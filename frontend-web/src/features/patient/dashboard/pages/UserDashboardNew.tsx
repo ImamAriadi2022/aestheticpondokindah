@@ -18,6 +18,7 @@ import DesktopUserBlogDetail from "@/features/patient/dashboard/components/Deskt
 import DesktopUserDownload from "@/features/patient/dashboard/components/DesktopUserDownload";
 import DesktopUserAkun from "@/features/patient/dashboard/components/DesktopUserAkun";
 import AccountSidebar from "@/core/layouts/AccountSidebar";
+import DashboardTopBar from "@/core/layouts/DashboardTopBar";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
 import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
 
@@ -184,6 +185,9 @@ export default function UserDashboardPage() {
 
       {/* Main Content */}
       <div className="flex-1 min-w-0 flex flex-col">
+        {/* Top Navbar Header Bar for Patient */}
+        <DashboardTopBar role="user" navbarLabel={tierLabel} />
+
         <div className="flex-1 flex min-h-0 bg-gray-50/50">
           <main className="flex-1 min-w-0 pt-4 pb-6 px-4 sm:pt-5 sm:px-5 lg:pt-6 lg:px-6 overflow-y-auto">
             {renderContent()}

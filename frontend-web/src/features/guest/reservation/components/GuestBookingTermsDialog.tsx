@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/shared/
 import { getPublicClinicSettings } from "../services/clinicSettingsApi";
 import TermsPdfModal from "@/features/patient/reservation/components/TermsPdfModal";
 import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
+import { broadcastRealtimeReservationEvent } from "@/core/services/GlobalNotificationManager";
 
 interface GuestBookingTermsDialogProps {
   open: boolean;
@@ -162,6 +163,15 @@ export default function GuestBookingTermsDialog({
 
   const handleConfirmSubmit = () => {
     onConfirm(signatureData);
+    broadcastRealtimeReservationEvent({
+      type: "guest_booked",
+      bookingCode: "#RSV-GUEST",
+      patientName: patientName,
+      serviceName: serviceName,
+      dateStr: dateStr,
+      timeStr: timeStr,
+      isGuest: true,
+    });
     onOpenChange(false);
   };
 

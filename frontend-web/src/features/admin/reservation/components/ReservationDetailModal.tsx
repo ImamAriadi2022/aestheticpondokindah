@@ -33,6 +33,7 @@ import { updateAdminReservation, type ReservationItem } from "../services/reserv
 import { getAdminDoctorSchedules, type AdminDoctorScheduleItem } from "@/features/admin/doctors/services/adminDoctorScheduleApi";
 import ReservationConsentPdfModal from "./ReservationConsentPdfModal";
 import TermsPdfModal from "@/features/patient/reservation/components/TermsPdfModal";
+import { broadcastRealtimeReservationEvent } from "@/core/services/GlobalNotificationManager";
 
 interface Props {
   isOpen: boolean;
@@ -41,6 +42,16 @@ interface Props {
   doctors?: any[];
   token: string;
   onUpdated?: () => void;
+}
+
+function normalizeDate(d?: string | null): string {
+  if (!d) return "";
+  return d.split("T")[0].trim();
+}
+
+function cleanDocName(name?: string | null): string {
+  if (!name) return "";
+  return name.toLowerCase().replace(/^(drg\.|dr\.|drg|dr)\s*/i, "").trim();
 }
 
 export default function ReservationDetailModal({
@@ -93,31 +104,60 @@ export default function ReservationDetailModal({
 
   const isGuest = !reservation.user_id || (reservation.source && reservation.source.includes("guest"));
 
+  // Normalize current selected date
+  const cleanSelectedDate = normalizeDate(selectedDate);
+
+  // Selected doctor metadata
+  const selectedDoctorObj = useMemo(() => {
+    const fromProps = doctors.find((d) => String(d.id || d.user_id || d.userId) === String(selectedDoctorId));
+    if (fromProps) return fromProps;
+    const fromSched = dbSchedules.find((s) => String(s.doctorId || s.id) === String(selectedDoctorId));
+    if (fromSched) return { id: fromSched.doctorId, name: fromSched.doctorName };
+    return null;
+  }, [doctors, dbSchedules, selectedDoctorId]);
+
+  const selectedDocCleanName = cleanDocName(selectedDoctorObj?.name || reservation.doctor);
+
+  // Helper to check if a schedule belongs to the selected doctor
+  const isScheduleForSelectedDoctor = (s: AdminDoctorScheduleItem) => {
+    if (!selectedDoctorId && !selectedDocCleanName) return false;
+    if (selectedDoctorId && (String(s.doctorId) === String(selectedDoctorId) || String(s.id) === String(selectedDoctorId))) {
+      return true;
+    }
+    if (selectedDocCleanName && s.doctorName) {
+      const sClean = cleanDocName(s.doctorName);
+      if (sClean === selectedDocCleanName || sClean.includes(selectedDocCleanName) || selectedDocCleanName.includes(sClean)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   // Check schedules available on selectedDate
   const availableSchedulesOnDate = useMemo(() => {
-    if (!selectedDate) return [];
-    return dbSchedules.filter((s) => s.date === selectedDate);
-  }, [dbSchedules, selectedDate]);
+    if (!cleanSelectedDate) return [];
+    return dbSchedules.filter((s) => normalizeDate(s.date) === cleanSelectedDate);
+  }, [dbSchedules, cleanSelectedDate]);
 
   // Check schedules belonging to the selected doctor
   const doctorAllSchedules = useMemo(() => {
-    if (!selectedDoctorId) return [];
-    return dbSchedules.filter((s) => String(s.doctorId) === String(selectedDoctorId));
-  }, [dbSchedules, selectedDoctorId]);
+    if (!selectedDoctorId && !selectedDocCleanName) return [];
+    return dbSchedules.filter(isScheduleForSelectedDoctor);
+  }, [dbSchedules, selectedDoctorId, selectedDocCleanName]);
 
   const doctorSchedulesOnDate = useMemo(() => {
-    if (!selectedDoctorId || !selectedDate) return [];
+    if ((!selectedDoctorId && !selectedDocCleanName) || !cleanSelectedDate) return [];
     return dbSchedules.filter(
-      (s) => String(s.doctorId) === String(selectedDoctorId) && s.date === selectedDate
+      (s) => isScheduleForSelectedDoctor(s) && normalizeDate(s.date) === cleanSelectedDate
     );
-  }, [dbSchedules, selectedDoctorId, selectedDate]);
+  }, [dbSchedules, selectedDoctorId, selectedDocCleanName, cleanSelectedDate]);
 
   const doctorOtherUpcomingSchedules = useMemo(() => {
-    if (!selectedDoctorId) return [];
+    if (!selectedDoctorId && !selectedDocCleanName) return [];
     return dbSchedules.filter(
-      (s) => String(s.doctorId) === String(selectedDoctorId) && s.date !== selectedDate && !s.isFull
+      (s) => isScheduleForSelectedDoctor(s) && normalizeDate(s.date) !== cleanSelectedDate && !s.isFull
     );
-  }, [dbSchedules, selectedDoctorId, selectedDate]);
+  }, [dbSchedules, selectedDoctorId, selectedDocCleanName, cleanSelectedDate]);
 
   // Find exact matched schedule for doctor & date
   const matchedDoctorSchedule = useMemo(() => {
@@ -130,7 +170,7 @@ export default function ReservationDetailModal({
 
   // Conflict evaluation
   const scheduleConflictWarning = useMemo(() => {
-    if (!selectedDoctorId) {
+    if (!selectedDoctorId && !selectedDocCleanName) {
       return {
         hasConflict: true,
         level: "warning",
@@ -138,7 +178,7 @@ export default function ReservationDetailModal({
       };
     }
 
-    if (!selectedDate) {
+    if (!cleanSelectedDate) {
       return {
         hasConflict: true,
         level: "warning",
@@ -150,7 +190,7 @@ export default function ReservationDetailModal({
       return {
         hasConflict: true,
         level: "danger",
-        message: `⚠️ Jadwal Bentrok: Dokter yang dipilih TIDAK memiliki jadwal praktik pada tanggal ${selectedDate}. Silakan pilih dokter yang bertugas atau klik salah satu jadwal aktif dokter di bawah.`,
+        message: `⚠️ Jadwal Bentrok: Dokter yang dipilih TIDAK memiliki jadwal praktik pada tanggal ${cleanSelectedDate}. Silakan pilih dokter yang bertugas atau klik salah satu jadwal aktif dokter di bawah.`,
       };
     }
 
@@ -158,7 +198,7 @@ export default function ReservationDetailModal({
       return {
         hasConflict: true,
         level: "danger",
-        message: `⚠️ Kuota Penuh: Jadwal praktik dokter pada tanggal ${selectedDate} (${matchedDoctorSchedule.timeRange}) sudah penuh (0 slot tersisa).`,
+        message: `⚠️ Kuota Penuh: Jadwal praktik dokter pada tanggal ${cleanSelectedDate} (${matchedDoctorSchedule.timeRange}) sudah penuh (0 slot tersisa).`,
       };
     }
 
@@ -167,7 +207,7 @@ export default function ReservationDetailModal({
       level: "success",
       message: `✓ Jadwal Praktik Sesuai & Terverifikasi: ${matchedDoctorSchedule?.timeRange || selectedTimeSlot} (Sisa ${matchedDoctorSchedule?.slotsLeft || 1} slot kuota di database).`,
     };
-  }, [selectedDoctorId, selectedDate, doctorSchedulesOnDate, matchedDoctorSchedule, selectedTimeSlot]);
+  }, [selectedDoctorId, selectedDocCleanName, cleanSelectedDate, doctorSchedulesOnDate, matchedDoctorSchedule, selectedTimeSlot]);
 
   // Handle doctor selection change & auto-sync practice time
   const handleDoctorChange = (newDocId: string) => {
@@ -518,7 +558,7 @@ export default function ReservationDetailModal({
                     <label className="text-[10px] font-bold text-[#8A7B6B] block">Tanggal Kunjungan</label>
                     <Input
                       type="date"
-                      value={selectedDate}
+                      value={normalizeDate(selectedDate)}
                       onChange={(e) => {
                         setSelectedDate(e.target.value);
                       }}
@@ -614,17 +654,20 @@ export default function ReservationDetailModal({
                 >
                   <option value="">-- Tetapkan Dokter Spesialis --</option>
                   {doctors.map((d) => {
-                    const sched = dbSchedules.find(
-                      (s) => String(s.doctorId) === String(d.id || d.user_id) && s.date === selectedDate
-                    );
+                    const docClean = cleanDocName(d.name);
+                    const sched = dbSchedules.find((s) => {
+                      const matchDoc = String(s.doctorId) === String(d.id || d.user_id) ||
+                                       (s.doctorName && docClean && (cleanDocName(s.doctorName) === docClean || cleanDocName(s.doctorName).includes(docClean)));
+                      return matchDoc && normalizeDate(s.date) === cleanSelectedDate;
+                    });
                     const statusLabel = sched
                       ? sched.isFull
                         ? `[⚠️ Kuota Penuh (${sched.timeRange})]`
                         : `[✅ Ada Praktik: ${sched.timeRange} (Sisa ${sched.slotsLeft} Slot)]`
-                      : `[⚠️ Tidak Praktik di Tgl ${selectedDate || "ini"}]`;
+                      : `[⚠️ Tidak Praktik di Tgl ${cleanSelectedDate || "ini"}]`;
 
                     return (
-                      <option key={d.id} value={d.id || d.user_id}>
+                      <option key={d.id || d.user_id} value={d.id || d.user_id}>
                         {d.name} {statusLabel}
                       </option>
                     );

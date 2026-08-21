@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Shared\Reservation\ReservationChangesController;
 
 // =========================================================================
 // 1. SHARED CONTROLLERS (Multi-Actor Interaction)
@@ -258,6 +259,7 @@ Route::prefix('admin')->group(function () {
 // 4. PATIENT / USER AUTHENTICATED ROUTES
 // =========================================================================
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/reservations/changes', [ReservationChangesController::class, 'changes']);
     Route::post('/upload', [UploadController::class, 'store']);
 
     // Profile (Shared User entity)
@@ -456,3 +458,7 @@ Route::get('/branches', [BranchController::class, 'index']);
 // 7. WEBHOOKS & EXTERNAL CALLBACKS
 // =========================================================================
 Route::post('/membership/payment/webhook', [UserMembershipPaymentController::class, 'webhook']);
+
+
+
+Route::get('/guest/reservations/changes', [ReservationChangesController::class, 'changes']);

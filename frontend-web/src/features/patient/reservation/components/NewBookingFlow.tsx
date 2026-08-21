@@ -31,6 +31,9 @@ import { getSession } from "@/core/auth/services/session";
 import { toast } from "@/shared/ui/toast";
 import { API_BASE } from "@/core/api/apiConfig";
 import { apiClient } from "@/core/api/apiClient";
+import { triggerPushNotification } from "@/core/services/pushNotificationService";
+import { broadcastRealtimeReservationEvent } from "@/core/services/GlobalNotificationManager";
+import { useRef } from "react";
 import DigitalSignaturePad from "./DigitalSignaturePad";
 import DigitalSignatureModal from "./DigitalSignatureModal";
 import TermsPdfModal from "./TermsPdfModal";
@@ -399,44 +402,71 @@ export default function NewBookingFlow({
     }
   };
 
-  // 6. Fetch Real Patient Bookings History from Backend API
-  const fetchBookings = async () => {
-    setHistoryLoading(true);
+  // 6. Fetch Real Patient Bookings History with 1s Realtime Silent Polling
+  const prevReservationStatusesRef = useRef<Map<string | number, string>>(new Map());
+
+  const fetchBookings = async (silent = false) => {
+    if (!silent) setHistoryLoading(true);
     try {
       const res = await apiClient.get("/user/reservations");
       const list = Array.isArray(res)
         ? res
         : res?.reservations || res?.data?.reservations || res?.data || [];
       if (Array.isArray(list)) {
-        setBookingsHistory(
-          list.map((r: any) => ({
-            id: r.id,
-            code: r.code || `#RSV-${String(r.id).padStart(6, "0")}`,
-            doctorName: r.doctor_name || r.doctor?.name || "drg. Yulita Dora",
-            doctorPhoto: r.doctor?.avatar || `/dokter/${r.doctor_name || r.doctor?.name || "drg. Yulita Dora"}.jpeg`,
-            specialization: r.treatment_interest || r.doctor?.specialization || "Dokter Gigi Spesialis",
-            serviceName: r.service_name || r.treatment_interest || "Pemeriksaan Gigi & Mulut",
-            date: r.scheduled_date || r.date,
-            displayDate: r.scheduled_date || r.date,
-            time: r.scheduled_time || r.preferred_time || "10:00",
-            status: r.status || "confirmed",
-            rawStatus: r.raw_status || r.status,
-            totalAmount: r.total_amount || 1500000,
-            locationName: "Aesthetic Pondok Indah",
-            locationAddress: "Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310",
-            examinationResult: r.admin_notes || r.notes || r.complaint,
-            patientName: r.patient_name || r.name || patientName,
-            phone: r.phone || patientPhone,
-          }))
-        );
+        const formatted = list.map((r: any) => ({
+          id: r.id,
+          code: r.code || `#RSV-${String(r.id).padStart(6, "0")}`,
+          doctorName: r.doctor_name || r.doctor?.name || "drg. Yulita Dora",
+          doctorPhoto: r.doctor?.avatar || `/dokter/${r.doctor_name || r.doctor?.name || "drg. Yulita Dora"}.jpeg`,
+          specialization: r.treatment_interest || r.doctor?.specialization || "Dokter Gigi Spesialis",
+          serviceName: r.service_name || r.treatment_interest || "Pemeriksaan Gigi & Mulut",
+          date: r.scheduled_date || r.date,
+          displayDate: r.scheduled_date || r.date,
+          time: r.scheduled_time || r.preferred_time || "10:00",
+          status: r.status || "confirmed",
+          rawStatus: r.raw_status || r.status,
+          totalAmount: r.total_amount || 1500000,
+          locationName: "Aesthetic Pondok Indah",
+          locationAddress: "Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310",
+          examinationResult: r.admin_notes || r.notes || r.complaint,
+          patientName: r.patient_name || r.name || patientName,
+          phone: r.phone || patientPhone,
+        }));
+
+        // Detect status transition to 'confirmed' / 'Dikonfirmasi'
+        formatted.forEach((item) => {
+          const prevStatus = prevReservationStatusesRef.current.get(item.id);
+          const currentStatus = (item.rawStatus || item.status || "").toLowerCase();
+
+          if (
+            prevStatus &&
+            (prevStatus === "baru" || prevStatus === "pending" || prevStatus === "menunggu") &&
+            (currentStatus === "dikonfirmasi" || currentStatus === "confirmed")
+          ) {
+            triggerPushNotification({
+              title: "🎉 Janji Temu Dikonfirmasi!",
+              message: `Reservasi ${item.code} bersama ${item.doctorName} telah disetujui oleh Admin. Silakan cek E-Tiket Anda.`,
+              sender: "Aesthetic Pondok Indah",
+              role: "patient",
+              type: "reservation_confirmed",
+              bookingCode: item.code,
+            });
+          }
+
+          prevReservationStatusesRef.current.set(item.id, currentStatus);
+        });
+
+        setBookingsHistory(formatted);
       } else {
         setBookingsHistory([]);
       }
     } catch (err) {
-      console.warn("Failed to fetch user reservations from backend:", err);
-      setBookingsHistory([]);
+      if (!silent) {
+        console.warn("Failed to fetch user reservations from backend:", err);
+        setBookingsHistory([]);
+      }
     } finally {
-      setHistoryLoading(false);
+      if (!silent) setHistoryLoading(false);
     }
   };
 
@@ -446,7 +476,14 @@ export default function NewBookingFlow({
     fetchBranches();
     fetchDoctorSchedules();
     fetchPatientProfile();
-    fetchBookings();
+    fetchBookings(false);
+
+    // 1-second silent polling for patient status updates
+    const interval = setInterval(() => {
+      fetchBookings(true);
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Dynamic categories extracted from servicesList
@@ -614,6 +651,16 @@ export default function NewBookingFlow({
       };
 
       setActiveTicket(newTicket);
+      broadcastRealtimeReservationEvent({
+        type: "patient_booked",
+        bookingCode: newTicket.code,
+        patientName: newTicket.patientName,
+        serviceName: newTicket.serviceName,
+        doctorId: selectedDoctor?.userId || selectedDoctor?.id,
+        dateStr: selectedDate,
+        timeStr: selectedTimeSlot,
+        isGuest: false,
+      });
       setBookingsHistory((prev) => [newTicket, ...prev]);
       setShowSuccessModal(true);
     } catch (err: any) {

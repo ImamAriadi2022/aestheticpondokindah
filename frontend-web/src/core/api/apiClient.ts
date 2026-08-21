@@ -42,7 +42,7 @@ export const apiClient = {
   request: async <T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
     const {
       timeoutMs = DEFAULT_TIMEOUT_MS,
-      retries = (options.method || "GET") === "GET" ? 1 : 0,
+      retries = 0,
       skipAuth = false,
       skipToast = false,
       ...fetchOptions

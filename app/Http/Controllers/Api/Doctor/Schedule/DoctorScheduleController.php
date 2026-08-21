@@ -137,13 +137,25 @@ class DoctorScheduleController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $schedules = DoctorSchedule::query()
-            ->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                  ->orWhereHas('user', function ($uq) use ($user) {
-                      $uq->where('name', $user->name);
-                  });
-            })
+        
+        $query = DoctorSchedule::query()->with('user');
+
+        if ($user) {
+            $hasSpecific = DoctorSchedule::where('user_id', $user->id)->exists();
+            if ($hasSpecific) {
+                $query->where('user_id', $user->id);
+            } else {
+                $query->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhereHas('user', function ($uq) use ($user) {
+                          $uq->where('name', 'LIKE', '%' . $user->name . '%')
+                             ->orWhere('role', 'doctor');
+                      });
+                });
+            }
+        }
+
+        $schedules = $query
             ->orderBy('date')
             ->orderBy('time_range')
             ->get()
@@ -151,14 +163,16 @@ class DoctorScheduleController extends Controller
                 return [
                     'id' => (string) $s->id,
                     'userId' => (string) $s->user_id,
+                    'doctorId' => (string) $s->user_id,
+                    'doctorName' => $s->user?->name ?? 'Dokter Spesialis',
                     'date' => $s->date->format('Y-m-d'),
                     'displayDate' => $s->date->format('d F Y'),
                     'timeRange' => $s->time_range,
                     'location' => $s->location ?? 'Aesthetic Pondok Indah',
-                    'totalSlots' => $s->total_slots,
-                    'bookedSlots' => $s->booked_slots,
-                    'slotsLeft' => $s->slots_left,
-                    'isFull' => $s->is_full,
+                    'totalSlots' => (int) $s->total_slots,
+                    'bookedSlots' => (int) $s->booked_slots,
+                    'slotsLeft' => (int) $s->slots_left,
+                    'isFull' => (bool) $s->is_full,
                     'createdAt' => optional($s->created_at)->toISOString(),
                 ];
             })

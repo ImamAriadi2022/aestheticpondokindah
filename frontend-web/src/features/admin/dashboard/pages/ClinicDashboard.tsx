@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { Navigate, useSearchParams, useNavigate } from "react-router";
 import DashboardLayout from "@/core/layouts/DashboardLayout";
+import { useRealtimeReservations } from "@/core/services/reservationSyncEngine";
 import { getSession } from "@/core/auth/services/session";
+import { triggerPushNotification } from "@/core/services/pushNotificationService";
+import { useRef } from "react";
 import { API_BASE } from "@/core/api/apiConfig";
 import { toast } from "@/shared/ui/toast";
 import { logger } from "@/core/utils/logger";
@@ -65,7 +68,7 @@ export default function ClinicDashboardPage() {
   const [apiTestimonials, setApiTestimonials] = useState<any[]>([]);
   const [apiPromos, setApiPromos] = useState<any[]>([]);
   const [apiDownloadApps, setApiDownloadApps] = useState<any[]>([]);
-  const [reservations, setReservations] = useState<any[]>([]);
+  const { reservations, refresh: refreshReservations } = useRealtimeReservations();
   const [branches, setBranches] = useState<any[]>([]);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
@@ -177,15 +180,9 @@ export default function ClinicDashboardPage() {
     }
   };
 
-  const fetchReservations = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/admin/reservations`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setReservations(Array.isArray(data) ? data : data?.data || data?.reservations || []);
-      }
-    } catch (e) { logger.error("Gagal memuat reservasi", e); }
-  };
+  const knownReservationIdsRef = useRef<Set<string | number> | null>(null);
+
+  // Reservations are now powered by Incremental Change Polling & IndexedDB Persistent Cache
 
   const fetchBranches = async () => {
     try {
@@ -231,7 +228,7 @@ export default function ClinicDashboardPage() {
       fetchAnalytics();
     }
     if (activeTab === "users") fetchUsers();
-    if (activeTab === "doctors") { fetchApiDoctors(); fetchDoctorSchedules(); }
+    if (activeTab === "doctors" || activeTab === "reservasi") { fetchApiDoctors(); fetchDoctorSchedules(); }
     if (activeTab === "content-blog") fetchApiPosts();
     if (activeTab === "content-popup") fetchApiPopups();
     if (activeTab === "content-gallery") fetchApiGallery();
@@ -240,7 +237,7 @@ export default function ClinicDashboardPage() {
     if (activeTab === "content-download") fetchApiDownloadApps();
     if (activeTab === "branches") fetchBranches();
     if (activeTab === "reservasi") {
-      fetchReservations();
+      refreshReservations();
       fetchApiDoctors();
     }
     if (activeTab === "pengaduan") fetchComplaints();
@@ -328,10 +325,10 @@ export default function ClinicDashboardPage() {
       case "reservasi":
         return (
           <ReservationPage
-            reservations={reservations}
+            reservations={reservations as any}
             doctors={apiDoctors}
             token={token || ""}
-            onRefresh={fetchReservations}
+            onRefresh={refreshReservations}
           />
         );
 

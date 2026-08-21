@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Doctor\Schedule\DoctorSchedule;
 use App\Models\Shared\Reservation\Reservation;
 use App\Models\Shared\Reservation\ReservationAudit;
+use App\Services\Shared\Notification\NotificationService;
 use App\Models\Shared\User\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -136,6 +137,33 @@ class ReservationController extends Controller
             'signature_data' => $validated['signature_data'] ?? null,
             'terms_accepted_at' => !empty($validated['signature_data']) ? now() : null,
         ]);
+
+        $code = 'RSV-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT);
+
+        // Dispatch Backend Notification to Admins
+        try {
+            NotificationService::sendToAdmins(
+                '🔔 Reservasi Masuk dari Pasien',
+                'Pasien: ' . $user->name . ' - ' . ($reservation->treatment_interest ?? 'Layanan Gigi'),
+                'appointment',
+                '/#/dashboard/clinic?tab=reservasi',
+                ['reservation_id' => $reservation->id, 'code' => $code]
+            );
+
+            // Dispatch targeted notification to assigned doctor if exists
+            if (!empty($doctorId)) {
+                NotificationService::send(
+                    (int) $doctorId,
+                    '🩺 Pasien Baru Ditugaskan',
+                    'Pasien: ' . $user->name . ' - ' . ($reservation->treatment_interest ?? 'Layanan Gigi') . ' pada ' . optional($reservation->date)->format('d M Y'),
+                    'appointment',
+                    '/#/dashboard/doctor?tab=reservasi',
+                    ['reservation_id' => $reservation->id, 'code' => $code]
+                );
+            }
+        } catch (\Throwable $e) {
+            // Non-blocking notification dispatch
+        }
 
         return response()->json([
             'message' => 'Permintaan reservasi berhasil dikirim dan tersinkronisasi dengan jadwal dokter.',

@@ -5,6 +5,7 @@ import { clearSessionStorage, touchSessionLastActive } from "@/core/auth/service
 import AccountSidebar from "@/core/layouts/AccountSidebar";
 import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
+import DashboardTopBar from "@/core/layouts/DashboardTopBar";
 import DoctorSidebar from "@/features/doctor/DoctorSidebar";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
 import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut } from "lucide-react";
@@ -589,6 +590,9 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className="flex-1 min-w-0 flex flex-col">
+        {/* Top Navbar Header Bar */}
+        <DashboardTopBar role={role} navbarLabel={navbarLabel} />
+
         {/* Content + Right Panel */}
         <div className="flex-1 flex min-h-0 bg-gray-50/50">
           <main className={`flex-1 min-w-0 pt-4 pb-6 px-4 sm:pt-5 sm:px-5 lg:pt-6 lg:px-6 overflow-y-auto transition-all duration-300`}>

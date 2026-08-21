@@ -35,7 +35,7 @@ class NotificationService
     public static function sendToAdmins(string $title, string $body, string $type = 'consultation', ?string $deepLink = null, array $data = [], ?int $exceptUserId = null): void
     {
         User::query()
-            ->where('role', 'clinic_admin')
+            ->whereIn('role', ['admin', 'clinic_admin', 'clinic'])
             ->where('status', 'active')
             ->when($exceptUserId, fn ($q) => $q->where('id', '!=', $exceptUserId))
             ->pluck('id')

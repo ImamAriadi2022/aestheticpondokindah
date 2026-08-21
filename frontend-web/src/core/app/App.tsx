@@ -6,6 +6,8 @@ import ErrorBoundary from "@/core/router/ErrorBoundary";
 import ProtectedRoute from "@/core/router/ProtectedRoute";
 import ChatBot from "@/features/guest/chatbot/components/ChatBot";
 import { ToastViewport } from "@/shared/ui/toast";
+import PushNotificationBanner from "@/core/components/PushNotificationBanner";
+import GlobalNotificationManager from "@/core/services/GlobalNotificationManager";
 import { trackVisit } from "@/core/api/analyticsApi";
 import { PwaManager } from "@/core/providers/PwaManager";
 import { GuestSessionProvider } from "@/features/guest/consultation/services/GuestSessionContext";
@@ -39,7 +41,15 @@ function SessionManager() {
     // 2. Mark session as active
     touchSessionLastActive();
 
-    // 3. Silently refresh token in background to extend sliding 10-day validity
+    // 3. Only refresh token ONCE per session or if older than 30 minutes
+    const lastRefresh = Number(localStorage.getItem("apident:last_refresh_time") || 0);
+    const now = Date.now();
+    if (now - lastRefresh < 30 * 60 * 1000) {
+      return; // Skip refresh if refreshed within 30 minutes
+    }
+
+    localStorage.setItem("apident:last_refresh_time", String(now));
+
     apiClient
       .post("/auth/refresh", {}, { skipToast: true })
       .then((res) => {
@@ -372,6 +382,8 @@ export default function App() {
         </ErrorBoundary>
       </Suspense>
       <ChatBotWrapper />
+      <GlobalNotificationManager />
+      <PushNotificationBanner />
       <ToastViewport />
       <PwaManager />
       </Router>

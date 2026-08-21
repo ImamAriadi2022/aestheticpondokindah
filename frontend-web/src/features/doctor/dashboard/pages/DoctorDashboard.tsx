@@ -1,9 +1,8 @@
 import { Navigate, useSearchParams, useNavigate } from "react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import DashboardLayout from "@/core/layouts/DashboardLayout";
 import DesktopDoctorHome from "../components/DesktopDoctorHome";
 import { getSession } from "@/core/auth/services/session";
-import { toast } from "@/shared/ui/toast";
 import {
   getDoctorSchedules,
   type DoctorScheduleItem,
@@ -19,34 +18,49 @@ export default function DoctorDashboardPage() {
   const activeTab = searchParams.get("tab") || "dashboard";
 
   const [reservations, setReservations] = useState<DoctorQueueItem[]>([]);
-  const [schedules, setSchedules] = useState<DoctorScheduleItem[]>([]);
-  const [loadingSchedules, setLoadingSchedules] = useState(true);
+  const [schedules, setSchedules] = useState<DoctorScheduleItem[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_doctor_cached_schedules");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loadingSchedules, setLoadingSchedules] = useState(schedules.length === 0);
+  const schedulesFetchedRef = useRef(false);
 
-  const fetchSchedules = () => {
-    setLoadingSchedules(true);
-    getDoctorSchedules()
-      .then((data) => setSchedules(data))
-      .catch(() => {
-        toast({ title: "Gagal", message: "Tidak bisa memuat jadwal praktik", variant: "error" });
-      })
-      .finally(() => setLoadingSchedules(false));
-  };
-
-  const fetchReservations = () => {
-    getDoctorQueue()
-      .then((queue) => setReservations(queue || []))
-      .catch(() => setReservations([]));
+  // 1. JADWAL DOKTER: One-time fetch (Bukan Realtime Polling)
+  const fetchSchedules = async () => {
+    try {
+      const data = await getDoctorSchedules();
+      if (Array.isArray(data) && data.length > 0) {
+        setSchedules(data);
+        localStorage.setItem("apig_doctor_cached_schedules", JSON.stringify(data));
+      }
+    } catch {
+      // Pertahankan data cache jika terjadi gangguan sementara
+    } finally {
+      setLoadingSchedules(false);
+    }
   };
 
   useEffect(() => {
-    if (activeTab === "jadwal" || activeTab === "dashboard") {
+    if (!schedulesFetchedRef.current && (activeTab === "jadwal" || activeTab === "dashboard")) {
+      schedulesFetchedRef.current = true;
       fetchSchedules();
     }
   }, [activeTab]);
 
+  // 2. DAFTAR PASIEN DI DASHBOARD HOME (One-time fetch saat di home dashboard)
   useEffect(() => {
-    if (activeTab === "reservasi" || activeTab === "pasien" || activeTab === "klien" || activeTab === "dashboard") {
-      fetchReservations();
+    if (activeTab === "dashboard") {
+      getDoctorQueue()
+        .then((queue) => {
+          if (Array.isArray(queue) && queue.length > 0) {
+            setReservations(queue);
+          }
+        })
+        .catch(() => {});
     }
   }, [activeTab]);
 
@@ -68,11 +82,11 @@ export default function DoctorDashboardPage() {
 
   const renderContent = () => {
     switch (activeTab) {
-      // Tab 1: Jadwal Praktik Dokter
+      // Tab 1: Jadwal Praktik Dokter (Bukan realtime, cukup one-time fetch)
       case "jadwal":
         return <DoctorSchedulePage schedules={mySchedules} onRefresh={fetchSchedules} />;
 
-      // Tab 2: Pasien Saya / Reservasi Perawatan Medis
+      // Tab 2: Pasien Saya / Reservasi Perawatan Medis (Realtime di handle oleh ReservationList)
       case "reservasi":
       case "pasien":
       case "klien":

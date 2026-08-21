@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Doctor\Schedule\DoctorSchedule;
 use App\Models\Shared\Reservation\Reservation;
 use App\Models\Shared\Reservation\ReservationAudit;
+use App\Services\Shared\Notification\NotificationService;
 use App\Models\Shared\User\User;
 use App\Services\Patient\Membership\MembershipService;
 use Illuminate\Http\JsonResponse;
@@ -232,7 +233,38 @@ class ReservationAdminController extends Controller
             }
         }
 
-        $reservation->save();
+                $reservation->save();
+
+        $code = 'RSV-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT);
+
+        // Dispatch Backend Notifications to Patient and Doctor
+        try {
+            // 1. If status is Dikonfirmasi -> notify patient
+            if ($targetStatus === 'Dikonfirmasi' && !empty($reservation->user_id)) {
+                NotificationService::send(
+                    (int) $reservation->user_id,
+                    '🎉 Janji Temu Dikonfirmasi',
+                    'Reservasi ' . $code . ' bersama ' . ($reservation->doctor?->name ?? 'Dokter Spesialis') . ' telah disetujui oleh Admin.',
+                    'appointment',
+                    '/#/dashboard/user?tab=reservasi',
+                    ['reservation_id' => $reservation->id, 'code' => $code]
+                );
+            }
+
+            // 2. If assigned to doctor -> notify specific doctor
+            if (!empty($reservation->doctor_id)) {
+                NotificationService::send(
+                    (int) $reservation->doctor_id,
+                    '🩺 Jadwal Pasien Dikonfirmasi',
+                    'Pasien ' . $reservation->name . ' dijadwalkan pada ' . optional($reservation->date)->format('d M Y') . ' (' . $reservation->preferred_time . ' WIB).',
+                    'appointment',
+                    '/#/dashboard/doctor?tab=reservasi',
+                    ['reservation_id' => $reservation->id, 'code' => $code]
+                );
+            }
+        } catch (\Throwable $e) {
+            // Non-blocking
+        }
 
         return response()->json([
             'id' => (string) $reservation->id,

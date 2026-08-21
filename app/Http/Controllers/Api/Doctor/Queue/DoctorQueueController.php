@@ -14,27 +14,38 @@ class DoctorQueueController extends Controller
     {
         $doctor = $request->user();
 
-        $query = Reservation::query()
-            ->with(['doctor', 'doctorSchedule', 'user'])
-            ->where(function ($q) use ($doctor) {
+        $query = Reservation::query()->with(['doctor', 'doctorSchedule', 'user']);
+
+        if ($doctor) {
+            $cleanName = trim(preg_replace('/^(drg\.|dr\.|drg|dr)\s*/i', '', $doctor->name));
+
+            $query->where(function ($q) use ($doctor, $cleanName) {
                 $q->where('doctor_id', $doctor->id)
-                  ->orWhereHas('doctor', function ($dq) use ($doctor) {
-                      $dq->where('name', $doctor->name);
+                  ->orWhereHas('doctor', function ($dq) use ($doctor, $cleanName) {
+                      $dq->where('id', $doctor->id)
+                         ->orWhere('name', $doctor->name)
+                         ->orWhere('name', 'LIKE', '%' . $cleanName . '%');
                   })
-                  ->orWhereHas('doctorSchedule', function ($sq) use ($doctor) {
+                  ->orWhereHas('doctorSchedule', function ($sq) use ($doctor, $cleanName) {
                       $sq->where('user_id', $doctor->id)
-                         ->orWhereHas('user', function ($uq) use ($doctor) {
-                             $uq->where('name', $doctor->name);
+                         ->orWhereHas('user', function ($uq) use ($doctor, $cleanName) {
+                             $uq->where('id', $doctor->id)
+                                ->orWhere('name', $doctor->name)
+                                ->orWhere('name', 'LIKE', '%' . $cleanName . '%');
                          });
                   });
-            })
-            ->orderByDesc('date')
-            ->orderByDesc('created_at');
-
-        $status = trim((string) $request->query('status', ''));
-        if ($status !== '' && $status !== 'all') {
-            $query->where('status', $status);
+            });
         }
+
+        // Dokter hanya menangani status Dikonfirmasi (terjadwal) dan Selesai
+        $status = trim((string) $request->query('status', ''));
+        if ($status !== '' && $status !== 'all' && $status !== 'Semua') {
+            $query->where('status', $status);
+        } else {
+            $query->whereIn('status', ['Dikonfirmasi', 'Selesai', 'confirmed', 'completed', 'in_progress']);
+        }
+
+        $query->orderByDesc('date')->orderByDesc('created_at');
 
         $items = $query->limit(200)->get()->map(function (Reservation $r) {
             return $this->toDoctorDto($r);
