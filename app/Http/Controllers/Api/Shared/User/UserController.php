@@ -91,7 +91,7 @@ class UserController extends Controller
     {
         $doctors = User::query()
             ->where('role', 'doctor')
-            ->orderByDesc('created_at')
+            ->orderBy('id', 'asc')
             ->get()
             ->map(function (User $u) {
                 $domicile = $u->city;
@@ -115,14 +115,20 @@ class UserController extends Controller
                     'speciality' => $u->specialization ?? 'Dokter Gigi Spesialis',
                     'str' => $u->str_number,
                     'str_number' => $u->str_number,
+                    'strNumber' => $u->str_number,
                     'sip' => $u->sip_number,
                     'sip_number' => $u->sip_number,
+                    'sipNumber' => $u->sip_number,
                     'education' => $u->education,
                     'experience_years' => $u->experience_years ?? 5,
+                    'experienceYears' => $u->experience_years ?? 5,
                     'consultation_fee' => $u->consultation_fee ?? 250000,
+                    'consultationFee' => $u->consultation_fee ?? 250000,
                     'primary_branch' => $u->primary_branch ?? 'Aesthetic Pondok Indah - Cabang Utama',
+                    'primaryBranch' => $u->primary_branch ?? 'Aesthetic Pondok Indah - Cabang Utama',
                     'bio' => $u->bio,
                     'is_active' => $u->status === 'active',
+                    'status' => $u->status ?? 'active',
                     'created_at' => optional($u->created_at)->toISOString(),
                     'birthDate' => optional($u->birth_date)->format('Y-m-d'),
                     'gender' => $u->gender,
@@ -324,12 +330,20 @@ class UserController extends Controller
             'membership_level' => 'nullable|in:bronze,gold,platinum',
             'password' => 'nullable|string|min:6',
             'specialization' => 'nullable|string|max:255',
+            'speciality' => 'nullable|string|max:255',
             'str' => 'nullable|string|max:100',
+            'str_number' => 'nullable|string|max:100',
+            'strNumber' => 'nullable|string|max:100',
             'sip' => 'nullable|string|max:100',
+            'sip_number' => 'nullable|string|max:100',
+            'sipNumber' => 'nullable|string|max:100',
             'education' => 'nullable|string|max:255',
             'experience_years' => 'nullable|integer|min:0',
+            'experienceYears' => 'nullable|integer|min:0',
             'consultation_fee' => 'nullable|numeric|min:0',
+            'consultationFee' => 'nullable|numeric|min:0',
             'primary_branch' => 'nullable|string|max:255',
+            'primaryBranch' => 'nullable|string|max:255',
             'bio' => 'nullable|string',
             'is_active' => 'nullable|boolean',
             'dentalComplaints' => 'nullable|array',
@@ -360,12 +374,20 @@ class UserController extends Controller
             if (array_key_exists('email', $data)) $user->email = $data['email'];
             if (array_key_exists('whatsapp', $data)) $user->whatsapp = $data['whatsapp'];
             if (array_key_exists('specialization', $data)) $user->specialization = $data['specialization'];
+            elseif (array_key_exists('speciality', $data)) $user->specialization = $data['speciality'];
             if (array_key_exists('str', $data)) $user->str_number = $data['str'];
+            elseif (array_key_exists('str_number', $data)) $user->str_number = $data['str_number'];
+            elseif (array_key_exists('strNumber', $data)) $user->str_number = $data['strNumber'];
             if (array_key_exists('sip', $data)) $user->sip_number = $data['sip'];
+            elseif (array_key_exists('sip_number', $data)) $user->sip_number = $data['sip_number'];
+            elseif (array_key_exists('sipNumber', $data)) $user->sip_number = $data['sipNumber'];
             if (array_key_exists('education', $data)) $user->education = $data['education'];
             if (array_key_exists('experience_years', $data)) $user->experience_years = $data['experience_years'];
+            elseif (array_key_exists('experienceYears', $data)) $user->experience_years = $data['experienceYears'];
             if (array_key_exists('consultation_fee', $data)) $user->consultation_fee = $data['consultation_fee'];
+            elseif (array_key_exists('consultationFee', $data)) $user->consultation_fee = $data['consultationFee'];
             if (array_key_exists('primary_branch', $data)) $user->primary_branch = $data['primary_branch'];
+            elseif (array_key_exists('primaryBranch', $data)) $user->primary_branch = $data['primaryBranch'];
             if (array_key_exists('bio', $data)) $user->bio = $data['bio'];
             if (array_key_exists('is_active', $data)) {
                 $user->status = $data['is_active'] ? 'active' : 'inactive';
@@ -767,16 +789,26 @@ class UserController extends Controller
                 'phone' => $user->whatsapp,
                 'whatsapp' => $user->whatsapp,
                 'avatar' => $this->formatMediaUrl($user->avatar),
+                'avatar_url' => $this->formatMediaUrl($user->avatar),
                 'role' => $user->role,
                 'status' => $user->status ?? 'active',
+                'is_active' => ($user->status ?? 'active') === 'active',
+                'str' => $user->str_number ?? '',
+                'str_number' => $user->str_number ?? '',
                 'strNumber' => $user->str_number ?? '',
+                'sip' => $user->sip_number ?? '',
+                'sip_number' => $user->sip_number ?? '',
                 'sipNumber' => $user->sip_number ?? '',
                 'specialization' => $user->specialization ?? 'Dokter Gigi Spesialis',
-                'education' => $user->education ?? '',
-                'experienceYears' => $user->experience_years ?? '',
+                'speciality' => $user->specialization ?? 'Dokter Gigi Spesialis',
+                'education' => $user->education ?? 'FKG Universitas Indonesia (UI)',
+                'experienceYears' => $user->experience_years ?? 5,
+                'experience_years' => $user->experience_years ?? 5,
                 'bio' => $user->bio ?? '',
-                'primaryBranch' => $user->primary_branch ?? 'Aesthetic Pondok Indah',
+                'primaryBranch' => $user->primary_branch ?? 'Aesthetic Pondok Indah - Cabang Utama',
+                'primary_branch' => $user->primary_branch ?? 'Aesthetic Pondok Indah - Cabang Utama',
                 'consultationFee' => (float) ($user->consultation_fee ?? 250000),
+                'consultation_fee' => (float) ($user->consultation_fee ?? 250000),
                 'created_at' => optional($user->created_at)->toISOString(),
             ];
         }

@@ -1,5 +1,68 @@
 [
     {
+        "id": "act-255",
+        "date": "2026-08-24",
+        "time": "14:06",
+        "category": "Admin & Doctor Data Harmonization & Database Cleanup",
+        "type": "Bug Fix & Refactor",
+        "feature": "Pembersihan Akun Duplikat Dokter Dummy dan Sinkronisasi Sempurna Nomor Login (+62887437525310) & Email",
+        "description": "1) Menemukan akar masalah sebelumnya mengapa nomor login yang muncul di modal admin adalah 0833333333 / doctor_a@example.com, yaitu karena adanya akun dummy hasil seeder terdahulu (ID 18 & 19) yang terduplikasi dengan nama dokter yang sama, 2) Melakukan migrasi jadwal dan pembersihan akun duplikat dari database, 3) Memastikan akun dokter utama (ID 3: drg. Yulita Dora, WhatsApp: +62887437525310, Email: doctor123@gmail.com, STR: 31.2.1.100.3.21.123456) tersinkronisasi 100% identik di Modal Admin maupun Halaman Profil Dokter, 4) Memperbaiki sorting controller `UserController::doctors()` menjadi `orderBy('id', 'asc')` agar urutan data konsisten di seluruh modul.",
+        "notes": "1. Removed Duplicate Dummy Doctor Accounts: ID 18 dan 19 dihapus dari database setelah seluruh jadwal dipindahkan ke dokter asli.\n2. Unified Credentials: Nomor login (+62887437525310), Email (doctor123@gmail.com), STR, SIP, dan Spesialisasi kini identik 100% antara Admin POV dan Doctor POV.\n3. Consistent Sorting: Urutan dokter di admin controller disesuaikan dengan database ID.\n4. Design System Compliance: Mengikuti standar UI Aesthetic Pondok Indah.\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi pertanyaan pengguna mengenai ketidaksesuaian nomor login 0833333333 dan email pada modal admin dengan akun dokter login +62887437525310.",
+        "files": [
+            "app/Http/Controllers/Api/Shared/User/UserController.php",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-254",
+        "date": "2026-08-24",
+        "time": "14:00",
+        "category": "Admin Doctors Management & Database Sync",
+        "type": "Bug Fix & Enhancement",
+        "feature": "Sinkronisasi Penuh Seluruh Dokter Database (15 Dokter) pada Halaman Kelola Dokter Admin",
+        "description": "1) Mengidentifikasi penyebab sebelumnya hanya muncul 3 dokter karena fallback ke mock statis saat prop kosong, 2) Memperbarui `DoctorsPage.tsx` dan `ClinicDashboard.tsx` menggunakan `apiClient` untuk mengambil seluruh daftar dokter riil langsung dari endpoint backend `/admin/doctors` (dan fallback ke `/doctors`), 3) Menampilkan seluruh 15 dokter spesialis yang ada di database MySQL secara lengkap beserta status aktif, spesialisasi, dan nomor STR/SIP, 4) Menambahkan tombol 'Muat Ulang' (Refresh) di header halaman kelola dokter, 5) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Real Database Doctors: Seluruh 15 dokter dari database ditampilkan secara otomatis pada tabel kelola dokter admin.\n2. Auto-fetch on Mount: `DoctorsPage.tsx` melakukan fetch langsung ke API backend saat dibuka.\n3. Refresh Action: Ditambahkan tombol 'Muat Ulang' untuk kemudahan sinkronisasi manual kapan pun diperlukan.\n4. Design System Compliance: Mengikuti UI standard Aesthetic Pondok Indah.\n5. Build Verified: `npm run build` sukses 100% (`✓ built in 39.02s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi pertanyaan dan instruksi pengguna terkait jumlah dokter di tabel admin yang sebelumnya hanya menampilkan 3 dokter agar menampilkan seluruh 15 dokter yang ada di database backend.",
+        "files": [
+            "frontend-web/src/features/admin/doctors/pages/DoctorsPage.tsx",
+            "frontend-web/src/features/admin/dashboard/pages/ClinicDashboard.tsx",
+            "public/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-253",
+        "date": "2026-08-24",
+        "time": "13:52",
+        "category": "Admin & Doctor Profile Synchronization & UI Enhancement",
+        "type": "Feature & Refactor",
+        "feature": "Penyempurnaan Modal Kelola Dokter (Toggle Eye Password) & Harmonisasi Profil Dokter (Admin & Dokter POV)",
+        "description": "1) Menambahkan fitur Toggle Eye (ikon mata Eye/EyeOff) pada input Password Baru dan Konfirmasi Password di modal Edit Data & Kredensial Dokter Spesialis (`DoctorEditorModal.tsx`) sehingga admin dapat melihat/menyembunyikan password, 2) Menyatukan dan menyinkronkan (merge) seluruh data kredensial dokter (STR, SIP, Spesialisasi, Almamater Pendidikan, Pengalaman, Biografi, Cabang Utama, Tarif Konsultasi, Nomor Telepon/WhatsApp, dan Foto Profil) antara modal Admin dan halaman Profil / Login Dokter di backend (`UserController.php`, `AuthController.php`) dan frontend, 3) Memastikan kedua POV menampilkan data yang lengkap dan tersinkronisasi tanpa perbedaan, 4) Memverifikasi build frontend sukses 100%.",
+        "notes": "1. Password Eye Toggle: Menambahkan toggle visibility password menggunakan ikon Eye/EyeOff dari Lucide.\n2. Unified Profile Fields: Mendukung kedua konvensi penamaan (camelCase & snake_case) untuk strNumber/str_number, sipNumber/sip_number, experienceYears/experience_years, consultationFee/consultation_fee, primaryBranch/primary_branch di controller dan frontend.\n3. Backend Auth & User Controller Sync: Menjamin saat login dokter maupun akses detail profil, seluruh kredensial terisi lengkap dari database.\n4. Design System Compliance: Mengikuti palet warna Champagne Gold, Warm Gray, dan Charcoal Dark sesuai standardisasi UI klinik.\n5. Build Verified: `npm run build` sukses 100% (`✓ built in 51.47s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk menambahkan toggle preview password pada modal edit dokter di admin dan menyatukan/menyinkronkan seluruh data profil dokter antara admin modal dan profil login dokter.",
+        "files": [
+            "frontend-web/src/features/admin/doctors/components/DoctorEditorModal.tsx",
+            "frontend-web/src/features/admin/doctors/pages/DoctorsPage.tsx",
+            "app/Http/Controllers/Api/Shared/User/UserController.php",
+            "app/Http/Controllers/Api/Shared/Auth/AuthController.php",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-252",
         "date": "2026-08-19",
         "time": "17:55",

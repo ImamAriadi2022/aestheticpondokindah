@@ -1,3 +1,4 @@
+import { apiClient } from "@/core/api/apiClient";
 import { useState, useEffect, useMemo } from "react";
 import { Navigate, useSearchParams, useNavigate } from "react-router";
 import DashboardLayout from "@/core/layouts/DashboardLayout";
@@ -101,14 +102,26 @@ export default function ClinicDashboardPage() {
     } catch (e) { logger.error("Gagal memuat pengguna", e); }
   };
 
-  const fetchApiDoctors = async () => {
+    const fetchApiDoctors = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/doctors`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setApiDoctors(Array.isArray(data) ? data : data?.doctors || data?.data || []);
+      const res: any = await apiClient.get("/admin/doctors", { skipToast: true });
+      const list = Array.isArray(res) ? res : res?.doctors || res?.data || [];
+      if (Array.isArray(list) && list.length > 0) {
+        setApiDoctors(list);
+      } else {
+        const pubRes: any = await apiClient.get("/doctors", { skipToast: true });
+        const pubList = Array.isArray(pubRes) ? pubRes : pubRes?.doctors || pubRes?.data || [];
+        setApiDoctors(pubList);
       }
-    } catch (e) { logger.error("Gagal memuat dokter", e); }
+    } catch (e) {
+      try {
+        const pubRes: any = await apiClient.get("/doctors", { skipToast: true });
+        const pubList = Array.isArray(pubRes) ? pubRes : pubRes?.doctors || pubRes?.data || [];
+        setApiDoctors(pubList);
+      } catch (err) {
+        logger.error("Gagal memuat dokter", err);
+      }
+    }
   };
 
   const fetchDoctorSchedules = async () => {

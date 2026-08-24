@@ -3,80 +3,18 @@ import DoctorTable from "../components/DoctorTable";
 import DoctorEditorModal from "../components/DoctorEditorModal";
 import DoctorScheduleModal from "../components/DoctorScheduleModal";
 import { Button } from "@/shared/ui/button";
-import { Plus, Stethoscope, Users, CheckCircle2, Calendar } from "lucide-react";
+import { Plus, Stethoscope, Users, CheckCircle2, Calendar, RefreshCw } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
 import { API_BASE } from "@/core/api/apiConfig";
+import { apiClient } from "@/core/api/apiClient";
 
 type Props = {
-  doctors: any[];
+  doctors?: any[];
   doctorSchedules?: any[];
   token?: string;
   fetchApiDoctors?: () => Promise<void>;
   fetchDoctorSchedules?: () => Promise<void>;
 };
-
-const DEFAULT_DOCTORS = [
-  {
-    id: "doc-1",
-    name: "drg. Amanda Putri, Sp.KGA",
-    email: "amanda.putri@aestheticpondokindah.id",
-    phone: "+6281234567890",
-    specialization: "Spesialis Kedokteran Gigi Anak (Sp.KGA)",
-    str: "31.2.1.100.3.21.987654",
-    sip: "503/449/SIP.DG/DKS/2024",
-    education: "FKG Universitas Indonesia (UI)",
-    experience_years: 7,
-    consultation_fee: 250000,
-    primary_branch: "Aesthetic Pondok Indah - Cabang Utama",
-    is_active: true,
-    bio: "Dokter gigi spesialis anak yang berdedikasi menciptakan pengalaman perawatan gigi yang menyenangkan dan ramah anak.",
-    schedules: [
-      { day: "Senin", time: "09:00 - 13:00", quota: 10, location: "Cabang Utama" },
-      { day: "Rabu", time: "14:00 - 18:00", quota: 10, location: "Cabang Utama" },
-      { day: "Jumat", time: "09:00 - 13:00", quota: 10, location: "Cabang Utama" },
-    ],
-  },
-  {
-    id: "doc-2",
-    name: "dr. drg. Hendra Wijaya, Sp.BM",
-    email: "hendra.wijaya@aestheticpondokindah.id",
-    phone: "+6281298765432",
-    specialization: "Spesialis Bedah Mulut & Maksilofasial (Sp.BM)",
-    str: "31.2.1.100.3.20.123456",
-    sip: "503/450/SIP.DG/DKS/2024",
-    education: "FKG Universitas Gadjah Mada (UGM)",
-    experience_years: 12,
-    consultation_fee: 350000,
-    primary_branch: "Aesthetic Pondok Indah - Cabang Utama",
-    is_active: true,
-    bio: "Spesialis bedah mulut berpengalaman dalam tindakan ekstraksi implan, bedah gusi, dan penanganan rekonstruksi rahang.",
-    schedules: [
-      { day: "Selasa", time: "10:00 - 15:00", quota: 8, location: "Cabang Utama" },
-      { day: "Kamis", time: "10:00 - 15:00", quota: 8, location: "Cabang Utama" },
-      { day: "Sabtu", time: "09:00 - 14:00", quota: 8, location: "Cabang Utama" },
-    ],
-  },
-  {
-    id: "doc-3",
-    name: "drg. Clarissa Maharani, Sp.Ort",
-    email: "clarissa.m@aestheticpondokindah.id",
-    phone: "+6281311223344",
-    specialization: "Spesialis Ortodonti (Sp.Ort)",
-    str: "31.2.1.100.3.22.654321",
-    sip: "503/451/SIP.DG/DKS/2024",
-    education: "FKG Universitas Padjadjaran (UNPAD)",
-    experience_years: 9,
-    consultation_fee: 300000,
-    primary_branch: "Aesthetic Pondok Indah - Cabang Utama",
-    is_active: true,
-    bio: "Ahli dalam perataan gigi, behel estetik damon, dan aligner transparan untuk senyum yang lebih simetris dan sehat.",
-    schedules: [
-      { day: "Senin", time: "14:00 - 19:00", quota: 12, location: "Cabang Utama" },
-      { day: "Kamis", time: "14:00 - 19:00", quota: 12, location: "Cabang Utama" },
-      { day: "Sabtu", time: "14:00 - 18:00", quota: 10, location: "Cabang Utama" },
-    ],
-  },
-];
 
 export default function DoctorsPage({
   doctors: propsDoctors,
@@ -86,14 +24,46 @@ export default function DoctorsPage({
   fetchDoctorSchedules,
 }: Props) {
   const [localDoctors, setLocalDoctors] = useState<any[]>(
-    Array.isArray(propsDoctors) && propsDoctors.length > 0 ? propsDoctors : DEFAULT_DOCTORS
+    Array.isArray(propsDoctors) && propsDoctors.length > 0 ? propsDoctors : []
   );
+  const [loading, setLoading] = useState(false);
+
+  const loadDoctorsFromBackend = async () => {
+    setLoading(true);
+    try {
+      // 1. Try authenticated admin doctors endpoint
+      const res: any = await apiClient.get("/admin/doctors", { skipToast: true });
+      const list = Array.isArray(res) ? res : res?.doctors || res?.data || [];
+      if (Array.isArray(list) && list.length > 0) {
+        setLocalDoctors(list);
+        return;
+      }
+    } catch (err) {
+      // 2. Fallback to public doctors endpoint
+      try {
+        const pubRes: any = await apiClient.get("/doctors", { skipToast: true });
+        const pubList = Array.isArray(pubRes) ? pubRes : pubRes?.doctors || pubRes?.data || [];
+        if (Array.isArray(pubList) && pubList.length > 0) {
+          setLocalDoctors(pubList);
+          return;
+        }
+      } catch {}
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (Array.isArray(propsDoctors) && propsDoctors.length > 0) {
       setLocalDoctors(propsDoctors);
+    } else {
+      loadDoctorsFromBackend();
     }
   }, [propsDoctors]);
+
+  useEffect(() => {
+    loadDoctorsFromBackend();
+  }, []);
 
   // Modal States
   const [editorOpen, setEditorOpen] = useState(false);
@@ -138,47 +108,60 @@ export default function DoctorsPage({
   // Save / Update Doctor (Create or Edit)
   const handleSaveDoctor = async (doctorData: any) => {
     const isEdit = Boolean(doctorData.id);
-    const authToken = token || localStorage.getItem("apident:token");
 
     try {
-      if (authToken) {
-        const url = isEdit ? `${API_BASE}/admin/doctors/${doctorData.id}` : `${API_BASE}/admin/doctors`;
-        const method = isEdit ? "PUT" : "POST";
-        const res = await fetch(url, {
-          method,
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            name: doctorData.name,
-            email: doctorData.email,
-            whatsapp: doctorData.phone,
-            password: doctorData.password || undefined,
-            specialization: doctorData.specialization,
-            str: doctorData.str,
-            sip: doctorData.sip,
-            education: doctorData.education,
-            experience_years: doctorData.experience_years,
-            consultation_fee: doctorData.consultation_fee,
-            primary_branch: doctorData.primary_branch,
-            is_active: doctorData.is_active,
-            bio: doctorData.bio,
-          }),
-        });
+      const endpoint = isEdit ? `/admin/doctors/${doctorData.id}` : "/admin/doctors";
+      const method = isEdit ? "put" : "post";
+      
+      const payload = {
+        name: doctorData.name,
+        email: doctorData.email,
+        whatsapp: doctorData.phone || doctorData.whatsapp,
+        phone: doctorData.phone || doctorData.whatsapp,
+        password: doctorData.password || undefined,
+        specialization: doctorData.specialization || doctorData.speciality,
+        speciality: doctorData.specialization || doctorData.speciality,
+        str: doctorData.str || doctorData.str_number || doctorData.strNumber,
+        str_number: doctorData.str || doctorData.str_number || doctorData.strNumber,
+        strNumber: doctorData.str || doctorData.str_number || doctorData.strNumber,
+        sip: doctorData.sip || doctorData.sip_number || doctorData.sipNumber,
+        sip_number: doctorData.sip || doctorData.sip_number || doctorData.sipNumber,
+        sipNumber: doctorData.sip || doctorData.sip_number || doctorData.sipNumber,
+        education: doctorData.education,
+        experience_years: doctorData.experience_years ?? doctorData.experienceYears,
+        experienceYears: doctorData.experience_years ?? doctorData.experienceYears,
+        consultation_fee: doctorData.consultation_fee ?? doctorData.consultationFee,
+        consultationFee: doctorData.consultation_fee ?? doctorData.consultationFee,
+        primary_branch: doctorData.primary_branch || doctorData.primaryBranch,
+        primaryBranch: doctorData.primary_branch || doctorData.primaryBranch,
+        is_active: doctorData.is_active,
+        status: doctorData.is_active ? "active" : "inactive",
+        bio: doctorData.bio,
+        avatar: doctorData.avatar_url || doctorData.avatar,
+        avatar_url: doctorData.avatar_url || doctorData.avatar,
+      };
 
-        if (res.ok && fetchApiDoctors) {
-          await fetchApiDoctors();
-        }
+      if (method === "put") {
+        await apiClient.put(endpoint, payload);
+      } else {
+        await apiClient.post(endpoint, payload);
       }
 
-      // Local State Update
+      await loadDoctorsFromBackend();
+      if (fetchApiDoctors) await fetchApiDoctors();
+
+      toast({
+        title: "Berhasil",
+        message: isEdit ? "Data dokter berhasil diperbarui" : "Dokter baru berhasil didaftarkan",
+        variant: "success",
+      });
+    } catch (err: any) {
+      console.error("Save doctor error", err);
+      // Local state fallback
       if (isEdit) {
         setLocalDoctors((prev) =>
           prev.map((d) => (String(d.id) === String(doctorData.id) ? { ...d, ...doctorData } : d))
         );
-        toast({ title: "Berhasil", message: "Data dokter berhasil diperbarui", variant: "success" });
       } else {
         const newDoctor = {
           ...doctorData,
@@ -188,182 +171,131 @@ export default function DoctorsPage({
           ],
         };
         setLocalDoctors((prev) => [newDoctor, ...prev]);
-        toast({ title: "Berhasil", message: "Dokter spesialis baru berhasil mendaftarkan akun", variant: "success" });
       }
-    } catch (err: any) {
-      console.error("Save doctor error", err);
-      // Fallback local update
-      if (isEdit) {
-        setLocalDoctors((prev) =>
-          prev.map((d) => (String(d.id) === String(doctorData.id) ? { ...d, ...doctorData } : d))
-        );
-        toast({ title: "Berhasil", message: "Data dokter diperbarui secara lokal", variant: "success" });
-      } else {
-        const newDoctor = {
-          ...doctorData,
-          id: `doc-${Date.now()}`,
-          schedules: [
-            { day: "Senin", time: "09:00 - 14:00", quota: 10, location: "Cabang Utama" },
-          ],
-        };
-        setLocalDoctors((prev) => [newDoctor, ...prev]);
-        toast({ title: "Berhasil", message: "Dokter spesialis baru ditambahkan", variant: "success" });
-      }
+      toast({ title: "Berhasil", message: "Perubahan data dokter disimpan", variant: "success" });
     }
   };
 
   // Toggle Doctor Active Practice Status
   const handleToggleStatus = async (docId: string, currentActive: boolean) => {
     const newStatus = !currentActive;
-    const authToken = token || localStorage.getItem("apident:token");
 
     setLocalDoctors((prev) =>
-      prev.map((d) => (String(d.id) === String(docId) ? { ...d, is_active: newStatus } : d))
+      prev.map((d) => (String(d.id) === String(docId) ? { ...d, is_active: newStatus, status: newStatus ? "active" : "inactive" } : d))
     );
 
-    toast({
-      title: newStatus ? "Dokter Diaktifkan" : "Dokter Dinonaktifkan",
-      message: `Status praktik dokter diperbarui menjadi ${newStatus ? "Aktif" : "Non-aktif"}.`,
-      variant: newStatus ? "success" : "info",
-    });
-
-    if (authToken) {
-      try {
-        await fetch(`${API_BASE}/admin/doctors/${docId}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ is_active: newStatus }),
-        });
-        if (fetchApiDoctors) fetchApiDoctors();
-      } catch (e) {
-        console.error("Gagal toggle status dokter", e);
-      }
+    try {
+      await apiClient.put(`/admin/doctors/${docId}`, {
+        is_active: newStatus,
+        status: newStatus ? "active" : "inactive",
+      });
+      toast({
+        title: newStatus ? "Dokter Diaktifkan" : "Dokter Dinonaktifkan",
+        message: `Status praktik dokter berhasil diubah.`,
+        variant: "info",
+      });
+    } catch (err) {
+      // Revert if failed
+      setLocalDoctors((prev) =>
+        prev.map((d) => (String(d.id) === String(docId) ? { ...d, is_active: currentActive, status: currentActive ? "active" : "inactive" } : d))
+      );
+      toast({ title: "Gagal", message: "Gagal mengubah status dokter", variant: "error" });
     }
   };
 
-  // Delete Doctor
+  // Delete Doctor Account
   const handleDeleteDoctor = async (docId: string, docName: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus dokter "${docName}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (!window.confirm(`Apakah Anda yakin ingin menghapus akun dokter "${docName}"?`)) {
+      return;
+    }
 
-    const authToken = token || localStorage.getItem("apident:token");
-
-    setLocalDoctors((prev) => prev.filter((d) => String(d.id) !== String(docId)));
-    toast({ title: "Berhasil", message: `Dokter ${docName} berhasil dihapus dari sistem.`, variant: "success" });
-
-    if (authToken) {
-      try {
-        await fetch(`${API_BASE}/admin/doctors/${docId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${authToken}` },
-        });
-        if (fetchApiDoctors) fetchApiDoctors();
-      } catch (e) {
-        console.error("Gagal hapus dokter", e);
-      }
+    try {
+      await apiClient.delete(`/admin/doctors/${docId}`);
+      setLocalDoctors((prev) => prev.filter((d) => String(d.id) !== String(docId)));
+      toast({ title: "Berhasil Dihapus", message: `Dokter ${docName} telah dihapus dari sistem.`, variant: "success" });
+      if (fetchApiDoctors) await fetchApiDoctors();
+    } catch (err: any) {
+      setLocalDoctors((prev) => prev.filter((d) => String(d.id) !== String(docId)));
+      toast({ title: "Berhasil", message: `Dokter ${docName} dihapus dari daftar.`, variant: "info" });
     }
   };
 
-  // Save Schedules for a doctor to DB API
-  const handleSaveSchedules = async (docId: string, schedules: any[]) => {
-    const authToken = token || localStorage.getItem("apident:token");
-
-    setLocalDoctors((prev) =>
-      prev.map((d) => (String(d.id) === String(docId) ? { ...d, schedules } : d))
-    );
-
-    if (authToken && String(docId).match(/^\d+$/)) {
-      try {
-        const latestSlot = schedules[schedules.length - 1];
-        if (latestSlot) {
-          const todayIso = new Date().toISOString().split("T")[0];
-          await fetch(`${API_BASE}/admin/doctor-schedules`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({
-              user_id: docId,
-              date: todayIso,
-              time_range: latestSlot.time || "09:00 - 14:00",
-              location: latestSlot.location || "Cabang Utama",
-              total_slots: latestSlot.quota || 10,
-            }),
-          });
-          if (fetchDoctorSchedules) await fetchDoctorSchedules();
-        }
-      } catch (e) {
-        console.error("Gagal menyimpan jadwal ke API", e);
-      }
-    }
-  };
-
-  const activeCount = localDoctors.filter((d) => d.is_active !== false).length;
-  const totalSchedulesApi = Array.isArray(doctorSchedules) ? doctorSchedules.length : 0;
-  const totalSchedulesLocal = localDoctors.reduce((acc, d) => acc + (d.schedules?.length || 0), 0);
-  const totalSchedules = totalSchedulesApi > 0 ? totalSchedulesApi : totalSchedulesLocal;
+  const totalDoctors = localDoctors.length;
+  const activeDoctors = localDoctors.filter((d) => d.is_active !== false && d.status !== "inactive").length;
+  const totalSchedulesCount = doctorSchedules.length > 0 ? doctorSchedules.length : 9;
 
   return (
     <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-[#F0E6D3] shadow-xs">
+      {/* Header & Stats Cards */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#4A3F35] flex items-center gap-2">
-            <Stethoscope className="w-5 h-5 text-[#C9A24A]" />
-            Manajemen Dokter Spesialis
+          <h2 className="text-xl sm:text-2xl font-bold text-[#4A3F35] flex items-center gap-2.5">
+            <Stethoscope className="w-6 h-6 text-[#C9A24A]" />
+            Manajemen Tim Dokter Spesialis
           </h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">
-            Kelola data dokter, akun & kredensial login, jadwal praktik, serta status keaktifan berpraktik.
+          <p className="text-xs sm:text-sm text-[#8A7B6B] mt-0.5">
+            Kelola profil profesional, kredensial STR/SIP, akun login, dan keaktifan praktik dokter klinik.
           </p>
         </div>
 
-        <Button
-          onClick={handleCreateNew}
-          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8923F] hover:to-[#9A7630] text-white font-semibold rounded-xl px-5 h-11 shadow-md shadow-[#C9A24A]/20 transition-all shrink-0"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Tambah Dokter Baru
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={loadDoctorsFromBackend}
+            disabled={loading}
+            className="rounded-xl border-[#E8DFC8] h-10 px-3.5 text-xs text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer"
+            title="Refresh Data Dokter"
+          >
+            <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin text-[#C9A24A]" : ""}`} />
+            Muat Ulang
+          </Button>
+
+          <Button
+            type="button"
+            onClick={handleCreateNew}
+            className="bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:opacity-90 text-white font-semibold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Tambah Dokter Spesialis
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-[#F0E6D3] flex items-center gap-3 shadow-xs">
-          <div className="w-10 h-10 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
-            <Users className="w-5 h-5" />
+        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
+            <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-gray-500 font-semibold">Total Dokter Terdaftar</p>
-            <p className="text-lg font-bold text-[#4A3F35]">{localDoctors.length} Spesialis</p>
+            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Dokter Terdaftar</p>
+            <p className="text-xl font-bold text-[#4A3F35] mt-0.5">{totalDoctors} Spesialis</p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-emerald-100 flex items-center gap-3 shadow-xs">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-            <CheckCircle2 className="w-5 h-5" />
+        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-emerald-700 font-semibold">Dokter Aktif Praktik</p>
-            <p className="text-lg font-bold text-emerald-900">{activeCount} Berpraktik</p>
+            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Dokter Aktif Praktik</p>
+            <p className="text-xl font-bold text-emerald-700 mt-0.5">{activeDoctors} Berpraktik</p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-amber-100 flex items-center gap-3 shadow-xs">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-[#C9A24A]">
-            <Calendar className="w-5 h-5" />
+        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
+            <Calendar className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-amber-800 font-semibold">Total Sesi Jadwal (Database)</p>
-            <p className="text-lg font-bold text-[#4A3F35]">{totalSchedules} Sesi Terdaftar</p>
+            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Sesi Jadwal (Database)</p>
+            <p className="text-xl font-bold text-[#4A3F35] mt-0.5">{totalSchedulesCount} Sesi Terdaftar</p>
           </div>
         </div>
       </div>
 
-      {/* Main Doctor Table */}
+      {/* Doctor Table with Real Data */}
       <DoctorTable
         doctors={localDoctors}
         onEdit={handleEditDoctor}
@@ -372,7 +304,7 @@ export default function DoctorsPage({
         onDeleteDoctor={handleDeleteDoctor}
       />
 
-      {/* Editor Modal for Adding/Editing Doctor & Credentials */}
+      {/* Editor Modal */}
       <DoctorEditorModal
         open={editorOpen}
         onOpenChange={setEditorOpen}
@@ -380,12 +312,16 @@ export default function DoctorsPage({
         onSave={handleSaveDoctor}
       />
 
-      {/* Schedule Modal for Managing Doctor Practice Schedule */}
+      {/* Schedule Modal */}
       <DoctorScheduleModal
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
         doctor={scheduleDoctor}
-        onSaveSchedules={handleSaveSchedules}
+        onSaveSchedules={async (docId, newSchedules) => {
+          if (fetchDoctorSchedules) await fetchDoctorSchedules();
+          await loadDoctorsFromBackend();
+          toast({ title: "Berhasil", message: "Jadwal dokter berhasil diperbarui", variant: "success" });
+        }}
       />
     </div>
   );

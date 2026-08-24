@@ -4,7 +4,21 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { toast } from "@/shared/ui/toast";
-import { User, Mail, Phone, Lock, Stethoscope, ShieldCheck, Briefcase, MapPin, DollarSign, Activity, FileText } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Stethoscope,
+  ShieldCheck,
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Activity,
+  FileText,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 type DoctorEditorModalProps = {
   open: boolean;
@@ -27,6 +41,10 @@ const SPECIALIZATION_OPTIONS = [
 export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }: DoctorEditorModalProps) {
   const isEdit = Boolean(doctor && doctor.id);
 
+  // Password visibility states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -36,7 +54,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
     specialization: SPECIALIZATION_OPTIONS[0],
     str: "",
     sip: "",
-    education: "",
+    education: "FKG Universitas Indonesia (UI)",
     experience_years: 5,
     consultation_fee: 250000,
     primary_branch: "Aesthetic Pondok Indah - Cabang Utama",
@@ -48,6 +66,9 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+
     if (doctor) {
       setForm({
         name: doctor.name || "",
@@ -56,15 +77,15 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
         password: "",
         confirmPassword: "",
         specialization: doctor.specialization || doctor.speciality || SPECIALIZATION_OPTIONS[0],
-        str: doctor.str || doctor.str_number || "",
-        sip: doctor.sip || doctor.sip_number || "",
+        str: doctor.str || doctor.str_number || doctor.strNumber || "",
+        sip: doctor.sip || doctor.sip_number || doctor.sipNumber || "",
         education: doctor.education || "FKG Universitas Indonesia (UI)",
-        experience_years: doctor.experience_years ?? 5,
-        consultation_fee: doctor.consultation_fee ?? 250000,
-        primary_branch: doctor.primary_branch || "Aesthetic Pondok Indah - Cabang Utama",
-        is_active: doctor.is_active !== false,
+        experience_years: doctor.experience_years ?? doctor.experienceYears ?? 5,
+        consultation_fee: doctor.consultation_fee ?? doctor.consultationFee ?? 250000,
+        primary_branch: doctor.primary_branch || doctor.primaryBranch || "Aesthetic Pondok Indah - Cabang Utama",
+        is_active: doctor.is_active !== false && doctor.status !== "inactive",
         bio: doctor.bio || "",
-        avatar_url: doctor.avatar_url || doctor.photo_url || "",
+        avatar_url: doctor.avatar_url || doctor.avatar || doctor.photo || doctor.photo_url || "",
       });
     } else {
       setForm({
@@ -112,6 +133,23 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
         ...doctor,
         ...form,
         id: doctor?.id,
+        // Harmonize both camelCase and snake_case keys
+        str_number: form.str,
+        strNumber: form.str,
+        sip_number: form.sip,
+        sipNumber: form.sip,
+        experience_years: form.experience_years,
+        experienceYears: form.experience_years,
+        primary_branch: form.primary_branch,
+        primaryBranch: form.primary_branch,
+        consultation_fee: form.consultation_fee,
+        consultationFee: form.consultation_fee,
+        whatsapp: form.phone,
+        phone: form.phone,
+        avatar: form.avatar_url,
+        avatar_url: form.avatar_url,
+        status: form.is_active ? "active" : "inactive",
+        is_active: form.is_active,
       });
       onOpenChange(false);
     } catch (err: any) {
@@ -156,7 +194,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     placeholder="dokter@aestheticpondokindah.id"
-                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs bg-white"
                   />
                 </div>
               </div>
@@ -171,11 +209,12 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="+62 812-3456-7890"
-                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs bg-white"
                   />
                 </div>
               </div>
 
+              {/* Password Baru with Eye Toggle */}
               <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-xs font-semibold text-gray-700">
                   {isEdit ? "Password Baru (Kosongkan jika tidak diubah)" : "Password Akun Dokter *"}
@@ -183,27 +222,44 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
                   <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required={!isEdit}
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     placeholder={isEdit ? "••••••••" : "Password minimal 6 karakter"}
-                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                    className="pl-10 pr-10 h-10 rounded-xl border-gray-200 text-xs bg-white"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-[#C9A24A] transition-colors cursor-pointer p-0.5 rounded focus:outline-none"
+                    title={showPassword ? "Sembunyikan password" : "Lihat password"}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
+              {/* Konfirmasi Password with Eye Toggle */}
               <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-xs font-semibold text-gray-700">Konfirmasi Password</Label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
                   <Input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     value={form.confirmPassword}
                     onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                     placeholder="Ketik ulang password baru"
-                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                    className="pl-10 pr-10 h-10 rounded-xl border-gray-200 text-xs bg-white"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-[#C9A24A] transition-colors cursor-pointer p-0.5 rounded focus:outline-none"
+                    title={showConfirmPassword ? "Sembunyikan konfirmasi password" : "Lihat konfirmasi password"}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
             </div>
@@ -251,7 +307,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                     value={form.str}
                     onChange={(e) => setForm({ ...form, str: e.target.value })}
                     placeholder="31.2.1.100.3.21.987654"
-                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs font-mono"
                   />
                 </div>
               </div>
@@ -264,7 +320,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                     value={form.sip}
                     onChange={(e) => setForm({ ...form, sip: e.target.value })}
                     placeholder="503/449/SIP.DG/DKS/2024"
-                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs"
+                    className="pl-10 h-10 rounded-xl border-gray-200 text-xs font-mono"
                   />
                 </div>
               </div>

@@ -80,6 +80,37 @@ class AuthController extends Controller
 
     private function serializeUser(User $user): array
     {
+        if ($user->role === 'doctor') {
+            return [
+                'id' => (string) $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->whatsapp,
+                'whatsapp' => $user->whatsapp,
+                'avatar' => $user->avatar,
+                'avatar_url' => $user->avatar,
+                'role' => $user->role,
+                'status' => $user->status ?? 'active',
+                'is_active' => ($user->status ?? 'active') === 'active',
+                'str' => $user->str_number ?? '',
+                'str_number' => $user->str_number ?? '',
+                'strNumber' => $user->str_number ?? '',
+                'sip' => $user->sip_number ?? '',
+                'sip_number' => $user->sip_number ?? '',
+                'sipNumber' => $user->sip_number ?? '',
+                'specialization' => $user->specialization ?? 'Dokter Gigi Spesialis',
+                'speciality' => $user->specialization ?? 'Dokter Gigi Spesialis',
+                'education' => $user->education ?? 'FKG Universitas Indonesia (UI)',
+                'experienceYears' => $user->experience_years ?? 5,
+                'experience_years' => $user->experience_years ?? 5,
+                'bio' => $user->bio ?? '',
+                'primaryBranch' => $user->primary_branch ?? 'Aesthetic Pondok Indah - Cabang Utama',
+                'primary_branch' => $user->primary_branch ?? 'Aesthetic Pondok Indah - Cabang Utama',
+                'consultationFee' => (float) ($user->consultation_fee ?? 250000),
+                'consultation_fee' => (float) ($user->consultation_fee ?? 250000),
+            ];
+        }
+
         $profile = $user->profile;
 
         return [
