@@ -1,5 +1,21 @@
 [
   {
+    "id": "act-271",
+    "timestamp": "2026-08-24T13:20:19.480Z",
+    "category": "feature",
+    "title": "Integrasi Layanan Guest Dinamis & Navigasi Terhubung ke Guest Booking Flow",
+    "description": "Menghubungkan halaman katalog Layanan Publik/Guest (/services) dan seksi Home Services dengan database dinamis manajemen layanan admin, menyertakan filter kategori dan search bar, serta mengarahkan tombol 'Booking Sekarang' langsung ke formulir reservasi online versi guest (/booking/new) dengan layanan terpilih otomatis.",
+    "details": [
+      "Dynamic Services Fetching: Halaman /services dan komponen ServicesSection kini mengambil 27 layanan aktif langsung dari backend (GET /api/public/services) dengan dukungan cache localStorage untuk instant render 0ms.",
+      "Category Filter & Search: Menambahkan filter kategori tindakan medis dinamis (Estetik, Ortodonti, Umum, Implan, Bedah Mulut, Pediatrik) dan kolom pencarian pada halaman /services.",
+      "Integrated Guest Booking Flow: Mengubah tautan 'Booking Sekarang' pada kartu layanan dan dialog modal detail agar mengarah ke formulir reservasi guest (/booking/new?service=...) dan otomatis memilih layanan yang diklik.",
+      "Guest Booking Preselection: Mengintegrasikan hook useSearchParams pada GuestBookingFlow.tsx sehingga parameter URL 'service' atau 'serviceId' otomatis ter-highlight dan terpilih pada Step 1.",
+      "Frontend Build: Teruji 100% lulus melalui Vite build tanpa error."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-270",
     "timestamp": "2026-08-24T11:31:40.641Z",
     "category": "fix",

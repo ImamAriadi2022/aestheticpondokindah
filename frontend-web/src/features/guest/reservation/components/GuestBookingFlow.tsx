@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import {
   Calendar,
   Clock,
@@ -53,6 +53,10 @@ interface DoctorItem {
 }
 
 export default function GuestBookingFlow() {
+  const [searchParams] = useSearchParams();
+  const requestedServiceName = searchParams.get("service") || searchParams.get("treatment") || searchParams.get("layanan");
+  const requestedServiceId = searchParams.get("serviceId") || searchParams.get("id");
+
   const [currentStep, setCurrentStep] = useState<"layanan" | "dokter" | "jadwal" | "konfirmasi">("layanan");
 
   // Step 1: Services
@@ -133,7 +137,22 @@ export default function GuestBookingFlow() {
             popular: Boolean(item.is_featured || item.popular),
           }));
           setServices(mapped);
-          setSelectedService(mapped[0]);
+
+          let initialMatch = mapped[0];
+          if (requestedServiceId) {
+            const foundById = mapped.find((m: any) => String(m.id) === String(requestedServiceId));
+            if (foundById) initialMatch = foundById;
+          } else if (requestedServiceName) {
+            const q = requestedServiceName.toLowerCase().trim();
+            const foundByName = mapped.find(
+              (m: any) =>
+                m.name.toLowerCase() === q ||
+                m.name.toLowerCase().includes(q) ||
+                q.includes(m.name.toLowerCase())
+            );
+            if (foundByName) initialMatch = foundByName;
+          }
+          setSelectedService(initialMatch);
         }
       } catch {
         // fallback
@@ -142,7 +161,7 @@ export default function GuestBookingFlow() {
       }
     };
     fetchServices();
-  }, []);
+  }, [requestedServiceName, requestedServiceId]);
 
   // Load Doctors
   useEffect(() => {

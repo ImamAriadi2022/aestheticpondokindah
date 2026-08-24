@@ -1,5 +1,6 @@
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, Calendar, MessageCircle } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { Link } from "react-router";
 import type { ServiceDetail } from "../services/servicesService";
 
 interface ServiceCardProps {
@@ -18,7 +19,7 @@ export function ServiceCard({ service, onOpen }: ServiceCardProps) {
           alt={service.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = "/layanan/default.png";
+            (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png";
           }}
         />
         {!isAvailable && (
@@ -37,28 +38,22 @@ export function ServiceCard({ service, onOpen }: ServiceCardProps) {
           {service.intro}
         </p>
 
-        <div className="flex items-center justify-between pt-4 border-t border-brand-gold/10 mt-auto">
+        <div className="flex items-center justify-between pt-4 border-t border-brand-gold/10 mt-auto gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onOpen(service.id)}
             className="text-brand-gold hover:text-brand-gold-dark hover:bg-brand-gold/5 font-semibold text-xs rounded-xl p-0 h-auto gap-1"
           >
-            Detail Informasi <ArrowRight className="w-3.5 h-3.5" />
+            Detail <ArrowRight className="w-3.5 h-3.5" />
           </Button>
 
-          <a
-            href={`https://wa.me/6281990114949?text=${encodeURIComponent(`Halo, saya ingin konsultasi mengenai layanan ${service.title}`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            to={`/booking/new?service=${encodeURIComponent(service.title)}`}
+            className="inline-flex items-center gap-1 bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl text-xs font-semibold h-8 px-3 shadow-xs"
           >
-            <Button
-              size="sm"
-              className="bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-semibold h-8 px-3 gap-1 shadow-sm"
-            >
-              <MessageCircle className="w-3.5 h-3.5" /> Chat
-            </Button>
-          </a>
+            <Calendar className="w-3.5 h-3.5" /> Booking
+          </Link>
         </div>
       </div>
     </div>

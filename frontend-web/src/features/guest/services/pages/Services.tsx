@@ -4,609 +4,369 @@ import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Card } from "@/shared/ui/card";
-import { MessageCircle, ArrowRight, X, QrCode, ShieldCheck, Banknote, Info } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Link } from "react-router";
-
-type ServiceSpecialistSection = {
-  label: string;
-  names: string[];
-};
-
-type ServiceDetail = {
-  id: string;
-  title: string;
-  image: string;
-  intro: string;
-  paragraphs: string[];
-  steps: string[];
-  generalDentists: string[];
-  specialistSection?: ServiceSpecialistSection;
-};
-
-const generalDentists = [
-  "Yulita Dora",
-  "Della Sparringa",
-  "Nola Lolita",
-  "Shivly",
-  "Rannyani Ramli",
-  "Ryan Jusuf",
-];
-
-export const services: ServiceDetail[] = [
-  {
-    id: "dental-whitening",
-    title: "Dental Whitening",
-    image: "/layanan/Dental Whitening.png",
-    intro:
-      "Dental whitening is a professional cosmetic treatment designed to brighten your smile safely and effectively.",
-    paragraphs: [
-      "Over time, teeth can become stained due to coffee, tea, smoking, and natural aging. Professional whitening helps lift stains and restore a more radiant appearance.",
-      "At Aesthetic Pondok Indah, we use clinically tested materials and a careful approach to minimize sensitivity while maximizing results.",
-    ],
-    steps: [
-      "Shade assessment and oral examination to ensure whitening is suitable.",
-      "Protection of gums and soft tissue prior to the procedure.",
-      "Application of whitening gel and activation (if needed), followed by final polishing.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Cosmetic Dentist:",
-      names: ["Ryan Jusuf"],
-    },
-  },
-  {
-    id: "root-canal-treatments",
-    title: "Root Canal Treatments",
-    image: "/layanan/Root Canal Treatments.png",
-    intro:
-      "Root canal treatment is an essential dental procedure designed to save a tooth that has been severely damaged by infection or decay.",
-    paragraphs: [
-      "When the soft inner tissue of the tooth (pulp) becomes inflamed or infected—often due to deep cavities, cracks, or trauma—it can cause intense pain and swelling.",
-      "Our goal is to remove the infected tissue, disinfect the canals, and seal the tooth to prevent reinfection, restoring comfort and function.",
-    ],
-    steps: [
-      "Gently removing the infected or damaged pulp.",
-      "Thoroughly cleaning and disinfecting the inner tooth canals.",
-      "Sealing the canals to prevent reinfection and restoring the tooth’s structure.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Specialist Endodontist:",
-      names: ["Pramodanti Jiwanakusuma, Sp.KG", "Riesta Paluvi, Sp.KG"],
-    },
-  },
-  {
-    id: "pediatric-dentistry",
-    title: "Pediatric Dentistry",
-    image: "/layanan/Pediatric Dentistry.png",
-    intro:
-      "Pediatric dentistry focuses on gentle, age-appropriate dental care for infants, children, and teens.",
-    paragraphs: [
-      "We help children build healthy habits early through preventive care, education, and a friendly clinic experience.",
-      "Treatments are tailored to a child’s stage of growth to support long-term oral health.",
-    ],
-    steps: [
-      "Dental check-up, risk assessment, and oral hygiene education.",
-      "Preventive treatments such as fluoride and sealants when indicated.",
-      "Restorative care if needed, with comfort-first techniques.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Pediatric Dentist:",
-      names: ["Nola Lolita"],
-    },
-  },
-  {
-    id: "full-mouth-rehabilitations",
-    title: "Full Mouth Rehabilitations",
-    image: "/layanan/Full Mouth Rehabilitations.png",
-    intro:
-      "Full mouth rehabilitation is a comprehensive plan combining restorative and aesthetic treatments to rebuild function, comfort, and smile harmony.",
-    paragraphs: [
-      "It is typically recommended for extensive tooth wear, multiple missing teeth, bite issues, or complex dental problems affecting chewing and appearance.",
-      "We design a phased plan that prioritizes health first, then function, and finally aesthetics.",
-    ],
-    steps: [
-      "Comprehensive assessment (clinical exam, imaging, bite analysis).",
-      "Customized treatment plan: restorations, crowns/bridges, implants, and gum care as needed.",
-      "Final rehabilitation and maintenance plan for long-term stability.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Specialist Team:",
-      names: ["Pramodanti Jiwanakusuma, Sp.KG", "Riesta Paluvi, Sp.KG"],
-    },
-  },
-  {
-    id: "emergency-dental-services",
-    title: "Emergency Dental Services",
-    image: "/layanan/Emergency Dental Services.png",
-    intro:
-      "Emergency dental services help manage urgent issues such as severe toothache, swelling, broken teeth, or dental trauma.",
-    paragraphs: [
-      "Fast and accurate diagnosis is crucial to relieve pain and prevent complications.",
-      "We focus on stabilizing the condition first, then planning definitive treatment.",
-    ],
-    steps: [
-      "Urgent assessment and pain management.",
-      "Immediate care (temporary filling, drainage, splinting, etc.) as indicated.",
-      "Follow-up plan for definitive treatment and prevention.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "dentures",
-    title: "Dentures",
-    image: "/layanan/Dentures.png",
-    intro:
-      "Dentures are removable appliances designed to replace missing teeth and restore chewing, speech, and facial support.",
-    paragraphs: [
-      "Options include full dentures and partial dentures, depending on how many teeth are missing.",
-      "We ensure proper fit, comfort, and natural-looking aesthetics.",
-    ],
-    steps: [
-      "Oral examination, measurements, and denture design selection.",
-      "Try-in sessions to refine fit, bite, and appearance.",
-      "Final delivery with adjustment and care instructions.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "dental-implants",
-    title: "Dental Implants",
-    image: "/layanan/Dental Implants.png",
-    intro:
-      "Dental implants are a long-term solution to replace missing teeth using a titanium root and a natural-looking crown.",
-    paragraphs: [
-      "Implants help preserve jawbone and allow you to chew comfortably without affecting adjacent teeth.",
-      "Treatment is planned carefully with imaging and bite evaluation.",
-    ],
-    steps: [
-      "Evaluation and implant planning (including imaging).",
-      "Implant placement and healing period (osseointegration).",
-      "Crown/bridge attachment and final bite adjustment.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Implant Specialist:",
-      names: ["Rannyani Ramli"],
-    },
-  },
-  {
-    id: "dental-extraction-wisdom-tooth-removal",
-    title: "Dental Extraction and Wisdom Tooth Removal",
-    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.png",
-    intro:
-      "Tooth extraction removes a problematic tooth safely, including impacted or painful wisdom teeth.",
-    paragraphs: [
-      "Extractions may be needed due to severe decay, infection, crowding, or impaction.",
-      "We use careful techniques and anesthesia options to keep you comfortable.",
-    ],
-    steps: [
-      "Clinical exam and imaging to assess root position and difficulty.",
-      "Local anesthesia and gentle extraction technique.",
-      "Post-operative instructions and follow-up for healing.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Oral Surgery Specialist:",
-      names: ["Shivly"],
-    },
-  },
-  {
-    id: "oral-care",
-    title: "Oral Care",
-    image: "/layanan/Oral Care.png",
-    intro:
-      "Oral care includes routine check-ups, professional cleaning, and personalized guidance to keep your teeth and gums healthy.",
-    paragraphs: [
-      "Preventive care is the most effective way to reduce cavities, gum disease, and bad breath.",
-      "We tailor recommendations based on your oral condition and lifestyle.",
-    ],
-    steps: [
-      "Oral examination and plaque/tartar assessment.",
-      "Professional scaling/polishing for a cleaner, fresher mouth.",
-      "Home care plan: brushing technique, flossing, and recommended products.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "dental-bridges",
-    title: "Dental Bridges",
-    image: "/layanan/Dental Bridges.png",
-    intro:
-      "Dental bridges replace one or more missing teeth by anchoring an artificial tooth to neighboring teeth or implants.",
-    paragraphs: [
-      "A well-made bridge restores chewing, speech, and aesthetics while preventing teeth from shifting.",
-      "We design bridges that look natural and feel comfortable.",
-    ],
-    steps: [
-      "Assessment and bridge design selection.",
-      "Tooth preparation and impressions.",
-      "Try-in and final cementation with bite refinement.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "bone-grafting",
-    title: "Bone Grafting",
-    image: "/layanan/Bone Grafting.png",
-    intro:
-      "Bone grafting adds or regenerates bone in the jaw to support implants or improve long-term stability.",
-    paragraphs: [
-      "When bone volume is insufficient, grafting helps create a stronger foundation for future treatments.",
-      "The procedure is planned carefully with imaging and healing time consideration.",
-    ],
-    steps: [
-      "Assessment of bone volume and treatment planning.",
-      "Bone graft placement with appropriate materials.",
-      "Healing period and re-evaluation before implants or restoration.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "dental-spa",
-    title: "Dental Spa",
-    image: "/layanan/Dental Spa.png",
-    intro:
-      "Dental spa services combine professional oral care with a calm, comfortable experience—focused on relaxation and wellness.",
-    paragraphs: [
-      "Ideal for patients who want a more soothing dental visit with comfort-first care.",
-      "We prioritize gentle techniques and a relaxing environment.",
-    ],
-    steps: [
-      "Personalized consultation to understand comfort preferences.",
-      "Professional cleaning and supportive care.",
-      "Optional add-ons depending on availability (whitening, polish, etc.).",
-    ],
-    generalDentists,
-  },
-  {
-    id: "veneers",
-    title: "Veneers",
-    image: "/layanan/Veneers.png",
-    intro:
-      "Veneers are thin shells placed on the front surface of teeth to improve shape, color, and overall smile aesthetics.",
-    paragraphs: [
-      "They can help address stains, gaps, chips, and mild misalignment while maintaining a natural look.",
-      "We aim for a balanced, harmonious result tailored to your facial features.",
-    ],
-    steps: [
-      "Smile design consultation and shade selection.",
-      "Minimal tooth preparation and impression.",
-      "Veneer placement and final polishing.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Cosmetic Dentist:",
-      names: ["Yulita Dora"],
-    },
-  },
-  {
-    id: "invisalign",
-    title: "Invisalign",
-    image: "/layanan/Invisalign.png",
-    intro:
-      "Invisalign uses clear aligners to straighten teeth with a discreet, comfortable approach.",
-    paragraphs: [
-      "Aligners are custom-made and replaced periodically to gradually move teeth into the planned position.",
-      "It’s suitable for many mild-to-moderate alignment cases.",
-    ],
-    steps: [
-      "Digital scan and treatment simulation.",
-      "Aligner fitting and wear schedule guidance.",
-      "Regular check-ins and refinement until completion.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Orthodontic Team:",
-      names: ["Della Sparringa"],
-    },
-  },
-  {
-    id: "orthodontics",
-    title: "Orthodontics",
-    image: "/layanan/Orthodontics.png",
-    intro:
-      "Orthodontics corrects tooth alignment and bite problems to improve function, comfort, and aesthetics.",
-    paragraphs: [
-      "Treatment options may include braces or clear aligners, depending on your case.",
-      "A proper bite helps reduce excessive wear and supports better oral hygiene.",
-    ],
-    steps: [
-      "Assessment of bite, spacing, and jaw relationship.",
-      "Treatment plan selection (braces/aligners) and timeline estimate.",
-      "Periodic adjustments and retention planning.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Orthodontic Team:",
-      names: ["Della Sparringa"],
-    },
-  },
-  {
-    id: "dental-fillings-inlays-onlays",
-    title: "Dental Fillings, Inlays & Onlays",
-    image: "/layanan/Dental Fillings, Inlays & Onlays.png",
-    intro:
-      "Fillings, inlays, and onlays restore teeth damaged by decay or fractures while preserving healthy tooth structure.",
-    paragraphs: [
-      "Direct fillings are typically completed in one visit, while inlays/onlays are custom restorations for larger cavities.",
-      "We focus on precise fit, strong bite, and natural appearance.",
-    ],
-    steps: [
-      "Removal of decay and tooth preparation.",
-      "Placement of filling or impression for an inlay/onlay.",
-      "Final fitting, bonding, and bite adjustment.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "gum-ablation",
-    title: "Gum Ablation",
-    image: "/layanan/Gum Ablation.png",
-    intro:
-      "Gum ablation is a procedure to remove or contour gum tissue for improved gum health or smile aesthetics.",
-    paragraphs: [
-      "It can help address excessive gum tissue, irregular gum lines, or certain gum conditions.",
-      "We use careful techniques for a clean contour and comfortable healing.",
-    ],
-    steps: [
-      "Evaluation of gum line and tissue condition.",
-      "Precise ablation/contouring under local anesthesia.",
-      "Healing guidance and follow-up checks.",
-    ],
-    generalDentists,
-    specialistSection: {
-      label: "Our Periodontal Team:",
-      names: ["Pramodanti Jiwanakusuma, Sp.KG"],
-    },
-  },
-  {
-    id: "lip-repositioning",
-    title: "Lip Repositioning",
-    image: "/layanan/Lip Repositioning.png",
-    intro:
-      "Lip repositioning is a procedure aimed at reducing excessive gum display by limiting upper lip movement when smiling.",
-    paragraphs: [
-      "It may be an option for certain gummy smile cases based on facial and lip anatomy.",
-      "A thorough evaluation is needed to determine the best approach.",
-    ],
-    steps: [
-      "Smile analysis and candidacy evaluation.",
-      "Minor surgical repositioning under local anesthesia.",
-      "Post-procedure care and monitoring.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "crown-lengthening",
-    title: "Crown lengthening",
-    image: "/layanan/Crown lengthening.png",
-    intro:
-      "Crown lengthening reshapes gum and sometimes bone tissue to expose more of the tooth structure.",
-    paragraphs: [
-      "It can be performed for restorative needs (to place a crown) or cosmetic improvements.",
-      "We focus on balanced gum contours and predictable healing.",
-    ],
-    steps: [
-      "Assessment and planning based on gum/tooth proportions.",
-      "Reshaping of gum tissue (and bone if required).",
-      "Healing period and final restoration planning.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "gummy-smile-correction",
-    title: "Gummy Smile Correction",
-    image: "/layanan/Gummy Smile Correction.png",
-    intro:
-      "Gummy smile correction improves smile proportions by reducing excessive gum display.",
-    paragraphs: [
-      "The right approach depends on the cause—gum tissue, tooth size, lip movement, or jaw factors.",
-      "We customize treatment options to suit your facial structure and expectations.",
-    ],
-    steps: [
-      "Diagnosis to identify the cause of gummy smile.",
-      "Treatment plan selection (contouring, crown lengthening, lip repositioning, etc.).",
-      "Follow-up and maintenance to preserve results.",
-    ],
-    generalDentists,
-  },
-  {
-    id: "frenectomy",
-    title: "Frenectomy",
-    image: "/layanan/Frenectomy.png",
-    intro:
-      "Frenectomy is a minor procedure to release a tight frenum (tissue band) that may affect speech, gum health, or tooth spacing.",
-    paragraphs: [
-      "It can be indicated for lip-tie or tongue-tie cases after proper evaluation.",
-      "The procedure is quick and typically has a smooth recovery.",
-    ],
-    steps: [
-      "Evaluation of frenum attachment and functional impact.",
-      "Release procedure under local anesthesia.",
-      "Post-care guidance and healing follow-up.",
-    ],
-    generalDentists,
-  },
-];
+import {
+  MessageCircle,
+  ArrowRight,
+  X,
+  QrCode,
+  ShieldCheck,
+  Banknote,
+  Info,
+  Calendar,
+  Search,
+  Sparkles,
+  Clock,
+  Tag,
+} from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
+import {
+  fetchPublicServices,
+  defaultServices,
+  type ServiceDetail,
+} from "../services/servicesService";
 
 export default function ServicesPage() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("Semua");
+
+  // Dynamic Services with LocalStorage Cache-First Strategy
+  const [servicesList, setServicesList] = useState<ServiceDetail[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_public_cached_services");
+      return cached ? JSON.parse(cached) : defaultServices;
+    } catch {
+      return defaultServices;
+    }
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchPublicServices().then((data) => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setServicesList(data);
+        try {
+          localStorage.setItem("apig_public_cached_services", JSON.stringify(data));
+        } catch {}
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Categories extracted dynamically
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    servicesList.forEach((s) => {
+      if (s.category) set.add(s.category);
+    });
+    return ["Semua", ...Array.from(set)];
+  }, [servicesList]);
+
+  // Filtered services
+  const filteredServices = useMemo(() => {
+    return servicesList.filter((s) => {
+      const matchCat = activeCategory === "Semua" || s.category === activeCategory;
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        s.title.toLowerCase().includes(q) ||
+        s.intro.toLowerCase().includes(q) ||
+        (s.category && s.category.toLowerCase().includes(q));
+      return matchCat && matchSearch;
+    });
+  }, [servicesList, activeCategory, searchQuery]);
 
   const selectedService = useMemo(() => {
     if (!selectedServiceId) return null;
-    return services.find((s) => s.id === selectedServiceId) ?? null;
-  }, [selectedServiceId]);
+    return servicesList.find((s) => s.id === selectedServiceId || String(s.rawId) === selectedServiceId) ?? null;
+  }, [selectedServiceId, servicesList]);
 
   const openService = (serviceId: string) => {
     setSelectedServiceId(serviceId);
     setOpen(true);
   };
 
+  const handleBookingRedirect = (serviceTitle: string) => {
+    setOpen(false);
+    navigate(`/booking/new?service=${encodeURIComponent(serviceTitle)}`);
+  };
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#FCFAF7] text-[#3D332A]">
       <Header />
       <main className="pb-24 lg:pb-0">
         {/* Hero Section */}
-        <section className="relative py-14 sm:py-20 bg-gradient-to-br from-brand-cream via-background to-brand-gold-light/30 overflow-hidden">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-brand-charcoal mb-5 sm:mb-6">
+        <section className="relative py-14 sm:py-20 bg-gradient-to-br from-[#F8F3EA] via-white to-[#F5ECE0] overflow-hidden border-b border-[#EADBBD]/40">
+          <div className="max-w-4xl mx-auto text-center px-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#FAF4E8] rounded-full text-xs font-bold text-[#8A6B2B] border border-[#E8D4A2]/60 mb-4 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#C9A24A]" />
+              Katalog Layanan & Tindakan Medis Terlengkap
+            </div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#3D332A] mb-5 tracking-tight">
               Layanan Dental
-              <span className="text-gradient-gold"> Premium</span>
+              <span className="text-[#C9A24A]"> Premium</span>
             </h1>
-            <p className="text-base sm:text-lg text-brand-warm-gray font-body leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg text-[#7A6E60] font-body leading-relaxed max-w-2xl mx-auto">
               Kami menyediakan berbagai layanan dental komprehensif dengan teknologi terkini 
               dan dokter spesialis berpengalaman untuk memenuhi semua kebutuhan perawatan gigi Anda.
             </p>
           </div>
         </section>
 
-        {/* Services Grid */}
-        <section className="py-16 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {services.map((service) => (
-                <Card
-                  key={service.id}
-                  className="border-border shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-shadow overflow-hidden"
-                >
-                  <div className="flex flex-row h-full">
-                    {/* Square Image on Left */}
-                    <div className="w-28 sm:w-32 flex-shrink-0 bg-brand-cream">
-                      <img
-                        src={service.image}
-                        alt={service.title}
-                        className="h-full w-full object-cover aspect-square"
-                        loading="lazy"
-                      />
-                    </div>
-                    {/* Content on Right */}
-                    <div className="flex flex-col justify-between p-3 flex-1 min-w-0">
-                      <div>
-                        <h3 className="text-sm font-bold text-brand-charcoal leading-tight line-clamp-2 mb-1">
-                          {service.title}
-                        </h3>
-                        <p className="text-xs text-brand-warm-gray font-body leading-relaxed line-clamp-2">
-                          {service.intro}
-                        </p>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="px-0 py-0 h-auto text-brand-gold hover:bg-transparent hover:text-brand-gold font-semibold font-body text-xs mt-2 w-fit"
-                        onClick={() => openService(service.id)}
-                      >
-                        Selengkapnya
-                        <ArrowRight className="w-3 h-3 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+        {/* Filter & Search Bar Section */}
+        <section className="py-6 bg-white border-b border-[#F0E6D3] sticky top-0 z-20 shadow-xs backdrop-blur-md bg-white/95">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              {/* Category Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
+                {categories.map((cat) => {
+                  const isActive = activeCategory === cat;
+                  return (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setActiveCategory(cat)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-[#C9A24A] text-white shadow-xs"
+                          : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Search Box */}
+              <div className="relative w-full md:w-72 shrink-0">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91]" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari perawatan gigi..."
+                  className="w-full h-10 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-9 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+                />
+              </div>
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-14 sm:py-20 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="relative bg-brand-gold-light rounded-[2.5rem] p-8 md:p-16 overflow-hidden">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full translate-x-1/2 -translate-y-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-gold/5 rounded-full -translate-x-1/2 translate-y-1/2"></div>
+        {/* Services Grid */}
+        <section className="py-12 bg-[#FCFAF7]">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-xs sm:text-sm font-semibold text-[#8A7B6B]">
+                Menampilkan <strong className="text-[#3D332A]">{filteredServices.length}</strong> layanan perawatan gigi
+              </p>
+              {activeCategory !== "Semua" && (
+                <button
+                  onClick={() => setActiveCategory("Semua")}
+                  className="text-xs font-semibold text-[#C9A24A] hover:underline"
+                >
+                  Reset Filter
+                </button>
+              )}
+            </div>
 
+            {filteredServices.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-[#F0E6D3] max-w-lg mx-auto space-y-3">
+                <Info className="w-10 h-10 text-[#C9A24A] mx-auto opacity-40" />
+                <h4 className="text-base font-bold text-[#3D332A]">Layanan Tidak Ditemukan</h4>
+                <p className="text-xs text-[#8A7B6B]">
+                  Tidak ada layanan perawatan gigi yang sesuai dengan pencarian atau filter Anda.
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setActiveCategory("Semua");
+                  }}
+                  className="bg-[#FAF4E8] text-[#8A6B2B] hover:bg-[#F5E6C8] rounded-xl text-xs font-semibold"
+                >
+                  Tampilkan Semua Layanan
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredServices.map((service) => (
+                  <Card
+                    key={service.id}
+                    className="border border-[#F0E6D3] bg-white rounded-3xl overflow-hidden shadow-xs hover:shadow-md hover:border-[#C9A24A]/60 transition-all duration-300 flex flex-col group"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-[#FAF4E8]">
+                      <img
+                        src={service.image}
+                        alt={service.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png";
+                        }}
+                      />
+                      {service.category && (
+                        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#8A6B2B] border border-[#E8D4A2]/50 shadow-xs flex items-center gap-1">
+                          <Tag className="w-2.5 h-2.5 text-[#C9A24A]" />
+                          {service.category}
+                        </div>
+                      )}
+                      {service.price && (
+                        <div className="absolute bottom-3 right-3 bg-[#3D332A]/85 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-white shadow-xs">
+                          {service.price}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        <h3 className="text-base font-bold text-[#3D332A] group-hover:text-[#8A6B2B] transition-colors leading-snug line-clamp-1">
+                          {service.title}
+                        </h3>
+                        <p className="text-xs text-[#7A6E60] font-body leading-relaxed line-clamp-2 mt-1.5">
+                          {service.intro}
+                        </p>
+                      </div>
+
+                      <div className="pt-3 border-t border-[#F5ECE0] flex items-center justify-between gap-2">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="px-0 py-0 h-auto text-[#8A6B2B] hover:bg-transparent hover:text-[#70541C] font-bold text-xs gap-1 cursor-pointer"
+                          onClick={() => openService(service.id)}
+                        >
+                          Selengkapnya
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
+
+                        <Link
+                          to={`/booking/new?service=${encodeURIComponent(service.title)}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A24A] hover:bg-[#B8943F] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                        >
+                          <Calendar className="w-3.5 h-3.5" />
+                          Booking
+                        </Link>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Payment Methods Section */}
+        <section className="py-14 sm:py-20 bg-white border-t border-[#F0E6D3]">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="relative bg-gradient-to-br from-[#FAF5EC] via-[#F6EDE0] to-[#EFE2CE] rounded-[2.5rem] p-8 md:p-14 overflow-hidden border border-[#EADBBD] shadow-xs">
               <div className="relative z-10 max-w-4xl mx-auto">
-                <div className="text-center mb-12">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal mb-4">
+                <div className="text-center mb-10">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/80 rounded-full text-xs font-bold text-[#8A6B2B] border border-[#EADBBD] mb-3">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#C9A24A]" />
+                    Kemudahan Pembayaran di Klinik
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#3D332A] mb-3">
                     Metode Pembayaran Klinik
                   </h2>
-                  <p className="text-brand-warm-gray max-w-2xl mx-auto font-body">
-                    Kami mendukung berbagai pilihan pembayaran untuk memudahkan transaksi Anda di Aesthetic Pondok Indah.
+                  <p className="text-xs sm:text-sm text-[#7A6E60] max-w-2xl mx-auto font-body leading-relaxed">
+                    Kami mendukung berbagai pilihan pembayaran resmi untuk memudahkan transaksi perawatan Anda di Aesthetic Pondok Indah Dental Clinic.
                   </p>
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-3 mb-12">
+                <div className="grid gap-5 md:grid-cols-3 mb-10">
                   {/* Digital & Card */}
-                  <div className="bg-background/60 backdrop-blur-sm p-6 rounded-3xl border border-brand-gold/10">
-                    <div className="w-12 h-12 bg-brand-gold/10 rounded-2xl flex items-center justify-center mb-4">
-                      <QrCode className="w-6 h-6 text-brand-gold" />
+                  <div className="bg-white/90 backdrop-blur-xs p-6 rounded-3xl border border-[#EADBBD] shadow-xs">
+                    <div className="w-11 h-11 bg-[#FAF4E8] rounded-2xl flex items-center justify-center mb-4 border border-[#E8D4A2]/50">
+                      <QrCode className="w-5 h-5 text-[#8A6B2B]" />
                     </div>
-                    <h3 className="font-bold text-brand-charcoal mb-3">Digital & Kartu</h3>
-                    <ul className="space-y-2 text-sm text-brand-warm-gray font-body">
+                    <h3 className="font-bold text-[#3D332A] text-sm mb-2">Digital & Kartu</h3>
+                    <ul className="space-y-1.5 text-xs text-[#7A6E60] font-body">
                       <li className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0" />
-                        <span>QRIS (GoPay, OVO, Dana, LinkAja)</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
+                        <span>QRIS (GoPay, OVO, Dana, ShopeePay)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0" />
-                        <span>Kartu Debit/Kredit (Visa, Mastercard, GPN)</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
+                        <span>Kartu Debit & Kredit (Visa, Mastercard, GPN)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
                         <span>Transfer Bank / Virtual Account</span>
                       </li>
                     </ul>
                   </div>
 
                   {/* Insurance & Health */}
-                  <div className="bg-background/60 backdrop-blur-sm p-6 rounded-3xl border border-brand-gold/10">
-                    <div className="w-12 h-12 bg-brand-gold/10 rounded-2xl flex items-center justify-center mb-4">
-                      <ShieldCheck className="w-6 h-6 text-brand-gold" />
+                  <div className="bg-white/90 backdrop-blur-xs p-6 rounded-3xl border border-[#EADBBD] shadow-xs">
+                    <div className="w-11 h-11 bg-[#FAF4E8] rounded-2xl flex items-center justify-center mb-4 border border-[#E8D4A2]/50">
+                      <ShieldCheck className="w-5 h-5 text-[#8A6B2B]" />
                     </div>
-                    <h3 className="font-bold text-brand-charcoal mb-3">Asuransi & Jaminan</h3>
-                    <ul className="space-y-2 text-sm text-brand-warm-gray font-body">
+                    <h3 className="font-bold text-[#3D332A] text-sm mb-2">Asuransi & Jaminan</h3>
+                    <ul className="space-y-1.5 text-xs text-[#7A6E60] font-body">
                       <li className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
                         <span>BPJS Kesehatan (JKN-KIS Mitra)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0" />
-                        <span>Asuransi Swasta (Cashless/Reimbursement)</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
+                        <span>Asuransi Swasta (Cashless & Reimbursement)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
                         <span>Kerjasama Perusahaan</span>
                       </li>
                     </ul>
                   </div>
 
                   {/* Cash */}
-                  <div className="bg-background/60 backdrop-blur-sm p-6 rounded-3xl border border-brand-gold/10">
-                    <div className="w-12 h-12 bg-brand-gold/10 rounded-2xl flex items-center justify-center mb-4">
-                      <Banknote className="w-6 h-6 text-brand-gold" />
+                  <div className="bg-white/90 backdrop-blur-xs p-6 rounded-3xl border border-[#EADBBD] shadow-xs">
+                    <div className="w-11 h-11 bg-[#FAF4E8] rounded-2xl flex items-center justify-center mb-4 border border-[#E8D4A2]/50">
+                      <Banknote className="w-5 h-5 text-[#8A6B2B]" />
                     </div>
-                    <h3 className="font-bold text-brand-charcoal mb-3">Pembayaran Tunai</h3>
-                    <ul className="space-y-2 text-sm text-brand-warm-gray font-body">
+                    <h3 className="font-bold text-[#3D332A] text-sm mb-2">Pembayaran Tunai</h3>
+                    <ul className="space-y-1.5 text-xs text-[#7A6E60] font-body">
                       <li className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0" />
-                        <span>Pembayaran tunai langsung di kasir klinik (Rupiah)</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
+                        <span>Pembayaran tunai langsung di kasir klinik</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] mt-1.5 shrink-0" />
+                        <span>Kuitansi & struk resmi berstempel</span>
                       </li>
                     </ul>
                   </div>
                 </div>
 
-                <div className="bg-brand-gold/5 rounded-2xl p-4 mb-12 flex items-start gap-3 border border-brand-gold/10">
-                  <Info className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
-                  <p className="text-xs sm:text-sm text-brand-warm-gray font-body leading-relaxed">
-                    <strong>Tips:</strong> Untuk beberapa tindakan medis tertentu, kami mungkin memerlukan DP (Down Payment). Silakan tanyakan detailnya saat melakukan konsultasi.
+                <div className="bg-white/80 rounded-2xl p-4 mb-8 flex items-start gap-3 border border-[#EADBBD]">
+                  <Info className="w-5 h-5 text-[#C9A24A] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[#7A6E60] font-body leading-relaxed">
+                    <strong>Catatan Kasir:</strong> Untuk tindakan bedah mulut dan implan tertentu, penjadwalan dapat dikonfirmasi terlebih dahulu melalui reservasi online. Pembayaran dilakukan saat kedatangan di klinik.
                   </p>
                 </div>
 
-                <div className="text-center">
+                <div className="text-center flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link to="/booking/new">
+                    <Button size="lg" className="bg-[#C9A24A] hover:bg-[#B8943F] text-white font-bold px-8 rounded-2xl shadow-md h-12 text-sm">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Buat Janji Temu (Guest Booking)
+                    </Button>
+                  </Link>
                   <a 
                     href={`https://wa.me/6281990114949?text=${encodeURIComponent(
-                      "Halo Admin Aesthetic Pondok Indah, saya ingin konsultasi mengenai layanan klinik dan cek informasi mengenai metode pembayaran (Asuransi/Cashless). Bisa dibantu untuk jadwalnya?"
+                      "Halo Admin Aesthetic Pondok Indah, saya ingin bertanya seputar layanan dan jadwal konsultasi klinik."
                     )}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
-                    <Button size="lg" className="bg-background text-brand-gold hover:bg-brand-cream font-semibold px-8 rounded-xl shadow-xl h-14 text-base font-body border-2 border-brand-gold/20">
-                      <MessageCircle className="w-5 h-5 mr-2" />
-                      Konsultasi & Cek Pembayaran
+                    <Button size="lg" variant="outline" className="bg-white text-[#8A6B2B] hover:bg-[#FAF8F5] border-[#EADBBD] font-bold px-6 rounded-2xl h-12 text-sm">
+                      <MessageCircle className="w-4 h-4 mr-2 text-[#25D366]" />
+                      Konsultasi WhatsApp
                     </Button>
                   </a>
                 </div>
@@ -615,6 +375,7 @@ export default function ServicesPage() {
           </div>
         </section>
 
+        {/* Service Detail Modal */}
         <Dialog
           open={open}
           onOpenChange={(nextOpen) => {
@@ -622,104 +383,130 @@ export default function ServicesPage() {
             if (!nextOpen) setSelectedServiceId(null);
           }}
         >
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-6xl p-0 max-h-[calc(100vh-2rem)] overflow-y-auto lg:overflow-hidden rounded-[2.5rem]">
-          {selectedService && (
-            <div className="grid lg:grid-cols-2">
-              <div className="relative bg-brand-cream aspect-square sm:aspect-video lg:aspect-auto">
-                <img
-                  src={selectedService.image}
-                  alt={selectedService.title}
-                  className="h-full w-full object-cover"
-                />
-                <DialogPrimitive.Close asChild>
-                  <button
-                    type="button"
-                    className="absolute top-4 right-4 w-8 h-8 bg-black/10 hover:bg-black/20 rounded-full flex items-center justify-center text-brand-charcoal transition-colors z-20"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </DialogPrimitive.Close>
-              </div>
-
-              <div className="p-6 sm:p-10 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-brand-cream rounded-full mb-5">
-                  <span className="text-xs font-semibold text-brand-gold font-body">Aesthetic Pondok Indah</span>
+          <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-4xl p-0 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-[2.5rem] bg-white border border-[#EADBBD] shadow-2xl">
+            {selectedService && (
+              <div className="grid lg:grid-cols-2">
+                {/* Left Side: Image & Meta */}
+                <div className="relative bg-[#FAF4E8] aspect-square sm:aspect-video lg:aspect-auto">
+                  <img
+                    src={selectedService.image}
+                    alt={selectedService.title}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png";
+                    }}
+                  />
+                  <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+                    {selectedService.category && (
+                      <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-[#8A6B2B] border border-[#E8D4A2]/60 shadow-xs">
+                        {selectedService.category}
+                      </span>
+                    )}
+                  </div>
+                  <DialogPrimitive.Close asChild>
+                    <button
+                      type="button"
+                      className="absolute top-4 right-4 w-8 h-8 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-colors z-20 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </DialogPrimitive.Close>
                 </div>
 
-                <DialogTitle asChild>
-                  <h3 className="text-2xl sm:text-3xl font-bold text-brand-gold">
-                    {selectedService.title}
-                  </h3>
-                </DialogTitle>
-
-                <div className="h-px bg-brand-gold/25 my-6" />
-
-                <div className="space-y-4">
-                  <p className="text-sm text-brand-charcoal font-body leading-relaxed font-semibold">
-                    {selectedService.intro}
-                  </p>
-                  {selectedService.paragraphs.map((p) => (
-                    <p key={p} className="text-sm text-brand-warm-gray font-body leading-relaxed">
-                      {p}
-                    </p>
-                  ))}
-
-                  <div className="pt-2">
-                    <h4 className="text-sm font-bold text-brand-charcoal font-body">
-                      The treatment involves:
-                    </h4>
-                    <ol className="list-decimal pl-5 mt-3 space-y-2 text-sm text-brand-warm-gray font-body">
-                      {selectedService.steps.map((step) => (
-                        <li key={step}>{step}</li>
-                      ))}
-                    </ol>
-                  </div>
-
-                  <div className="pt-4">
-                    <h4 className="text-sm font-bold text-brand-gold font-body">Our General Dentist :</h4>
-                    <ul className="list-disc pl-5 mt-3 space-y-1 text-sm text-brand-warm-gray font-body">
-                      {selectedService.generalDentists.map((name) => (
-                        <li key={name}>{name}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {selectedService.specialistSection && (
-                    <div className="pt-4">
-                      <h4 className="text-sm font-bold text-brand-gold font-body">
-                        {selectedService.specialistSection.label}
-                      </h4>
-                      <ul className="list-disc pl-5 mt-3 space-y-1 text-sm text-brand-warm-gray font-body">
-                        {selectedService.specialistSection.names.map((name) => (
-                          <li key={name}>{name}</li>
-                        ))}
-                      </ul>
+                {/* Right Side: Information & Action */}
+                <div className="p-6 sm:p-8 flex flex-col justify-between space-y-5">
+                  <div className="space-y-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#FAF4E8] rounded-full">
+                      <Sparkles className="w-3.5 h-3.5 text-[#C9A24A]" />
+                      <span className="text-xs font-bold text-[#8A6B2B]">Aesthetic Pondok Indah Dental Clinic</span>
                     </div>
-                  )}
 
-                  <div className="pt-8 flex flex-col sm:flex-row gap-4 sticky bottom-0 bg-background pb-4 mt-auto">
-                    <Link to="/services" className="flex-1">
+                    <DialogTitle asChild>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-[#3D332A] tracking-tight">
+                        {selectedService.title}
+                      </h3>
+                    </DialogTitle>
+
+                    {/* Price & Duration Badges */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {selectedService.price && (
+                        <span className="px-3 py-1 bg-[#FAF4E8] rounded-xl text-xs font-bold text-[#8A6B2B] border border-[#E8D4A2]/50">
+                          {selectedService.price}
+                        </span>
+                      )}
+                      {selectedService.duration && (
+                        <span className="px-3 py-1 bg-[#F5ECE0] rounded-xl text-xs font-semibold text-[#7A6E60] flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-[#B8943F]" />
+                          {selectedService.duration}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="h-px bg-[#F0E6D3] my-4" />
+
+                    <div className="space-y-3 text-xs text-[#5C5245] font-body leading-relaxed">
+                      <p className="font-semibold text-[#3D332A]">
+                        {selectedService.intro}
+                      </p>
+                      {selectedService.paragraphs.map((p, idx) => (
+                        <p key={idx}>{p}</p>
+                      ))}
+
+                      {selectedService.steps.length > 0 && (
+                        <div className="pt-2">
+                          <h4 className="text-xs font-bold text-[#3D332A] uppercase tracking-wider text-[#B8943F]">
+                            Tahapan Prosedur Medis:
+                          </h4>
+                          <ol className="list-decimal pl-4 mt-2 space-y-1 text-xs text-[#6B6053]">
+                            {selectedService.steps.map((step, idx) => (
+                              <li key={idx}>{step}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+
+                      {selectedService.generalDentists.length > 0 && (
+                        <div className="pt-2">
+                          <h4 className="text-xs font-bold text-[#3D332A]">Dokter Penanggung Jawab:</h4>
+                          <p className="text-xs text-[#8A7B6B] mt-1">
+                            {selectedService.generalDentists.slice(0, 4).join(", ")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Booking Action Buttons */}
+                  <div className="pt-6 border-t border-[#F0E6D3] flex flex-col sm:flex-row gap-3">
+                    <Button
+                      onClick={() => handleBookingRedirect(selectedService.title)}
+                      className="flex-1 h-12 bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Booking Layanan Ini (Guest)
+                    </Button>
+                    <a
+                      href={`https://wa.me/6281990114949?text=${encodeURIComponent(
+                        `Halo Aesthetic Pondok Indah, saya ingin reservasi untuk layanan ${selectedService.title}.`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0"
+                    >
                       <Button
+                        type="button"
                         variant="outline"
-                        className="w-full h-12 border-brand-gold/30 text-brand-gold hover:bg-brand-gold-light rounded-2xl font-semibold"
+                        className="h-12 px-4 rounded-2xl border-[#E8DFC8] text-[#8A6B2B] hover:bg-[#FAF8F5] text-xs font-bold flex items-center gap-1.5"
                       >
-                        Lihat Semua Layanan
-                      </Button>
-                    </Link>
-                    <a href="https://wa.me/6281990114949" target="_blank" rel="noopener noreferrer" className="flex-1">
-                      <Button
-                        className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white rounded-2xl font-semibold shadow-lg shadow-brand-gold/20"
-                      >
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Booking Sekarang
+                        <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                        Tanya Admin
                       </Button>
                     </a>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </DialogContent>
+            )}
+          </DialogContent>
         </Dialog>
       </main>
       <Footer />

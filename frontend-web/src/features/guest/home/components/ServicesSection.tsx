@@ -6,21 +6,12 @@ import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog";
 import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
 import { logger } from "@/core/utils/logger";
 
-type ServiceSpecialistSection = {
-  label: string;
-  names: string[];
-};
-
-type ServiceDetail = {
-  id: string;
-  title: string;
-  image: string;
-  intro: string;
-  paragraphs: string[];
-  steps: string[];
-  generalDentists: string[];
-  specialistSection?: ServiceSpecialistSection;
-};
+import {
+  fetchPublicServices,
+  defaultServices,
+  type ServiceDetail,
+  type ServiceSpecialistSection,
+} from "@/features/guest/services/services/servicesService";
 
 type PromoItem = {
   id: number;
@@ -451,6 +442,31 @@ export default function ServicesSection() {
   const [promos, setPromos] = useState<PromoItem[]>([]);
   const [loadingPromos, setLoadingPromos] = useState(false);
 
+  // Dynamic Services with LocalStorage Cache
+  const [servicesList, setServicesList] = useState<ServiceDetail[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_public_cached_services");
+      return cached ? JSON.parse(cached) : defaultServices;
+    } catch {
+      return defaultServices;
+    }
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchPublicServices().then((data) => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        setServicesList(data);
+        try {
+          localStorage.setItem("apig_public_cached_services", JSON.stringify(data));
+        } catch {}
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Fetch promos on mount
   useEffect(() => {
     const fetchPromos = async () => {
@@ -483,8 +499,8 @@ export default function ServicesSection() {
 
   const selectedService = useMemo(() => {
     if (!selectedServiceId) return null;
-    return services.find((s) => s.id === selectedServiceId) ?? null;
-  }, [selectedServiceId]);
+    return servicesList.find((s) => s.id === selectedServiceId || String(s.rawId) === selectedServiceId) ?? null;
+  }, [selectedServiceId, servicesList]);
 
   const scrollByCards = (direction: "prev" | "next") => {
     const el = sliderRef.current;
@@ -545,7 +561,7 @@ export default function ServicesSection() {
               ref={sliderRef}
               className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-              {services.map((service) => (
+              {servicesList.map((service) => (
                 <div
                   key={service.id}
                   data-service-card
@@ -747,19 +763,23 @@ export default function ServicesSection() {
                     <Link to="/services" className="flex-1">
                       <Button
                         variant="outline"
-                        className="w-full h-12 border-brand-gold/30 text-brand-gold hover:bg-brand-gold-light rounded-2xl font-semibold"
+                        className="w-full h-12 border-brand-gold/30 text-brand-gold hover:bg-brand-gold-light rounded-2xl font-semibold text-xs sm:text-sm"
                       >
                         Lihat Semua Layanan
                       </Button>
                     </Link>
-                    <a href="https://wa.me/6281990114949" target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <Link
+                      to={`/booking/new?service=${encodeURIComponent(selectedService.title)}`}
+                      className="flex-1"
+                      onClick={() => setModalOpen(false)}
+                    >
                       <Button
-                        className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white rounded-2xl font-semibold shadow-lg shadow-brand-gold/20"
+                        className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white rounded-2xl font-semibold shadow-lg shadow-brand-gold/20 flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer"
                       >
-                        <MessageCircle className="w-4 h-4 mr-2" />
+                        <Calendar className="w-4 h-4" />
                         Booking Sekarang
                       </Button>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>

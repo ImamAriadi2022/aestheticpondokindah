@@ -7,7 +7,11 @@ export type ServiceSpecialistSection = {
 
 export type ServiceDetail = {
   id: string;
+  rawId?: number | string;
   title: string;
+  category?: string;
+  price?: string;
+  duration?: string;
   image: string;
   intro: string;
   paragraphs: string[];
@@ -429,21 +433,48 @@ export const services = defaultServices;
 
 export async function fetchPublicServices(): Promise<ServiceDetail[]> {
   try {
-    const data = await apiClient.get<any[]>("/public/services");
-    if (Array.isArray(data) && data.length > 0) {
-      return data.map((d) => ({
-        id: d.slug || String(d.id),
-        title: d.title,
-        image: d.image || "/layanan/Dental Whitening.png",
-        intro: d.intro,
-        paragraphs: Array.isArray(d.paragraphs) ? d.paragraphs : [],
-        steps: Array.isArray(d.steps) ? d.steps : [],
-        generalDentists: Array.isArray(d.general_dentists) ? d.general_dentists : generalDentists,
-        specialistSection: d.specialist_names && d.specialist_names.length > 0 ? {
-          label: d.specialist_label || "Spesialis Kami:",
-          names: d.specialist_names,
-        } : undefined,
-      }));
+    const res = await apiClient.get<any>("/public/services");
+    const list = Array.isArray(res) ? res : res?.data || res?.services || [];
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map((d: any) => {
+        let img = d.image || d.image_url || d.image_path || "/layanan/Dental Whitening.png";
+        if (img && !img.startsWith("http") && !img.startsWith("/")) {
+          img = `/${img}`;
+        }
+
+        const priceText = d.price ? `Rp ${Number(d.price).toLocaleString("id-ID")}` : (d.price_formatted || "Konsultasi Dokter");
+        const durationText = d.duration || "45 - 60 Menit";
+        const cat = d.category || "Perawatan Gigi";
+
+        return {
+          id: d.slug || String(d.id),
+          rawId: d.id,
+          title: d.title || d.name,
+          category: cat,
+          price: priceText,
+          duration: durationText,
+          image: img,
+          intro: d.intro || d.short_desc || d.description || "Layanan perawatan dental komprehensif di Aesthetic Pondok Indah.",
+          paragraphs: Array.isArray(d.paragraphs) && d.paragraphs.length > 0
+            ? d.paragraphs
+            : [
+                d.description || `Perawatan ${d.title || d.name} dilakukan dengan standar sterilisasi dan teknologi dental modern.`,
+                "Didukung oleh tim dokter gigi spesialis berpengalaman untuk memastikan kenyamanan dan hasil senyum optimal.",
+              ],
+          steps: Array.isArray(d.steps) && d.steps.length > 0
+            ? d.steps
+            : [
+                "Pemeriksaan dan konsultasi diagnosis klinis awal bersama dokter.",
+                "Tindakan perawatan gigi sesuai prosedur medis standar.",
+                "Pemberian instruksi pasca tindakan dan kontrol berkala.",
+              ],
+          generalDentists: Array.isArray(d.general_dentists) && d.general_dentists.length > 0 ? d.general_dentists : generalDentists,
+          specialistSection: d.specialist_names && d.specialist_names.length > 0 ? {
+            label: d.specialist_label || "Dokter Spesialis Kami:",
+            names: d.specialist_names,
+          } : undefined,
+        };
+      });
     }
   } catch {
     // Fallback to default
