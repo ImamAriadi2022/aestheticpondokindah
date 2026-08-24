@@ -1,5 +1,98 @@
 [
     {
+        "id": "act-261",
+        "date": "2026-08-24",
+        "time": "16:36",
+        "category": "Performance, UX & Error Toast Suppression",
+        "type": "Bugfix & Instant State Optimization",
+        "feature": "Eliminasi Pop-up Toast 'Gagal Memuat' & Caching Instan pada Dashboard Pasien",
+        "description": "1) Mengintegrasikan getCachedConsultationList() pada inisialisasi state UserDashboardNew.tsx sehingga daftar konsultasi pasien langsung tampil 0ms seketika tanpa jeda kosong, 2) Menghilangkan pemicu toast error agresif saat pemuatan background konsultasi dan pengaduan, 3) Mengaktifkan silent background sync (silent: true) dan real-time auto-polling 5 detik pada tab konsultasi pasien, 4) Memverifikasi build frontend 100% sukses tanpa kendala.",
+        "notes": "1. 0ms Initial Render: Pasien membuka tab 'Daftar Konsultasi' langsung melihat daftar percakapan aktif dari cache lokal tanpa layar kosong.\n2. No More Red Toast Spam: Pop-up 'GAGAL MEMUAT: Tidak bisa memuat riwayat konsultasi' telah dihapus sepenuhnya.\n3. Silent Real-time Sync: Polling 5s berjalan tenang di latar belakang dan memperbarui status konsultasi secara otomatis.\n4. Verified Build: `npm run build` berhasil 100% (`✓ built in 24.19s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi komplain pengguna mengenai loading lama dan munculnya notifikasi toast 'Gagal Memuat' yang mengganggu di dashboard pasien.",
+        "files": [
+            "frontend-web/src/features/patient/dashboard/pages/UserDashboardNew.tsx",
+            "frontend-web/src/features/patient/consultation/services/consultationApi.ts",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-260",
+        "date": "2026-08-24",
+        "time": "16:31",
+        "category": "Admin UI/UX & In-Dashboard Chat Layout",
+        "type": "UI/UX Redesign & Standardization",
+        "feature": "Standardisasi UI Chat Admin Menjadi Tampilan Penuh Halaman (Non-Popup)",
+        "description": "1) Mengganti modal/pop-up chat pada Dashboard Admin menjadi tampilan halaman penuh di dalam dashboard (AdminConsultationChatView.tsx) persis seperti UX chat pada sisi pasien, 2) Menambahkan header elegan lengkap dengan tombol kembali (ArrowLeft), badge status dinamis, dan tombol penutupan sesi ('Akhiri Konsultasi'), 3) Menyajikan panel 2 kolom: ringkasan asesmen keluhan pasien di sisi kiri dan ruang chat interaktif 2 arah real-time di sisi kanan, 4) Mempertahankan performa caching 0ms dan optimistic messaging, 5) Memverifikasi build frontend 100% sukses tanpa kendala.",
+        "notes": "1. In-Page Seamless Transition: Admin mengklik 'Buka Chat' langsung berpindah ke tampilan chat di halaman utama tanpa jendela pop-up/modal.\n2. Unified UI/UX: Layout chat Admin kini 100% konsisten dan harmonis dengan layout chat Pasien.\n3. Integrated Navigation: Tombol kembali di pojok kiri atas mengembalikan Admin ke tabel konsultasi secara instan.\n4. Zero Breaking Change: Seluruh fungsi chat real-time, caching, dan status sync tetap berjalan normal.\n5. Verified Build: `npm run build` berhasil 100% (`✓ built in 30.23s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna agar tampilan chat pada sisi admin tidak berupa pop-up melainkan sama persis seperti UI chat pada pengguna/pasien.",
+        "files": [
+            "frontend-web/src/features/admin/consultation/components/AdminConsultationChatView.tsx",
+            "frontend-web/src/features/admin/consultation/pages/ConsultationPage.tsx",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-259",
+        "date": "2026-08-24",
+        "time": "16:24",
+        "category": "Performance & Real-time Memory Management",
+        "type": "Optimization & High-Speed Chat Caching",
+        "feature": "Optimasi State Caching LocalStorage (0ms Load Chat) & Supresi Timeout Polling",
+        "description": "1) Mengimplementasikan arsitektur Stale-While-Revalidate dengan local cache storage (consultationCache.ts) sehingga chat yang pernah dibuka langsung terbuka 0ms secara instan tanpa menunggu loading spinner, 2) Mengaktifkan Optimistic UI Update pada pengiriman pesan Admin & Pasien untuk feedback pengiriman instan, 3) Mengaktifkan silent background sync (skipToast: true) pada seluruh interval polling sehingga tidak memunculkan popup timeout spam di layar, 4) Membatasi background polling hanya saat tab browser aktif (document.visibilityState === 'visible') guna meminimalisir beban request ke server, 5) Memverifikasi build frontend 100% sukses tanpa kendala.",
+        "notes": "1. Instant 0ms Chat Rendering: Chat yang pernah dibuka langsung muncul dari cache lokal seketika tanpa jeda.\n2. Silent Polling: Polling berkala 4 detik berjalan di latar belakang secara hening tanpa menampilkan popup toast error jika terjadi jeda jaringan.\n3. Optimistic Messaging: Pesan yang diketik langsung muncul di stream percakapan secara instan sebelum network round-trip selesai.\n4. Server Load Optimization: Polling dijeda otomatis jika user berpindah tab browser.\n5. Verified Build: `npm run build` berhasil 100% (`✓ built in 29.25s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk menghilangkan notifikasi timeout dan mempercepat loading chat melalui manajemen memori & state caching di localstorage.",
+        "files": [
+            "frontend-web/src/features/patient/consultation/services/consultationCache.ts",
+            "frontend-web/src/features/patient/consultation/services/consultationApi.ts",
+            "frontend-web/src/features/admin/consultation/components/AdminConsultationChatModal.tsx",
+            "frontend-web/src/features/patient/consultation/pages/PatientConsultationChatPage.tsx",
+            "frontend-web/src/features/admin/consultation/pages/ConsultationPage.tsx",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
+        "id": "act-258",
+        "date": "2026-08-24",
+        "time": "16:06",
+        "category": "Konsultasi Medis Online (Patient <-> Admin Flow)",
+        "type": "Feature Audit & Complete Real-time Interaction",
+        "feature": "Audit & Implementasi Penuh Flow Konsultasi Pasien ↔ Admin Klinik Real-time",
+        "description": "1) Menstandarkan 2 aktor utama konsultasi (Pasien/User Login & Admin Klinik) dan menghapus keterlibatan dokter dari modul konsultasi, 2) Menyempurnakan form konsultasi bertahap 3 langkah: Keluhan Utama -> Skala Nyeri 0-10 -> Uraian Detail Keluhan -> Submit berstatus 'Menunggu', 3) Mengintegrasikan modal chat real-time interaktif di Dashboard Admin (AdminConsultationChatModal) dengan auto-accept (Menunggu -> Dibuka), asesmen ringkasan keluhan pasien, auto-poll real-time 3.5s, shortcut rekomendasi booking dokter, dan aksi penutupan konsultasi ('Selesai'), 4) Menyempurnakan ruang chat pasien (PatientConsultationChatPage) dengan status dinamis (Menunggu, Dibuka, Selesai), asesmen keluhan, aksi akhiri konsultasi, dan callout rekomendasi booking dokter, 5) Menghapus kolom 'Dokter Penanggung Jawab' dari tabel konsultasi admin, 6) Menambahkan endpoint dan kontroler penutupan sesi konsultasi di sisi backend Laravel (/api/user/consultations/{id}/close).",
+        "notes": "1. 2-Actor Model: Modul konsultasi murni merupakan asesmen awal antara Pasien dan Admin Klinik.\n2. 3-State Lifecycle: Menunggu (Waiting) -> Dibuka (In-progress) -> Selesai (Closed/Archived).\n3. Live Two-Way Chat: Admin dan Pasien dapat berbalas pesan secara real-time dengan auto-refresh 3.5s.\n4. Separation of Concern: Konsultasi tidak tercampur dengan booking, namun Admin dapat mengirimkan rekomendasi rujukan booking dokter secara instan.\n5. Verified Build: `npm run build` berhasil 100% tanpa error (`✓ built in 34.10s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi seluruh spesifikasi flow audit konsultasi yang diminta pengguna sesuai panduan 14 poin flow konsultasi.",
+        "files": [
+            "frontend-web/src/features/admin/consultation/components/AdminConsultationChatModal.tsx",
+            "frontend-web/src/features/admin/consultation/components/ConsultationTable.tsx",
+            "frontend-web/src/features/admin/consultation/pages/ConsultationPage.tsx",
+            "frontend-web/src/features/patient/consultation/pages/PatientConsultationChatPage.tsx",
+            "frontend-web/src/features/patient/consultation/components/DesktopKonsultasi.tsx",
+            "app/Http/Controllers/Api/Patient/Consultation/ConsultationController.php",
+            "app/Models/Shared/Consultation/Consultation.php",
+            "routes/api.php",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-257",
         "date": "2026-08-24",
         "time": "15:45",

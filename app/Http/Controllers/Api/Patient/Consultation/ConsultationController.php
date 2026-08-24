@@ -129,6 +129,20 @@ class ConsultationController extends Controller
         return response()->json(['read' => (int) $count]);
     }
 
+    public function close(Request $request, int|string $id): JsonResponse
+    {
+        $patient = $request->user();
+        $consultation = Consultation::find($id);
+
+        if (!$consultation || !$consultation->isParticipant($patient)) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke konsultasi ini.'], 403);
+        }
+
+        $consultation = $this->consultationService->complete($consultation);
+
+        return response()->json(['message' => 'Konsultasi selesai.', 'consultation' => ConsultationService::dto($consultation->load(['user']))]);
+    }
+
     public function meetings(Request $request, int|string $id): JsonResponse
     {
         $patient = $request->user();

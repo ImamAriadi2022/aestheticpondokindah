@@ -1,4 +1,3 @@
-import { API_BASE } from "@/core/api/apiConfig";
 import { apiClient } from "@/core/api/apiClient";
 import type {
   Consultation,
@@ -50,47 +49,24 @@ export interface CreateScheduledConsultationInput {
   doctorScheduleId?: number;
 }
 
-function getToken(): string | null {
-  return localStorage.getItem("apident:token");
-}
-
-function headers() {
-  const token = getToken();
-  return {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
-export async function getMyConsultations(): Promise<ConsultationItem[]> {
-  const res = await fetch(`${API_BASE}/user/consultations`, {
-    headers: headers(),
-  });
-  if (!res.ok) throw new Error("Gagal memuat konsultasi");
-  return res.json();
+export async function getMyConsultations(options?: { silent?: boolean }): Promise<ConsultationItem[]> {
+  const res = await apiClient.get<any>("/user/consultations", { skipToast: true, timeoutMs: 12000 });
+  return Array.isArray(res) ? res : res?.data || res?.consultations || [];
 }
 
 export async function createConsultation(
   input: CreateQuickConsultationInput | CreateScheduledConsultationInput
 ): Promise<ConsultationItem> {
-  const res = await fetch(`${API_BASE}/user/consultations`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify(input),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || "Gagal membuat konsultasi");
-  }
-  return res.json();
+  const res = await apiClient.post<ConsultationItem>("/user/consultations", input);
+  return (res as any)?.data || res;
 }
 
-export async function getMyConsultationDetail(id: string): Promise<Consultation> {
+export async function getMyConsultationDetail(id: string, options?: { silent?: boolean }): Promise<Consultation> {
   const res = await apiClient.get<{ consultation: Consultation }>(
-    `/user/consultations/${id}`
+    `/user/consultations/${id}`,
+    { skipToast: options?.silent ?? true, timeoutMs: 12000 }
   );
-  return res.consultation;
+  return res?.consultation || (res as any)?.data || (res as any);
 }
 
 export async function sendMyConsultationMessage(
@@ -99,21 +75,31 @@ export async function sendMyConsultationMessage(
 ): Promise<ConsultationMessage> {
   const res = await apiClient.post<{ message: ConsultationMessage }>(
     `/user/consultations/${id}/messages`,
-    { body }
+    { body },
+    { timeoutMs: 12000 }
   );
-  return res.message;
+  return res?.message || (res as any)?.data || (res as any);
 }
 
 export async function markMyConsultationRead(id: string): Promise<number> {
-  const res = await apiClient.post<{ read: number }>(`/user/consultations/${id}/read`);
-  return res.read ?? 0;
+  try {
+    const res = await apiClient.post<{ read: number }>(
+      `/user/consultations/${id}/read`,
+      {},
+      { skipToast: true, timeoutMs: 8000 }
+    );
+    return res?.read ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function getMyConsultationMeetings(id: string): Promise<ConsultationMeeting[]> {
   const res = await apiClient.get<{ meetings: ConsultationMeeting[] }>(
-    `/user/consultations/${id}/meetings`
+    `/user/consultations/${id}/meetings`,
+    { skipToast: true }
   );
-  return res.meetings;
+  return res?.meetings || [];
 }
 
 // Admin APIs
@@ -121,39 +107,40 @@ export async function getAllConsultations(params?: {
   search?: string;
   status?: string;
   type?: string;
-}): Promise<ConsultationItem[]> {
+}, options?: { silent?: boolean }): Promise<ConsultationItem[]> {
   const qs = new URLSearchParams();
   if (params?.search) qs.set("search", params.search);
   if (params?.status && params.status !== "Semua") qs.set("status", params.status);
   if (params?.type && params.type !== "Semua") qs.set("type", params.type);
 
-  const res = await fetch(`${API_BASE}/admin/consultations?${qs.toString()}`, {
-    headers: headers(),
-  });
-  if (!res.ok) throw new Error("Gagal memuat daftar konsultasi");
-  return res.json();
+  const url = `/admin/consultations${qs.toString() ? `?${qs.toString()}` : ""}`;
+  const res = await apiClient.get<any>(url, { skipToast: options?.silent ?? true, timeoutMs: 12000 });
+  return Array.isArray(res) ? res : res?.data || res?.consultations || [];
 }
 
-export async function getConsultationDetail(id: string): Promise<Consultation> {
+export async function getConsultationDetail(id: string, options?: { silent?: boolean }): Promise<Consultation> {
   const res = await apiClient.get<{ consultation: Consultation }>(
-    `/admin/consultations/${id}`
+    `/admin/consultations/${id}`,
+    { skipToast: options?.silent ?? true, timeoutMs: 12000 }
   );
-  return res.consultation;
+  return res?.consultation || (res as any)?.data || (res as any);
 }
 
 export async function getConsultationQueue(): Promise<ConsultationQueue> {
-  return apiClient.get<ConsultationQueue>("/admin/consultations/queue");
+  return apiClient.get<ConsultationQueue>("/admin/consultations/queue", { skipToast: true });
 }
 
 export async function getDoctorsAvailability(): Promise<DoctorAvailabilityItem[]> {
-  return apiClient.get<DoctorAvailabilityItem[]>("/admin/doctors-availability");
+  return apiClient.get<DoctorAvailabilityItem[]>("/admin/doctors-availability", { skipToast: true });
 }
 
 export async function acceptConsultation(id: string): Promise<Consultation> {
   const res = await apiClient.post<{ consultation: Consultation }>(
-    `/admin/consultations/${id}/accept`
+    `/admin/consultations/${id}/accept`,
+    {},
+    { skipToast: true, timeoutMs: 10000 }
   );
-  return res.consultation;
+  return res?.consultation || (res as any)?.data || (res as any);
 }
 
 export async function rejectConsultation(id: string, reason?: string): Promise<Consultation> {
@@ -161,7 +148,7 @@ export async function rejectConsultation(id: string, reason?: string): Promise<C
     `/admin/consultations/${id}/reject`,
     { reason }
   );
-  return res.consultation;
+  return res?.consultation || (res as any)?.data || (res as any);
 }
 
 export async function transferConsultation(
@@ -172,14 +159,16 @@ export async function transferConsultation(
     `/admin/consultations/${id}/transfer`,
     { doctorId }
   );
-  return res.consultation;
+  return res?.consultation || (res as any)?.data || (res as any);
 }
 
 export async function closeConsultation(id: string): Promise<Consultation> {
   const res = await apiClient.post<{ consultation: Consultation }>(
-    `/admin/consultations/${id}/close`
+    `/admin/consultations/${id}/close`,
+    {},
+    { timeoutMs: 12000 }
   );
-  return res.consultation;
+  return res?.consultation || (res as any)?.data || (res as any);
 }
 
 export async function sendAdminConsultationMessage(
@@ -188,36 +177,37 @@ export async function sendAdminConsultationMessage(
 ): Promise<ConsultationMessage> {
   const res = await apiClient.post<{ message: ConsultationMessage }>(
     `/admin/consultations/${id}/messages`,
-    { body }
+    { body },
+    { timeoutMs: 12000 }
   );
-  return res.message;
+  return res?.message || (res as any)?.data || (res as any);
 }
 
 export async function markAdminConsultationRead(id: string): Promise<number> {
-  const res = await apiClient.post<{ read: number }>(`/admin/consultations/${id}/read`);
-  return res.read ?? 0;
+  try {
+    const res = await apiClient.post<{ read: number }>(
+      `/admin/consultations/${id}/read`,
+      {},
+      { skipToast: true, timeoutMs: 8000 }
+    );
+    return res?.read ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
-// Doctor APIs (kept for reference / reuse)
+// Doctor APIs
 export async function getDoctorScheduledConsultations(): Promise<ConsultationItem[]> {
-  const res = await fetch(`${API_BASE}/doctor/consultations`, {
-    headers: headers(),
-  });
-  if (!res.ok) throw new Error("Gagal memuat daftar konsultasi");
-  return res.json();
+  const res = await apiClient.get<any>("/doctor/consultations", { skipToast: true });
+  return Array.isArray(res) ? res : res?.data || res?.consultations || [];
 }
 
 export async function updateConsultationStatus(
   id: string,
   status: ConsultationStatus
 ): Promise<ConsultationItem> {
-  const res = await fetch(`${API_BASE}/admin/consultations/${id}`, {
-    method: "PUT",
-    headers: headers(),
-    body: JSON.stringify({ status }),
-  });
-  if (!res.ok) throw new Error("Gagal memperbarui status");
-  return res.json();
+  const res = await apiClient.put<any>(`/admin/consultations/${id}`, { status });
+  return (res as any)?.data || res;
 }
 
 export type { ConsultationStatus, ConsultationType };

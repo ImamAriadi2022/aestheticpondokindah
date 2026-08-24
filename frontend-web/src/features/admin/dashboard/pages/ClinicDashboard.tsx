@@ -333,7 +333,7 @@ export default function ClinicDashboardPage() {
         );
 
       case "konsultasi":
-        return <ConsultationPage consultations={consultations} />;
+        return <ConsultationPage consultations={consultations} onRefresh={fetchConsultations} />;
 
       case "reservasi":
         return (

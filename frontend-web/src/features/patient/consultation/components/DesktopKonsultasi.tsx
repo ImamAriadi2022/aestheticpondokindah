@@ -31,7 +31,7 @@ const symptoms = [
   { id: "lainnya", label: "Lainnya", icon: Stethoscope, color: "bg-gray-100 text-gray-600" },
 ];
 
-const painLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const painLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 export default function DesktopKonsultasi() {
   const navigate = useNavigate();
@@ -254,7 +254,7 @@ export default function DesktopKonsultasi() {
                 Tingkat Nyeri
               </h3>
               <p className="text-sm text-gray-500">
-                Pada skala 1-10, seberapa parah rasa sakitnya?
+                Pada skala 0 - 10, seberapa parah rasa sakit yang Anda rasakan?
               </p>
             </div>
 

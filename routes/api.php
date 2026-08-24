@@ -278,6 +278,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/consultations/{id}', [UserConsultationController::class, 'show']);
     Route::post('/user/consultations/{id}/messages', [UserConsultationController::class, 'sendMessage']);
     Route::post('/user/consultations/{id}/read', [UserConsultationController::class, 'markRead']);
+    Route::post('/user/consultations/{id}/close', [UserConsultationController::class, 'close']);
     Route::get('/user/consultations/{id}/meetings', [UserConsultationController::class, 'meetings']);
 
     // Reservations (Patient)

@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { getSession, clearSession } from "@/core/auth/services/session";
 import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
 import { getMyConsultations } from "@/features/patient/consultation/services/consultationApi";
+import { getCachedConsultationList, setCachedConsultationList } from "@/features/patient/consultation/services/consultationCache";
 import { getMyComplaints } from "@/features/patient/consultation/services/complaintApi";
 import { getPublicDoctorSchedules } from "@/features/guest/doctors/services/publicDoctorScheduleApi";
 import { toast } from "@/shared/ui/toast";
@@ -49,31 +50,47 @@ export default function UserDashboardPage() {
   // Ambil session
   const session = getSession();
 
-  const [consultations, setConsultations] = useState<any[]>([]);
+  const [consultations, setConsultations] = useState<any[]>(() => getCachedConsultationList() || []);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [publicSchedules, setPublicSchedules] = useState<any[]>([]);
 
+  const fetchUserConsultations = useCallback((silent = true) => {
+    getMyConsultations({ silent: true })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setConsultations(data);
+          setCachedConsultationList(data);
+        }
+      })
+      .catch((err) => {
+        logger.warn("Gagal memuat konsultasi (silent fallback to cache)", err);
+      });
+  }, []);
+
   useEffect(() => {
     if (activeTab === "konsultasi" || activeTab === "dashboard" || activeTab === "riwayat") {
-      getMyConsultations()
-        .then((data) => setConsultations(data))
-        .catch((err) => {
-          logger.error("Gagal memuat konsultasi", err);
-          toast({ title: "Gagal memuat", message: "Tidak bisa memuat riwayat konsultasi." });
-        })
-        .finally(() => {});
+      fetchUserConsultations(true);
     }
 
     if (activeTab === "pengaduan" || activeTab === "dashboard") {
       getMyComplaints()
         .then((data) => setComplaints(data))
         .catch((err) => {
-          logger.error("Gagal memuat pengaduan", err);
-          toast({ title: "Gagal memuat", message: "Tidak bisa memuat riwayat pengaduan." });
-        })
-        .finally(() => {});
+          logger.warn("Gagal memuat pengaduan", err);
+        });
     }
-  }, [activeTab]);
+  }, [activeTab, fetchUserConsultations]);
+
+  // Real-time silent polling every 5s on consultation tab
+  useEffect(() => {
+    if (activeTab !== "konsultasi") return;
+    const timer = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchUserConsultations(true);
+      }
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [activeTab, fetchUserConsultations]);
 
   useEffect(() => {
     getPublicDoctorSchedules()

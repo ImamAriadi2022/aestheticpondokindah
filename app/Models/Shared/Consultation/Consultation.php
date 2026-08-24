@@ -138,7 +138,7 @@ class Consultation extends Model
      */
     public function isParticipant(User $user): bool
     {
-        if ($user->role === 'clinic_admin') {
+        if (in_array($user->role, ['clinic_admin', 'clinic', 'admin'], true)) {
             return true;
         }
 
