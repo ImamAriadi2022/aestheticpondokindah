@@ -455,9 +455,17 @@ export default function NewBookingFlow({
   const [activeTicket, setActiveTicket] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // History Bookings
-  const [bookingsHistory, setBookingsHistory] = useState<any[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  // History Bookings with 0ms Instant Cache Render
+  const [bookingsHistory, setBookingsHistory] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_user_cached_bookings");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const hasCachedBookings = bookingsHistory.length > 0;
+  const [historyLoading, setHistoryLoading] = useState<boolean>(!hasCachedBookings);
 
   // 1. Fetch Services from Backend
   const fetchServices = async () => {
@@ -655,13 +663,15 @@ export default function NewBookingFlow({
         });
 
         setBookingsHistory(formatted);
+        try {
+          localStorage.setItem("apig_user_cached_bookings", JSON.stringify(formatted));
+        } catch {}
       } else {
-        setBookingsHistory([]);
+        if (!hasCachedBookings) setBookingsHistory([]);
       }
     } catch (err) {
       if (!silent) {
         console.warn("Failed to fetch user reservations from backend:", err);
-        setBookingsHistory([]);
       }
     } finally {
       isFetchingBookingsRef.current = false;
@@ -670,22 +680,27 @@ export default function NewBookingFlow({
   };
 
   useEffect(() => {
-    // 1. Initial database fetch on load (Once, connected directly to MySQL via REST API)
+    // 1. Initial database fetch on load with Cache-First strategy
     fetchServices();
     fetchDoctors();
     fetchBranches();
     fetchDoctorSchedules();
     fetchPatientProfile();
-    fetchBookings(false);
+    fetchBookings(hasCachedBookings);
 
-    // 2. Event-Driven Trigger: Refetch data only when a push notification or status trigger occurs (No continuous polling)
+    // 2. Realtime Background Silent Polling every 6 seconds
+    const pollInterval = setInterval(() => {
+      fetchBookings(true);
+    }, 6000);
+
+    // 3. Event-Driven Trigger: Refetch data when push notifications occur
     const unsubscribe = subscribeToPushNotifications((payload) => {
       if (payload.type === "reservation_confirmed" || payload.type === "reservation_new" || payload.bookingCode) {
         fetchBookings(true);
       }
     });
 
-    // 3. Window focus / visibility change trigger (Re-verify if user returns after notification click)
+    // 4. Window focus / visibility change trigger
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         fetchBookings(true);
@@ -694,10 +709,11 @@ export default function NewBookingFlow({
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      clearInterval(pollInterval);
       unsubscribe();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [hasCachedBookings]);
 
   // Dynamic categories extracted from servicesList
   const categories = useMemo(() => {

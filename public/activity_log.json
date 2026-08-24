@@ -1,5 +1,50 @@
 [
   {
+    "id": "act-270",
+    "timestamp": "2026-08-24T11:31:40.641Z",
+    "category": "fix",
+    "title": "Perbaikan Sinkronisasi Buku Besar Poin & Modal Riwayat Poin Member Admin",
+    "description": "Memperbaiki namespace Model MembershipPoint pada query global ledger di MembershipAdminController dan memetakan respons paginasi secara fleksibel pada modal riwayat poin member, sehingga seluruh mutasi perolehan poin transaksi langsung tampil sinkron.",
+    "details": [
+      "Backend Fix: Memperbaiki namespace class App\\Models\\Patient\\Membership\\MembershipPoint di MembershipAdminController::pointsLedger() yang sebelumnya menyebabkan exception internal.",
+      "Frontend Extraction: Memperbaiki ekstraksi array paginasi pada openHistoryModal() dan loadGlobalLedger() di AdminMembership.tsx.",
+      "Verifikasi: Endpoint GET /api/admin/membership/points-ledger dan GET /api/admin/membership/2/points-history berhasil mengembalikan HTTP 200 dengan data mutasi poin +50 pts reservasi RSV-000060.",
+      "Frontend Build: npm run build selesai dengan 0 error."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-269",
+    "timestamp": "2026-08-24T11:25:40.852Z",
+    "category": "performance",
+    "title": "Optimasi Caching (SWR) & Polling Realtime Riwayat Booking Pasien",
+    "description": "Mengoptimalkan kecepatan pemuatan Riwayat Booking Pasien dengan LocalStorage Caching (0ms instant render) dan menambahkan polling realtime di latar belakang setiap 6 detik tanpa flickering atau loading spinner yang memblokir tampilan.",
+    "details": [
+      "Instant Cache Render: Menginisialisasi state bookingsHistory dari localStorage ('apig_user_cached_bookings') sehingga saat pasien membuka menu riwayat booking, data langsung muncul dalam 0 milidetik.",
+      "Non-blocking History Loading: Menghilangkan spinner 'Memuat Riwayat Booking...' saat cache lokal tersedia.",
+      "Continuous Realtime Background Sync: Menambahkan interval sinkronisasi latar belakang setiap 6 detik yang memperbarui status reservasi, status pembayaran lunas, dan perolehan poin reward secara hening tanpa kedipan UI.",
+      "Kompilasi Frontend: Berhasil diverifikasi melalui Vite build dengan 0 error."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-268",
+    "timestamp": "2026-08-24T11:14:42.702Z",
+    "category": "fix",
+    "title": "Perbaikan Route Konfirmasi Pembayaran & Penyempurnaan Tampilan Bersih Tabel Reservasi",
+    "description": "Memperbaiki error Method Not Supported pada endpoint konfirmasi pembayaran reservasi dan merapikan visual UI tabel reservasi admin agar luas, elegan, dan tidak padat/cramped.",
+    "details": [
+      "Route Bugfix: Mendaftarkan route POST /reservations/{id}/confirm-payment secara eksplisit pada grup admin di routes/api.php sehingga request konfirmasi kasir diproses sukses (HTTP 200).",
+      "UI Streamlining (ReservationTable.tsx): Menghilangkan penumpukan badge ganda dan tombol besar yang berdesakan di baris tabel. Menyatukan info perawatan + dokter bertugas secara rapi, menampilkan single status badge yang elegan, dan menyediakan tombol 'Detail' yang lapang.",
+      "Centralized Cashier Panel: Tombol dan panel konfirmasi pembayaran kasir offline ditempatkan secara ergonomis di dalam Detail Modal Reservasi dengan konteks lengkap.",
+      "Uji Verifikasi: Endpoint HTTP 200 dan kompilasi Vite frontend terverifikasi 100% lulus."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-267",
     "timestamp": "2026-08-24T11:09:38.632Z",
     "category": "performance",

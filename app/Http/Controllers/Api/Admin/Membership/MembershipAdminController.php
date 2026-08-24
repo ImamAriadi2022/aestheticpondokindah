@@ -570,7 +570,7 @@ class MembershipAdminController extends Controller
      */
     public function pointsLedger(Request $request): JsonResponse
     {
-        $query = \AppModelsPatientMembershipMembershipPoint::with(['user:id,name,email,whatsapp', 'admin:id,name'])->latest();
+        $query = \App\Models\Patient\Membership\MembershipPoint::with(['user:id,name,email,whatsapp', 'admin:id,name'])->latest();
 
         if ($request->has('type') && $request->input('type') !== 'all') {
             $query->where('type', $request->input('type'));

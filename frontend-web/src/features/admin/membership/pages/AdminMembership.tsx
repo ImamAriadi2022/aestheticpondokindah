@@ -264,10 +264,12 @@ export default function AdminMembershipPage() {
   const loadGlobalLedger = async () => {
     setLoadingLedger(true);
     try {
-      const res = await apiClient.get<{ data: { data: PointLedgerItem[] } }>("/admin/membership/points-ledger", { skipToast: true });
-      if (Array.isArray(res?.data?.data)) {
-        setLedgerItems(res.data.data);
-        try { localStorage.setItem("apig_admin_cached_point_ledger", JSON.stringify(res.data.data)); } catch {}
+      const res = await apiClient.get<any>("/admin/membership/points-ledger", { skipToast: true });
+      const rawData = res?.data;
+      const list = Array.isArray(rawData) ? rawData : (rawData?.data || []);
+      if (Array.isArray(list)) {
+        setLedgerItems(list);
+        try { localStorage.setItem("apig_admin_cached_point_ledger", JSON.stringify(list)); } catch {}
       }
     } catch {} finally {
       setLoadingLedger(false);
@@ -391,8 +393,10 @@ export default function AdminMembershipPage() {
     setHistoryMember(member);
     setLoadingMemberHistory(true);
     try {
-      const response = await apiClient.get<{ data: { data: PointLedgerItem[] } }>(`/admin/membership/${member.id}/points-history`);
-      setMemberHistoryItems(response?.data?.data || []);
+      const response = await apiClient.get<any>(`/admin/membership/${member.id}/points-history`);
+      const rawData = response?.data;
+      const list = Array.isArray(rawData) ? rawData : (rawData?.data || []);
+      setMemberHistoryItems(list);
     } catch {
       toast({ title: "Gagal Memuat Riwayat", message: "Tidak dapat mengambil riwayat poin member.", variant: "error" });
     } finally {
