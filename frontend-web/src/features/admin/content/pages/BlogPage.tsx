@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import BlogEditorPanel from "../components/BlogEditorPanel";
 import { Button } from "@/shared/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { Plus, Edit2, Trash2, FileText, Eye, Tag } from "lucide-react";
+import { Plus, Edit2, Trash2, FileText, Eye, Tag, Search, Image as ImageIcon } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
-import { API_BASE } from "@/core/api/apiConfig";
+import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
 
 type Props = {
   searchParams: URLSearchParams;
@@ -15,12 +15,16 @@ type Props = {
   fetchApiPosts: () => Promise<void>;
 };
 
-export default function BlogPage({ searchParams, setSearchParams, apiPosts, token, sessionName, fetchApiPosts }: Props) {
+export default function BlogPage({ searchParams, setSearchParams, apiPosts = [], token, sessionName, fetchApiPosts }: Props) {
   const contentView = searchParams.get("view") || "posts";
   const editorId = searchParams.get("id");
-  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterStatus, setFilterStatus] = useState<"All" | "Published" | "Draft">("All");
   const [filterCategory, setFilterCategory] = useState("Semua");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetchApiPosts();
+  }, []);
 
   if (contentView === "editor") {
     const currentPost = editorId ? apiPosts.find((p) => String(p.id) === editorId) : undefined;
@@ -55,18 +59,32 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts, toke
 
   const isPublishedPost = (status?: string) => (!status ? true : status.toLowerCase() === "published");
 
-  const filtered = apiPosts
-    .filter((p) => (filterStatus === "All" ? true : filterStatus === "Published" ? isPublishedPost(p.status) : !isPublishedPost(p.status)))
-    .filter((p) => (filterCategory === "Semua" ? true : p.category === filterCategory))
-    .filter((p) => {
-      const q = search.trim().toLowerCase();
-      if (!q) return true;
-      return (
-        (p.title || "").toLowerCase().includes(q) ||
-        (p.slug || "").toLowerCase().includes(q) ||
-        (p.category || "").toLowerCase().includes(q)
-      );
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    apiPosts.forEach((p) => {
+      if (p.category) set.add(p.category);
     });
+    return ["Semua", ...Array.from(set)];
+  }, [apiPosts]);
+
+  const filtered = useMemo(() => {
+    return apiPosts
+      .filter((p) => {
+        if (filterStatus === "Published") return isPublishedPost(p.status);
+        if (filterStatus === "Draft") return !isPublishedPost(p.status);
+        return true;
+      })
+      .filter((p) => (filterCategory === "Semua" ? true : p.category === filterCategory))
+      .filter((p) => {
+        const q = search.trim().toLowerCase();
+        if (!q) return true;
+        return (
+          (p.title || "").toLowerCase().includes(q) ||
+          (p.slug || "").toLowerCase().includes(q) ||
+          (p.category || "").toLowerCase().includes(q)
+        );
+      });
+  }, [apiPosts, filterStatus, filterCategory, search]);
 
   const publishedCount = apiPosts.filter((p) => isPublishedPost(p.status)).length;
   const draftCount = apiPosts.filter((p) => !isPublishedPost(p.status)).length;
@@ -90,13 +108,14 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts, toke
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Artikel Blog</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">Kelola artikel edukasi gigi dan estetika untuk pengunjung web.</p>
+          <p className="text-sm text-[#8A7B6B] mt-1">Kelola publikasi edukasi kesehatan gigi dan konten informasi klinik.</p>
         </div>
         <Button
-          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white font-semibold rounded-xl"
+          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
           onClick={() => {
             setSearchParams((prev: any) => {
               const next = new URLSearchParams(prev);
@@ -112,6 +131,7 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts, toke
         </Button>
       </div>
 
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
@@ -130,7 +150,10 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts, toke
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Dipublikasikan</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{publishedCount}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-2xl font-bold text-[#4A3F35]">{publishedCount}</p>
+            {draftCount > 0 && <span className="text-xs text-[#8A7B6B]">({draftCount} draft)</span>}
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
@@ -144,10 +167,54 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts, toke
         </div>
       </div>
 
+      {/* Filter & Search Bar */}
+      <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
+          {(["All", "Published", "Draft"] as const).map((st) => (
+            <button
+              key={st}
+              type="button"
+              onClick={() => setFilterStatus(st)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                filterStatus === st
+                  ? "bg-[#C9A24A] text-white shadow-xs"
+                  : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
+              }`}
+            >
+              {st === "All" ? "Semua Status" : st === "Published" ? "Dipublikasikan" : "Draft"}
+            </button>
+          ))}
+          {categories.length > 2 && (
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="h-8 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] px-2.5 text-xs text-[#4A3F35] font-semibold"
+            >
+              {categories.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div className="relative w-full md:w-64 shrink-0">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A89F91]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Cari artikel..."
+            className="w-full h-8.5 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-8.5 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+          />
+        </div>
+      </div>
+
+      {/* Table */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">
+              <TableHead className="w-14">Cover</TableHead>
               <TableHead>Judul Artikel</TableHead>
               <TableHead>Kategori</TableHead>
               <TableHead>Status</TableHead>
@@ -157,20 +224,34 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts, toke
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-xs text-[#8A7B6B]">
+                <TableCell colSpan={5} className="text-center py-8 text-xs text-[#8A7B6B]">
                   Tidak ada artikel ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow key={item.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                   <TableCell>
-                    <p className="text-xs font-bold text-[#4A3F35]">{item.title}</p>
-                    <p className="text-[10px] text-[#8A7B6B]">{item.slug}</p>
+                    {item.cover_image_url || item.cover_image_path ? (
+                      <img
+                        src={getStorageUrl(item.cover_image_url || item.cover_image_path) || item.cover_image_url}
+                        alt=""
+                        className="w-10 h-10 rounded-lg object-cover border border-[#F0E6D3]"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png"; }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-[#FDF8F0] flex items-center justify-center text-[#B8943F] border border-[#F0E6D3]">
+                        <ImageIcon className="w-4 h-4" />
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-xs font-bold text-[#4A3F35] leading-snug">{item.title}</p>
+                    <p className="text-[10px] text-[#8A7B6B] mt-0.5">{item.slug}</p>
                   </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF8F5] text-[#4A3F35] border border-[#F0E6D3]">
-                      {item.category || "Informasi"}
+                      {item.category || "Edukasi Gigi"}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -191,11 +272,16 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts, toke
                           return next;
                         });
                       }}
-                      className="h-8 w-8 p-0 text-[#B8943F]"
+                      className="h-8 w-8 p-0 text-[#B8943F] hover:bg-[#FAF4E8] cursor-pointer"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => handleDelete(item.id)} className="h-8 w-8 p-0 text-red-600">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(item.id)}
+                      className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 cursor-pointer"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>

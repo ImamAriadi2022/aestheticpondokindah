@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
 import {
@@ -32,6 +32,10 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [previewItem, setPreviewItem] = useState<any | null>(null);
+
+  useEffect(() => {
+    fetchApiPopups();
+  }, []);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -146,6 +150,10 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
       payload.append("enabled", formData.enabled ? "1" : "0");
       if (formData.imageFile) {
         payload.append("image", formData.imageFile);
+      }
+
+      if (selectedPopup) {
+        payload.append("_method", "PUT");
       }
 
       const url = selectedPopup

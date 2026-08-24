@@ -1,5 +1,37 @@
 [
   {
+    "id": "act-273",
+    "timestamp": "2026-08-24T17:21:05.503Z",
+    "category": "fix",
+    "title": "Perbaikan Fetching Data & Multi-Fallback Resilient Manajemen Konten Admin",
+    "description": "Memperbaiki konektivitas API pada seluruh fitur konten Admin (Blog, Promo, Pop Up, Galeri, Testimoni, Download Mobile) dengan beralih ke apiClient terpusat, menambahkan penanganan multi-layer fallback ke endpoint publik jika token otorisasi terputus, mengintegrasikan auto-fetch on mount di setiap komponen page, dan menginisialisasi default records pada tabel download_apps.",
+    "details": [
+      "Resilient apiClient Integration: Mengganti raw fetch pada contentService.ts dengan apiClient yang otomatis menyuntikkan token dari storage dan menangani header otorisasi secara konsisten.",
+      "Dual-Layer Fallback: Jika endpoint admin gagal atau token tidak tersinkron, sistem otomatis memanggil endpoint publik (/posts, /promos, /gallery-items, /testimonials, /download-apps) agar data database selalu tampil.",
+      "Auto-Fetch on Mount: Menambahkan useEffect pada BlogPage, PromoPage, GalleryPage, TestimonialsPage, DownloadAppPage, dan PopupPage untuk memastikan refresh data instan begitu halaman dibuka.",
+      "Default Download Apps: Mengisi 2 record aplikasi mobile (Android APK & iOS) pada database.",
+      "Build Verification: Terverifikasi lulus build Vite dalam 25 detik tanpa error."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-272",
+    "timestamp": "2026-08-24T16:38:24.081Z",
+    "category": "performance",
+    "title": "Optimasi State Management & SWR Caching Manajemen Konten Admin (Blog, Promo, Pop Up, Galeri, Testimoni, Download Mobile)",
+    "description": "Menerapkan arsitektur caching lokal (SWR cache-first) dan state management terpadu untuk 6 modul Manajemen Konten Admin (Blog, Promo, Pop Up, Galeri, Testimoni, Daftar Aplikasi Mobile), memperbaiki sinkronisasi status aktif/non-aktif promo, menambahkan tombol toggle status instan, filter kategori/platform/rating, search bar, dan kartu statistik ringkasan.",
+    "details": [
+      "Instant 0ms Initial Load: Seluruh 6 tab konten admin menginisialisasi state dari localStorage cache (apig_admin_cached_*) sehingga perpindahan tab terjadi seketika tanpa layar kosong atau loading spinner lambat.",
+      "Background Auto-Sync: ClinicDashboard dan orderService secara otomatis memperbarui data terbaru dari backend API secara asinkron di latar belakang dan menyimpan pembaharuan ke cache lokal.",
+      "Bugfix Promo Status: Memperbaiki ketidakcocokan field antara frontend ('enabled') dan backend ('is_active') pada model Promo sehingga status aktif/non-aktif tersinkronisasi 100% dengan database.",
+      "Interactive UI Enhancements: Menambahkan tombol Quick Status Toggle (Aktif/Non-aktif) langsung pada tabel untuk Promo dan Daftar Aplikasi Mobile, filter kategori/status/rating, search bar respon instan, serta ringkasan kartu statistik di setiap modul.",
+      "Build Verification: Terverifikasi lulus 100% melalui Vite build tanpa error."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-271",
     "timestamp": "2026-08-24T13:20:19.480Z",
     "category": "feature",

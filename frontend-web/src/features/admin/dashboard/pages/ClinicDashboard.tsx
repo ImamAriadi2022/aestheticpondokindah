@@ -39,6 +39,17 @@ import { getAdminDoctorSchedules } from "@/features/admin/doctors/services/admin
 import { getAllComplaints } from "@/features/patient/consultation/services/complaintApi";
 import { getAnalyticsSummary, type AnalyticsSummaryResponse } from "@/core/api/analyticsApi";
 
+import {
+  CACHE_KEYS,
+  getAdminCache,
+  fetchAdminPosts,
+  fetchAdminPopups,
+  fetchAdminGallery,
+  fetchAdminTestimonials,
+  fetchAdminPromos,
+  fetchAdminDownloadApps,
+} from "@/features/admin/content/services/contentService";
+
 export default function ClinicDashboardPage() {
   const session = getSession();
   const navigate = useNavigate();
@@ -58,17 +69,17 @@ export default function ClinicDashboardPage() {
     }
   }, [token, session, navigate]);
 
-  // Data States
+  // Data States with Instant Cache
   const summary = useMemo(() => getSummaryForRole((session?.role || "clinic") as any), [session?.role]);
   const [users, setUsers] = useState<any[]>([]);
   const [apiDoctors, setApiDoctors] = useState<any[]>([]);
   const [doctorSchedules, setDoctorSchedules] = useState<any[]>([]);
-  const [apiPosts, setApiPosts] = useState<any[]>([]);
-  const [apiPopups, setApiPopups] = useState<any[]>([]);
-  const [apiGalleryItems, setApiGalleryItems] = useState<any[]>([]);
-  const [apiTestimonials, setApiTestimonials] = useState<any[]>([]);
-  const [apiPromos, setApiPromos] = useState<any[]>([]);
-  const [apiDownloadApps, setApiDownloadApps] = useState<any[]>([]);
+  const [apiPosts, setApiPosts] = useState<any[]>(() => getAdminCache(CACHE_KEYS.POSTS));
+  const [apiPopups, setApiPopups] = useState<any[]>(() => getAdminCache(CACHE_KEYS.POPUPS));
+  const [apiGalleryItems, setApiGalleryItems] = useState<any[]>(() => getAdminCache(CACHE_KEYS.GALLERY));
+  const [apiTestimonials, setApiTestimonials] = useState<any[]>(() => getAdminCache(CACHE_KEYS.TESTIMONIALS));
+  const [apiPromos, setApiPromos] = useState<any[]>(() => getAdminCache(CACHE_KEYS.PROMOS));
+  const [apiDownloadApps, setApiDownloadApps] = useState<any[]>(() => getAdminCache(CACHE_KEYS.DOWNLOAD_APPS));
   const { reservations, refresh: refreshReservations } = useRealtimeReservations();
   const [branches, setBranches] = useState<any[]>([]);
   const [complaints, setComplaints] = useState<any[]>([]);
@@ -102,7 +113,7 @@ export default function ClinicDashboardPage() {
     } catch (e) { logger.error("Gagal memuat pengguna", e); }
   };
 
-    const fetchApiDoctors = async () => {
+  const fetchApiDoctors = async () => {
     try {
       const res: any = await apiClient.get("/admin/doctors", { skipToast: true });
       const list = Array.isArray(res) ? res : res?.doctors || res?.data || [];
@@ -133,61 +144,43 @@ export default function ClinicDashboardPage() {
 
   const fetchApiPosts = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/posts`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setApiPosts(Array.isArray(data) ? data : data?.data || []);
-      }
+      const list = await fetchAdminPosts(token);
+      setApiPosts(list);
     } catch (e) { logger.error("Gagal memuat artikel", e); }
   };
 
   const fetchApiPopups = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/popups`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setApiPopups(Array.isArray(data) ? data : data?.data || []);
-      }
+      const list = await fetchAdminPopups(token);
+      setApiPopups(list);
     } catch (e) { logger.error("Gagal memuat pop-up", e); }
   };
 
   const fetchApiGallery = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/gallery-items`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setApiGalleryItems(Array.isArray(data) ? data : data?.data || []);
-      }
+      const list = await fetchAdminGallery(token);
+      setApiGalleryItems(list);
     } catch (e) { logger.error("Gagal memuat galeri", e); }
   };
 
   const fetchApiTestimonials = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/testimonials`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setApiTestimonials(Array.isArray(data) ? data : data?.data || []);
-      }
+      const list = await fetchAdminTestimonials(token);
+      setApiTestimonials(list);
     } catch (e) { logger.error("Gagal memuat testimoni", e); }
   };
 
   const fetchApiPromos = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/promos`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setApiPromos(Array.isArray(data) ? data : data?.data || []);
-      }
+      const list = await fetchAdminPromos(token);
+      setApiPromos(list);
     } catch (e) { logger.error("Gagal memuat promo", e); }
   };
 
   const fetchApiDownloadApps = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/download-apps`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setApiDownloadApps(Array.isArray(data) ? data : data?.data || []);
-      }
+      const list = await fetchAdminDownloadApps(token);
+      setApiDownloadApps(list);
     } catch (e) {
       logger.error("Gagal memuat rilis aplikasi", e);
     }
