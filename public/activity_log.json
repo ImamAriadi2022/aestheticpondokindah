@@ -1,5 +1,33 @@
 [
     {
+        "id": "act-256",
+        "date": "2026-08-24",
+        "time": "14:21",
+        "category": "Patient & Admin Complaint Module & Reporting",
+        "type": "Feature Implementation & Bug Fix",
+        "feature": "Penyempurnaan Interaksi Pengaduan Pasien-Admin, Modal Tanggapan, Export PDF Rekapitulasi & Anti-Spam Notifikasi",
+        "description": "1) Menambahkan `ComplaintDetailModal.tsx` di sisi pasien sehingga tombol 'Lihat Detail' berfungsi menampilkan rincian komplain dan respon resmi klinik, 2) Mengaktifkan tombol 'Tanggapi' di sisi Admin dengan `ComplaintResponseModal.tsx` yang memungkinkan admin menulis teks tanggapan/solusi dan mengubah status (Diproses, Selesai, Ditolak, Menunggu), 3) Menambahkan fitur 'Rekap Laporan PDF' di admin dengan `ComplaintRecapPdfModal.tsx` berstandar Kop Surat resmi untuk dikirimkan ke atasan/pimpinan klinik, 4) Memperbaiki filter pencarian & tab status pengaduan di admin, 5) Menghilangkan spam notifikasi reservasi pada `reservationSyncEngine.ts` dengan membatasi hanya pada event tunggal riil, 6) Memperbarui transform backend `ComplaintAdminController.php` & `ComplaintController.php`.",
+        "notes": "1. Patient Detail View: Pasien dapat melihat rincian pengaduan dan balasan resmi manajemen klinik secara transparan.\n2. Admin Response Flow: Admin dapat merespons pengaduan secara fleksibel dengan teks penjelasan dan status penyelesaian.\n3. PDF Rekapitulasi: Dilengkapi Kop Surat dinamis, ringkasan metrik statistik (Total, Selesai, Diproses, Rasio %), tabel rincian, dan lembar tanda tangan Pimpinan/Staff.\n4. Anti-Spam Notification: Notifikasi reservasi massal dinonaktifkan.\n5. Design Standard: Mengikuti UI Design System Aesthetic Pondok Indah.\n6. Verified Build: `npm run build` sukses 100% (`✓ built in 32.88s`).\n7. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi kebutuhan perbaikan interaksi pengaduan (detail pasien, respon admin), eliminasi spam notifikasi reservasi, dan pembuatan fitur rekap laporan pengaduan PDF untuk atasan klinik.",
+        "files": [
+            "frontend-web/src/features/patient/complaint/components/ComplaintDetailModal.tsx",
+            "frontend-web/src/features/patient/complaint/components/DesktopPengaduan.tsx",
+            "frontend-web/src/features/admin/complaints/pages/ComplaintsPage.tsx",
+            "frontend-web/src/features/admin/complaints/components/ComplaintTable.tsx",
+            "frontend-web/src/features/admin/complaints/components/ComplaintResponseModal.tsx",
+            "frontend-web/src/features/admin/complaints/components/ComplaintRecapPdfModal.tsx",
+            "frontend-web/src/core/services/reservationSyncEngine.ts",
+            "app/Http/Controllers/Api/Admin/Complaint/ComplaintAdminController.php",
+            "app/Http/Controllers/Api/Patient/Complaint/ComplaintController.php",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-255",
         "date": "2026-08-24",
         "time": "14:06",

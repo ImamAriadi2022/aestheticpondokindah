@@ -67,15 +67,17 @@ class ComplaintAdminController extends Controller
             'description' => $c->description,
             'status' => $c->status,
             'adminResponse' => $c->admin_response,
+            'admin_response' => $c->admin_response,
             'attachmentUrl' => $c->attachment_url,
-            'user' => [
+            'user' => $c->user ? [
                 'id' => $c->user->id,
                 'name' => $c->user->name,
                 'email' => $c->user->email,
-            ],
-            'createdAt' => $c->created_at->toISOString(),
-            'updatedAt' => $c->updated_at->toISOString(),
-            'date' => $c->created_at->format('j M Y'),
+                'whatsapp' => $c->user->whatsapp,
+            ] : null,
+            'createdAt' => $c->created_at ? $c->created_at->toISOString() : null,
+            'updatedAt' => $c->updated_at ? $c->updated_at->toISOString() : null,
+            'date' => $c->created_at ? $c->created_at->format('j M Y') : '-',
         ];
     }
 }

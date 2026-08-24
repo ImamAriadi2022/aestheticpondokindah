@@ -1,3 +1,4 @@
+import ComplaintDetailModal from "./ComplaintDetailModal";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/shared/ui/button";
@@ -46,6 +47,7 @@ export default function DesktopPengaduan() {
   const [searchQuery, setSearchQuery] = useState("");
   const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedComplaint, setSelectedComplaint] = useState<ComplaintItem | null>(null);
 
   const loadComplaints = async () => {
     setLoading(true);
@@ -279,9 +281,13 @@ export default function DesktopPengaduan() {
                         <span className="mx-2">•</span>
                         <span className="font-medium">{complaint.id}</span>
                       </div>
-                      <button className="flex items-center gap-1 text-sm text-[#c9a24a] font-medium hover:underline">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedComplaint(complaint)}
+                        className="flex items-center gap-1 text-xs text-[#c9a24a] font-bold hover:underline cursor-pointer bg-[#FAF5EA] px-2.5 py-1 rounded-lg border border-[#EADBBD]"
+                      >
                         Lihat Detail
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -395,6 +401,12 @@ export default function DesktopPengaduan() {
           </div>
         </div>
       )}
+      {/* Detail Modal */}
+      <ComplaintDetailModal
+        open={Boolean(selectedComplaint)}
+        onClose={() => setSelectedComplaint(null)}
+        complaint={selectedComplaint}
+      />
     </div>
   );
 }
