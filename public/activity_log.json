@@ -1,5 +1,28 @@
 [
     {
+        "id": "act-257",
+        "date": "2026-08-24",
+        "time": "15:45",
+        "category": "Admin Dashboard Navigation & UI/UX Grouping",
+        "type": "Enhancement & Refactoring",
+        "feature": "Restrukturisasi & Grouping Navigasi Sidebar Admin Serta Integrasi Pengaturan Klinik ke Area Profil Dropdown",
+        "description": "1) Mengelompokkan menu 'Pengaduan' menjadi submenu di bawah 'Sistem Booking' (Booking, Konsultasi, Pengaduan), 2) Mengelompokkan menu 'Dokter' menjadi submenu di bawah 'Kelola Pengguna' (Pengguna, Dokter, Membership), 3) Menghapus menu terpisah 'Pengaturan Klinik' dari sidebar utama dan mengintegrasikannya ke dalam dropdown profil pengguna/admin di bagian atas dashboard (DashboardTopBar) dan popup profil sidebar, 4) Menyederhanakan sidebar admin menjadi 4 menu utama yang clean dan intuitif (Dashboard, Sistem Booking, Konten, Kelola Pengguna), 5) Memverifikasi build frontend 100% sukses tanpa kendala.",
+        "notes": "1. Clean Sidebar Grouping: Sidebar admin kini jauh lebih rapi, hanya menampilkan 4 kategori utama ber-submenu.\n2. Submenu Sistem Booking: Berisi Booking, Konsultasi, dan Pengaduan.\n3. Submenu Kelola Pengguna: Berisi Pengguna, Dokter, dan Membership.\n4. TopBar Profile Dropdown: Pengaturan Klinik dapat diakses langsung melalui tombol/avatar profil di header atas.\n5. Zero Breaking Change: Seluruh tab dan fitur yang sudah ada tetap berfungsi 100% normal.\n6. Verified Build: `npm run build` sukses 100% (`✓ built in 40.75s`).\n7. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi instruksi pengguna untuk menyederhanakan sidebar admin melalui grouping berdasarkan fungsi dan memindahkan Pengaturan Klinik ke area profil.",
+        "files": [
+            "frontend-web/src/core/permissions/menu.ts",
+            "frontend-web/src/core/layouts/DashboardTopBar.tsx",
+            "frontend-web/src/core/layouts/DashboardLayout.tsx",
+            "frontend-web/src/features/admin/AdminSidebar.tsx",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-256",
         "date": "2026-08-24",
         "time": "14:21",

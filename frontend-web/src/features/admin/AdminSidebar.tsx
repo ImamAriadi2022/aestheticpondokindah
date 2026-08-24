@@ -44,7 +44,7 @@ export default function AdminSidebar({ activeTab }: Props) {
   const isPublicInfoActive = publicInfoTabs.includes(currentTab);
   const [isPublicInfoOpen, setIsPublicInfoOpen] = useState(true);
 
-  const navGroups = useMemo(
+    const navGroups = useMemo(
     () => [
       {
         title: "Utama",
@@ -58,11 +58,11 @@ export default function AdminSidebar({ activeTab }: Props) {
         ],
       },
       {
-        title: "Layanan & Booking",
+        title: "Sistem Booking",
         items: [
           {
             id: "reservasi",
-            label: "Reservasi Janji Temu",
+            label: "Booking (Reservasi)",
             icon: Calendar,
             href: "/dashboard/clinic?tab=reservasi",
           },
@@ -71,6 +71,12 @@ export default function AdminSidebar({ activeTab }: Props) {
             label: "Konsultasi Pasien",
             icon: MessageSquare,
             href: "/dashboard/clinic?tab=konsultasi",
+          },
+          {
+            id: "pengaduan",
+            label: "Pengaduan Pasien",
+            icon: AlertCircle,
+            href: "/dashboard/clinic?tab=pengaduan",
           },
         ],
       },
@@ -116,25 +122,19 @@ export default function AdminSidebar({ activeTab }: Props) {
         ],
       },
       {
-        title: "Klinik & Pengguna",
+        title: "Kelola Pengguna",
         items: [
           {
-            id: "doctors",
-            label: "Dokter & Jadwal",
-            icon: Stethoscope,
-            href: "/dashboard/clinic?tab=doctors",
-          },
-          {
             id: "users",
-            label: "Daftar Pasien / Pengguna",
+            label: "Pengguna",
             icon: Users,
             href: "/dashboard/clinic?tab=users",
           },
           {
-            id: "branches",
-            label: "Cabang Klinik",
-            icon: Building2,
-            href: "/dashboard/clinic?tab=branches",
+            id: "doctors",
+            label: "Dokter",
+            icon: Stethoscope,
+            href: "/dashboard/clinic?tab=doctors",
           },
           {
             id: "membership",
@@ -142,33 +142,11 @@ export default function AdminSidebar({ activeTab }: Props) {
             icon: Sparkles,
             href: "/dashboard/clinic/membership",
           },
-        ],
-      },
-      {
-        title: "Layanan Pelanggan & Masukan",
-        items: [
           {
-            id: "pengaduan",
-            label: "Pengaduan Pasien",
-            icon: AlertCircle,
-            href: "/dashboard/clinic?tab=pengaduan",
-          },
-          {
-            id: "messages",
-            label: "Pesan Masuk",
-            icon: Bell,
-            href: "/dashboard/clinic?tab=messages",
-          },
-        ],
-      },
-      {
-        title: "Sistem",
-        items: [
-          {
-            id: "settings",
-            label: "Pengaturan Klinik",
-            icon: FileText,
-            href: "/dashboard/clinic?tab=settings",
+            id: "branches",
+            label: "Cabang Klinik",
+            icon: Building2,
+            href: "/dashboard/clinic?tab=branches",
           },
         ],
       },

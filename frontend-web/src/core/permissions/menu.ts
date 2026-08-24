@@ -33,13 +33,15 @@ export const CONTENT_SUBMENU: MenuItem["submenu"] = [
   { label: "Daftar Aplikasi Mobile", href: "/dashboard/clinic?tab=content-download" },
 ];
 
-const BOOKING_SUBMENU: MenuItem["submenu"] = [
-  { label: "Reservasi", href: "/dashboard/clinic?tab=reservasi" },
+export const BOOKING_SUBMENU: MenuItem["submenu"] = [
+  { label: "Booking", href: "/dashboard/clinic?tab=reservasi" },
   { label: "Konsultasi", href: "/dashboard/clinic?tab=konsultasi" },
+  { label: "Pengaduan", href: "/dashboard/clinic?tab=pengaduan" },
 ];
 
-const USER_MANAGEMENT_SUBMENU: MenuItem["submenu"] = [
-  { label: "Daftar Pengguna", href: "/dashboard/clinic?tab=users" },
+export const USER_MANAGEMENT_SUBMENU: MenuItem["submenu"] = [
+  { label: "Pengguna", href: "/dashboard/clinic?tab=users" },
+  { label: "Dokter", href: "/dashboard/clinic?tab=doctors" },
   { label: "Membership", href: "/dashboard/clinic/membership" },
 ];
 
@@ -58,7 +60,6 @@ export const MENU: AppMenu = {
         href: "/dashboard/clinic?tab=reservasi",
         submenu: BOOKING_SUBMENU,
       },
-      { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan" },
       {
         label: "Konten",
         icon: FileText,
@@ -71,8 +72,6 @@ export const MENU: AppMenu = {
         href: "/dashboard/clinic?tab=users",
         submenu: USER_MANAGEMENT_SUBMENU,
       },
-      { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
-      { label: "Pengaturan Klinik", icon: FileText, href: "/dashboard/clinic?tab=settings" },
     ],
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },

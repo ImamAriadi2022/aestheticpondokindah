@@ -8,7 +8,7 @@ import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
 import DashboardTopBar from "@/core/layouts/DashboardTopBar";
 import DoctorSidebar from "@/features/doctor/DoctorSidebar";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
-import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut } from "lucide-react";
+import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut, FileText } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -500,8 +500,21 @@ export default function DashboardLayout({
 
                     {/* Dropdown Menu Items */}
                     <div className="pt-2 space-y-1">
-                      <Link
-                        to="/profile"
+                      {role === "clinic" && (
+      <Link
+        to="/dashboard/clinic?tab=settings"
+        onClick={() => {
+          setUserPopupOpen(false);
+          handleMenuClick();
+        }}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-[#E8C547] bg-[#C9A24A]/20 hover:bg-[#C9A24A]/30 transition-all mb-1 border border-[#C9A24A]/30"
+      >
+        <FileText className="w-4 h-4 text-[#C9A24A]" />
+        Pengaturan Klinik
+      </Link>
+    )}
+    <Link
+      to="/profile"
                         onClick={() => {
                           setUserPopupOpen(false);
                           handleMenuClick();
