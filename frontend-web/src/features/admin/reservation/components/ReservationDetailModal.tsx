@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   X,
+  Coins,
+  CreditCard,
+  Banknote,
   Calendar,
   Clock,
   User,
@@ -29,7 +32,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { toast } from "@/shared/ui/toast";
-import { updateAdminReservation, type ReservationItem } from "../services/reservationService";
+import { updateAdminReservation, confirmAdminReservationPayment, type ReservationItem } from "../services/reservationService";
 import { getAdminDoctorSchedules, type AdminDoctorScheduleItem } from "@/features/admin/doctors/services/adminDoctorScheduleApi";
 import ReservationConsentPdfModal from "./ReservationConsentPdfModal";
 import TermsPdfModal from "@/features/patient/reservation/components/TermsPdfModal";
@@ -367,6 +370,41 @@ export default function ReservationDetailModal({
     );
 
     window.open(`https://wa.me/${targetPhone}?text=${message}`, "_blank");
+  };
+
+
+  const isPaid = (reservation.paymentStatus === "Sudah Bayar" || reservation.paymentStatus === "paid" || status === "Selesai");
+
+  const handleConfirmPaymentInModal = async () => {
+    if (!token) return;
+    if (!window.confirm(`Konfirmasi bahwa pasien ${patientName} telah membayar layanan "${serviceName}" di kasir klinik? Poin reward akan otomatis ditambahkan ke saldo akun member.`)) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await confirmAdminReservationPayment(token, reservation.id, {
+        payment_method: "Tunai / Kasir Offline",
+      });
+
+      const pts = res?.data?.point_awarded;
+      toast({
+        title: "Pembayaran Dikonfirmasi!",
+        message: `Reservasi #${bookingCode} berhasil ditandai Lunas. ${pts ? `+${pts} Poin otomatis diberikan ke pasien.` : "Poin telah diproses."}`,
+        variant: "success",
+      });
+
+      setStatus("Selesai");
+      if (onUpdated) onUpdated();
+    } catch (err: any) {
+      toast({
+        title: "Gagal Mengonfirmasi",
+        message: err?.message || "Terjadi kesalahan saat memproses pembayaran kasir.",
+        variant: "error",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle Quick Status Change
@@ -905,6 +943,55 @@ export default function ReservationDetailModal({
                   Ingatkan pasien untuk hadir 15-30 menit sebelum jadwal treatment.
                 </p>
               </button>
+            </div>
+          </div>
+
+
+          {/* Card: KONFIRMASI PEMBAYARAN KASIR & POIN PASIEN */}
+          <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between border-b border-[#F0E6D3] pb-2.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
+                <Coins className="w-4 h-4 text-[#8C6B1C]" />
+                Status Pembayaran Kasir & Perolehan Poin Member
+              </h4>
+              <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                isPaid ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200"
+              }`}>
+                {isPaid ? "🟢 Sudah Bayar (Lunas)" : "🟡 Belum Bayar (Kasir Offline)"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 bg-[#FAF8F5] rounded-xl border border-[#E8DFC8] space-y-1">
+                <p className="text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">Layanan Terdaftar</p>
+                <p className="font-bold text-[#2C2416] text-sm">{serviceName}</p>
+                <p className="text-[11px] text-emerald-700 font-semibold pt-1">
+                  ✨ Pasien otomatis mendapatkan poin sesuai aturan poin layanan saat status pembayaran dikonfirmasi Lunas.
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-[#FAF5EA] rounded-xl border border-[#EADBBD] flex flex-col justify-between space-y-2">
+                <div>
+                  <p className="text-[10px] text-[#8C6B1C] uppercase font-bold tracking-wider">Tindakan Kasir</p>
+                  <p className="text-xs text-[#2C2416] mt-0.5">
+                    {isPaid
+                      ? "Pembayaran telah terverifikasi dan poin member telah masuk ke buku besar ledger."
+                      : "Pasien membayar langsung di klinik/kasir secara offline. Klik tombol di bawah untuk mencatat pembayaran dan memberikan poin reward otomatis."}
+                  </p>
+                </div>
+
+                {!isPaid && (
+                  <Button
+                    type="button"
+                    onClick={handleConfirmPaymentInModal}
+                    disabled={isSubmitting}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold h-9 px-4 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                  >
+                    <Coins className="w-4 h-4" />
+                    <span>Konfirmasi Sudah Bayar (Kasir) & Beri Poin</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

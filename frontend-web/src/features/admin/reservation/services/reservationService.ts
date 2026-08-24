@@ -78,3 +78,30 @@ export async function updateAdminReservation(
 
   return res.json();
 }
+
+export async function confirmAdminReservationPayment(
+  token: string,
+  id: string | number,
+  payload?: {
+    payment_method?: string;
+    amount?: number;
+    notes?: string;
+  }
+): Promise<{ success: boolean; message: string; data: any }> {
+  const res = await fetch(`${API_BASE}/admin/reservations/${id}/confirm-payment`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+    body: JSON.stringify(payload || {}),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `Gagal mengonfirmasi pembayaran (${res.status})`);
+  }
+
+  return res.json();
+}

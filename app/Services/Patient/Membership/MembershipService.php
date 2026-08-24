@@ -166,46 +166,49 @@ class MembershipService
     /**
      * Add points to user account
      */
-    public function addPoints(User $user, int $points, string $type = 'earned', string $description = null, ?string $referenceId = null, ?string $referenceType = null): MembershipPoint
+    public function addPoints(User $user, int $points, string $type = 'earned', string $description = null, ?string $referenceId = null, ?string $referenceType = null, ?int $adminId = null): MembershipPoint
     {
         try {
-            DB::beginTransaction();
+            return DB::transaction(function () use ($user, $points, $type, $description, $referenceId, $referenceType, $adminId) {
+                $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
+                $currentBalance = (int) ($lockedUser->membership_points ?? 0);
 
-            $point = MembershipPoint::create([
-                'user_id' => $user->id,
-                'points' => $points,
-                'type' => $type,
-                'description' => $description,
-                'reference_id' => $referenceId,
-                'reference_type' => $referenceType,
-                'expires_at' => now()->addYear(),
-            ]);
-
-            // Update user point balance
-            $currentBalance = (int) $user->membership_points;
-            if ($type === 'redeemed' || $type === 'expired') {
-                $deductAmount = abs($points);
-                if ($currentBalance < $deductAmount) {
-                    throw new \InvalidArgumentException("Saldo poin member tidak mencukupi untuk pengurangan poin.");
+                if ($type === 'redeemed' || $type === 'expired') {
+                    $deductAmount = abs($points);
+                    if ($currentBalance < $deductAmount) {
+                        throw new \InvalidArgumentException("Saldo poin member tidak mencukupi untuk pengurangan poin.");
+                    }
+                    $pointsValue = -$deductAmount;
+                    $newBalance = $currentBalance - $deductAmount;
+                } else {
+                    $pointsValue = $points;
+                    $newBalance = $currentBalance + $pointsValue;
+                    if ($newBalance < 0) {
+                        throw new \InvalidArgumentException("Penyesuaian poin akan menyebabkan saldo menjadi negatif.");
+                    }
                 }
-                $newBalance = $currentBalance - $deductAmount;
-            } else {
-                // earned or adjusted
-                $newBalance = $currentBalance + $points;
-                if ($newBalance < 0) {
-                    throw new \InvalidArgumentException("Penyesuaian poin akan menyebabkan saldo menjadi negatif.");
-                }
-            }
 
-            $user->update([
-                'membership_points' => $newBalance,
-            ]);
+                $point = MembershipPoint::create([
+                    'user_id' => $lockedUser->id,
+                    'points' => $pointsValue,
+                    'balance_before' => $currentBalance,
+                    'balance_after' => $newBalance,
+                    'type' => $type,
+                    'description' => $description,
+                    'reference_id' => $referenceId,
+                    'reference_type' => $referenceType,
+                    'admin_id' => $adminId,
+                    'expires_at' => now()->addYear(),
+                ]);
 
-            DB::commit();
+                $lockedUser->membership_points = $newBalance;
+                $lockedUser->save();
 
-            return $point;
+                $this->checkAndUpdateMembershipLevel($lockedUser, $adminId);
+
+                return $point;
+            });
         } catch (\Exception $e) {
-            DB::rollBack();
             Log::error("Failed to add points: " . $e->getMessage());
             throw $e;
         }

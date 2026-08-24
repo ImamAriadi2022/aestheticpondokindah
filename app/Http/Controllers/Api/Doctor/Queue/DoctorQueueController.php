@@ -159,6 +159,9 @@ class DoctorQueueController extends Controller
         $visit = $visitService->findOrCreateFromReservation($reservation);
         $visitService->transitionStatus($visit, 'completed');
 
+        // Automatic Dynamic Point Awarding
+        app(\App\Services\Patient\Membership\MembershipPointRuleService::class)->processAutomaticPointsForCompletedReservation($reservation);
+
         // Audit Trail
         ReservationAudit::create([
             'reservation_id' => $reservation->id,

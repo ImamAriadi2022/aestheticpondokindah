@@ -564,4 +564,81 @@ class MembershipAdminController extends Controller
             'data' => $invoice,
         ]);
     }
+
+    /**
+     * Get global point ledger for all members
+     */
+    public function pointsLedger(Request $request): JsonResponse
+    {
+        $query = \AppModelsPatientMembershipMembershipPoint::with(['user:id,name,email,whatsapp', 'admin:id,name'])->latest();
+
+        if ($request->has('type') && $request->input('type') !== 'all') {
+            $query->where('type', $request->input('type'));
+        }
+
+        if ($request->has('search') && trim($request->input('search'))) {
+            $search = trim($request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhere('reference_id', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $ledger = $query->paginate($request->input('per_page', 25));
+
+        return response()->json([
+            'success' => true,
+            'data' => $ledger,
+        ]);
+    }
+
+    /**
+     * Manual Point Adjustment with mandatory reason and admin audit trail
+     */
+    public function manualAdjustment(Request $request, int $id): JsonResponse
+    {
+        $member = User::findOrFail($id);
+        $admin = $request->user();
+
+        $validated = $request->validate([
+            'points' => ['required', 'integer'],
+            'action' => ['required', 'in:add,deduct'],
+            'reason' => ['required', 'string', 'min:3', 'max:500'],
+        ]);
+
+        $amount = abs($validated['points']);
+        $finalPoints = $validated['action'] === 'add' ? $amount : -$amount;
+        $description = "Koreksi Manual Admin (" . ($validated['action'] === 'add' ? "+" : "-") . "{$amount} Pts): " . $validated['reason'];
+
+        try {
+            $point = $this->membershipService->addPoints(
+                $member,
+                $finalPoints,
+                'adjusted',
+                $description,
+                null,
+                'manual_adjustment',
+                $admin?->id
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Koreksi poin manual berhasil dicatat.",
+            'data' => [
+                'point_entry' => $point,
+                'new_balance' => $member->fresh()->membership_points,
+            ],
+        ]);
+    }
+
 }

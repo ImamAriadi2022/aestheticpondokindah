@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\Admin\Reservation\ReservationAdminController;
 use App\Http\Controllers\Api\Admin\Consultation\ConsultationAdminController;
 use App\Http\Controllers\Api\Admin\Complaint\ComplaintAdminController;
 use App\Http\Controllers\Api\Admin\Membership\MembershipAdminController;
+use App\Http\Controllers\Api\Admin\Membership\MembershipPointRuleAdminController;
 use App\Http\Controllers\Api\Admin\PublicInfo\ClinicServiceAdminController;
 use App\Http\Controllers\Api\Admin\PublicInfo\FaqAdminController;
 use App\Http\Controllers\Api\Admin\PublicInfo\ContactMessageAdminController;
@@ -208,6 +209,13 @@ Route::prefix('admin')->group(function () {
         // Membership (Admin)
         Route::prefix('membership')->group(function () {
             Route::get('/', [MembershipAdminController::class, 'index']);
+            Route::get('/rules', [MembershipPointRuleAdminController::class, 'index']);
+            Route::post('/rules', [MembershipPointRuleAdminController::class, 'store']);
+            Route::put('/rules/{id}', [MembershipPointRuleAdminController::class, 'update']);
+            Route::patch('/rules/{id}/toggle', [MembershipPointRuleAdminController::class, 'toggle']);
+            Route::delete('/rules/{id}', [MembershipPointRuleAdminController::class, 'destroy']);
+            Route::get('/points-ledger', [MembershipAdminController::class, 'pointsLedger']);
+            Route::post('/{id}/manual-adjustment', [MembershipAdminController::class, 'manualAdjustment']);
             Route::get('/upgrade-requests', [MembershipAdminController::class, 'requests']);
             Route::get('/upgrade-requests/{id}', [MembershipAdminController::class, 'showRequest']);
             Route::post('/upgrade-requests/{id}/approve', [MembershipAdminController::class, 'approveRequest']);

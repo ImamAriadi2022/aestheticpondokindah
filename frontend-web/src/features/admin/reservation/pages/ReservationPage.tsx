@@ -305,6 +305,8 @@ export default function ReservationPage({
           <ReservationTable
             reservations={filteredReservations}
             onSelect={handleSelect}
+            token={token}
+            onRefresh={onRefresh}
           />
 
           {/* Interactive Detail Modal Popup */}

@@ -294,6 +294,23 @@ export default function BookingHistoryList({
                       <MapPin className="w-3.5 h-3.5 text-[#8C6B1C] shrink-0" />
                       <span className="truncate">Aesthetic Pondok Indah</span>
                     </div>
+
+                    {/* Status Pembayaran & Poin */}
+                    <div className="pt-1.5 border-t border-[#EDE5D6] flex items-center justify-between text-[11px]">
+                      <span className="text-[#8C8272]">Pembayaran:</span>
+                      {isCompleted ? (
+                        <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                          <span>🟢 Lunas (Kasir)</span>
+                          <span className="text-[#8C6B1C] font-black">• ✨ Poin Masuk</span>
+                        </span>
+                      ) : isCancelled ? (
+                        <span className="font-semibold text-rose-700">Dibatalkan</span>
+                      ) : (
+                        <span className="font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          🟡 Bayar Offline di Kasir Klinik
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Action Buttons: E-Ticket & Hubungi Admin */}

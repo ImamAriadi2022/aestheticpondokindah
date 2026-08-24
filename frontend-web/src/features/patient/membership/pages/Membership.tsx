@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { getSession } from "@/core/auth/services/session";
 import DashboardLayout from "@/core/layouts/DashboardLayout";
 import NewMobileDashboardLayout from "@/core/layouts/NewMobileDashboardLayout";
+import { apiClient } from "@/core/api/apiClient";
 import { logger } from "@/core/utils/logger";
 import {
   Star,
@@ -20,13 +21,28 @@ import {
   ChevronRight,
   Calendar,
   Award,
+  Coins,
+  ArrowRight,
+  Receipt,
+  Clock,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import * as htmlToImage from "html-to-image";
 import { membershipApi, MembershipData } from "@/features/patient/membership/services/membershipApi";
 
+type PointMutation = {
+  id: number;
+  points: number;
+  balance_before: number;
+  balance_after: number;
+  type: "earned" | "redeemed" | "expired" | "adjusted" | string;
+  description: string | null;
+  reference_id: string | null;
+  reference_type: string | null;
+  created_at: string;
+};
+
 export default function MembershipPage() {
-  // Detect mobile to decide which layout (ensure new bottom bar on mobile)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
@@ -34,14 +50,27 @@ export default function MembershipPage() {
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
-  // Ambil session dari backend asli
-  const session = getSession();
 
+  const session = getSession();
   const navigate = useNavigate();
 
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [apiMembership, setApiMembership] = useState<MembershipData | null>(null);
+
+  // User Point History Ledger State
+  const [pointsData, setPointsData] = useState<{
+    current_balance: number;
+    total_earned: number;
+    total_redeemed: number;
+    history: PointMutation[];
+  }>({
+    current_balance: 0,
+    total_earned: 0,
+    total_redeemed: 0,
+    history: [],
+  });
+  const [pointsLoading, setPointsLoading] = useState(true);
 
   useEffect(() => {
     membershipApi.getMembership()
@@ -51,9 +80,26 @@ export default function MembershipPage() {
       .catch((err) => {
         logger.warn("Fetch real membership API fallback to session:", err);
       });
+
+    // Fetch live point ledger mutations
+    apiClient.get<{ data: any }>("/patient/membership/points", { skipToast: true })
+      .then((res) => {
+        const payload = res?.data || {};
+        const historyList = Array.isArray(payload.history)
+          ? payload.history
+          : payload.history?.data || [];
+
+        setPointsData({
+          current_balance: Number(payload.current_balance || 0),
+          total_earned: Number(payload.total_earned || 0),
+          total_redeemed: Number(payload.total_redeemed || 0),
+          history: historyList,
+        });
+      })
+      .catch(() => {})
+      .finally(() => setPointsLoading(false));
   }, []);
 
-  // Unified Gold Theme Membership Configuration
   const tierConfig = {
     bronze: {
       label: 'Basic Member',
@@ -84,23 +130,17 @@ export default function MembershipPage() {
     },
   };
 
-  const upgradeThresholds = {
-    bronze: { to: 'gold', amount: 5000000, label: 'Gold' },
-    gold: { to: 'platinum', amount: 15000000, label: 'Platinum' },
-    platinum: null,
-  };
-
-  // Ambil tier dari API backend (atau fallback ke session)
   const currentTier = apiMembership?.membership?.level || (session as any)?.membership_level || 'bronze';
   const config = tierConfig[currentTier as keyof typeof tierConfig] || tierConfig.bronze;
-  const userPoints = apiMembership?.membership?.points ?? (session as any)?.membership_points ?? 0;
+  const userPoints = pointsData.current_balance || apiMembership?.membership?.points || (session as any)?.membership_points || 0;
   const membershipExpiry = apiMembership?.membership?.expires_at 
     ? new Date(apiMembership.membership.expires_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
     : "Seumur Hidup";
+
   const generateMemberId = (userId: string | number) => {
     const id = String(userId).toUpperCase();
-    if (id.startsWith("AESPI_")) return `MEM-${id}`;
-    return `MEM-AESPI_${String(userId).padStart(2, "0")}`;
+    if (id.startsWith("AESPI_")) return "MEM-" + id;
+    return "MEM-AESPI_" + String(userId).padStart(2, "0");
   };
   const membershipId = generateMemberId(session?.id || "00");
 
@@ -125,47 +165,6 @@ export default function MembershipPage() {
     }
   };
 
-  const calculateProgress = () => {
-    if (!session) return 0;
-    const fields = [
-      "name",
-      "email",
-      "phone",
-      "gender",
-      "birthDate",
-      "bloodType",
-      "job",
-      "address",
-      "province",
-      "city",
-      "sourceInfo",
-    ];
-    
-    const filledFields = fields.filter((field) => {
-      // Handle both backend style (snake_case) and frontend style (camelCase)
-      const s = session as any;
-      const value = s[field] ||
-                    s[field.replace(/([A-Z])/g, "_$1").toLowerCase()] ||
-                    s[field === 'phone' ? 'whatsapp' : field] ||
-                    s[field === 'bloodType' ? 'blood_type' : field] ||
-                    s[field === 'address' ? 'address_line' : field];
-      return !!value;
-    });
-
-    const interests = (session as any).interests || [];
-    const interestScore = interests.length > 0 ? 1 : 0;
-    const dentalComplaintsScore = Array.isArray((session as any).dentalComplaints) && (session as any).dentalComplaints.length > 0 ? 1 : 0;
-    const desiredServicesScore = Array.isArray((session as any).desiredServices) && (session as any).desiredServices.length > 0 ? 1 : 0;
-
-    const totalFields = fields.length + 3;
-    const totalFilled = filledFields.length + interestScore + dentalComplaintsScore + desiredServicesScore;
-    
-    return Math.round((totalFilled / totalFields) * 100);
-  };
-
-  const progress = calculateProgress();
-  const isProfileComplete = progress >= 100;
-
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -179,15 +178,13 @@ export default function MembershipPage() {
 
   const Layout = isMobile ? NewMobileDashboardLayout : DashboardLayout;
   const containerClasses = isMobile
-    ? "w-full mx-auto px-4 py-5 space-y-5"
+    ? "w-full mx-auto px-4 py-5 space-y-6"
     : "w-full max-w-[1400px] mx-auto px-2 sm:px-4 py-6 space-y-6";
 
   return (
     <Layout role="user">
       <div className={containerClasses}>
         
-        {/* Top Stats Row removed as per request */}
-
         {/* Middle Row: Membership Card (left) & Progress (right) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Progress Menuju Gold (Right - 2/3) */}
@@ -201,7 +198,7 @@ export default function MembershipPage() {
               </div>
 
               <div className="relative mb-8">
-                {/* Upgrade Banner replacing totals & chart */}
+                {/* Upgrade Banner */}
                 <div className="relative overflow-hidden rounded-2xl bg-amber-50 p-5 sm:p-6 border border-amber-100">
                   <div className="absolute -left-10 top-1/2 -translate-y-1/2 w-40 h-40 bg-amber-200/40 rounded-full blur-2xl" />
                   <div className="flex items-start gap-5 relative z-10">
@@ -211,17 +208,16 @@ export default function MembershipPage() {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1">Naik Level ke Gold Member</h3>
                       <p className="text-sm text-gray-600 mb-4">Nikmati prioritas booking, benefit eksklusif, dan poin reward lebih banyak dengan upgrade ke Gold Member.</p>
-                      {/* mini-benefits list removed as requested */}
                       <Button onClick={() => navigate('/membership/upgrade')} className="bg-[#C9A24A] text-white font-bold px-5 h-10 hover:opacity-90">Upgrade Sekarang</Button>
                     </div>
                   </div>
                 </div>
 
-                {/* Compact Benefit Bronze Member - placed under banner */}
+                {/* Compact Benefit Bronze Member */}
                 <div className="mt-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Crown className="w-4 h-4 text-[#C9A24A]" />
-                    <h4 className="text-sm font-semibold text-gray-900">Benefit Bronze Member</h4>
+                    <h4 className="text-sm font-semibold text-gray-900">Benefit {config.label}</h4>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
@@ -256,11 +252,9 @@ export default function MembershipPage() {
                 
                 {/* Digital Card Preview */}
                 <div className="relative aspect-[1.58/1] w-full bg-gradient-to-br from-[#1a1612] to-[#2a2319] rounded-2xl p-5 overflow-hidden border border-[#C9A24A]/20 shadow-2xl mb-6">
-                  {/* Decorative Elements */}
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9A24A]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                   <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#E8C547]/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
                   
-                  {/* Card Content */}
                   <div className="relative h-full flex flex-col justify-between">
                     <div className="flex justify-between items-start">
                       <div>
@@ -277,7 +271,7 @@ export default function MembershipPage() {
                     <div className="mb-4">
                       <p className="text-[8px] text-[#C9A24A] font-bold tracking-widest mb-1 uppercase">{config.badge} MEMBER</p>
                       <h4 className="text-base font-black text-white tracking-wider uppercase truncate">
-                        {(session as any)?.name || 'ROBIN SYAIFUDDIN'}
+                        {(session as any)?.name || 'PASIEN KLINIK'}
                       </h4>
                     </div>
 
@@ -321,7 +315,7 @@ export default function MembershipPage() {
                         <p className="text-xs font-bold text-white leading-tight">Gold Member</p>
                       </div>
                     </div>
-                    <button className="text-[10px] text-[#C9A24A] font-bold hover:underline">
+                    <button onClick={() => navigate('/membership/upgrade')} className="text-[10px] text-[#C9A24A] font-bold hover:underline cursor-pointer">
                       Upgrade
                     </button>
                   </div>
@@ -329,7 +323,7 @@ export default function MembershipPage() {
 
                 <button 
                   onClick={() => setShowMembershipModal(true)}
-                  className="w-full py-3 rounded-xl border border-[#C9A24A]/30 text-[#C9A24A] text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#C9A24A] hover:text-[#1a1612] transition-all"
+                  className="w-full py-3 rounded-xl border border-[#C9A24A]/30 text-[#C9A24A] text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#C9A24A] hover:text-[#1a1612] transition-all cursor-pointer"
                 >
                   Lihat Detail Membership <ChevronRight className="w-4 h-4" />
                 </button>
@@ -338,34 +332,137 @@ export default function MembershipPage() {
           </Card>
         </div>
 
-        {/* Old Benefit Section removed; benefits shown compactly under progress */}
+        {/* SECTION: BUKU BESAR MUTASI & RIWAYAT POIN PASIEN (LEDGER) */}
+        <Card className="rounded-3xl border border-[#E8DFC8] shadow-xs bg-white overflow-hidden text-left">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F0E6D3] pb-4">
+              <div>
+                <h3 className="text-lg font-bold text-[#2C2416] flex items-center gap-2">
+                  <Coins className="w-5 h-5 text-[#8C6B1C]" />
+                  Buku Besar & Riwayat Mutasi Poin Anda
+                </h3>
+                <p className="text-xs text-[#8C8272] mt-0.5">
+                  Setiap transaksi perawatan gigi yang selesai di kasir klinik akan otomatis menghasilkan poin reward yang tercatat di sini.
+                </p>
+              </div>
 
-        {/* Bottom upgrade banner removed as requested */}
+              <div className="flex items-center gap-2">
+                <div className="px-3.5 py-1.5 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] text-xs font-bold text-[#8C6B1C] flex items-center gap-1.5 shadow-2xs">
+                  <Sparkles className="w-4 h-4 text-[#C9A24A]" />
+                  <span>Saldo: {userPoints} Poin</span>
+                </div>
+              </div>
+            </div>
 
+            {/* Table of Point Mutations */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#FAF8F5] border-b border-[#E8DFC8] text-[10px] uppercase font-bold text-[#8C8272] tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3">Tanggal</th>
+                    <th className="px-4 py-3">Sumber Perawatan / Tindakan</th>
+                    <th className="px-4 py-3">Tipe Mutasi</th>
+                    <th className="px-4 py-3">Perolehan Poin</th>
+                    <th className="px-4 py-3">Saldo Berjalan</th>
+                    <th className="px-4 py-3">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F5EFE6]">
+                  {pointsLoading ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-8 text-center text-[#8C8272]">
+                        <Clock className="w-5 h-5 animate-spin mx-auto text-[#C9A24A] mb-1" />
+                        Memuat riwayat mutasi poin...
+                      </td>
+                    </tr>
+                  ) : pointsData.history.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center text-[#8C8272]">
+                        <Receipt className="w-8 h-8 text-[#C9A24A]/40 mx-auto mb-2" />
+                        <p className="font-bold text-[#2C2416]">Belum Ada Mutasi Poin</p>
+                        <p className="text-[11px] mt-0.5">
+                          Lakukan reservasi janji temu dan selesaikan perawatan gigi Anda untuk mulai mengumpulkan poin reward!
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    pointsData.history.map((item) => {
+                      const isPositive = Number(item.points) > 0 || item.type === "earned";
+                      return (
+                        <tr key={item.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                          <td className="px-4 py-3 whitespace-nowrap text-[#8C8272] font-mono text-[11px]">
+                            {item.created_at
+                              ? new Date(item.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                              : "-"}
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-[#2C2416]">
+                            {item.reference_type === "reservation" ? (
+                              <span className="text-[#8C6B1C] font-mono font-bold">
+                                Reservasi #{item.reference_id}
+                              </span>
+                            ) : (
+                              <span>{item.reference_type || "Sistem Reward"}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-block rounded-full px-2.5 py-0.5 font-bold text-[9px] uppercase border ${
+                                item.type === "earned"
+                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                  : item.type === "adjusted"
+                                  ? "bg-amber-50 text-amber-800 border-amber-200"
+                                  : "bg-rose-50 text-rose-800 border-rose-200"
+                              }`}
+                            >
+                              {item.type}
+                            </span>
+                          </td>
+                          <td className={`px-4 py-3 font-black text-xs ${isPositive ? "text-emerald-600" : "text-rose-600"}`}>
+                            {isPositive ? `+${item.points}` : item.points} Pts
+                          </td>
+                          <td className="px-4 py-3 font-mono text-[11px]">
+                            {item.balance_before !== undefined && item.balance_after !== undefined ? (
+                              <span className="inline-flex items-center gap-1 font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2 py-0.5 rounded-lg border border-[#EADBBD]">
+                                <span>{item.balance_before}</span>
+                                <ArrowRight className="w-2.5 h-2.5 text-gray-400" />
+                                <span className="text-[#2C2416]">{item.balance_after}</span>
+                              </span>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-[#5C5546] max-w-xs text-[11px] truncate" title={item.description || ""}>
+                            {item.description || "-"}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Digital Membership Modal */}
         <Dialog open={showMembershipModal} onOpenChange={setShowMembershipModal}>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 !bg-transparent !border-0 !shadow-none">
             <div className="flex flex-col items-center">
               <div id="membership-card-modal" className="w-full aspect-[1.58/1] rounded-[1.5rem] relative overflow-hidden shadow-2xl">
-                {/* Background Image - cardbronze.png */}
                 <img
                   src="/dashboard/cardbronze.png"
                   alt="Card Background"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
 
-                {/* Content */}
                 <div className="relative h-full flex flex-col justify-between p-6 sm:p-8">
-                  {/* Top Section */}
                   <div className="flex justify-between items-start">
-                    {/* Left - Brand Name */}
                     <div className="flex flex-col">
                       <h3 className="text-[#F5E6C8] text-3xl sm:text-4xl font-extralight tracking-[0.1em] leading-none">aesthetic</h3>
                       <p className="text-[#D4A84B] text-xs sm:text-sm tracking-[0.3em] lowercase mt-1">pondok indah</p>
                       <p className="text-[#B8943F] text-[9px] sm:text-[10px] tracking-[0.4em] mt-2 font-medium uppercase">{config.badge} MEMBERSHIP</p>
                     </div>
-                    {/* Right - Logo & Membership */}
                     <div className="flex flex-col items-end gap-0.5">
-                      {/* Clinic Logo */}
                       <img
                         src="/logo/logo.png"
                         alt="Aesthetic Pondok Indah"
@@ -374,19 +471,16 @@ export default function MembershipPage() {
                     </div>
                   </div>
 
-                  {/* Middle Section - Card Details */}
                   <div className="mt-auto mb-1">
                     <p className="text-[#C9A24A]/70 text-[9px] sm:text-[10px] tracking-[0.3em] mb-1.5 font-medium uppercase">Nama Pemilik</p>
                     <h4 className="text-[#F5E6C8] text-xl sm:text-2xl font-bold tracking-[0.15em] truncate uppercase">
-                      {(session as any)?.name?.toUpperCase() || 'ROBIN SYAIFUDDIN'}
+                      {(session as any)?.name?.toUpperCase() || 'PASIEN KLINIK'}
                     </h4>
-                    {/* Card Number - 4 blocks format */}
                     <p className="text-[#E8D5B5] text-lg sm:text-xl font-mono tracking-[0.2em] mt-2 uppercase" style={{fontFamily: "'Courier New', Courier, monospace"}}>
                       0145  2000  1234  5678
                     </p>
                   </div>
 
-                  {/* Bottom Section - Valid Thru */}
                   <div className="flex items-center gap-3">
                     <p className="text-[#C9A24A]/70 text-[8px] sm:text-[9px] tracking-[0.2em] font-medium uppercase">Valid Thru</p>
                     <p className="text-[#F5E6C8] text-sm sm:text-base font-bold tracking-wide" style={{fontFamily: "'Courier New', Courier, monospace"}}>04/26</p>

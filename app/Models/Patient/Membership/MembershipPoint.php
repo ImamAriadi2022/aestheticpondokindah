@@ -11,46 +11,35 @@ class MembershipPoint extends Model
 {
     use HasFactory;
 
+    protected $table = 'membership_points';
+
     protected $fillable = [
         'user_id',
         'points',
+        'balance_before',
+        'balance_after',
         'type',
         'description',
         'reference_id',
         'reference_type',
+        'admin_id',
         'expires_at',
     ];
 
     protected $casts = [
         'points' => 'integer',
+        'balance_before' => 'integer',
+        'balance_after' => 'integer',
         'expires_at' => 'date',
     ];
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function scopeEarned($query)
+    public function admin(): BelongsTo
     {
-        return $query->where('type', 'earned');
-    }
-
-    public function scopeRedeemed($query)
-    {
-        return $query->where('type', 'redeemed');
-    }
-
-    public function scopeActive($query)
-    {
-        return $query->where(function ($q) {
-            $q->whereNull('expires_at')
-              ->orWhere('expires_at', '>', now());
-        });
-    }
-
-    public function scopeExpired($query)
-    {
-        return $query->where('expires_at', '<=', now());
+        return $this->belongsTo(User::class, 'admin_id');
     }
 }

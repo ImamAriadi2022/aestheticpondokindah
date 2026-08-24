@@ -197,9 +197,10 @@ class ReservationAdminController extends Controller
 
         // Audit Payment Status Change
         if (array_key_exists('paymentStatus', $validated) && $validated['paymentStatus'] !== null) {
-            // Business rule: only allow payment status change if Selesai, except if setting to Belum Bayar/Dibatalkan
-            if ($reservation->status !== 'Selesai' && !in_array($validated['paymentStatus'], ['Belum Bayar', 'Dibatalkan'])) {
-                return response()->json(['message' => 'Status pembayaran hanya bisa diubah jika reservasi sudah Selesai.'], 422);
+            // If marking as Sudah Bayar, automatically advance status to Selesai if not already cancelled/rejected
+            if ($validated['paymentStatus'] === 'Sudah Bayar' && !in_array($targetStatus, ['Dibatalkan', 'Ditolak'])) {
+                $targetStatus = 'Selesai';
+                $reservation->status = 'Selesai';
             }
 
             $oldPaymentStatus = $reservation->payment_status;
@@ -216,19 +217,10 @@ class ReservationAdminController extends Controller
                 ]);
                 $reservation->payment_status = $newPaymentStatus;
 
-                // TRIGGER MEMBERSHIP ENGINE WHEN PAYMENT IS PAID
+                // AUTOMATIC POINT RULES TRIGGER WHEN PAYMENT IS PAID OR RESERVATION COMPLETED
                 if ($newPaymentStatus === 'Sudah Bayar' && $reservation->user_id) {
-                    $patient = User::find($reservation->user_id);
-                    if ($patient) {
-                        $this->membershipService->addPoints(
-                            $patient,
-                            50,
-                            'earned',
-                            "Poin dari Reservasi Perawatan #" . $reservation->id,
-                            (string) $reservation->id,
-                            'reservation'
-                        );
-                    }
+                    app(\App\Services\Patient\Membership\MembershipPointRuleService::class)
+                        ->processAutomaticPointsForCompletedReservation($reservation);
                 }
             }
         }
@@ -306,4 +298,87 @@ class ReservationAdminController extends Controller
                 return false;
         }
     }
+
+    /**
+     * Dedicated Offline Payment Confirmation & Automatic Point Awarding
+     */
+    public function confirmPayment(Request $request, int $id): \Illuminate\Http\JsonResponse
+    {
+        $reservation = \App\Models\Shared\Reservation\Reservation::findOrFail($id);
+        $admin = $request->user();
+
+        $validated = $request->validate([
+            'payment_method' => ['nullable', 'string', 'max:50'],
+            'notes' => ['nullable', 'string', 'max:500'],
+            'amount' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $oldPaymentStatus = $reservation->payment_status;
+        $reservation->payment_status = 'Sudah Bayar';
+        if ($reservation->status !== 'Selesai' && !in_array($reservation->status, ['Dibatalkan', 'Ditolak'])) {
+            $reservation->status = 'Selesai';
+        }
+        $reservation->save();
+
+        // Audit Payment Confirmation
+        \App\Models\Shared\Reservation\ReservationAudit::create([
+            'reservation_id' => $reservation->id,
+            'user_id' => $admin?->id,
+            'action' => 'confirm_payment',
+            'field' => 'payment_status',
+            'old_value' => $oldPaymentStatus,
+            'new_value' => 'Sudah Bayar',
+        ]);
+
+        // Calculate amount and update patient transaction volume
+        $amount = $validated['amount'] ?? null;
+        if (!$amount && $reservation->treatment_interest) {
+            $service = \App\Models\Guest\Service\ClinicService::where('title', 'like', "%{$reservation->treatment_interest}%")->first();
+            if ($service && $service->price) {
+                $amount = $service->price;
+            }
+        }
+
+        $pointEntry = null;
+        if ($reservation->user_id) {
+            $patient = \App\Models\Shared\User\User::find($reservation->user_id);
+            if ($patient) {
+                if ($amount && $amount > 0) {
+                    $patient->increment('total_transactions', (int) $amount);
+                }
+                $patient->increment('completed_treatments');
+            }
+
+            // Trigger Dynamic Point Rules Engine
+            $pointEntry = app(\App\Services\Patient\Membership\MembershipPointRuleService::class)
+                ->processAutomaticPointsForCompletedReservation($reservation);
+        }
+
+        // Send patient notification
+        if ($reservation->user_id) {
+            $code = $reservation->code ?: 'RSV-' . str_pad((string)$reservation->id, 6, '0', STR_PAD_LEFT);
+            $pointsInfo = ($pointEntry && $pointEntry->points > 0) ? " dan mendapatkan +{$pointEntry->points} Poin Reward!" : "!";
+            try {
+                \App\Services\Shared\Notification\NotificationService::send(
+                    (int) $reservation->user_id,
+                    '🎉 Pembayaran Kasir Dikonfirmasi',
+                    "Pembayaran reservasi {$code} ({$reservation->treatment_interest}) telah dikonfirmasi oleh Kasir{$pointsInfo}",
+                    'appointment',
+                    '/#/dashboard/user?tab=reservasi',
+                    ['reservation_id' => $reservation->id, 'code' => $code]
+                );
+            } catch (\Throwable $e) {}
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran reservasi berhasil dikonfirmasi dan poin reward otomatis diberikan.',
+            'data' => [
+                'reservation' => $reservation->fresh(['doctor', 'user']),
+                'point_awarded' => $pointEntry ? $pointEntry->points : 0,
+                'point_entry' => $pointEntry,
+            ],
+        ]);
+    }
+
 }

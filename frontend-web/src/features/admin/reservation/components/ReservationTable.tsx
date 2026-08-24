@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Button } from "@/shared/ui/button";
 import {
@@ -10,15 +11,23 @@ import {
   CheckCircle2,
   AlertCircle,
   XCircle,
+  Coins,
+  Check,
+  Loader2,
 } from "lucide-react";
-import type { ReservationItem } from "../services/reservationService";
+import { confirmAdminReservationPayment, type ReservationItem } from "../services/reservationService";
+import { toast } from "@/shared/ui/toast";
 
 type Props = {
   reservations: ReservationItem[];
   onSelect: (item: ReservationItem) => void;
+  token?: string;
+  onRefresh?: () => void;
 };
 
-export default function ReservationTable({ reservations, onSelect }: Props) {
+export default function ReservationTable({ reservations, onSelect, token = "", onRefresh }: Props) {
+  const [processingId, setProcessingId] = useState<string | number | null>(null);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Dikonfirmasi":
@@ -58,6 +67,43 @@ export default function ReservationTable({ reservations, onSelect }: Props) {
     }
   };
 
+  const handleQuickConfirmPayment = async (e: React.MouseEvent, item: ReservationItem) => {
+    e.stopPropagation();
+    if (!token) {
+      toast({ title: "Sesi Tidak Valid", message: "Silakan refresh halaman admin.", variant: "warning" });
+      return;
+    }
+
+    const code = item.code || item.id;
+    if (!window.confirm(`Konfirmasi pembayaran kasir untuk reservasi #${code} (${item.name})? Poin reward akan otomatis diberikan ke akun member.`)) {
+      return;
+    }
+
+    setProcessingId(item.id);
+    try {
+      const res = await confirmAdminReservationPayment(token, item.id, {
+        payment_method: "Tunai / Kasir Offline",
+      });
+
+      const pts = res?.data?.point_awarded;
+      toast({
+        title: "Pembayaran Dikonfirmasi!",
+        message: `Reservasi #${code} lunas. ${pts ? `+${pts} Poin reward otomatis masuk ke akun pasien.` : "Status diperbarui."}`,
+        variant: "success",
+      });
+
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      toast({
+        title: "Gagal Konfirmasi",
+        message: err?.message || "Terjadi kendala saat mengonfirmasi pembayaran.",
+        variant: "error",
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-[#F0E6D3] overflow-hidden shadow-xs">
       <div className="overflow-x-auto">
@@ -68,8 +114,8 @@ export default function ReservationTable({ reservations, onSelect }: Props) {
               <TableHead className="font-bold text-[#3D332A] py-4">Layanan / Perawatan</TableHead>
               <TableHead className="font-bold text-[#3D332A] py-4">Dokter & Cabang</TableHead>
               <TableHead className="font-bold text-[#3D332A] py-4">Jadwal Kunjungan</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-4">Status</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-4 pr-6 text-right">Aksi</TableHead>
+              <TableHead className="font-bold text-[#3D332A] py-4">Status & Pembayaran</TableHead>
+              <TableHead className="font-bold text-[#3D332A] py-4 pr-6 text-right">Aksi & Kasir</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -91,6 +137,7 @@ export default function ReservationTable({ reservations, onSelect }: Props) {
                 const branchName = item.branch_name || "Aesthetic Pondok Indah Main Branch";
                 const dateStr = item.date || (item as any).booking_date || "-";
                 const timeStr = item.preferred_time || (item as any).booking_time || "10:00 WIB";
+                const isPaid = item.paymentStatus === "Sudah Bayar" || item.paymentStatus === "paid" || item.status === "Selesai";
 
                 return (
                   <TableRow
@@ -146,31 +193,64 @@ export default function ReservationTable({ reservations, onSelect }: Props) {
                         <span>{dateStr}</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-[11px] text-[#8A7B6B] mt-0.5">
-                        <Clock className="w-3 h-3 text-[#B8943F]" />
+                        <Clock className="w-3.5 h-3.5 text-[#B8943F]" />
                         <span>{timeStr}</span>
                       </div>
                     </TableCell>
 
-                    {/* Status */}
+                    {/* Status & Pembayaran */}
                     <TableCell className="py-4">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${statusBadge.bg}`}
-                      >
-                        <statusBadge.icon className="w-3 h-3" />
-                        {statusBadge.label}
-                      </span>
+                      <div className="space-y-1">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusBadge.bg}`}
+                        >
+                          <statusBadge.icon className="w-3 h-3" />
+                          {statusBadge.label}
+                        </span>
+                        <div>
+                          {isPaid ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              <Check className="w-2.5 h-2.5 text-emerald-600 stroke-[3]" /> Sudah Bayar
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              <Coins className="w-2.5 h-2.5 text-amber-600" /> Belum Bayar (Kasir)
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </TableCell>
 
-                    {/* Aksi */}
+                    {/* Aksi & Kasir */}
                     <TableCell className="py-4 pr-6 text-right">
-                      <Button
-                        size="sm"
-                        onClick={() => onSelect(item)}
-                        className="h-8 px-3 text-xs font-semibold bg-[#FAF4E8] hover:bg-[#F5E6C8] text-[#8A6B2B] rounded-xl border border-[#E8D4A2]/60 transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Detail
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        {!isPaid && item.status !== "Dibatalkan" && item.status !== "Ditolak" && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => handleQuickConfirmPayment(e, item)}
+                            disabled={processingId === item.id}
+                            className="h-8 px-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-2xs inline-flex items-center gap-1 cursor-pointer"
+                            title="Konfirmasi Pembayaran Kasir & Berikan Poin Reward Pasien"
+                          >
+                            {processingId === item.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <Coins className="w-3.5 h-3.5" />
+                                <span>Konfirmasi Bayar</span>
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => onSelect(item)}
+                          className="h-8 px-3 text-xs font-semibold bg-[#FAF4E8] hover:bg-[#F5E6C8] text-[#8A6B2B] rounded-xl border border-[#E8D4A2]/60 transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Detail
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
