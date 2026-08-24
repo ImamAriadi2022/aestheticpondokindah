@@ -141,6 +141,7 @@ Route::prefix('admin')->group(function () {
         // Reservations (Admin)
         Route::get('/reservations', [ReservationAdminController::class, 'index']);
         Route::put('/reservations/{reservation}', [ReservationAdminController::class, 'update']);
+        Route::post('/reservations/{id}/confirm-payment', [ReservationAdminController::class, 'confirmPayment']);
 
         // Clinic Settings (T&C, WA number, etc.)
         Route::get('/clinic-settings', [ClinicSettingAdminController::class, 'index']);

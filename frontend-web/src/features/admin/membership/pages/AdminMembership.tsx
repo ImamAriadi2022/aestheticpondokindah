@@ -115,10 +115,37 @@ export default function AdminMembershipPage() {
     }
   });
 
-  const [rules, setRules] = useState<PointRule[]>([]);
-  const [clinicServices, setClinicServices] = useState<any[]>([]);
-  const [ledgerItems, setLedgerItems] = useState<PointLedgerItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Read cache immediately (0ms instant render for all tabs)
+  const [rules, setRules] = useState<PointRule[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_admin_cached_point_rules");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [clinicServices, setClinicServices] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_admin_cached_clinic_services");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [ledgerItems, setLedgerItems] = useState<PointLedgerItem[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_admin_cached_point_ledger");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // If any entity has cached data, don't show full-page loading spinner
+  const hasCachedData = members.length > 0 || transactions.length > 0 || rules.length > 0 || ledgerItems.length > 0;
+  const [loading, setLoading] = useState(!hasCachedData);
   const [loadingRules, setLoadingRules] = useState(false);
   const [loadingLedger, setLoadingLedger] = useState(false);
   const [savingId, setSavingId] = useState<number | null>(null);
@@ -154,9 +181,9 @@ export default function AdminMembershipPage() {
   const [memberHistoryItems, setMemberHistoryItems] = useState<PointLedgerItem[]>([]);
   const [loadingMemberHistory, setLoadingMemberHistory] = useState(false);
 
-  // Load Main Data
+  // Load Main Data with Stale-While-Revalidate (SWR) Caching
   const loadData = useCallback(async (silent = false) => {
-    if (!silent && members.length === 0) setLoading(true);
+    if (!silent && !hasCachedData) setLoading(true);
     try {
       const query = new URLSearchParams();
       if (search.trim()) query.set("search", search.trim());
@@ -188,34 +215,46 @@ export default function AdminMembershipPage() {
 
       if (Array.isArray(ruleList)) {
         setRules(ruleList);
+        try { localStorage.setItem("apig_admin_cached_point_rules", JSON.stringify(ruleList)); } catch {}
       }
 
       if (Array.isArray(srvList)) {
         setClinicServices(srvList);
+        try { localStorage.setItem("apig_admin_cached_clinic_services", JSON.stringify(srvList)); } catch {}
       }
 
       if (Array.isArray(ldgList)) {
         setLedgerItems(ldgList);
+        try { localStorage.setItem("apig_admin_cached_point_ledger", JSON.stringify(ldgList)); } catch {}
       }
     } catch {
-      // Keep cached data
+      // Keep cached data smoothly
     } finally {
       setLoading(false);
       setLoadingRules(false);
       setLoadingLedger(false);
     }
-  }, [levelFilter, search, members.length]);
+  }, [levelFilter, search, hasCachedData]);
 
+  // Initial & Realtime Polling Synchronization (SWR every 8 seconds)
   useEffect(() => {
-    loadData(members.length > 0);
-  }, [loadData, members.length]);
+    loadData(hasCachedData);
+
+    const interval = setInterval(() => {
+      // Background silent sync
+      loadData(true);
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [loadData, hasCachedData]);
 
   const loadRules = async () => {
     setLoadingRules(true);
     try {
-      const res = await apiClient.get<{ data: PointRule[] }>("/admin/membership/rules");
+      const res = await apiClient.get<{ data: PointRule[] }>("/admin/membership/rules", { skipToast: true });
       if (Array.isArray(res?.data)) {
         setRules(res.data);
+        try { localStorage.setItem("apig_admin_cached_point_rules", JSON.stringify(res.data)); } catch {}
       }
     } catch {} finally {
       setLoadingRules(false);
@@ -225,9 +264,10 @@ export default function AdminMembershipPage() {
   const loadGlobalLedger = async () => {
     setLoadingLedger(true);
     try {
-      const res = await apiClient.get<{ data: { data: PointLedgerItem[] } }>("/admin/membership/points-ledger");
+      const res = await apiClient.get<{ data: { data: PointLedgerItem[] } }>("/admin/membership/points-ledger", { skipToast: true });
       if (Array.isArray(res?.data?.data)) {
         setLedgerItems(res.data.data);
+        try { localStorage.setItem("apig_admin_cached_point_ledger", JSON.stringify(res.data.data)); } catch {}
       }
     } catch {} finally {
       setLoadingLedger(false);
