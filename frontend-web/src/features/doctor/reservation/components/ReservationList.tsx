@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   Loader2,
@@ -15,19 +15,62 @@ import {
   FileText,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { useRealtimeReservations } from "@/core/services/reservationSyncEngine";
 import { toast } from "@/shared/ui/toast";
 import { apiClient } from "@/core/api/apiClient";
-import { triggerPushNotification } from "@/core/services/pushNotificationService";
-import { useRef } from "react";
+import { getDoctorQueue } from "@/features/doctor/dashboard/services/doctorDashboardService";
+
+const STORAGE_KEY = "apig_doctor_cached_patients";
 
 export default function DoctorReservationList() {
-  const { reservations, loading, refresh: refreshReservations } = useRealtimeReservations();
+  // Read cache immediately (0ms instant display)
+  const [reservations, setReservations] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem(STORAGE_KEY);
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [loading, setLoading] = useState(reservations.length === 0);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
+  const isFetchingRef = useRef(false);
 
-  // Doctor reservations are powered by Incremental Change Polling & IndexedDB Persistent Cache
+  const fetchPatients = useCallback(async (silent = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    if (!silent && reservations.length === 0) setLoading(true);
+
+    try {
+      const queue = await getDoctorQueue();
+      if (Array.isArray(queue)) {
+        setReservations(queue);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
+        } catch {}
+      }
+    } catch {
+      // Keep cached data silently
+    } finally {
+      isFetchingRef.current = false;
+      setLoading(false);
+    }
+  }, [reservations.length]);
+
+  useEffect(() => {
+    fetchPatients(reservations.length > 0);
+
+    // Smart background poll every 5s only if tab is visible
+    const timer = setInterval(() => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        fetchPatients(true);
+      }
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [fetchPatients, reservations.length]);
 
   useEffect(() => {
     if (selectedPatient) {
@@ -104,7 +147,7 @@ export default function DoctorReservationList() {
   };
 
   return (
-    <div className="space-y-6 text-left">
+    <div className="space-y-6 text-left animate-in fade-in duration-150">
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 sm:p-6 rounded-2xl border border-[#F0E6D3] shadow-xs">
         <div>
@@ -125,7 +168,7 @@ export default function DoctorReservationList() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => refreshReservations()}
+            onClick={() => fetchPatients(false)}
             disabled={loading}
             className="rounded-xl border-[#EADBBD] text-[#8C6B1C] hover:bg-[#FAF5EA] font-semibold h-10 px-4 text-xs cursor-pointer"
           >
@@ -137,7 +180,7 @@ export default function DoctorReservationList() {
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
-        {/* Status Filter Tabs (Hanya Dikonfirmasi Admin & Selesai) */}
+        {/* Status Filter Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           <button
             type="button"
@@ -190,7 +233,7 @@ export default function DoctorReservationList() {
       {/* Patient Table */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          {loading ? (
+          {loading && reservations.length === 0 ? (
             <div className="text-center py-14">
               <Loader2 className="w-8 h-8 text-[#C9A24A] animate-spin mx-auto mb-2" />
               <p className="text-xs text-[#8A7B6B]">Memuat daftar pasien dari database...</p>
@@ -226,7 +269,7 @@ export default function DoctorReservationList() {
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-gray-900 flex items-center gap-1.5">
                           <User className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                          <span>{r.patient_name || "Pasien"}</span>
+                          <span>{r.patient_name || r.name || "Pasien"}</span>
                         </div>
                         <div className="text-[10px] text-gray-400 font-mono mt-0.5">
                           #{r.code || `RSV-${r.id}`}
@@ -235,7 +278,7 @@ export default function DoctorReservationList() {
                       <td className="py-3.5 px-4 font-mono text-gray-700">
                         <div className="flex items-center gap-1">
                           <Phone className="w-3 h-3 text-emerald-600" />
-                          <span>{r.patient_phone || "-"}</span>
+                          <span>{r.patient_phone || r.phone || "-"}</span>
                         </div>
                       </td>
                       <td className="py-3.5 px-4 font-medium text-[#8C6B1C]">
@@ -245,7 +288,7 @@ export default function DoctorReservationList() {
                         </div>
                         <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-0.5">
                           <Clock className="w-3 h-3 text-gray-400" />
-                          <span>{r.preferred_time} WIB</span>
+                          <span>{r.preferred_time || "Sesuai Jadwal"} WIB</span>
                         </div>
                       </td>
                       <td className="py-3.5 px-4 max-w-xs">
@@ -292,7 +335,7 @@ export default function DoctorReservationList() {
         </div>
       </div>
 
-      {/* POP UP MODAL DETAIL DATA PASIEN (PORTAL TO BODY - SELALU TEPAT DI TENGAH VIEWPORT APAPUN SCROLL NYA) */}
+      {/* POP UP MODAL DETAIL DATA PASIEN */}
       {selectedPatient &&
         createPortal(
           <div
@@ -304,7 +347,7 @@ export default function DoctorReservationList() {
               className="relative w-full max-w-4xl lg:max-w-5xl bg-white rounded-3xl border border-[#EADBBD] shadow-2xl overflow-hidden flex flex-col my-auto max-h-[calc(100vh-40px)] animate-in zoom-in-95 duration-150"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Header (Compact) */}
+              {/* Modal Header */}
               <div className="relative z-10 flex items-center justify-between px-5 sm:px-6 py-3.5 bg-gradient-to-r from-[#FAF5EA] via-[#FDF8F0] to-[#F5ECE0] border-b border-[#EADBBD] shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[#C9A24A] to-[#B8943F] flex items-center justify-center text-white shadow-md shadow-[#C9A24A]/20 shrink-0">
@@ -335,9 +378,8 @@ export default function DoctorReservationList() {
                 </button>
               </div>
 
-              {/* Modal Body (Clean, Compact, Horizontal 3-Column Layout) */}
+              {/* Modal Body */}
               <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1 text-left bg-gradient-to-b from-white to-[#FDFBF7]">
-                {/* Status & Location Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl bg-[#FAF5EA]/80 border border-[#EADBBD]">
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-[#8C6B1C]" />
@@ -362,9 +404,7 @@ export default function DoctorReservationList() {
                   </div>
                 </div>
 
-                {/* 3 Columns Grid (Compact Card Details) */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-                  {/* 1. Biodata Pasien */}
                   <div className="p-4 rounded-xl bg-white border border-[#F0E6D3] shadow-xs space-y-2.5">
                     <div className="flex items-center gap-1.5 pb-2 border-b border-[#F5F0E8] text-[#8C6B1C] font-bold text-xs">
                       <User className="w-3.5 h-3.5" />
@@ -374,7 +414,7 @@ export default function DoctorReservationList() {
                       <div>
                         <span className="text-[#8A7B6B] block text-[11px]">Nama Lengkap</span>
                         <span className="font-bold text-[#4A3F35] text-sm truncate block">
-                          {selectedPatient.patient_name || "-"}
+                          {selectedPatient.patient_name || selectedPatient.name || "-"}
                         </span>
                       </div>
                       <div>
@@ -392,11 +432,10 @@ export default function DoctorReservationList() {
                     </div>
                   </div>
 
-                  {/* 2. Jadwal & Layanan */}
                   <div className="p-4 rounded-xl bg-white border border-[#F0E6D3] shadow-xs space-y-2.5">
                     <div className="flex items-center gap-1.5 pb-2 border-b border-[#F5F0E8] text-[#8C6B1C] font-bold text-xs">
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>Jadwal &amp; Layanan</span>
+                      <span>Jadwal & Layanan</span>
                     </div>
                     <div className="space-y-2.5 text-xs">
                       <div>
@@ -410,7 +449,7 @@ export default function DoctorReservationList() {
                         <span className="text-[#8A7B6B] block text-[11px]">Jam Praktik</span>
                         <div className="flex items-center gap-1.5 font-bold text-[#8C6B1C]">
                           <Clock className="w-3.5 h-3.5 text-[#C9A24A]" />
-                          <span>{selectedPatient.preferred_time} WIB</span>
+                          <span>{selectedPatient.preferred_time || "Sesuai Jadwal"} WIB</span>
                         </div>
                       </div>
                       <div>
@@ -422,11 +461,10 @@ export default function DoctorReservationList() {
                     </div>
                   </div>
 
-                  {/* 3. Keluhan & Catatan Medis */}
                   <div className="p-4 rounded-xl bg-white border border-[#F0E6D3] shadow-xs space-y-2.5">
                     <div className="flex items-center gap-1.5 pb-2 border-b border-[#F5F0E8] text-[#8C6B1C] font-bold text-xs">
                       <FileText className="w-3.5 h-3.5" />
-                      <span>Keluhan &amp; Catatan</span>
+                      <span>Keluhan & Catatan</span>
                     </div>
                     <div className="space-y-2 text-xs">
                       <div>
@@ -451,7 +489,7 @@ export default function DoctorReservationList() {
                 </div>
               </div>
 
-              {/* Modal Footer (Compact) */}
+              {/* Modal Footer */}
               <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-3 bg-[#FAF8F5] border-t border-[#EADBBD] shrink-0">
                 <div className="text-[11px] text-[#8A7B6B]">
                   ID Pasien: <span className="font-mono font-semibold text-gray-800">#{selectedPatient.id}</span>

@@ -1,5 +1,26 @@
 [
     {
+        "id": "act-263",
+        "date": "2026-08-24",
+        "time": "17:25",
+        "category": "Doctor Portal & State Caching",
+        "type": "Performance Optimization & Real-Time Sync",
+        "feature": "Pemuatan Instan (0ms Caching) & Auto-Sync Senyap pada Menu Daftar Pasien Dokter",
+        "description": "1) Mengimplementasikan arsitektur Stale-While-Revalidate pada daftar pasien dokter (ReservationList.tsx) dengan local storage apig_doctor_cached_patients sehingga tabel pasien dan filter status langsung tampil 0ms secara instan tanpa loading spinner yang lama, 2) Menginisialisasi state metrik Home Dashboard Dokter (DoctorDashboard.tsx) dari cache lokal untuk rendering instan seketika pada tab utama, 3) Mengaktifkan silent background sync (skipToast: true) dan auto-polling 5 detik hanya saat tab browser aktif guna menjaga data tetap 100% realtime tanpa membebani server dan tanpa pop-up timeout, 4) Memverifikasi build frontend 100% sukses tanpa kendala.",
+        "notes": "1. Instant 0ms Patient List: Dokter membuka menu 'Daftar Pasien' langsung melihat seluruh pasien tanpa tertahan spinner loading.\n2. Silent Auto-Polling: Data antrean dan status pasien disinkronisasi setiap 5 detik di latar belakang tanpa gangguan error toast.\n3. Optimistic Sync: Aksi dokter pada pasien langsung memperbarui tampilan lokal dan cache secara instan.\n4. Verified Build: `npm run build` berhasil 100% (`✓ built in 28.11s`).\n5. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi komplain pengguna mengenai proses loading yang terlalu lama pada menu Daftar Pasien di akun dokter, dengan menerapkan state caching dan manajemen memori instan.",
+        "files": [
+            "frontend-web/src/features/doctor/reservation/components/ReservationList.tsx",
+            "frontend-web/src/features/doctor/dashboard/pages/DoctorDashboard.tsx",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-262",
         "date": "2026-08-24",
         "time": "17:19",

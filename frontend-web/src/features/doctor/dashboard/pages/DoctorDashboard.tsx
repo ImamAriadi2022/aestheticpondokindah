@@ -17,7 +17,14 @@ export default function DoctorDashboardPage() {
   const navigate = useNavigate();
   const activeTab = searchParams.get("tab") || "dashboard";
 
-  const [reservations, setReservations] = useState<DoctorQueueItem[]>([]);
+  const [reservations, setReservations] = useState<DoctorQueueItem[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_doctor_cached_patients");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [schedules, setSchedules] = useState<DoctorScheduleItem[]>(() => {
     try {
       const cached = localStorage.getItem("apig_doctor_cached_schedules");
