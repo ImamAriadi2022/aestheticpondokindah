@@ -1,5 +1,28 @@
 [
     {
+        "id": "act-262",
+        "date": "2026-08-24",
+        "time": "17:19",
+        "category": "Banner Promo & Multi-Popup Management",
+        "type": "Feature Upgrade & Bugfix",
+        "feature": "Manajemen Multi Pop-Up Promo & Sistem Antrean Beruntun (Sequential Close Queue)",
+        "description": "1) Mengidentifikasi penyebab pop up 'baru imam 2' tetap muncul karena database menyimpan beberapa entri pop up namun UI admin sebelumnya hanya mengedit 1 entri teratas, 2) Mentransformasikan halaman PopupPage.tsx menjadi sistem manajemen multi pop up lengkap (CRUD, preview gambar, badge status, filter pencarian, dan toggle switch aktif/nonaktif instan per pop up), 3) Mengembangkan antrean pop up berurutan pada halaman utama (HomeWelcomePopup.tsx): jika ada N pop up aktif (misal 3), pengunjung akan melihat pop up ke-1 -> klik (X) -> lanjut ke pop up ke-2 -> klik (X) -> lanjut ke pop up ke-3 -> klik (X) -> selesai/tertutup semua. Jika hanya 1 pop up aktif, cukup 1 kali klik (X), dan jika 0 pop up aktif maka tidak ada pop up yang muncul sama sekali, 4) Memperbarui endpoint backend Laravel /api/public/popups/active agar mengembalikan seluruh daftar pop up berstatus aktif berurutan berdasarkan prioritas dan waktu, 5) Memverifikasi build frontend 100% sukses tanpa kendala.",
+        "notes": "1. Multi-Popup CRUD: Admin dapat menyimpan banyak pop up promo berbeda sekaligus dan mengontrol aktif/non-aktifnya masing-masing secara independen.\n2. Sequential Queue: Pengunjung mengklik (X) sebanyak jumlah pop up yang sedang aktif secara berurutan.\n3. Instant Status Toggle: Tombol saklar aktif/nonaktif pada kartu pop up langsung memperbarui status ke database seketika.\n4. Clean UX: Dilengkapi nomor urut 'Promo X dari Y', navigasi prev/next, dan indikator titik halaman.\n5. Verified Build: `npm run build` berhasil 100% (`✓ built in 25.87s`).\n6. Author: 'Imam Ariadi'.",
+        "reason": "Memenuhi permintaan pengguna untuk memperbaiki pop up yang masih muncul saat dinonaktifkan, menambahkan sistem multi pop up di admin, dan menampilkan antrean pop up berurutan yang ditutup bertahap sesuai jumlah yang aktif.",
+        "files": [
+            "frontend-web/src/features/admin/content/pages/PopupPage.tsx",
+            "frontend-web/src/features/guest/home/components/HomeWelcomePopup.tsx",
+            "app/Http/Controllers/Api/Guest/Content/ContentController.php",
+            "routes/api.php",
+            "public/activity_log.json",
+            "public_html/activity_log.json"
+        ],
+        "before_progress": 100,
+        "after_progress": 100,
+        "status": "🟢 Complete",
+        "author": "Imam Ariadi"
+    },
+    {
         "id": "act-261",
         "date": "2026-08-24",
         "time": "16:36",

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -11,52 +12,52 @@ type Props = {
 export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
   const interactedRef = useRef(false);
   const timerRef = useRef<number | null>(null);
-  const [popupData, setPopupData] = useState<any>(null);
+  const [activePopups, setActivePopups] = useState<any[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    // Clear legacy localStorage cache to prevent stale disabled popups
     try {
       localStorage.removeItem("apident:cached_popup");
     } catch {}
 
-    fetch(`${API_BASE}/public/popup/active?_t=${Date.now()}`)
+    fetch(`${API_BASE}/public/popups/active?_t=${Date.now()}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data && data.id && (data.enabled === true || data.enabled === 1 || data.enabled === "1")) {
-          setPopupData(data);
+        const list = Array.isArray(data) ? data : data?.id ? [data] : [];
+        const validList = list.filter((p: any) => p && (p.enabled === true || p.enabled === 1 || p.enabled === "1"));
+        if (validList.length > 0) {
+          setActivePopups(validList);
+          setCurrentIndex(0);
           onOpenChange(true);
         } else {
-          setPopupData(null);
+          setActivePopups([]);
           onOpenChange(false);
         }
       })
       .catch(() => {
-        setPopupData(null);
+        setActivePopups([]);
         onOpenChange(false);
       });
   }, [onOpenChange]);
 
-  useEffect(() => {
-    if (!open) {
-      interactedRef.current = false;
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-      timerRef.current = null;
+  const totalPopups = activePopups.length;
+  const currentPopup = activePopups[currentIndex];
+
+  const handleNextOrClose = () => {
+    interactedRef.current = true;
+    if (currentIndex < totalPopups - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      onOpenChange(false);
     }
-  }, [open]);
+  };
 
-  useEffect(() => {
-    if (!open || !popupData) return;
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-
-    timerRef.current = window.setTimeout(() => {
-      if (!interactedRef.current) onOpenChange(false);
-    }, 15000);
-
-    return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    };
-  }, [open, popupData, onOpenChange]);
+  const handlePrev = () => {
+    interactedRef.current = true;
+    if (currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    }
+  };
 
   const markInteracted = () => {
     interactedRef.current = true;
@@ -70,86 +71,177 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
       "Halo Aesthetic Pondok Indah Dental, saya ingin ambil kesempatan promo dan konsultasi. Mohon info jadwal & cara booking ya."
     );
 
-  if (!open || !popupData) {
+  if (!open || !currentPopup || totalPopups === 0) {
     return null;
   }
 
-  const title = popupData.title || "";
-  const headline = popupData.headline || "";
-  const message = popupData.message || "";
-  const buttonLabel = popupData.button_label || "Ambil Promo";
-  const imageUrl = getStorageUrl(popupData.image_url) || popupData.image_url || "";
+  const title = currentPopup.title || "PROMO SPESIAL";
+  const headline = currentPopup.headline || "";
+  const message = currentPopup.message || "";
+  const buttonLabel = currentPopup.button_label || "Klaim Promo";
+  const imageUrl = getStorageUrl(currentPopup.image_url) || currentPopup.image_url || "";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(val) => {
+      if (!val) {
+        handleNextOrClose();
+      }
+    }}>
       <DialogContent
-        showCloseButton
-        className="p-0 overflow-hidden w-[calc(100vw-32px)] max-w-[320px] sm:max-w-3xl rounded-2xl sm:rounded-3xl border border-border mx-auto my-auto"
+        showCloseButton={false}
+        className="p-0 overflow-hidden w-[calc(100vw-32px)] max-w-[320px] sm:max-w-3xl rounded-2xl sm:rounded-3xl border border-[#E8DFC8] bg-white shadow-2xl mx-auto my-auto relative"
       >
+        {/* Custom Header Badge & Sequential (X) Close Button */}
+        <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
+          {totalPopups > 1 && (
+            <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-black/60 text-white backdrop-blur-xs shadow-xs">
+              {currentIndex + 1} / {totalPopups}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleNextOrClose}
+            className="w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#2C2416] hover:text-black shadow-md flex items-center justify-center transition-all cursor-pointer border border-[#E8DFC8]/50"
+            title={currentIndex < totalPopups - 1 ? "Tutup promo ini & lihat berikutnya" : "Tutup"}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         <span className="sr-only">
-          <h2>{title || "Welcome Popup"}</h2>
-          <p>{headline || "Promo Info"}</p>
+          <h2>{title}</h2>
+          <p>{headline}</p>
         </span>
+
         <div className="grid grid-cols-1 md:grid-cols-2" onMouseDown={markInteracted} onKeyDown={markInteracted}>
-          <div className="relative bg-brand-cream">
+          {/* Left: Image / Banner */}
+          <div className="relative bg-[#FAF8F5] flex items-center justify-center overflow-hidden min-h-[220px] md:min-h-[420px]">
             {imageUrl ? (
               <img
                 src={imageUrl}
-                alt={title || "Aesthetic Pondok Indah Dental"}
-                className="w-full h-auto object-cover max-h-[200px] sm:max-h-[220px] md:max-h-none md:min-h-[420px]"
+                alt={title}
+                className="w-full h-full object-cover max-h-[240px] sm:max-h-[260px] md:max-h-none md:min-h-[420px]"
               />
             ) : (
-              <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-[#FDF8F0] text-[#B8943F] text-xs">
-                Promo Spesial Klinik
+              <div className="w-full h-full min-h-[220px] flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#FAF5EA] to-[#F5EFE6]">
+                <div className="w-12 h-12 rounded-2xl bg-[#C9A24A]/20 flex items-center justify-center text-[#8C6B1C] font-black text-lg mb-2">
+                  %
+                </div>
+                <p className="text-xs font-bold text-[#8C6B1C] uppercase tracking-wider">Aesthetic Pondok Indah</p>
+                <p className="text-xs text-[#8C8272] mt-1">Promo Perawatan Gigi Spesial</p>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-black/20 pointer-events-none" />
+
+            {/* Pagination Controls on Image for Multi-Popups */}
+            {totalPopups > 1 && (
+              <div className="absolute bottom-3 left-3 flex items-center gap-1.5 z-20">
+                {activePopups.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                      idx === currentIndex ? "w-6 bg-[#C9A24A]" : "w-1.5 bg-white/70 hover:bg-white"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="p-4 sm:p-6 md:p-8 flex flex-col justify-center">
-            <div className="space-y-1.5 sm:space-y-2">
-              <p className="text-[10px] sm:text-xs font-semibold tracking-widest text-brand-warm-gray">{title.toUpperCase()}</p>
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-brand-charcoal leading-tight" dangerouslySetInnerHTML={{ __html: headline }} />
-              <p className="text-xs sm:text-sm text-brand-warm-gray leading-relaxed">
-                {message}
+          {/* Right: Content & Action */}
+          <div className="p-5 sm:p-7 md:p-8 flex flex-col justify-between bg-white">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] sm:text-xs font-bold tracking-widest text-[#8C6B1C] uppercase">
+                  {title}
+                </span>
+                {totalPopups > 1 && (
+                  <span className="text-[10px] font-semibold text-[#8C8272]">
+                    Promo {currentIndex + 1} dari {totalPopups}
+                  </span>
+                )}
+              </div>
+
+              <h3
+                className="text-lg sm:text-2xl font-bold text-[#2C2416] leading-tight"
+                dangerouslySetInnerHTML={{ __html: headline || "Promo Spesial Klinik" }}
+              />
+
+              <p className="text-xs sm:text-sm text-[#6B5E4F] leading-relaxed whitespace-pre-wrap">
+                {message || "Dapatkan penawaran istimewa perawatan gigi terbaik di Aesthetic Pondok Indah Dental Clinic."}
               </p>
             </div>
 
-            <div className="mt-4 sm:mt-5 space-y-2.5 sm:space-y-3">
-              <a
-                href={popupData.button_url || whatsappHref}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => {
-                  markInteracted();
-                  onOpenChange(false);
-                }}
-              >
-                <Button
-                  type="button"
-                  className="w-full bg-gradient-gold hover:opacity-90 text-white font-semibold rounded-xl h-10 sm:h-11 text-sm"
-                >
-                  {buttonLabel}
-                </Button>
-              </a>
-
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-1.5 sm:pt-2 text-[10px] sm:text-xs text-brand-warm-gray">
-                <div className="rounded-lg sm:rounded-xl border border-border bg-background px-2 sm:px-3 py-1.5 sm:py-2 text-center">
-                  Respon
-                  <div className="font-semibold text-brand-charcoal text-[10px] sm:text-xs">Cepat</div>
+            <div className="mt-5 sm:mt-6 space-y-3">
+              <div className="grid grid-cols-3 gap-1.5 py-2.5 px-3 bg-[#FAF8F5] rounded-xl border border-[#E8DFC8] text-center">
+                <div>
+                  <p className="text-[9px] text-[#8C8272]">Pelayanan</p>
+                  <p className="text-[11px] font-bold text-[#2C2416]">Dokter Ahli</p>
                 </div>
-                <div className="rounded-lg sm:rounded-xl border border-border bg-background px-2 sm:px-3 py-1.5 sm:py-2 text-center">
-                  Promo
-                  <div className="font-semibold text-brand-charcoal text-[10px] sm:text-xs">Member</div>
+                <div className="border-x border-[#E8DFC8]">
+                  <p className="text-[9px] text-[#8C8272]">Fasilitas</p>
+                  <p className="text-[11px] font-bold text-[#8C6B1C]">Modern</p>
                 </div>
-                <div className="rounded-lg sm:rounded-xl border border-border bg-background px-2 sm:px-3 py-1.5 sm:py-2 text-center">
-                  Booking
-                  <div className="font-semibold text-brand-charcoal text-[10px] sm:text-xs">Mudah</div>
+                <div>
+                  <p className="text-[9px] text-[#8C8272]">Reservasi</p>
+                  <p className="text-[11px] font-bold text-[#2C2416]">Mudah</p>
                 </div>
               </div>
 
-              <p className="text-[10px] sm:text-[11px] text-brand-warm-gray pt-1.5 sm:pt-2">
-                Klik sekarang untuk konsultasi dan kami bantu pilih perawatan yang paling cocok untuk kebutuhanmu.
+              <div className="flex items-center gap-2">
+                {totalPopups > 1 && currentIndex > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePrev}
+                    className="h-10 w-10 border-[#E8DFC8] text-[#8C8272] hover:bg-[#FAF8F5] rounded-xl shrink-0 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                )}
+
+                <a
+                  href={currentPopup.button_url || whatsappHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    markInteracted();
+                    if (currentIndex < totalPopups - 1) {
+                      setCurrentIndex((prev) => prev + 1);
+                    } else {
+                      onOpenChange(false);
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  <Button
+                    className="w-full h-10 bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] hover:from-[#B8943F] hover:to-[#735514] text-white rounded-xl text-xs sm:text-sm font-bold shadow-md cursor-pointer"
+                  >
+                    {buttonLabel}
+                  </Button>
+                </a>
+
+                {totalPopups > 1 && currentIndex < totalPopups - 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextOrClose}
+                    className="h-10 w-10 border-[#E8DFC8] text-[#8C6B1C] hover:bg-[#FAF8F5] rounded-xl shrink-0 cursor-pointer"
+                    title="Promo Berikutnya"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+
+              <p className="text-[10px] text-center text-[#8C8272]">
+                {currentIndex < totalPopups - 1
+                  ? `Klik (X) untuk lanjut ke promo berikutnya (${totalPopups - currentIndex - 1} tersisa)`
+                  : "Klik tombol di atas untuk klaim promo langsung ke WhatsApp klinik"}
               </p>
             </div>
           </div>

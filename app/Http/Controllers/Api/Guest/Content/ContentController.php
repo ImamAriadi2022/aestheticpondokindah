@@ -97,8 +97,13 @@ class ContentController extends Controller
 
     public function activePopup(): JsonResponse
     {
+        return $this->activePopups();
+    }
+
+    public function activePopups(): JsonResponse
+    {
         $now = now();
-        $popup = Popup::query()
+        $popups = Popup::query()
             ->where('enabled', true)
             ->where(function ($q) use ($now) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
@@ -108,22 +113,21 @@ class ContentController extends Controller
             })
             ->orderByDesc('priority')
             ->orderByDesc('created_at')
-            ->first();
+            ->get()
+            ->map(fn (Popup $p) => [
+                'id' => (string) $p->id,
+                'title' => $p->title,
+                'headline' => $p->headline,
+                'message' => $p->message,
+                'button_label' => $p->button_label,
+                'button_url' => $p->button_url,
+                'image_url' => $this->formatMediaUrl($p->image_path),
+                'enabled' => (bool) $p->enabled,
+                'priority' => (int) $p->priority,
+            ])
+            ->values();
 
-        if (!$popup) {
-            return response()->json(null);
-        }
-
-        return response()->json([
-            'id' => (string) $popup->id,
-            'title' => $popup->title,
-            'headline' => $popup->headline,
-            'message' => $popup->message,
-            'button_label' => $popup->button_label,
-            'button_url' => $popup->button_url,
-            'image_url' => $this->formatMediaUrl($popup->image_path),
-            'enabled' => (bool) $popup->enabled,
-        ]);
+        return response()->json($popups);
     }
 
     public function gallery(Request $request): JsonResponse

@@ -428,7 +428,8 @@ Route::prefix('public')->group(function () {
     // Public Media & Content
     Route::get('/posts', [ContentController::class, 'posts']);
     Route::get('/posts/{slug}', [ContentController::class, 'postBySlug']);
-    Route::get('/popup/active', [ContentController::class, 'activePopup']);
+    Route::get('/popup/active', [ContentController::class, 'activePopups']);
+    Route::get('/popups/active', [ContentController::class, 'activePopups']);
     Route::get('/gallery-items', [ContentController::class, 'gallery']);
     Route::get('/testimonials', [ContentController::class, 'testimonials']);
     Route::get('/promos', [ContentController::class, 'promos']);
