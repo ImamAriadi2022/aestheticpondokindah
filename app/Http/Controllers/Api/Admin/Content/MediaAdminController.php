@@ -53,7 +53,7 @@ class MediaAdminController extends Controller
         };
 
         $file = $request->file('image');
-        $path = $file->store($folder, 'public');
+        $path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($file, $folder, 1600, 1600, 82);
 
         $media = Media::create([
             'uploaded_by' => optional($request->user())->id,
@@ -61,9 +61,9 @@ class MediaAdminController extends Controller
             'collection' => $collection,
             'disk' => 'public',
             'path' => $path,
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size_bytes' => $file->getSize(),
+            'original_name' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME) . '.webp',
+            'mime_type' => 'image/webp',
+            'size_bytes' => file_exists(storage_path('app/public/' . $path)) ? filesize(storage_path('app/public/' . $path)) : $file->getSize(),
         ]);
 
         return response()->json($this->serialize($media), 201);

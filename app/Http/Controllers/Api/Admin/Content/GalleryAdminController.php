@@ -38,7 +38,7 @@ class GalleryAdminController extends Controller
         }
 
         $data = $validator->validated();
-        $imagePath = $request->file('image')->store('gallery', 'public');
+        $imagePath = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'gallery', 1600, 1600, 82);
 
         $item = GalleryItem::create([
             'title' => $data['title'],
@@ -76,8 +76,10 @@ class GalleryAdminController extends Controller
         if (array_key_exists('is_published', $data)) $galleryItem->is_published = (bool)$data['is_published'];
 
         if ($request->hasFile('image')) {
-            Storage::disk('public')->delete($galleryItem->image_path);
-            $galleryItem->image_path = $request->file('image')->store('gallery', 'public');
+            if ($galleryItem->image_path) {
+                Storage::disk('public')->delete($galleryItem->image_path);
+            }
+            $galleryItem->image_path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'gallery', 1600, 1600, 82);
         }
 
         $galleryItem->save();

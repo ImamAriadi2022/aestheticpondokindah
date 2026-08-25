@@ -44,8 +44,8 @@ export const showLocalNotification = (title: string, body: string, deepLink?: st
   if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
     const notif = new Notification(title, {
       body,
-      icon: "/logo/logo.png",
-      badge: "/logo/logo.png",
+      icon: "/logo/logo.webp",
+      badge: "/logo/logo.webp",
       tag: "apig-notification",
     });
 

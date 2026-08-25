@@ -180,7 +180,7 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
                         src={getStorageUrl(item.photo_url || item.photo_path) || item.photo_url}
                         alt=""
                         className="w-10 h-10 rounded-full object-cover border border-[#F0E6D3]"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/dashboard/placeholder.png"; }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/dashboard/placeholder.webp"; }}
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-[#FDF8F0] flex items-center justify-center text-[#B8943F] font-bold text-xs border border-[#F0E6D3]">

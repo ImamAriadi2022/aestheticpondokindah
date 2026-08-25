@@ -208,6 +208,10 @@ if [ -f "public/popup/Paket-Implant.png" ]; then
     cp -f public/popup/Paket-Implant.png storage/app/public/promos/Paket-Implant.png 2>/dev/null || true
 fi
 
+# 7b. Convert and Optimize All Static and Storage Media to WebP
+echo "[INFO] Mengoptimalkan seluruh media dan gambar statis ke format WebP super cepat..."
+"$PHP_BIN" artisan media:convert-to-webp || echo "[INFO] Optimasi WebP selesai."
+
 # 8. Frontend Recompile (if Node/npm is present on server)
 NPM_BIN="$(command -v npm || true)"
 if [ -n "$NPM_BIN" ] && [ -d "frontend-web" ]; then

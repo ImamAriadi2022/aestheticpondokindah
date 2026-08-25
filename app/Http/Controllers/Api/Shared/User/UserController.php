@@ -159,7 +159,7 @@ class UserController extends Controller
             ->map(function (User $u) {
                 $photo = $this->formatMediaUrl($u->avatar);
                 if (!$photo || !str_starts_with($photo, 'http')) {
-                    $photo = '/dokter/' . $u->name . '.jpeg';
+                    $photo = '/dokter/' . $u->name . '.webp';
                 }
 
                 $exp = (int) ($u->experience_years ?: 5);
@@ -894,35 +894,8 @@ class UserController extends Controller
 
         if (str_starts_with($avatarInput, 'data:image')) {
             try {
-                @[$type, $fileData] = explode(';', $avatarInput);
-                @[, $fileData] = explode(',', $fileData);
-
-                if ($fileData) {
-                    $ext = 'png';
-                    if (str_contains($type, 'jpeg') || str_contains($type, 'jpg')) {
-                        $ext = 'jpg';
-                    } elseif (str_contains($type, 'webp')) {
-                        $ext = 'webp';
-                    }
-
-                    $decodedData = base64_decode($fileData);
-                    $filename = 'avatar_' . $user->id . '_' . time() . '.' . $ext;
-                    $relativePath = 'avatars/' . $filename;
-
-                    $targetDirs = [
-                        storage_path('app/public/avatars'),
-                        public_path('storage/avatars'),
-                    ];
-
-                    foreach ($targetDirs as $dir) {
-                        if (!file_exists($dir)) {
-                            @mkdir($dir, 0777, true);
-                        }
-                        @file_put_contents($dir . '/' . $filename, $decodedData);
-                    }
-
-                    return $relativePath;
-                }
+                $relativePath = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($avatarInput, 'avatars', 800, 800, 82);
+                return $relativePath;
             } catch (\Throwable $e) {
                 // Fallback to raw string if processing fails
             }

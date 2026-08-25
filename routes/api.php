@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\Admin\PublicInfo\ClinicServiceAdminController;
 use App\Http\Controllers\Api\Admin\PublicInfo\FaqAdminController;
 use App\Http\Controllers\Api\Admin\PublicInfo\ContactMessageAdminController;
 use App\Http\Controllers\Api\Admin\PublicInfo\AboutAdminController;
+use App\Http\Controllers\Api\Admin\PublicInfo\HomeAdminController;
 use App\Http\Controllers\Api\Admin\PublicInfo\LegalAdminController;
 use App\Http\Controllers\Api\Admin\Content\GalleryAdminController;
 use App\Http\Controllers\Api\Admin\Content\MediaAdminController;
@@ -76,6 +77,7 @@ use App\Http\Controllers\Api\Guest\Consultation\GuestConsultationController;
 use App\Http\Controllers\Api\Guest\Analytics\AnalyticsVisitController;
 use App\Http\Controllers\Api\Guest\Settings\ClinicSettingPublicController;
 use App\Http\Controllers\Api\Guest\About\AboutPublicController;
+use App\Http\Controllers\Api\Guest\Home\HomePublicController;
 use App\Http\Controllers\Api\Guest\Legal\LegalPublicController;
 
 /*
@@ -263,6 +265,9 @@ Route::prefix('admin')->group(function () {
 
         Route::get('/about', [AboutAdminController::class, 'show']);
         Route::put('/about', [AboutAdminController::class, 'update']);
+
+        Route::get('/home', [HomeAdminController::class, 'show']);
+        Route::put('/home', [HomeAdminController::class, 'update']);
 
         Route::get('/legal/{type}', [LegalAdminController::class, 'show']);
         Route::put('/legal/{type}', [LegalAdminController::class, 'update']);
@@ -471,6 +476,7 @@ Route::prefix('public')->group(function () {
     Route::get('/faqs', [FaqPublicController::class, 'index']);
     Route::post('/contact', [ContactPublicController::class, 'store']);
     Route::get('/about', [AboutPublicController::class, 'show']);
+    Route::get('/home', [HomePublicController::class, 'show']);
     Route::get('/legal/{type}', [LegalPublicController::class, 'show']);
 });
 

@@ -32,13 +32,21 @@ class ComplaintController extends Controller
             'attachment_url' => 'nullable|string',
         ]);
 
+        $attachmentUrl = $validated['attachment_url'] ?? null;
+        if ($attachmentUrl && str_starts_with($attachmentUrl, 'data:image')) {
+            try {
+                $stored = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($attachmentUrl, 'complaints', 1600, 1600, 82);
+                $attachmentUrl = asset('storage/' . $stored);
+            } catch (\Throwable $e) {}
+        }
+
         $complaint = Complaint::create([
             'user_id' => $request->user()->id,
             'category' => $validated['category'],
             'title' => $validated['title'],
             'description' => $validated['description'],
             'status' => 'pending',
-            'attachment_url' => $validated['attachment_url'] ?? null,
+            'attachment_url' => $attachmentUrl,
         ]);
 
         return response()->json($this->transform($complaint), 201);

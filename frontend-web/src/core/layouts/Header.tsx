@@ -171,7 +171,7 @@ export default function Header() {
           <div className="flex items-center justify-between h-20">
             {/* Brand */}
             <Link to="/" className="flex items-center gap-2 group">
-              <img src="/logo/logo.png" alt="Aesthetic Pondok Indah" className="h-12 w-auto" />
+              <img src="/logo/logo.webp" alt="Aesthetic Pondok Indah" className="h-12 w-auto" />
             </Link>
 
             {/* Desktop Navigation */}

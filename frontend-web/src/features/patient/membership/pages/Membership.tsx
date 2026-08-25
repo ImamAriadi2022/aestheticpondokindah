@@ -311,26 +311,26 @@ export default function MembershipPage() {
   const getTierCardBg = (tier: string) => {
     switch (tier) {
       case 'gold':
-        return '/dashboard/cardgold.png';
+        return '/dashboard/cardgold.webp';
       case 'platinum':
-        return '/dashboard/cardplatinum.png';
+        return '/dashboard/cardplatinum.webp';
       case 'bronze':
       default:
-        return '/dashboard/cardbronze.png';
+        return '/dashboard/cardbronze.webp';
     }
   };
 
   const getTierRibbon = (tier: string) => {
     switch (tier) {
       case 'gold':
-        return '/dashboard/gold.png';
+        return '/dashboard/gold.webp';
       case 'platinum':
-        return '/dashboard/platinum.png';
+        return '/dashboard/platinum.webp';
       case 'diamond':
-        return '/dashboard/diamond.png';
+        return '/dashboard/diamond.webp';
       case 'bronze':
       default:
-        return '/dashboard/bronze.png';
+        return '/dashboard/bronze.webp';
     }
   };
 
@@ -580,7 +580,7 @@ export default function MembershipPage() {
                     alt={`${config.badge} Card Background`}
                     className="absolute inset-0 w-full h-full object-cover"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = "/dashboard/cardbronze.png";
+                      (e.currentTarget as HTMLImageElement).src = "/dashboard/cardbronze.webp";
                     }}
                   />
                   <div className="absolute inset-0 bg-black/20" />
@@ -593,7 +593,7 @@ export default function MembershipPage() {
                       </div>
                       <div className="flex flex-col items-end">
                         <img
-                          src="/logo/logo.png"
+                          src="/logo/logo.webp"
                           alt="Aesthetic Pondok Indah"
                           className="h-6 sm:h-7 w-auto object-contain brightness-0 invert sepia-[.3] hue-rotate-[-10deg] saturate-[3]"
                         />
@@ -618,7 +618,7 @@ export default function MembershipPage() {
                           alt={`${config.badge} Ribbon`}
                           className="w-full h-full object-contain drop-shadow-xl"
                           onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = "/dashboard/bronze.png";
+                            (e.currentTarget as HTMLImageElement).src = "/dashboard/bronze.webp";
                           }}
                         />
                       </div>
@@ -908,7 +908,7 @@ export default function MembershipPage() {
                   alt={`${config.badge} Card Background`}
                   className="absolute inset-0 w-full h-full object-cover"
                   onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/dashboard/cardbronze.png";
+                    (e.currentTarget as HTMLImageElement).src = "/dashboard/cardbronze.webp";
                   }}
                 />
 
@@ -921,7 +921,7 @@ export default function MembershipPage() {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <img
-                        src="/logo/logo.png"
+                        src="/logo/logo.webp"
                         alt="Aesthetic Pondok Indah"
                         className="h-10 sm:h-12 w-auto object-contain brightness-0 invert sepia-[.3] hue-rotate-[-10deg] saturate-[3]"
                       />
@@ -951,7 +951,7 @@ export default function MembershipPage() {
                         alt={`${config.badge} Ribbon`}
                         className="w-full h-full object-contain drop-shadow-2xl"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/dashboard/bronze.png";
+                          (e.currentTarget as HTMLImageElement).src = "/dashboard/bronze.webp";
                         }}
                       />
                     </div>

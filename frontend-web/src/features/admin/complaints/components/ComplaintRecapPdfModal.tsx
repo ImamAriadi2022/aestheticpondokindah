@@ -30,7 +30,7 @@ export default function ComplaintRecapPdfModal({
     phone: "+62 812-3456-7890",
     email: "info@aestheticpondokindah.id",
     address: "Jl. Metro Pondok Indah Blok TB No. 27, Pondok Indah, Jakarta Selatan 12310",
-    logoUrl: "/logo/logo.png",
+    logoUrl: "/logo/logo.webp",
     logoWidth: 75,
     logoHeight: 75,
   };

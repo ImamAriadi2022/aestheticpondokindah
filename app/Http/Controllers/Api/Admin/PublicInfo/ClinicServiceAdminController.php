@@ -106,43 +106,19 @@ class ClinicServiceAdminController extends Controller
 
         if (str_starts_with($imageInput, 'data:image')) {
             try {
-                @[$type, $fileData] = explode(';', $imageInput);
-                @[, $fileData] = explode(',', $fileData);
+                $storedPath = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($imageInput, 'layanan', 1200, 1200, 82);
+                $filename = basename($storedPath);
 
-                if ($fileData) {
-                    $ext = 'webp';
-                    if (str_contains($type, 'png')) {
-                        $ext = 'png';
-                    } elseif (str_contains($type, 'jpeg') || str_contains($type, 'jpg')) {
-                        $ext = 'jpg';
-                    } elseif (str_contains($type, 'svg')) {
-                        $ext = 'svg';
+                // Mirror to public/layanan and frontend-web/public/layanan
+                $sourcePath = storage_path('app/public/' . $storedPath);
+                if (file_exists($sourcePath)) {
+                    @copy($sourcePath, public_path('layanan/' . $filename));
+                    if (is_dir(base_path('frontend-web/public/layanan'))) {
+                        @copy($sourcePath, base_path('frontend-web/public/layanan/' . $filename));
                     }
-
-                    $decodedData = base64_decode($fileData);
-                    $cleanTitle = Str::slug($serviceTitle) ?: 'service';
-                    $filename = $cleanTitle . '_' . time() . '.' . $ext;
-
-                    $targetDirs = [
-                        public_path('layanan'),
-                        public_path('storage/layanan'),
-                        storage_path('app/public/layanan'),
-                    ];
-
-                    $frontendDir = base_path('frontend-web/public/layanan');
-                    if (is_dir(base_path('frontend-web/public'))) {
-                        $targetDirs[] = $frontendDir;
-                    }
-
-                    foreach ($targetDirs as $dir) {
-                        if (!file_exists($dir)) {
-                            @mkdir($dir, 0777, true);
-                        }
-                        @file_put_contents($dir . DIRECTORY_SEPARATOR . $filename, $decodedData);
-                    }
-
-                    return '/layanan/' . $filename;
                 }
+
+                return '/layanan/' . $filename;
             } catch (\Throwable $e) {
                 // Fallback to raw string
             }

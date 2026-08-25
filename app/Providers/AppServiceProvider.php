@@ -11,6 +11,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        if (file_exists(app_path('Services/Shared/Media/ImageOptimizationService.php'))) {
+            require_once app_path('Services/Shared/Media/ImageOptimizationService.php');
+        }
+
         $this->app->singleton(
             \App\Contracts\PaymentServiceInterface::class,
             \App\Services\Patient\Payment\SimulationPaymentService::class

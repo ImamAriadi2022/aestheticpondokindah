@@ -31,7 +31,7 @@ export default function DesktopUserPromo() {
       code: "SMILE25",
       discount: "25% OFF",
       ends_at: "2026-12-31",
-      image_url: "/dashboard/gigi.png",
+      image_url: "/dashboard/gigi.webp",
     },
     {
       id: "promo-2",
@@ -41,7 +41,7 @@ export default function DesktopUserPromo() {
       code: "BEHEL500K",
       discount: "Rp 500.000",
       ends_at: "2026-12-31",
-      image_url: "/logo/logo.png",
+      image_url: "/logo/logo.webp",
     },
     {
       id: "promo-3",
@@ -51,7 +51,7 @@ export default function DesktopUserPromo() {
       code: "VENEERGOLD",
       discount: "20% OFF",
       ends_at: "2026-12-31",
-      image_url: "/dashboard/sapadokter.png",
+      image_url: "/dashboard/sapadokter.webp",
     },
   ];
 

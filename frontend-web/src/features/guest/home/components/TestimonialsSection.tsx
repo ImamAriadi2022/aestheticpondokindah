@@ -13,7 +13,7 @@ export default function TestimonialsSection() {
       .catch(() => setLoading(false));
   }, []);
 
-  const testimonials = apiItems.map((t: any) => ({ name: t.name, image: t.photo_url || "/testi/placeholder.jpg", content: t.quote, rating: t.rating }));
+  const testimonials = apiItems.map((t: any) => ({ name: t.name, image: t.photo_url || "/testi/placeholder.webp", content: t.quote, rating: t.rating }));
 
   const topRow = [...testimonials, ...testimonials];
   const bottomBase = [...testimonials].reverse();

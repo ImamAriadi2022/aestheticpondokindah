@@ -9,6 +9,7 @@ import {
   Stethoscope,
   Crown,
   Settings,
+  Store,
 } from "lucide-react";
 import { ROLES, type AppRole } from "@/core/permissions/roles";
 
@@ -23,6 +24,11 @@ export interface MenuItem {
 export interface AppMenu {
   root: Record<Exclude<AppRole, "guest">, MenuItem[]>;
 }
+
+export const ETALASE_SUBMENU: MenuItem["submenu"] = [
+  { label: "Edit Beranda", href: "/dashboard/clinic?tab=etalase-beranda" },
+  { label: "Edit Tentang", href: "/dashboard/clinic?tab=etalase-tentang" },
+];
 
 export const CONTENT_SUBMENU: MenuItem["submenu"] = [
   { label: "Blog", href: "/dashboard/clinic?tab=content-blog" },
@@ -54,6 +60,12 @@ export const MENU: AppMenu = {
     ],
     [ROLES.CLINIC]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/clinic" },
+      {
+        label: "Etalase",
+        icon: Store,
+        href: "/dashboard/clinic?tab=etalase-beranda",
+        submenu: ETALASE_SUBMENU,
+      },
       {
         label: "Sistem Booking",
         icon: Calendar,

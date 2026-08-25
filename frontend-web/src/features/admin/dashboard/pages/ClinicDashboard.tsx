@@ -31,6 +31,8 @@ import FaqsManagePage from "@/features/admin/public_info/pages/FaqsManagePage";
 import ContactMessagesPage from "@/features/admin/public_info/pages/ContactMessagesPage";
 import AboutManagePage from "@/features/admin/public_info/pages/AboutManagePage";
 import LegalManagePage from "@/features/admin/public_info/pages/LegalManagePage";
+import EditBerandaPage from "@/features/admin/etalase/pages/EditBerandaPage";
+import EditTentangPage from "@/features/admin/etalase/pages/EditTentangPage";
 import AnalyticsDashboard from "@/features/admin/dashboard/components/AnalyticsDashboard";
 import DesktopClinicHome from "@/features/admin/dashboard/components/DesktopClinicHome";
 
@@ -260,6 +262,12 @@ export default function ClinicDashboardPage() {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "etalase-beranda":
+        return <EditBerandaPage />;
+
+      case "etalase-tentang":
+        return <EditTentangPage />;
+
       case "analytics":
         return <AnalyticsDashboard />;
 

@@ -237,7 +237,7 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
                         src={getStorageUrl(item.cover_image_url || item.cover_image_path) || item.cover_image_url}
                         alt=""
                         className="w-10 h-10 rounded-lg object-cover border border-[#F0E6D3]"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png"; }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp"; }}
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-lg bg-[#FDF8F0] flex items-center justify-center text-[#B8943F] border border-[#F0E6D3]">

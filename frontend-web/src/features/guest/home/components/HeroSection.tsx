@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { buildGuestBookingWhatsAppUrl, submitPublicReservation, WA_NUMBER } from "@/features/guest/reservation/services/reservationApi";
 import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
+import { fetchPublicHome, type HomeContentData, DEFAULT_HOME_CONTENT } from "@/features/admin/etalase/services/etalaseService";
 import GuestBookingTermsDialog from "@/features/guest/reservation/components/GuestBookingTermsDialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -23,11 +24,16 @@ export default function HeroSection() {
   const [termsOpen, setTermsOpen] = useState(false);
   const [bookingTerms, setBookingTerms] = useState<string>();
   const [bookingWhatsappNumber, setBookingWhatsappNumber] = useState(WA_NUMBER);
+  const [homeContent, setHomeContent] = useState<HomeContentData>(DEFAULT_HOME_CONTENT);
 
   useEffect(() => {
     getPublicClinicSettings().then((settings) => {
       setBookingTerms(settings.booking_terms);
       if (settings.booking_whatsapp_number) setBookingWhatsappNumber(settings.booking_whatsapp_number);
+    }).catch(() => {});
+
+    fetchPublicHome().then((data) => {
+      if (data) setHomeContent(data);
     }).catch(() => {});
   }, []);
 
@@ -107,23 +113,23 @@ export default function HeroSection() {
           <div className="relative grid lg:grid-cols-2 gap-6 lg:gap-10 items-start px-3 sm:px-4 lg:px-16 pt-4 lg:pt-8 pb-28 sm:pb-32 lg:pb-32">
             <div className="space-y-4 lg:-mt-1">
               <div className="text-xs lg:text-[1.25rem] font-semibold tracking-wide text-brand-warm-gray font-body">
-                Aesthetic Pondok Indah Dental Clinic
+                {homeContent.hero_tagline || "Aesthetic Pondok Indah Dental Clinic"}
               </div>
 
               <h1 className="text-[1.75rem] sm:text-[2.5rem] md:text-[3.5rem] lg:text-[4.25rem] font-bold text-brand-charcoal leading-[1.1] sm:leading-[1.03] tracking-tight">
-                The solution to
-                <span className="block">brighten your</span>
-                <span className="block text-gradient-gold">smile</span>
+                {homeContent.hero_headline_line1}
+                <span className="block">{homeContent.hero_headline_line2}</span>
+                <span className="block text-gradient-gold">{homeContent.hero_headline_highlight}</span>
               </h1>
 
               <div className="lg:hidden rounded-xl bg-background/70 border border-border p-4 shadow-lg shadow-black/5">
-                <div className="text-xs font-semibold text-brand-charcoal">Our Services Include:</div>
+                <div className="text-xs font-semibold text-brand-charcoal">{homeContent.floating_services_title || "Our Services Include:"}</div>
                 <div className="mt-2 space-y-1.5">
-                  {[
+                  {(homeContent.floating_services || [
                     "Aesthetic Dentistry Consultation",
                     "Pre-Veneer",
                     "Smile Design",
-                  ].map((item) => (
+                  ]).map((item) => (
                     <div key={item} className="flex items-start gap-2">
                       <div className="mt-1 w-1.5 h-1.5 rounded-full bg-brand-gold flex-shrink-0" />
                       <div className="text-xs text-brand-warm-gray font-body">{item}</div>
@@ -134,22 +140,24 @@ export default function HeroSection() {
 
               <div className="space-y-2 lg:-mt-1">
                 <div className="text-base sm:text-lg font-semibold text-brand-charcoal">
-                  Smile Confidently with Veneers!
+                  {homeContent.hero_subheadline}
                 </div>
                 <div className="text-sm sm:text-base text-brand-warm-gray font-body">
-                  Professional and Trusted Aesthetic Dentistry
+                  {homeContent.hero_description}
                 </div>
-                <div className="inline-flex rounded-lg sm:rounded-xl bg-brand-gold-light px-3 sm:px-5 py-2 text-xs sm:text-base font-semibold text-brand-charcoal font-body">
-                  Get 10% Off When You Consult for Veneers This Month!
-                </div>
+                {homeContent.hero_promo_badge && (
+                  <div className="inline-flex rounded-lg sm:rounded-xl bg-brand-gold-light px-3 sm:px-5 py-2 text-xs sm:text-base font-semibold text-brand-charcoal font-body">
+                    {homeContent.hero_promo_badge}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3 pt-2">
                 <div className="flex -space-x-2">
                   {[
-                    "/testi/DEBBY-2-scaled.jpg",
-                    "/testi/MARSHANDA-scaled.jpg",
-                    "/testi/MAZAYA-scaled.jpg",
+                    "/testi/DEBBY-2-scaled.webp",
+                    "/testi/MARSHANDA-scaled.webp",
+                    "/testi/MAZAYA-scaled.webp",
                   ].map((src) => (
                     <img
                       key={src}
@@ -161,8 +169,9 @@ export default function HeroSection() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="text-sm sm:text-base font-semibold text-brand-charcoal">180+</span>
-                    <span className="text-[10px] sm:text-xs text-brand-warm-gray font-body">Satisfied Customer</span>
+                    <span className="text-sm sm:text-base font-semibold text-brand-charcoal">
+                      {homeContent.hero_rating_text || "180+ Satisfied Customer"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -187,20 +196,20 @@ export default function HeroSection() {
                     }}
                   >
                     <img
-                      src="/hero/foto-dokter.png"
+                      src={homeContent.hero_image || "/dokter/drg. Yulita Dora.webp"}
                       alt="Doctor"
                       className="w-full h-full object-contain object-bottom drop-shadow-[0_25px_50px_rgba(0,0,0,0.12)]"
                     />
                   </div>
 
                   <div className="absolute bottom-10 right-6 w-[340px] rounded-2xl bg-background/85 backdrop-blur border border-border p-5 shadow-xl shadow-black/10">
-                    <div className="text-sm font-semibold text-brand-charcoal">Our Services Include:</div>
+                    <div className="text-sm font-semibold text-brand-charcoal">{homeContent.floating_services_title || "Our Services Include:"}</div>
                     <div className="mt-3 space-y-2">
-                      {[
+                      {(homeContent.floating_services || [
                         "Aesthetic Dentistry Consultation",
                         "Pre-Veneer",
                         "Smile Design",
-                      ].map((item) => (
+                      ]).map((item) => (
                         <div key={item} className="flex items-start gap-3">
                           <div className="mt-1 w-2 h-2 rounded-full bg-brand-gold" />
                           <div className="text-sm text-brand-warm-gray font-body">{item}</div>

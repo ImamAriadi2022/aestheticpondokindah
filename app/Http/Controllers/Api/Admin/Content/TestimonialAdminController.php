@@ -41,7 +41,7 @@ class TestimonialAdminController extends Controller
         $data = $validator->validated();
         $photoPath = null;
         if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('testimonials', 'public');
+            $photoPath = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('photo'), 'testimonials', 800, 800, 82);
         }
 
         $item = Testimonial::create([
@@ -92,7 +92,7 @@ class TestimonialAdminController extends Controller
             if ($testimonial->photo_path) {
                 Storage::disk('public')->delete($testimonial->photo_path);
             }
-            $testimonial->photo_path = $request->file('photo')->store('testimonials', 'public');
+            $testimonial->photo_path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('photo'), 'testimonials', 800, 800, 82);
         }
 
         $testimonial->save();

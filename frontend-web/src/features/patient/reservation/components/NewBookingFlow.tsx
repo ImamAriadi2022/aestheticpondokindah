@@ -81,7 +81,7 @@ export function mapBackendService(item: any): ServiceItem {
       maximumFractionDigits: 0,
     }).format(price);
 
-  let image = item.image || `/layanan/${title}.png`;
+  let image = item.image || `/layanan/${title}.webp`;
 
   let categoryBadge = category.toUpperCase();
   if (category.toLowerCase() === "estetik") categoryBadge = "ESTETIK GIGI";
@@ -121,7 +121,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "60–90 mnt",
     price: 1500000,
     priceFormatted: "Rp 1.500.000",
-    image: "/layanan/Dental Whitening.png",
+    image: "/layanan/Dental Whitening.webp",
     specialistNames: ["drg. Yulita Dora"],
     specialistLabel: "Aesthetic Dentist"
   },
@@ -134,7 +134,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "30–45 mnt",
     price: 450000,
     priceFormatted: "Rp 450.000",
-    image: "/layanan/Oral Care.png",
+    image: "/layanan/Oral Care.webp",
     specialistNames: ["drg. Eric Sulistio, Sp. Perio"],
     specialistLabel: "Periodontics & Preventive Dentist"
   },
@@ -147,7 +147,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "90 mnt",
     price: 4500000,
     priceFormatted: "Rp 4.500.000",
-    image: "/layanan/Veneers.png",
+    image: "/layanan/Veneers.webp",
     specialistNames: ["drg. Melati Putri, Sp. Pros", "drg. Yulita Dora"],
     specialistLabel: "Prosthodontist & Aesthetic Specialist"
   },
@@ -160,7 +160,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "120 mnt",
     price: 12000000,
     priceFormatted: "Rp 12.000.000",
-    image: "/layanan/Dental Implants.png",
+    image: "/layanan/Dental Implants.webp",
     specialistNames: ["drg. Yudy Ardila Utomo, Sp.BMM", "drg. Eric Sulistio, Sp. Perio"],
     specialistLabel: "Oral Surgeon & Periodontist"
   },
@@ -173,7 +173,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "60–90 mnt",
     price: 2500000,
     priceFormatted: "Rp 2.500.000",
-    image: "/layanan/Root Canal Treatments.png",
+    image: "/layanan/Root Canal Treatments.webp",
     specialistNames: ["drg. Pramodanti Jiwanakusuma, Sp.KG", "drg. Riesta Paluvi, Sp.KG"],
     specialistLabel: "Endodontic Specialist"
   },
@@ -186,7 +186,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "45–60 mnt",
     price: 2000000,
     priceFormatted: "Rp 2.000.000",
-    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.png",
+    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.webp",
     specialistNames: ["drg. Yudy Ardila Utomo, Sp.BMM"],
     specialistLabel: "Oral & Maxillofacial Surgeon"
   },
@@ -199,7 +199,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "45 mnt",
     price: 25000000,
     priceFormatted: "Rp 25.000.000",
-    image: "/layanan/Invisalign and Clear Aligners.png",
+    image: "/layanan/Invisalign and Clear Aligners.webp",
     specialistNames: ["drg. Nadia Safira, Sp.Ort"],
     specialistLabel: "Orthodontist Specialist"
   },
@@ -212,7 +212,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "30–45 mnt",
     price: 600000,
     priceFormatted: "Rp 600.000",
-    image: "/layanan/Oral Care.png",
+    image: "/layanan/Oral Care.webp",
     specialistNames: ["drg. Achmad Riwandy", "drg. Della Sparringa"],
     specialistLabel: "General Dentist"
   },
@@ -225,7 +225,7 @@ export const INITIAL_SERVICES_CATALOG: ServiceItem[] = [
     duration: "30 mnt",
     price: 500000,
     priceFormatted: "Rp 500.000",
-    image: "/layanan/Pediatric Dentistry.png",
+    image: "/layanan/Pediatric Dentistry.webp",
     specialistNames: ["drg. Anindita Putri, Sp.KGA"],
     specialistLabel: "Pediatric Dentist"
   }
@@ -239,7 +239,7 @@ export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
     specialization: "Aesthetic & Cosmetic Dentistry",
     university: "Universitas Indonesia",
     experienceYears: 8,
-    photo: "/dokter/drg. Yulita Dora.jpeg"
+    photo: "/dokter/drg. Yulita Dora.webp"
   },
   {
     id: "4",
@@ -248,7 +248,7 @@ export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
     specialization: "General Dentistry & Restorative",
     university: "Universitas Gadjah Mada",
     experienceYears: 6,
-    photo: "/dokter/drg. Achmad Riwandy.jpeg"
+    photo: "/dokter/drg. Achmad Riwandy.webp"
   },
   {
     id: "5",
@@ -257,7 +257,7 @@ export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
     specialization: "General Dentistry & Preventive",
     university: "Universitas Airlangga",
     experienceYears: 5,
-    photo: "/dokter/drg. Della Sparringa.jpeg"
+    photo: "/dokter/drg. Della Sparringa.webp"
   },
   {
     id: "6",
@@ -266,7 +266,7 @@ export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
     specialization: "Spesialis Periodonsia & Implan",
     university: "Universitas Indonesia",
     experienceYears: 11,
-    photo: "/dokter/drg. Eric Sulistio, Sp. Perio.jpeg"
+    photo: "/dokter/drg. Eric Sulistio, Sp. Perio.webp"
   },
   {
     id: "7",
@@ -275,7 +275,7 @@ export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
     specialization: "Spesialis Prostodonsia & Veneer",
     university: "Universitas Indonesia",
     experienceYears: 10,
-    photo: "/dokter/drg. Melati Putri, Sp. Pros.jpeg"
+    photo: "/dokter/drg. Melati Putri, Sp. Pros.webp"
   },
   {
     id: "8",
@@ -284,7 +284,7 @@ export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
     specialization: "Spesialis Bedah Mulut & Maksilofasial",
     university: "Universitas Padjadjaran",
     experienceYears: 14,
-    photo: "/dokter/drg. Yudy Ardila Utomo, Sp.BMM.jpeg"
+    photo: "/dokter/drg. Yudy Ardila Utomo, Sp.BMM.webp"
   },
   {
     id: "9",
@@ -293,7 +293,7 @@ export const INITIAL_DOCTORS_CATALOG: DoctorItem[] = [
     specialization: "Spesialis Konservasi Gigi & Endodontik",
     university: "Universitas Indonesia",
     experienceYears: 9,
-    photo: "/dokter/drg. Pramodanti Jiwanakusuma, Sp.KG.jpeg"
+    photo: "/dokter/drg. Pramodanti Jiwanakusuma, Sp.KG.webp"
   }
 ];
 
@@ -535,7 +535,7 @@ export default function NewBookingFlow({
           specialization: doc.specialization || "Dokter Gigi Spesialis",
           university: doc.university || doc.education || "Universitas Indonesia",
           experienceYears: Number(doc.experienceYears || doc.experience_years || 5),
-          photo: doc.photo || doc.avatar || `/dokter/${doc.name}.jpeg`,
+          photo: doc.photo || doc.avatar || `/dokter/${doc.name}.webp`,
         }));
         setDoctorsList(mapped);
         if (mapped.length > 0) {

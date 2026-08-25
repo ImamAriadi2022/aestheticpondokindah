@@ -40,7 +40,7 @@ class PopupAdminController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $this->processAndSaveWebp($request->file('image'));
+            $imagePath = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'popups', 1600, 1600, 82);
         }
 
         $popup = Popup::create([
@@ -106,7 +106,7 @@ class PopupAdminController extends Controller
                 Storage::disk('public')->delete($popup->image_path);
                 @unlink(public_path('storage/' . ltrim($popup->image_path, '/')));
             }
-            $popup->image_path = $this->processAndSaveWebp($request->file('image'));
+            $popup->image_path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'popups', 1600, 1600, 82);
         }
 
         $popup->save();

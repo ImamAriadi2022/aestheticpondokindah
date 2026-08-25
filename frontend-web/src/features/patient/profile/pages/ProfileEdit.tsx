@@ -211,24 +211,25 @@ export default function ProfileEditPage() {
     };
   }, []);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    try {
+      const { compressImageToWebP } = await import("@/core/utils/imageCompressor");
+      const result = await compressImageToWebP(file, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.85,
+      });
+      setProfile((prev) => ({ ...prev, avatar: result.dataUrl }));
+    } catch (err) {
       toast({
-        title: "File Terlalu Besar",
-        message: "Ukuran foto profil maksimal 2MB.",
+        title: "Gagal Memproses Foto",
+        message: "Tidak dapat mengompresi foto profil.",
         variant: "error",
       });
-      return;
     }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProfile((prev) => ({ ...prev, avatar: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleProvinceChange = (provId: string) => {

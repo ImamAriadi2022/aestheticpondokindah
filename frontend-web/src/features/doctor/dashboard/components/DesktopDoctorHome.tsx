@@ -125,7 +125,7 @@ export default function DesktopDoctorHome({
           {/* Hero Illustration */}
           <div className="hidden lg:flex items-center justify-center relative w-64 h-44 shrink-0">
             <img
-              src="/dashboard/sapadokter.png"
+              src="/dashboard/sapadokter.webp"
               alt="Sapa Dokter"
               className="w-full h-full object-contain drop-shadow-md"
               onError={(e) => {

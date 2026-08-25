@@ -73,7 +73,7 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
             </div>
             <div className="absolute -bottom-2 w-40 h-4 bg-gradient-to-r from-transparent via-[#C9A24A]/20 to-transparent rounded-full blur-sm" />
             <img 
-              src="/dashboard/sapadokter.png" 
+              src="/dashboard/sapadokter.webp" 
               alt="Dokter" 
               className="w-full h-full object-contain object-bottom drop-shadow-2xl relative z-10 hover:scale-105 transition-transform duration-500"
             />
@@ -102,7 +102,7 @@ function WelcomeHero({ userName }: { userName: string; isMembership?: boolean })
                 </Link>
               </div>
               <img 
-                src="/dashboard/gigi.png" 
+                src="/dashboard/gigi.webp" 
                 alt="Promo" 
                 className="w-28 h-28 object-contain -mr-5 -mt-3"
               />
@@ -174,7 +174,7 @@ export default function DesktopUserHome({
             </div>
             <div className="w-32 h-32 flex-shrink-0">
               <img
-                src="/dashboard/gigi.png"
+                src="/dashboard/gigi.webp"
                 alt="Konsultasi"
                 className="w-full h-full object-contain drop-shadow-lg"
               />
@@ -201,7 +201,7 @@ export default function DesktopUserHome({
             </div>
             <div className="w-32 h-32 flex-shrink-0">
               <img
-                src="/dashboard/kalender.png"
+                src="/dashboard/kalender.webp"
                 alt="Booking"
                 className="w-full h-full object-contain drop-shadow-lg"
               />

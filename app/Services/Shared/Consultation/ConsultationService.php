@@ -188,6 +188,23 @@ class ConsultationService
 
     public function sendMessage(Consultation $consultation, ?User $sender, string $role, string $body, ?array $attachments = null): ConsultationMessage
     {
+        if (is_array($attachments)) {
+            $processed = [];
+            foreach ($attachments as $item) {
+                if (is_string($item) && str_starts_with($item, 'data:image')) {
+                    try {
+                        $stored = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($item, 'consultations', 1600, 1600, 82);
+                        $processed[] = asset('storage/' . $stored);
+                    } catch (\Throwable $e) {
+                        $processed[] = $item;
+                    }
+                } else {
+                    $processed[] = $item;
+                }
+            }
+            $attachments = $processed;
+        }
+
         $message = $consultation->messages()->create([
             'sender_id' => $sender?->id,
             'sender_role' => $role,

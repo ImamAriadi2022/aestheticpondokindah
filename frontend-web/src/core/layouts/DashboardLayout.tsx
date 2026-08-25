@@ -38,22 +38,18 @@ export default function DashboardLayout({
   availableDoctorsCount = 0,
 }: DashboardLayoutProps) {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [contentMenuOpen, setContentMenuOpen] = useState(false);
-  const [floatingSubmenu, setFloatingSubmenu] = useState<MenuItem["submenu"]>([]);
-  const [contentMenuPos, setContentMenuPos] = useState({ top: 0, left: 0 });
+  const [openSubmenuLabel, setOpenSubmenuLabel] = useState<string | null>(null);
 
   const [userPopupOpen, setUserPopupOpen] = useState(false);
+  const sidebarRef = useRef<HTMLElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const avatarBtnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(e.target as Node) &&
-        avatarBtnRef.current &&
-        !avatarBtnRef.current.contains(e.target as Node)
-      ) {
+      const target = e.target as Node;
+      if (sidebarRef.current && !sidebarRef.current.contains(target)) {
+        setOpenSubmenuLabel(null);
         setUserPopupOpen(false);
       }
     };
@@ -63,13 +59,13 @@ export default function DashboardLayout({
 
   const toggleSidebar = () => {
     setSidebarExpanded((prev) => !prev);
-    setContentMenuOpen(false);
+    setOpenSubmenuLabel(null);
     setUserPopupOpen(false);
   };
 
   const handleMenuClick = () => {
     setSidebarExpanded(false);
-    setContentMenuOpen(false);
+    setOpenSubmenuLabel(null);
     setUserPopupOpen(false);
   };
   const location = useLocation();
@@ -196,6 +192,7 @@ export default function DashboardLayout({
         <div className="sticky top-4 left-0 h-[calc(100vh-32px)] self-start z-[100] pointer-events-auto ml-2 mr-2 flex-shrink-0">
           {/* Floating Glassmorphism Sidebar - Elegant Gold Theme */}
           <aside
+            ref={sidebarRef}
             className={`
               pointer-events-auto flex flex-col h-full
               bg-[#1a1612]
@@ -240,83 +237,163 @@ export default function DashboardLayout({
                 const active = isActive(item.href);
                 const isSubmenu = role === "clinic" && Boolean(item.submenu?.length);
 
-                // Pop-up submenu stays outside the compact sidebar.
+                // Submenu items anchored directly to the sidebar button
                 if (isSubmenu) {
                   const contentActive = item.submenu!.some((sub) => isActive(sub.href));
-                  return (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={(event) => {
-                        const nextOpen = !contentMenuOpen || floatingSubmenu !== item.submenu;
-                        if (nextOpen) {
-                          const rect = event.currentTarget.getBoundingClientRect();
-                          setContentMenuPos({ top: rect.top, left: rect.right + 12 });
-                        }
-                        if (nextOpen && !contentActive) navigate(item.href);
-                        setFloatingSubmenu(item.submenu || []);
-                        setContentMenuOpen(nextOpen);
-                      }}
-                      className={`
-                        group relative flex items-center
-                        h-12 rounded-2xl w-full
-                        transition-all duration-300
-                        ${contentActive
-                          ? "bg-gradient-to-r from-[#C9A24A]/80 to-[#B8943F]/80 shadow-[0_4px_20px_rgba(201,162,74,0.3)]"
-                          : "hover:bg-[#2a2319]"
-                        }
-                        ${sidebarExpanded ? "px-3 gap-3" : "justify-center px-0"}
-                      `}
-                    >
-                      {contentActive && (
-                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#C9A24A]/20 to-[#E8C547]/20 blur-xl -z-10" />
-                      )}
-                      <div className={`
-                        flex items-center justify-center w-9 h-9 rounded-xl
-                        transition-all duration-300
-                        ${contentActive
-                          ? "bg-[#E8C547]/20 text-[#FFF8E1] shadow-inner"
-                          : "bg-[#2a2319] text-[#A89F91] group-hover:bg-[#3a3126] group-hover:text-[#E8C547]"
-                        }
-                      `}>
-                        <item.icon className="w-[18px] h-[18px]" strokeWidth={contentActive ? 2.5 : 2} />
-                      </div>
-                      {sidebarExpanded && (
-                        <>
-                          <span className={`
-                            flex-1 text-sm font-medium tracking-wide text-left
-                            transition-all duration-300
-                            ${contentActive ? "text-white" : "text-[#D4C5B0] group-hover:text-[#E8C547]"}
-                          `}>
-                            {item.label}
-                          </span>
-                          <ChevronDown className={`
-                            w-4 h-4 transition-transform duration-300
-                            ${contentActive ? "text-white" : "text-[#A89F91]"}
-                            ${contentMenuOpen ? "rotate-180" : ""}
-                          `} />
-                        </>
-                      )}
+                  const isMenuOpen = openSubmenuLabel === item.label;
 
-                      {/* Tooltip when collapsed */}
-                      {!sidebarExpanded && (
-                        <div className="
-                          absolute left-full ml-3 px-3 py-1.5
-                          bg-[#1a1612] backdrop-blur-sm
-                          border border-[#C9A24A]/40 rounded-lg
-                          text-xs text-[#E8C547] font-medium
-                          whitespace-nowrap
-                          opacity-0 invisible
-                          group-hover:opacity-100 group-hover:visible
-                          transition-all duration-200
-                          shadow-[0_4px_20px_rgba(0,0,0,0.3)]
-                          z-50
-                        ">
-                          {item.label}
-                          <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
+                  return (
+                    <div key={item.label} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpenSubmenuLabel((prev) => (prev === item.label ? null : item.label));
+                          setUserPopupOpen(false);
+                        }}
+                        className={`
+                          group relative flex items-center
+                          h-12 rounded-2xl w-full
+                          transition-all duration-300
+                          ${contentActive
+                            ? "bg-gradient-to-r from-[#C9A24A]/80 to-[#B8943F]/80 shadow-[0_4px_20px_rgba(201,162,74,0.3)]"
+                            : "hover:bg-[#2a2319]"
+                          }
+                          ${sidebarExpanded ? "px-3 gap-3" : "justify-center px-0"}
+                        `}
+                      >
+                        {contentActive && (
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#C9A24A]/20 to-[#E8C547]/20 blur-xl -z-10" />
+                        )}
+                        <div className={`
+                          flex items-center justify-center w-9 h-9 rounded-xl
+                          transition-all duration-300
+                          ${contentActive
+                            ? "bg-[#E8C547]/20 text-[#FFF8E1] shadow-inner"
+                            : "bg-[#2a2319] text-[#A89F91] group-hover:bg-[#3a3126] group-hover:text-[#E8C547]"
+                          }
+                        `}>
+                          <item.icon className="w-[18px] h-[18px]" strokeWidth={contentActive ? 2.5 : 2} />
+                        </div>
+                        {sidebarExpanded && (
+                          <>
+                            <span className={`
+                              flex-1 text-sm font-medium tracking-wide text-left
+                              transition-all duration-300
+                              ${contentActive ? "text-white" : "text-[#D4C5B0] group-hover:text-[#E8C547]"}
+                            `}>
+                              {item.label}
+                            </span>
+                            <ChevronDown className={`
+                              w-4 h-4 transition-transform duration-300
+                              ${contentActive ? "text-white" : "text-[#A89F91]"}
+                              ${isMenuOpen ? "rotate-180" : ""}
+                            `} />
+                          </>
+                        )}
+
+                        {/* Tooltip when collapsed & closed */}
+                        {!sidebarExpanded && !isMenuOpen && (
+                          <div className="
+                            absolute left-full ml-3 px-3 py-1.5
+                            bg-[#1a1612] backdrop-blur-sm
+                            border border-[#C9A24A]/40 rounded-lg
+                            text-xs text-[#E8C547] font-medium
+                            whitespace-nowrap
+                            opacity-0 invisible
+                            group-hover:opacity-100 group-hover:visible
+                            transition-all duration-200
+                            shadow-[0_4px_20px_rgba(0,0,0,0.3)]
+                            z-50
+                          ">
+                            {item.label}
+                            <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
+                          </div>
+                        )}
+                      </button>
+
+                      {/* Dropdown for Collapsed Sidebar (Flyout attached directly to this sidebar item) */}
+                      {!sidebarExpanded && isMenuOpen && (
+                        <div
+                          className="
+                            absolute left-full top-0 ml-3.5 z-50 min-w-[200px]
+                            bg-[#1a1612] backdrop-blur-md
+                            border-2 border-[#C9A24A]/50 rounded-2xl
+                            shadow-[0_12px_40px_rgba(0,0,0,0.6)]
+                            p-2.5 flex flex-col gap-1
+                            animate-in fade-in zoom-in-95 duration-150
+                          "
+                        >
+                          {/* Triangle indicator pointing to the icon */}
+                          <div className="absolute -left-[7px] top-6 -translate-y-1/2 w-3.5 h-3.5 bg-[#1a1612] border-l-2 border-b-2 border-[#C9A24A]/50 rotate-45 pointer-events-none" />
+
+                          {/* Dropdown Title Header */}
+                          <div className="px-3 py-1.5 border-b border-[#C9A24A]/20 flex items-center justify-between mb-1">
+                            <span className="text-[11px] font-bold text-[#E8C547] uppercase tracking-wider">
+                              {item.label}
+                            </span>
+                            <span className="text-[10px] text-[#A89F91] font-medium">
+                              {item.submenu?.length} Menu
+                            </span>
+                          </div>
+
+                          {/* Submenu links */}
+                          {item.submenu?.map((sub) => {
+                            const subActive = isActive(sub.href);
+                            return (
+                              <Link
+                                key={sub.label}
+                                to={sub.href}
+                                onClick={() => {
+                                  setOpenSubmenuLabel(null);
+                                  handleMenuClick();
+                                }}
+                                className={`
+                                  flex items-center py-2 px-3 rounded-xl text-xs font-semibold
+                                  transition-all duration-200
+                                  ${subActive
+                                    ? "bg-gradient-to-r from-[#C9A24A]/30 to-[#B8943F]/30 text-[#E8C547] font-bold border border-[#C9A24A]/40 shadow-inner"
+                                    : "text-[#D4C5B0] hover:bg-[#2a2319] hover:text-[#E8C547]"
+                                  }
+                                `}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full mr-2.5 ${subActive ? "bg-[#E8C547]" : "bg-[#A89F91]"}`} />
+                                {sub.label}
+                              </Link>
+                            );
+                          })}
                         </div>
                       )}
-                    </button>
+
+                      {/* Accordion for Expanded Sidebar */}
+                      {sidebarExpanded && isMenuOpen && (
+                        <div className="pl-3 pr-1 py-1 space-y-1 border-l-2 border-[#C9A24A]/40 ml-6 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {item.submenu?.map((sub) => {
+                            const subActive = isActive(sub.href);
+                            return (
+                              <Link
+                                key={sub.label}
+                                to={sub.href}
+                                onClick={() => {
+                                  setOpenSubmenuLabel(null);
+                                  handleMenuClick();
+                                }}
+                                className={`
+                                  flex items-center py-2 px-2.5 rounded-xl text-xs font-semibold
+                                  transition-all duration-200
+                                  ${subActive
+                                    ? "bg-[#C9A24A]/30 text-[#E8C547] font-bold"
+                                    : "text-[#A89F91] hover:bg-[#2a2319] hover:text-[#E8C547]"
+                                  }
+                                `}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full mr-2 ${subActive ? "bg-[#E8C547]" : "bg-[#A89F91]"}`} />
+                                {sub.label}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 }
 
@@ -569,35 +646,6 @@ export default function DashboardLayout({
               </div>
             </div>
           </aside>
-          {/* Floating submenu */}
-          {contentMenuOpen && (
-            <div
-              className="fixed z-[60] bg-[#1a1612] border border-[#C9A24A]/40 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-2 min-w-[180px] pointer-events-auto flex flex-col gap-1"
-              style={{ top: contentMenuPos.top, left: contentMenuPos.left }}
-            >
-              {floatingSubmenu?.map((sub) => {
-                const subActive = isActive(sub.href);
-                return (
-                  <Link
-                    key={sub.label}
-                    to={sub.href}
-                    onClick={handleMenuClick}
-                    className={`
-                      flex items-center py-2.5 px-3 rounded-xl text-sm
-                      transition-all duration-200
-                      ${subActive
-                        ? "bg-[#C9A24A]/30 text-[#E8C547] font-semibold"
-                        : "text-[#A89F91] hover:bg-[#2a2319] hover:text-[#E8C547]"
-                      }
-                    `}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full mr-2.5 bg-current" />
-                    {sub.label}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
         </div>
       )}
 

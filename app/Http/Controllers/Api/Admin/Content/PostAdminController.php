@@ -57,7 +57,7 @@ class PostAdminController extends Controller
 
         $coverPath = null;
         if ($request->hasFile('cover_image')) {
-            $coverPath = $request->file('cover_image')->store('posts', 'public');
+            $coverPath = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('cover_image'), 'posts', 1600, 1600, 82);
         }
 
         $post = Post::create([
@@ -136,7 +136,7 @@ class PostAdminController extends Controller
             if ($post->cover_image_path) {
                 Storage::disk('public')->delete($post->cover_image_path);
             }
-            $post->cover_image_path = $request->file('cover_image')->store('posts', 'public');
+            $post->cover_image_path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('cover_image'), 'posts', 1600, 1600, 82);
         }
 
         if ($post->status === 'published' && !$post->published_at) {

@@ -34,6 +34,23 @@ class GuestConsultationController extends Controller
             'attachments' => ['nullable', 'array'],
         ]);
 
+        if (!empty($validated['attachments']) && is_array($validated['attachments'])) {
+            $processed = [];
+            foreach ($validated['attachments'] as $att) {
+                if (is_string($att) && str_starts_with($att, 'data:image')) {
+                    try {
+                        $stored = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($att, 'consultations', 1600, 1600, 82);
+                        $processed[] = asset('storage/' . $stored);
+                    } catch (\Throwable $e) {
+                        $processed[] = $att;
+                    }
+                } else {
+                    $processed[] = $att;
+                }
+            }
+            $validated['attachments'] = $processed;
+        }
+
         $consultation = $this->consultationService->createQuick(
             $validated,
             null,

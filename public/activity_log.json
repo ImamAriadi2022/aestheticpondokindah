@@ -1,5 +1,96 @@
 [
   {
+    "id": "act-286",
+    "timestamp": "2026-08-25T11:01:38.615Z",
+    "category": "ui-fix",
+    "title": "Perbaikan Bug Posisi Floating Dropdown Sidebar Admin (Penjangkaran Absolut Menempel pada Sidebar)",
+    "description": "Memperbaiki posisi dropdown submenu pada sidebar Admin (Etalase, Sistem Booking, Konten, Kelola Pengguna) dengan mengganti mekanisme koordinat viewport tetap (fixed) menjadi penjangkaran relatif-absolut yang menempel langsung pada tombol item sidebar (absolute left-full top-0 ml-3.5), sehingga saat halaman atau konten utama di-scroll, popup dropdown tetap terkunci sempurna pada sidebar tanpa terpisah atau bergerak independen.",
+    "details": [
+      "Sidebar Anchored Architecture: Menempatkan flyout dropdown langsung di dalam container tombol relatif item sidebar, sehingga posisi popup 100% terkunci dengan bilah sidebar.",
+      "Zero Scroll Drift: Menghilangkan bug terpisahnya dropdown saat scrolling halaman utama dengan memastikan dropdown tidak menggunakan posisi fixed viewport.",
+      "Integrated Accordion & Flyout: Mendukung mode flyout menu elegan saat sidebar menciut (collapsed) dan accordion inline saat sidebar melebar (expanded).",
+      "Clean Click Outside: Menggunakan sidebarRef terpadu untuk menutup popup submenu secara otomatis saat pengguna mengeklik area luar sidebar."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-285",
+    "timestamp": "2026-08-25T10:53:59.584Z",
+    "category": "feature",
+    "title": "Dinamisasi Kartu Statistik & Nilai-Nilai Inti pada CMS Edit Tentang Kami",
+    "description": "Menambahkan tombol '+ Tambah Kartu' dan tombol hapus (trash) dinamis pada Seksi 3 (Statistik & Pencapaian) serta Seksi 4 (Nilai-Nilai Utama/Core Values) di halaman CMS Edit Tentang Kami (/dashboard/clinic?tab=etalase-tentang), mengisi 4 default statistik dan 3 core values pada database, serta menyempurnakan responsivitas grid rendering pada halaman publik About.",
+    "details": [
+      "Dynamic Stats Management: Admin kini dapat menambah atau menghapus kartu statistik tanpa batas, dengan badge counter jumlah kartu aktif dan validasi minimal 1 kartu.",
+      "Dynamic Core Values Management: Admin dapat menambah poin nilai-nilai inti baru atau menghapus yang sudah ada secara visual.",
+      "Responsive Grid Adaptivity: Halaman publik AboutPage secara otomatis menyesuaikan tata letak kolom grid (1-2 kolom, 3 kolom, atau 4 kolom) mengikuti jumlah kartu statistik dan nilai inti yang diatur Admin.",
+      "Database Population: Memastikan 4 default stats ('15+ Tahun Pengalaman', '10k+ Pasien Bahagia', '25+ Dokter Spesialis', '99% Tingkat Kepuasan') terisi lengkap di database clinic_about_profile."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-284",
+    "timestamp": "2026-08-25T10:49:34.162Z",
+    "category": "ui-update",
+    "title": "Pembaruan Foto Banner Default Beranda Menggunakan Foto drg. Yulita Dora",
+    "description": "Mengganti referensi foto banner default pada CMS Etalase Beranda, database clinic_home_content, dan komponen HeroSection publik ke foto resmi drg. Yulita Dora (/dokter/drg. Yulita Dora.webp), menghapus berkas sementara nota/invoice yang tidak terpakai, serta menyinkronkan aset WebP ke direktori hero.",
+    "details": [
+      "Default Hero Image: Menjadikan foto drg. Yulita Dora sebagai gambar utama hero banner pada HomeAdminController, etalaseService, dan HeroSection.",
+      "Database Sync: Memperbarui record clinic_home_content di database agar langsung merujuk ke /dokter/drg. Yulita Dora.webp.",
+      "Asset Cleanup: Menghapus berkas sementara nota DigiBooster dari folder hero publik dan frontend-web."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-283",
+    "timestamp": "2026-08-25T10:32:01.456Z",
+    "category": "feature",
+    "title": "Fitur Etalase CMS di Panel Admin (Edit Beranda & Edit Tentang Tanpa Coding)",
+    "description": "Mengimplementasikan fitur Etalase CMS terintegrasi pada panel Admin Klinik dengan 2 sub-fitur (Edit Beranda & Edit Tentang), menyediakan backend controller & REST API dinamis (/api/admin/home, /api/public/home, /api/admin/about, /api/public/about), mesin optimasi gambar WebP instan, antarmuka editor visual interaktif lengkap dengan Live Preview, serta integrasi render dinamis pada halaman publik tamu (Home & About) sehingga seluruh perubahan teks, promo, foto, dan layanan langsung tayang tanpa perlu modifikasi kode.",
+    "details": [
+      "Sidebar Navigation & Permissions: Menambahkan grup menu induk 'Etalase' pada AdminSidebar dan menu.ts dengan sub-menu 'Edit Beranda' (/dashboard/clinic?tab=etalase-beranda) dan 'Edit Tentang' (/dashboard/clinic?tab=etalase-tentang).",
+      "CMS Edit Beranda: Antarmuka visual untuk mengubah Tagline, Headline (baris 1, 2, gradient highlight), Sub-headline, Deskripsi, Teks Badge Promo Emas, Teks Rating Pelanggan, Upload Foto Dokter Hero (auto WebP), serta Pengelolaan Item Kartu Layanan Melayang (Floating Services Card).",
+      "CMS Edit Tentang: Antarmuka visual untuk mengelola Judul Utama Hero, Subtitle Pengantar, Narasi Cerita Perjalanan Klinik (paragraf dinamis), Foto Fasilitas Klinik (auto WebP), Badge Penghargaan Melayang, 4 Kartu Metrik Statistik Pencapaian, dan Nilai-Nilai Inti Klinik.",
+      "Backend CMS Engine: Membuat HomeAdminController, HomePublicController, dan menyempurnakan AboutAdminController/AboutPublicController dengan persistensi JSON aman pada clinic_settings serta integrasi ImageOptimizationService.",
+      "Public Realtime Sync: Menghubungkan HeroSection dan AboutPage untuk merender data CMS secara realtime dengan fallback tangguh ke konfigurasi standar."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-282",
+    "timestamp": "2026-08-25T10:14:05.960Z",
+    "category": "cleanup",
+    "title": "Pembersihan Total Seluruh Format Gambar Warisan (.png, .jpg, .jpeg) & Penyelarasan Frontend",
+    "description": "Menghapus seluruh 233+ berkas gambar format lama (.png, .jpg, .jpeg, .bmp) dari direktori public/, frontend-web/public/, dan storage/ setelah seluruhnya terkonversi sempurna ke WebP, memperbarui 27 file sumber frontend, index.html, dan manifest.json ke format WebP murni, serta mengompilasi ulang bundel frontend produksi.",
+    "details": [
+      "Legacy Format Removal: Menghapus seluruh berkas non-WebP (membebaskan 128 MB ruang penyimpanan) setelah memastikan seluruh padanan .webp ada dan valid.",
+      "Frontend Code Sync: Memperbarui 27 file komponen React, index.html, dan manifest.json agar langsung merujuk ke path .webp secara native.",
+      "Zero Non-WebP Integrity: Memverifikasi audit akhir dengan 0 berkas gambar format lama yang tersisa di seluruh folder publik dan storage.",
+      "Production Build: Mengompilasi ulang bundel frontend ke public/ dengan 0 error kompilasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-281",
+    "timestamp": "2026-08-25T10:05:41.344Z",
+    "category": "performance",
+    "title": "Konversi WebP Global (91.8% Penghematan Bandwidth) & Kompresi Wajib Otomatis Multi-Role (Admin, Doctor, Patient, Guest)",
+    "description": "Mengonversi seluruh 233 aset gambar statis dan media di proyek (menghemat 91.8% ukuran dari 128 MB menjadi 10.5 MB tanpa mengurangi ketajaman / zero-blur), mengimplementasikan ImageOptimizationService dengan pemeliharaan alpha transparency dan orientasi EXIF, menerapkan mekanisme wajib konversi ke WebP pada seluruh fitur unggahan foto untuk 4 peran pengguna (Admin, Dokter, Pasien, Guest), menambahkan helper kompresi pre-upload di frontend, serta menyelaraskan database dan script deploy.sh.",
+    "details": [
+      "Bulk WebP Conversion: Mengonversi 233 file gambar (.png, .jpg, .jpeg) pada public/ (dashboard, dokter, layanan, galeri, hero, logo, popup, testi, promo), frontend-web/public/, dan storage/ ke WebP dengan kompresi berkualitas tinggi (Quality 82%), memangkas ukuran dari 127.98 MB menjadi 10.49 MB (-91.8% bandwidth).",
+      "ImageOptimizationService Engine: Membuat layanan backend terpusat untuk penyesuaian rotasi EXIF otomatis, pemeliharaan alpha transparency PNG, resizing proporsional bicubic (anti blur), dan encoding WebP.",
+      "Multi-Role Mandatory WebP Upload: Mengintegrasikan ImageOptimizationService ke Admin (Galeri, Promo, Popup, Post/Blog, Testimoni, Layanan, Media Manager), Dokter (Avatar Profil & lampiran rekam medis), Pasien (Avatar Akun, lampiran chat konsultasi, bukti pengaduan), dan Guest (lampiran form konsultasi cepat & live chat guest).",
+      "Frontend Pre-Compression: Menambahkan helper compressImageFileToWebPFile pada imageCompressor.ts untuk kompresi instan di sisi browser sebelum file dikirim ke server.",
+      "Database & Deploy Harmonization: Memperbarui 57+ referensi path gambar pada database ke .webp dan menambahkan perintah otomasi php artisan media:convert-to-webp pada deploy.sh."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-280",
     "timestamp": "2026-08-25T08:34:10.068Z",
     "category": "feature",

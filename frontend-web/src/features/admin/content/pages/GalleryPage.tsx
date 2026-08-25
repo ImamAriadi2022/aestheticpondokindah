@@ -181,7 +181,7 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
                         src={getStorageUrl(item.image_url || item.image_path) || item.image_url}
                         alt=""
                         className="w-12 h-12 rounded-xl object-cover border border-[#F0E6D3]"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png"; }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp"; }}
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F] border border-[#F0E6D3]">

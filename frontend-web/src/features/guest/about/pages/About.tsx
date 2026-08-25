@@ -3,23 +3,19 @@ import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
 import { Button } from "@/shared/ui/button";
 import { CheckCircle2, Award, Users, MessageCircle, Target } from "lucide-react";
-import { fetchPublicAbout, type ClinicAboutData, ABOUT_STATS, ABOUT_VALUES } from "../services/aboutService";
+import {
+  fetchPublicAbout,
+  type AboutContentData,
+  DEFAULT_ABOUT_CONTENT,
+} from "@/features/admin/etalase/services/etalaseService";
 
 export default function AboutPage() {
-  const [about, setAbout] = useState<ClinicAboutData>({
-    hero_title: "About The Company Aesthetic Pondok Indah",
-    hero_subtitle: "At Aesthetic Pondok Indah Dental Clinic, we deliver professional dental solutions that go beyond treating problems. Our focus is on enhancing your smile, improving confidence, and supporting long-term health.",
-    story_title: "Professional Care that Puts You First",
-    story_paragraphs: [
-      "Aesthetic Pondok Indah Dental Clinic didirikan dengan visi menghadirkan perawatan gigi berstandar tinggi yang mengutamakan kenyamanan, estetika alami, dan kesehatan jangka panjang.",
-      "Dengan tim dokter spesialis berpengalaman dan teknologi modern, kami berkomitmen memberikan perawatan yang personal dan presisi untuk setiap pasien.",
-    ],
-    stats: ABOUT_STATS,
-    values: ABOUT_VALUES,
-  });
+  const [about, setAbout] = useState<AboutContentData>(DEFAULT_ABOUT_CONTENT);
 
   useEffect(() => {
-    fetchPublicAbout().then((data) => setAbout(data));
+    fetchPublicAbout().then((data) => {
+      if (data) setAbout(data);
+    });
   }, []);
 
   return (
@@ -52,7 +48,7 @@ export default function AboutPage() {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-gold rounded-3xl rotate-3 scale-[0.97] opacity-20"></div>
                 <img
-                  src="/about/tentang3.jpg"
+                  src={about.story_image || "/about/tentang3.webp"}
                   alt="Klinik Aesthetic Pondok Indah"
                   className="relative rounded-3xl shadow-2xl shadow-black/10 w-full object-cover aspect-[6/5]"
                 />
@@ -62,8 +58,8 @@ export default function AboutPage() {
                       <Award className="w-8 h-8 text-white" />
                     </div>
                     <div>
-                      <p className="text-3xl font-bold text-brand-charcoal">Top</p>
-                      <p className="text-sm text-brand-warm-gray font-body">Dental Clinic in Jakarta</p>
+                      <p className="text-3xl font-bold text-brand-charcoal">{about.badge_title || "Top"}</p>
+                      <p className="text-sm text-brand-warm-gray font-body">{about.badge_subtitle || "Dental Clinic in Jakarta"}</p>
                     </div>
                   </div>
                 </div>
@@ -71,26 +67,26 @@ export default function AboutPage() {
 
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-gold-light rounded-full">
-                  <span className="text-sm font-semibold text-brand-gold font-body">Cerita Kami</span>
+                  <span className="text-sm font-semibold text-brand-gold font-body">{about.story_tag || "Cerita Kami"}</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal">
                   {about.story_title}
                 </h2>
                 <div className="space-y-4 text-brand-warm-gray font-body leading-relaxed text-sm sm:text-base">
-                  {about.story_paragraphs.map((para, idx) => (
+                  {(about.story_paragraphs || []).map((para, idx) => (
                     <p key={idx}>{para}</p>
                   ))}
                 </div>
 
                 <div className="pt-4 flex flex-wrap gap-4">
                   <a
-                    href="https://wa.me/6281990114949"
+                    href={about.cta_whatsapp_url || "https://wa.me/6281990114949"}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     <Button className="bg-gradient-gold hover:opacity-90 text-white rounded-full px-8 py-6 font-semibold font-body shadow-lg shadow-brand-gold/20 flex items-center gap-2">
                       <MessageCircle className="w-5 h-5" />
-                      Konsultasi WhatsApp
+                      {about.cta_whatsapp_text || "Konsultasi WhatsApp"}
                     </Button>
                   </a>
                 </div>
@@ -102,12 +98,18 @@ export default function AboutPage() {
         {/* Stats Section */}
         <section className="py-14 sm:py-20 bg-brand-cream/30 border-y border-brand-gold/10">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {about.stats.map((stat, idx) => (
+            <div className={`grid gap-8 ${
+              (about.stats || []).length <= 2
+                ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
+                : (about.stats || []).length === 3
+                ? "grid-cols-1 sm:grid-cols-3 max-w-4xl mx-auto"
+                : "grid-cols-2 lg:grid-cols-4"
+            }`}>
+              {(about.stats || []).map((stat, idx) => (
                 <div key={idx} className="text-center space-y-2">
                   <p className="text-4xl sm:text-5xl font-bold text-gradient-gold font-heading">{stat.value}</p>
                   <p className="text-lg font-semibold text-brand-charcoal font-heading">{stat.label}</p>
-                  <p className="text-sm text-brand-warm-gray font-body">{stat.sublabel}</p>
+                  {stat.sublabel && <p className="text-sm text-brand-warm-gray font-body">{stat.sublabel}</p>}
                 </div>
               ))}
             </div>
@@ -129,14 +131,20 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              {about.values.map((val, idx) => (
+            <div className={`grid gap-8 ${
+              (about.values || []).length <= 2
+                ? "grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto"
+                : (about.values || []).length === 4
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+            }`}>
+              {(about.values || []).map((val, idx) => (
                 <div
                   key={idx}
                   className="bg-card p-8 rounded-3xl border border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 space-y-4"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                    {idx === 0 ? <Users className="w-6 h-6" /> : idx === 1 ? <Target className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
+                    {idx % 3 === 0 ? <Users className="w-6 h-6" /> : idx % 3 === 1 ? <Target className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
                   </div>
                   <h3 className="text-xl font-bold text-brand-charcoal">{val.title}</h3>
                   <p className="text-sm text-brand-warm-gray font-body leading-relaxed">

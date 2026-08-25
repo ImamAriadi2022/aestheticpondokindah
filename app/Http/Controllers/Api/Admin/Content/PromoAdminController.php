@@ -55,7 +55,7 @@ class PromoAdminController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('promos', 'public');
+            $imagePath = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'promos', 1600, 1600, 82);
         }
 
         $promo = Promo::create([
@@ -121,7 +121,7 @@ class PromoAdminController extends Controller
             if ($promo->image_path) {
                 Storage::disk('public')->delete($promo->image_path);
             }
-            $promo->image_path = $request->file('image')->store('promos', 'public');
+            $promo->image_path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'promos', 1600, 1600, 82);
         }
 
         $promo->save();

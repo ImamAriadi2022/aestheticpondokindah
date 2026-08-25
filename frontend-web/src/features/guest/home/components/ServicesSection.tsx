@@ -39,7 +39,7 @@ const services: ServiceDetail[] = [
   {
     id: "dental-whitening",
     title: "Dental Whitening",
-    image: "/layanan/Dental Whitening.png",
+    image: "/layanan/Dental Whitening.webp",
     intro:
       "Dental whitening is a professional cosmetic treatment designed to brighten your smile safely and effectively.",
     paragraphs: [
@@ -60,7 +60,7 @@ const services: ServiceDetail[] = [
   {
     id: "root-canal-treatments",
     title: "Root Canal Treatments",
-    image: "/layanan/Root Canal Treatments.png",
+    image: "/layanan/Root Canal Treatments.webp",
     intro:
       "Root canal treatment is an essential dental procedure designed to save a tooth that has been severely damaged by infection or decay.",
     paragraphs: [
@@ -81,7 +81,7 @@ const services: ServiceDetail[] = [
   {
     id: "pediatric-dentistry",
     title: "Pediatric Dentistry",
-    image: "/layanan/Pediatric Dentistry.png",
+    image: "/layanan/Pediatric Dentistry.webp",
     intro:
       "Pediatric dentistry focuses on gentle, age-appropriate dental care for infants, children, and teens.",
     paragraphs: [
@@ -102,7 +102,7 @@ const services: ServiceDetail[] = [
   {
     id: "full-mouth-rehabilitations",
     title: "Full Mouth Rehabilitations",
-    image: "/layanan/Full Mouth Rehabilitations.png",
+    image: "/layanan/Full Mouth Rehabilitations.webp",
     intro:
       "Full mouth rehabilitation is a comprehensive plan combining restorative and aesthetic treatments to rebuild function, comfort, and smile harmony.",
     paragraphs: [
@@ -123,7 +123,7 @@ const services: ServiceDetail[] = [
   {
     id: "emergency-dental-services",
     title: "Emergency Dental Services",
-    image: "/layanan/Emergency Dental Services.png",
+    image: "/layanan/Emergency Dental Services.webp",
     intro:
       "Emergency dental services help manage urgent issues such as severe toothache, swelling, broken teeth, or dental trauma.",
     paragraphs: [
@@ -140,7 +140,7 @@ const services: ServiceDetail[] = [
   {
     id: "dentures",
     title: "Dentures",
-    image: "/layanan/Dentures.png",
+    image: "/layanan/Dentures.webp",
     intro:
       "Dentures are removable appliances designed to replace missing teeth and restore chewing, speech, and facial support.",
     paragraphs: [
@@ -157,7 +157,7 @@ const services: ServiceDetail[] = [
   {
     id: "dental-implants",
     title: "Dental Implants",
-    image: "/layanan/Dental Implants.png",
+    image: "/layanan/Dental Implants.webp",
     intro:
       "Dental implants are a long-term solution to replace missing teeth using a titanium root and a natural-looking crown.",
     paragraphs: [
@@ -178,7 +178,7 @@ const services: ServiceDetail[] = [
   {
     id: "dental-extraction-wisdom-tooth-removal",
     title: "Dental Extraction and Wisdom Tooth Removal",
-    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.png",
+    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.webp",
     intro:
       "Tooth extraction removes a problematic tooth safely, including impacted or painful wisdom teeth.",
     paragraphs: [
@@ -199,7 +199,7 @@ const services: ServiceDetail[] = [
   {
     id: "oral-care",
     title: "Oral Care",
-    image: "/layanan/Oral Care.png",
+    image: "/layanan/Oral Care.webp",
     intro:
       "Oral care includes routine check-ups, professional cleaning, and personalized guidance to keep your teeth and gums healthy.",
     paragraphs: [
@@ -216,7 +216,7 @@ const services: ServiceDetail[] = [
   {
     id: "dental-bridges",
     title: "Dental Bridges",
-    image: "/layanan/Dental Bridges.png",
+    image: "/layanan/Dental Bridges.webp",
     intro:
       "Dental bridges replace one or more missing teeth by anchoring an artificial tooth to neighboring teeth or implants.",
     paragraphs: [
@@ -233,7 +233,7 @@ const services: ServiceDetail[] = [
   {
     id: "bone-grafting",
     title: "Bone Grafting",
-    image: "/layanan/Bone Grafting.png",
+    image: "/layanan/Bone Grafting.webp",
     intro:
       "Bone grafting adds or regenerates bone in the jaw to support implants or improve long-term stability.",
     paragraphs: [
@@ -250,7 +250,7 @@ const services: ServiceDetail[] = [
   {
     id: "dental-spa",
     title: "Dental Spa",
-    image: "/layanan/Dental Spa.png",
+    image: "/layanan/Dental Spa.webp",
     intro:
       "Dental spa services combine professional oral care with a calm, comfortable experience—focused on relaxation and wellness.",
     paragraphs: [
@@ -267,7 +267,7 @@ const services: ServiceDetail[] = [
   {
     id: "veneers",
     title: "Veneers",
-    image: "/layanan/Veneers.png",
+    image: "/layanan/Veneers.webp",
     intro:
       "Veneers are thin shells placed on the front surface of teeth to improve shape, color, and overall smile aesthetics.",
     paragraphs: [
@@ -288,7 +288,7 @@ const services: ServiceDetail[] = [
   {
     id: "invisalign",
     title: "Invisalign",
-    image: "/layanan/Invisalign.png",
+    image: "/layanan/Invisalign.webp",
     intro:
       "Invisalign uses clear aligners to straighten teeth with a discreet, comfortable approach.",
     paragraphs: [
@@ -309,7 +309,7 @@ const services: ServiceDetail[] = [
   {
     id: "orthodontics",
     title: "Orthodontics",
-    image: "/layanan/Orthodontics.png",
+    image: "/layanan/Orthodontics.webp",
     intro:
       "Orthodontics corrects tooth alignment and bite problems to improve function, comfort, and aesthetics.",
     paragraphs: [
@@ -330,7 +330,7 @@ const services: ServiceDetail[] = [
   {
     id: "dental-fillings-inlays-onlays",
     title: "Dental Fillings, Inlays & Onlays",
-    image: "/layanan/Dental Fillings, Inlays & Onlays.png",
+    image: "/layanan/Dental Fillings, Inlays & Onlays.webp",
     intro:
       "Fillings, inlays, and onlays restore teeth damaged by decay or fractures while preserving healthy tooth structure.",
     paragraphs: [
@@ -347,7 +347,7 @@ const services: ServiceDetail[] = [
   {
     id: "gum-ablation",
     title: "Gum Ablation",
-    image: "/layanan/Gum Ablation.png",
+    image: "/layanan/Gum Ablation.webp",
     intro:
       "Gum ablation is a procedure to remove or contour gum tissue for improved gum health or smile aesthetics.",
     paragraphs: [
@@ -368,7 +368,7 @@ const services: ServiceDetail[] = [
   {
     id: "lip-repositioning",
     title: "Lip Repositioning",
-    image: "/layanan/Lip Repositioning.png",
+    image: "/layanan/Lip Repositioning.webp",
     intro:
       "Lip repositioning is a procedure aimed at reducing excessive gum display by limiting upper lip movement when smiling.",
     paragraphs: [
@@ -385,7 +385,7 @@ const services: ServiceDetail[] = [
   {
     id: "crown-lengthening",
     title: "Crown lengthening",
-    image: "/layanan/Crown lengthening.png",
+    image: "/layanan/Crown lengthening.webp",
     intro:
       "Crown lengthening reshapes gum and sometimes bone tissue to expose more of the tooth structure.",
     paragraphs: [
@@ -402,7 +402,7 @@ const services: ServiceDetail[] = [
   {
     id: "gummy-smile-correction",
     title: "Gummy Smile Correction",
-    image: "/layanan/Gummy Smile Correction.png",
+    image: "/layanan/Gummy Smile Correction.webp",
     intro:
       "Gummy smile correction improves smile proportions by reducing excessive gum display.",
     paragraphs: [
@@ -419,7 +419,7 @@ const services: ServiceDetail[] = [
   {
     id: "frenectomy",
     title: "Frenectomy",
-    image: "/layanan/Frenectomy.png",
+    image: "/layanan/Frenectomy.webp",
     intro:
       "Frenectomy is a minor procedure to release a tight frenum (tissue band) that may affect speech, gum health, or tooth spacing.",
     paragraphs: [
@@ -644,7 +644,7 @@ export default function ServicesSection() {
                 >
                   <div className="aspect-[16/10] overflow-hidden bg-brand-cream">
                     <img
-                      src={getStorageUrl(promo.image_url || promo.image_path) || "/dashboard/placeholder.png"}
+                      src={getStorageUrl(promo.image_url || promo.image_path) || "/dashboard/placeholder.webp"}
                       alt={promo.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       loading="lazy"

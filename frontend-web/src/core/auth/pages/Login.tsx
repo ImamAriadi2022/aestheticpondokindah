@@ -492,7 +492,7 @@ export default function LoginPage() {
               <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-brand-gold/30 via-brand-cream to-brand-gold-light/40 p-10 rounded-l-[2.5rem]">
                 <div className="w-full max-w-md flex flex-col items-center text-center">
                   <img
-                    src="/logo/logo.png"
+                    src="/logo/logo.webp"
                     alt="Aesthetic Pondok Indah"
                     className="h-20 w-auto"
                   />

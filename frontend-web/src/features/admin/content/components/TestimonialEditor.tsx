@@ -162,11 +162,18 @@ export default function TestimonialEditor({ current, editorId, token, fetchApiTe
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const url = URL.createObjectURL(file);
-                    updateSaved({ photoUrl: url, photoFile: file });
+                    try {
+                      const { compressImageFileToWebPFile } = await import("@/core/utils/imageCompressor");
+                      const compressed = await compressImageFileToWebPFile(file, { maxWidth: 800, maxHeight: 800, quality: 0.85 });
+                      const url = URL.createObjectURL(compressed);
+                      updateSaved({ photoUrl: url, photoFile: compressed });
+                    } catch {
+                      const url = URL.createObjectURL(file);
+                      updateSaved({ photoUrl: url, photoFile: file });
+                    }
                     e.currentTarget.value = "";
                   }}
                 />

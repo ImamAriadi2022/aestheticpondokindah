@@ -22,6 +22,8 @@ import {
   Info,
   Shield,
   Layers,
+  Store,
+  Home,
 } from "lucide-react";
 
 type Props = {
@@ -41,6 +43,20 @@ export default function AdminSidebar({ activeTab }: Props) {
     "public-legal",
   ];
 
+  const contentTabs = [
+    "content-popup",
+    "content-promo",
+    "content-blog",
+    "content-gallery",
+    "content-testimonials",
+    "content-download",
+  ];
+
+  const etalaseTabs = [
+    "etalase-beranda",
+    "etalase-tentang",
+  ];
+
   const isPublicInfoActive = publicInfoTabs.includes(currentTab);
   const [isPublicInfoOpen, setIsPublicInfoOpen] = useState(true);
 
@@ -54,6 +70,23 @@ export default function AdminSidebar({ activeTab }: Props) {
             label: "Dashboard & Analytics",
             icon: LayoutDashboard,
             href: "/dashboard/clinic?tab=dashboard",
+          },
+        ],
+      },
+      {
+        title: "Etalase (CMS Website)",
+        items: [
+          {
+            id: "etalase-beranda",
+            label: "Edit Beranda",
+            icon: Home,
+            href: "/dashboard/clinic?tab=etalase-beranda",
+          },
+          {
+            id: "etalase-tentang",
+            label: "Edit Tentang",
+            icon: Info,
+            href: "/dashboard/clinic?tab=etalase-tentang",
           },
         ],
       },

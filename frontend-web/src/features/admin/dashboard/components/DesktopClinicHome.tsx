@@ -170,7 +170,7 @@ export default function DesktopClinicHome({
             </div>
             {/* Tooth */}
             <div className="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-xl shadow-md border border-[#E8D4A2]/30 flex items-center justify-center">
-              <img src="/dashboard/gigi.png" alt="Tooth" className="w-8 h-8 object-contain" />
+              <img src="/dashboard/gigi.webp" alt="Tooth" className="w-8 h-8 object-contain" />
             </div>
             {/* Sparkle */}
             <Sparkles className="absolute top-4 right-16 w-4 h-4 text-[#C9A24A]/60" />

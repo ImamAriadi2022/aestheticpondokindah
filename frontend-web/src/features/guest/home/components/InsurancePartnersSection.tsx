@@ -7,14 +7,14 @@ type Partner = {
 };
 
 const partners: Partner[] = [
-  { name: "AdMedika", src: "/partner/Logo-Admedika-NEWW.png" },
-  { name: "Asuransi Jasindo", src: "/partner/Jasindo.png" },
-  { name: "FWD Insurance", src: "/partner/FWD.png" },
-  { name: "BNI Life", src: "/partner/BNI-life.png" },
-  { name: "BRI Life", src: "/partner/BRI-life.png" },
-  { name: "Sompo Insurance", src: "/partner/Sompo.png" },
-  { name: "Pertamina", src: "/partner/Pertamina.png" },
-  { name: "Takaful Keluarga", src: "/partner/Takaful.png" },
+  { name: "AdMedika", src: "/partner/Logo-Admedika-NEWW.webp" },
+  { name: "Asuransi Jasindo", src: "/partner/Jasindo.webp" },
+  { name: "FWD Insurance", src: "/partner/FWD.webp" },
+  { name: "BNI Life", src: "/partner/BNI-life.webp" },
+  { name: "BRI Life", src: "/partner/BRI-life.webp" },
+  { name: "Sompo Insurance", src: "/partner/Sompo.webp" },
+  { name: "Pertamina", src: "/partner/Pertamina.webp" },
+  { name: "Takaful Keluarga", src: "/partner/Takaful.webp" },
 ];
 
 export default function InsurancePartnersSection() {

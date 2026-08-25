@@ -207,7 +207,7 @@ export default function ServicesPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png";
+                          (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp";
                         }}
                       />
                       {service.category && (
@@ -393,7 +393,7 @@ export default function ServicesPage() {
                     alt={selectedService.title}
                     className="h-full w-full object-cover"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.png";
+                      (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp";
                     }}
                   />
                   <div className="absolute top-4 left-4 flex flex-col gap-1.5">

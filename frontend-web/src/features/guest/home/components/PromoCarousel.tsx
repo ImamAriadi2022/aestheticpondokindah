@@ -10,39 +10,39 @@ export default function PromoCarousel() {
     () => [
       {
         id: "s1",
-        imageUrl: "/carousels/332284087_1668569386907344_8629874387098871495_n-1024x1024.jpg",
+        imageUrl: "/carousels/332284087_1668569386907344_8629874387098871495_n-1024x1024.webp",
       },
       {
         id: "s2",
-        imageUrl: "/carousels/354013446_1306049049992222_4361818023443925309_n-1024x1024.jpg",
+        imageUrl: "/carousels/354013446_1306049049992222_4361818023443925309_n-1024x1024.webp",
       },
       {
         id: "s3",
-        imageUrl: "/carousels/375243559_625952536399454_3738302235619186163_n-1024x1024.jpg",
+        imageUrl: "/carousels/375243559_625952536399454_3738302235619186163_n-1024x1024.webp",
       },
       {
         id: "s4",
-        imageUrl: "/carousels/391105204_200354099740484_7608698753314950102_n-1024x1024.jpg",
+        imageUrl: "/carousels/391105204_200354099740484_7608698753314950102_n-1024x1024.webp",
       },
       {
         id: "s5",
-        imageUrl: "/carousels/393096476_233847392740779_1759637609764307009_n-1024x1024.jpg",
+        imageUrl: "/carousels/393096476_233847392740779_1759637609764307009_n-1024x1024.webp",
       },
       {
         id: "s6",
-        imageUrl: "/carousels/Before-After-Dental-Bridge-1024x1024.png",
+        imageUrl: "/carousels/Before-After-Dental-Bridge-1024x1024.webp",
       },
       {
         id: "s7",
-        imageUrl: "/carousels/Before-After-Scalling-Reviisi-1024x1024.png",
+        imageUrl: "/carousels/Before-After-Scalling-Reviisi-1024x1024.webp",
       },
       {
         id: "s8",
-        imageUrl: "/carousels/Dental-Whitening-2-ALIYAH--1024x1024.png",
+        imageUrl: "/carousels/Dental-Whitening-2-ALIYAH--1024x1024.webp",
       },
       {
         id: "s9",
-        imageUrl: "/carousels/Penambalan-gigi-depan-1024x1024.png",
+        imageUrl: "/carousels/Penambalan-gigi-depan-1024x1024.webp",
       },
     ],
     []

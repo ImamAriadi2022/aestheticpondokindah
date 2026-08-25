@@ -33,7 +33,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "dental-whitening",
     title: "Dental Whitening",
-    image: "/layanan/Dental Whitening.png",
+    image: "/layanan/Dental Whitening.webp",
     intro:
       "Dental whitening is a professional cosmetic treatment designed to brighten your smile safely and effectively.",
     paragraphs: [
@@ -54,7 +54,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "root-canal-treatments",
     title: "Root Canal Treatments",
-    image: "/layanan/Root Canal Treatments.png",
+    image: "/layanan/Root Canal Treatments.webp",
     intro:
       "Root canal treatment is an essential dental procedure designed to save a tooth that has been severely damaged by infection or decay.",
     paragraphs: [
@@ -75,7 +75,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "pediatric-dentistry",
     title: "Pediatric Dentistry",
-    image: "/layanan/Pediatric Dentistry.png",
+    image: "/layanan/Pediatric Dentistry.webp",
     intro:
       "Pediatric dentistry focuses on gentle, age-appropriate dental care for infants, children, and teens.",
     paragraphs: [
@@ -96,7 +96,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "full-mouth-rehabilitations",
     title: "Full Mouth Rehabilitations",
-    image: "/layanan/Full Mouth Rehabilitations.png",
+    image: "/layanan/Full Mouth Rehabilitations.webp",
     intro:
       "Full mouth rehabilitation is a comprehensive plan combining restorative and aesthetic treatments to rebuild function, comfort, and smile harmony.",
     paragraphs: [
@@ -117,7 +117,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "emergency-dental-services",
     title: "Emergency Dental Services",
-    image: "/layanan/Emergency Dental Services.png",
+    image: "/layanan/Emergency Dental Services.webp",
     intro:
       "Emergency dental services help manage urgent issues such as severe toothache, swelling, broken teeth, or dental trauma.",
     paragraphs: [
@@ -134,7 +134,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "dentures",
     title: "Dentures",
-    image: "/layanan/Dentures.png",
+    image: "/layanan/Dentures.webp",
     intro:
       "Dentures are removable appliances designed to replace missing teeth and restore chewing, speech, and facial support.",
     paragraphs: [
@@ -151,7 +151,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "dental-implants",
     title: "Dental Implants",
-    image: "/layanan/Dental Implants.png",
+    image: "/layanan/Dental Implants.webp",
     intro:
       "Dental implants are a long-term solution to replace missing teeth using a titanium root and a natural-looking crown.",
     paragraphs: [
@@ -172,7 +172,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "dental-extraction-wisdom-tooth-removal",
     title: "Dental Extraction and Wisdom Tooth Removal",
-    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.png",
+    image: "/layanan/Dental Extraction and Wisdom Teeth Removal.webp",
     intro:
       "Tooth extraction removes a problematic tooth safely, including impacted or painful wisdom teeth.",
     paragraphs: [
@@ -193,7 +193,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "oral-care",
     title: "Oral Care",
-    image: "/layanan/Oral Care.png",
+    image: "/layanan/Oral Care.webp",
     intro:
       "Oral care includes routine check-ups, professional cleaning, and personalized guidance to keep your teeth and gums healthy.",
     paragraphs: [
@@ -210,7 +210,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "dental-bridges",
     title: "Dental Bridges",
-    image: "/layanan/Dental Bridges.png",
+    image: "/layanan/Dental Bridges.webp",
     intro:
       "Dental bridges replace one or more missing teeth by anchoring an artificial tooth to neighboring teeth or implants.",
     paragraphs: [
@@ -227,7 +227,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "bone-grafting",
     title: "Bone Grafting",
-    image: "/layanan/Bone Grafting.png",
+    image: "/layanan/Bone Grafting.webp",
     intro:
       "Bone grafting adds or regenerates bone in the jaw to support implants or improve long-term stability.",
     paragraphs: [
@@ -244,7 +244,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "dental-spa",
     title: "Dental Spa",
-    image: "/layanan/Dental Spa.png",
+    image: "/layanan/Dental Spa.webp",
     intro:
       "Dental spa services combine professional oral care with a calm, comfortable experience—focused on relaxation and wellness.",
     paragraphs: [
@@ -261,7 +261,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "veneers",
     title: "Veneers",
-    image: "/layanan/Veneers.png",
+    image: "/layanan/Veneers.webp",
     intro:
       "Veneers are thin shells placed on the front surface of teeth to improve shape, color, and overall smile aesthetics.",
     paragraphs: [
@@ -282,7 +282,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "invisalign",
     title: "Invisalign",
-    image: "/layanan/Invisalign.png",
+    image: "/layanan/Invisalign.webp",
     intro:
       "Invisalign uses clear aligners to straighten teeth with a discreet, comfortable approach.",
     paragraphs: [
@@ -303,7 +303,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "orthodontics",
     title: "Orthodontics",
-    image: "/layanan/Orthodontics.png",
+    image: "/layanan/Orthodontics.webp",
     intro:
       "Orthodontics corrects tooth alignment and bite problems to improve function, comfort, and aesthetics.",
     paragraphs: [
@@ -324,7 +324,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "dental-fillings-inlays-onlays",
     title: "Dental Fillings, Inlays & Onlays",
-    image: "/layanan/Dental Fillings, Inlays & Onlays.png",
+    image: "/layanan/Dental Fillings, Inlays & Onlays.webp",
     intro:
       "Fillings, inlays, and onlays restore teeth damaged by decay or fractures while preserving healthy tooth structure.",
     paragraphs: [
@@ -341,7 +341,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "gum-ablation",
     title: "Gum Ablation",
-    image: "/layanan/Gum Ablation.png",
+    image: "/layanan/Gum Ablation.webp",
     intro:
       "Gum ablation is a procedure to remove or contour gum tissue for improved gum health or smile aesthetics.",
     paragraphs: [
@@ -362,7 +362,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "lip-repositioning",
     title: "Lip Repositioning",
-    image: "/layanan/Lip Repositioning.png",
+    image: "/layanan/Lip Repositioning.webp",
     intro:
       "Lip repositioning is a procedure aimed at reducing excessive gum display by limiting upper lip movement when smiling.",
     paragraphs: [
@@ -379,7 +379,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "crown-lengthening",
     title: "Crown lengthening",
-    image: "/layanan/Crown lengthening.png",
+    image: "/layanan/Crown lengthening.webp",
     intro:
       "Crown lengthening reshapes gum and sometimes bone tissue to expose more of the tooth structure.",
     paragraphs: [
@@ -396,7 +396,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "gummy-smile-correction",
     title: "Gummy Smile Correction",
-    image: "/layanan/Gummy Smile Correction.png",
+    image: "/layanan/Gummy Smile Correction.webp",
     intro:
       "Gummy smile correction improves smile proportions by reducing excessive gum display.",
     paragraphs: [
@@ -413,7 +413,7 @@ export const defaultServices: ServiceDetail[] = [
   {
     id: "frenectomy",
     title: "Frenectomy",
-    image: "/layanan/Frenectomy.png",
+    image: "/layanan/Frenectomy.webp",
     intro:
       "Frenectomy is a minor procedure to release a tight frenum (tissue band) that may affect speech, gum health, or tooth spacing.",
     paragraphs: [
@@ -437,7 +437,7 @@ export async function fetchPublicServices(): Promise<ServiceDetail[]> {
     const list = Array.isArray(res) ? res : res?.data || res?.services || [];
     if (Array.isArray(list) && list.length > 0) {
       return list.map((d: any) => {
-        let img = d.image || d.image_url || d.image_path || "/layanan/Dental Whitening.png";
+        let img = d.image || d.image_url || d.image_path || "/layanan/Dental Whitening.webp";
         if (img && !img.startsWith("http") && !img.startsWith("/")) {
           img = `/${img}`;
         }

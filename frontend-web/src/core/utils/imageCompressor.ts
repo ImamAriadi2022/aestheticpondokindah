@@ -1,4 +1,4 @@
-﻿export interface ImageCompressOptions {
+export interface ImageCompressOptions {
   maxWidth?: number;
   maxHeight?: number;
   quality?: number;
@@ -91,3 +91,32 @@ export async function compressImageToWebP(
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Compresses an image File and returns a WebP File object ready for FormData upload.
+ */
+export async function compressImageFileToWebPFile(
+  file: File,
+  options: ImageCompressOptions = {}
+): Promise<File> {
+  // If not an image (e.g. PDF/DOC), return original file
+  if (!file.type.startsWith("image/")) {
+    return file;
+  }
+
+  const result = await compressImageToWebP(file, {
+    maxWidth: options.maxWidth ?? 1600,
+    maxHeight: options.maxHeight ?? 1600,
+    quality: options.quality ?? 0.85,
+  });
+
+  // Convert DataURL to Blob
+  const res = await fetch(result.dataUrl);
+  const blob = await res.blob();
+
+  const originalBaseName = file.name.replace(/\.[^/.]+$/, "");
+  const newFileName = `${originalBaseName}.webp`;
+
+  return new File([blob], newFileName, { type: "image/webp" });
+}
+

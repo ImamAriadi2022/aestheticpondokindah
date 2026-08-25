@@ -536,14 +536,24 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
                       type="file"
                       id="popup-img-input"
                       accept="image/*"
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                          setFormData({
-                            ...formData,
-                            imageFile: file,
-                            previewUrl: URL.createObjectURL(file),
-                          });
+                          try {
+                            const { compressImageFileToWebPFile } = await import("@/core/utils/imageCompressor");
+                            const compressed = await compressImageFileToWebPFile(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.85 });
+                            setFormData({
+                              ...formData,
+                              imageFile: compressed,
+                              previewUrl: URL.createObjectURL(compressed),
+                            });
+                          } catch {
+                            setFormData({
+                              ...formData,
+                              imageFile: file,
+                              previewUrl: URL.createObjectURL(file),
+                            });
+                          }
                         }
                       }}
                       className="hidden"

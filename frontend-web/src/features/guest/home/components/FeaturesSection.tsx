@@ -17,14 +17,14 @@ export default function FeaturesSection() {
             <div className="grid grid-cols-[1.25fr_1fr] gap-5 items-end">
               <div className="relative overflow-hidden rounded-[2.25rem] bg-brand-cream border border-border shadow-xl shadow-black/5">
                 <img
-                  src="/about/tentang1.jpg"
+                  src="/about/tentang1.webp"
                   alt="Dokter"
                   className="w-full h-[340px] object-cover"
                 />
               </div>
               <div className="relative overflow-hidden rounded-[2.25rem] bg-brand-cream border border-border shadow-xl shadow-black/5">
                 <img
-                  src="/about/tentang2.jpg"
+                  src="/about/tentang2.webp"
                   alt="Perawatan"
                   className="w-full h-[260px] object-cover"
                 />
@@ -33,7 +33,7 @@ export default function FeaturesSection() {
 
             <div className="absolute -bottom-6 left-10">
               <div className="bg-background rounded-2xl border border-border shadow-xl shadow-black/10 px-6 py-4 flex items-center gap-3">
-                <img src="/logo/logo.png" alt="Aesthetic Pondok Indah" className="h-10 w-auto" />
+                <img src="/logo/logo.webp" alt="Aesthetic Pondok Indah" className="h-10 w-auto" />
               </div>
             </div>
           </div>

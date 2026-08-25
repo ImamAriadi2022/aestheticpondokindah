@@ -208,10 +208,16 @@ export default function BlogEditorPanel({ editorId, apiPost, sessionName, token,
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    updateEditor({ featuredImageUrl: URL.createObjectURL(file), featuredImageFile: file });
+                    try {
+                      const { compressImageFileToWebPFile } = await import("@/core/utils/imageCompressor");
+                      const compressed = await compressImageFileToWebPFile(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.85 });
+                      updateEditor({ featuredImageUrl: URL.createObjectURL(compressed), featuredImageFile: compressed });
+                    } catch {
+                      updateEditor({ featuredImageUrl: URL.createObjectURL(file), featuredImageFile: file });
+                    }
                   }}
                 />
                 <div className="w-full aspect-[16/9] rounded-sm border border-dashed border-emerald-300 bg-emerald-50/40 overflow-hidden flex items-center justify-center relative">

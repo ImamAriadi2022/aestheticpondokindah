@@ -46,6 +46,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
   const [userPopupOpen, setUserPopupOpen] = useState(false);
   const [helpDropdownOpen, setHelpDropdownOpen] = useState(false);
 
+  const sidebarRef = useRef<HTMLElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const avatarBtnRef = useRef<HTMLDivElement>(null);
 
@@ -58,21 +59,20 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
       return next;
     });
     setUserPopupOpen(false);
+    setHelpDropdownOpen(false);
   };
 
   const handleMenuClick = () => {
     setUserPopupOpen(false);
+    setHelpDropdownOpen(false);
   };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(e.target as Node) &&
-        avatarBtnRef.current &&
-        !avatarBtnRef.current.contains(e.target as Node)
-      ) {
+      const target = e.target as Node;
+      if (sidebarRef.current && !sidebarRef.current.contains(target)) {
         setUserPopupOpen(false);
+        setHelpDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -119,6 +119,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
     <div className="sticky top-4 left-0 h-[calc(100vh-32px)] self-start z-[100] pointer-events-auto ml-2 mr-2 flex-shrink-0">
       {/* Floating Glassmorphism Sidebar - Elegant Gold Theme */}
       <aside
+        ref={sidebarRef}
         className={`
           pointer-events-auto flex flex-col h-full
           bg-[#1a1612]
@@ -239,8 +240,8 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
             <button
               type="button"
               onClick={() => {
-                if (!expanded) setExpanded(true);
                 setHelpDropdownOpen((prev) => !prev);
+                setUserPopupOpen(false);
               }}
               className={`
                 w-full group relative flex items-center justify-between
@@ -287,8 +288,8 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 />
               )}
 
-              {/* Tooltip when collapsed */}
-              {!expanded && (
+              {/* Tooltip when collapsed & closed */}
+              {!expanded && !helpDropdownOpen && (
                 <div
                   className="
                   absolute left-full ml-3 px-3 py-1.5
@@ -309,9 +310,57 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
               )}
             </button>
 
-            {/* Sub-menu Items Accordion */}
+            {/* Anchored Flyout for Collapsed Sidebar */}
+            {!expanded && helpDropdownOpen && (
+              <div
+                className="
+                  absolute left-full top-0 ml-3.5 z-50 min-w-[210px]
+                  bg-[#1a1612] backdrop-blur-md
+                  border-2 border-[#C9A24A]/50 rounded-2xl
+                  shadow-[0_12px_40px_rgba(0,0,0,0.6)]
+                  p-2.5 flex flex-col gap-1
+                  animate-in fade-in zoom-in-95 duration-150
+                "
+              >
+                <div className="absolute -left-[7px] top-6 -translate-y-1/2 w-3.5 h-3.5 bg-[#1a1612] border-l-2 border-b-2 border-[#C9A24A]/50 rotate-45 pointer-events-none" />
+
+                <div className="px-3 py-1.5 border-b border-[#C9A24A]/20 flex items-center justify-between mb-1">
+                  <span className="text-[11px] font-bold text-[#E8C547] uppercase tracking-wider">
+                    Bantuan & Pengaduan
+                  </span>
+                  <span className="text-[10px] text-[#A89F91] font-medium">
+                    {helpSubMenus.length} Menu
+                  </span>
+                </div>
+
+                {helpSubMenus.map((sub) => {
+                  const subActive = isActive(sub.href);
+                  const SubIcon = sub.icon;
+                  return (
+                    <Link
+                      key={sub.label}
+                      to={sub.href}
+                      onClick={handleMenuClick}
+                      className={`
+                        flex items-center gap-2.5 py-2 px-3 rounded-xl text-xs font-semibold
+                        transition-all duration-200
+                        ${subActive
+                          ? "bg-gradient-to-r from-[#C9A24A]/30 to-[#B8943F]/30 text-[#E8C547] font-bold border border-[#C9A24A]/40 shadow-inner"
+                          : "text-[#D4C5B0] hover:bg-[#2a2319] hover:text-[#E8C547]"
+                        }
+                      `}
+                    >
+                      <SubIcon className={`w-3.5 h-3.5 ${subActive ? "text-[#E8C547]" : "text-[#A89F91]"}`} />
+                      <span className="truncate">{sub.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Sub-menu Items Accordion for Expanded Sidebar */}
             {expanded && (helpDropdownOpen || isHelpSectionActive) && (
-              <div className="ml-4 mt-1 pl-3 border-l-2 border-[#C9A24A]/30 space-y-1 py-1">
+              <div className="ml-4 mt-1 pl-3 border-l-2 border-[#C9A24A]/30 space-y-1 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
                 {helpSubMenus.map((sub) => {
                   const subActive = isActive(sub.href);
                   const SubIcon = sub.icon;
@@ -323,12 +372,12 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                       className={`
                         flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
                         ${subActive
-                          ? "bg-[#C9A24A]/30 text-[#E8C547] border border-[#C9A24A]/40"
+                          ? "bg-[#C9A24A]/30 text-[#E8C547] border border-[#C9A24A]/40 font-bold"
                           : "text-[#A89F91] hover:text-[#E8C547] hover:bg-[#2a2319]"
                         }
                       `}
                     >
-                      <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                      <SubIcon className={`w-3.5 h-3.5 ${subActive ? "text-[#E8C547]" : "text-[#A89F91]"}`} />
                       <span className="truncate">{sub.label}</span>
                     </Link>
                   );

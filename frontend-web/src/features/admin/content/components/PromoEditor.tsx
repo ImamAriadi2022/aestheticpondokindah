@@ -286,11 +286,18 @@ export default function PromoEditor({ current, editorId, token, fetchApiPromos, 
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    const url = URL.createObjectURL(file);
-                    updateSaved({ imageUrl: url, imageFile: file });
+                    try {
+                      const { compressImageFileToWebPFile } = await import("@/core/utils/imageCompressor");
+                      const compressed = await compressImageFileToWebPFile(file, { maxWidth: 1600, maxHeight: 1600, quality: 0.85 });
+                      const url = URL.createObjectURL(compressed);
+                      updateSaved({ imageUrl: url, imageFile: compressed });
+                    } catch {
+                      const url = URL.createObjectURL(file);
+                      updateSaved({ imageUrl: url, imageFile: file });
+                    }
                     e.currentTarget.value = "";
                   }}
                 />
