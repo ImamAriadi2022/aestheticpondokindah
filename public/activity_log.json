@@ -1,5 +1,34 @@
 [
   {
+    "id": "act-288",
+    "timestamp": "2026-08-25T12:32:00.425Z",
+    "category": "feature-update",
+    "title": "Standardisasi Pengurutan Data Terbaru & Perbaikan Redireksi Alur Booking Pasien",
+    "description": "Mengimplementasikan standardisasi pengurutan data terbaru (newest first / descending order) pada seluruh list data di Admin, Pasien, dan Dokter (termasuk reservasi, konsultasi, pengaduan, jadwal, dokter, dan konten), serta menyempurnakan alur booking pasien agar otomatis mereset form reservasi dan mengarahkan langsung ke Dashboard Utama Pasien (/dashboard/user) setelah pop-up konfirmasi/e-tiket ditutup guna mencegah kebingungan dan konfirmasi ganda.",
+    "details": [
+      "Unified Newest-First Ordering: Memastikan query backend Laravel dan penanganan filtering array React selalu mengurutkan data dari created_at, date, atau ID terbaru di urutan paling atas.",
+      "Patient Booking Flow Fix: Mereset stepper form ke Step 1 segera setelah reservasi sukses terkirim.",
+      "Direct Dashboard Navigation: Mengubah aksi onClose dan onGoHome pada BookingSuccessModal dan ETicketModal agar langsung menuju /dashboard/user.",
+      "Refined Action Labels: Menyelaraskan teks tombol modal menjadi 'Kembali ke Dashboard Utama'."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-287",
+    "timestamp": "2026-08-25T12:17:45.721Z",
+    "category": "ui-update",
+    "title": "Standardisasi Dropdown Sidebar Menempel Terpadu Multi-Role (Admin, Patient, Doctor)",
+    "description": "Menerapkan standardisasi sistem dropdown sidebar terjangkar anti-scroll pada seluruh role sistem (Patient via AccountSidebar, Doctor via DoctorSidebar, dan Admin via DashboardLayout). Seluruh menu bersubmenu kini menggunakan mode flyout gelap beraksen emas dengan pointer segitiga saat sidebar menciut, dan mode accordion inline saat sidebar melebar, serta bebas dari bug terlepas saat halaman di-scroll.",
+    "details": [
+      "Patient/User Sidebar (AccountSidebar): Menyelaraskan menu dropdown 'Bantuan & Pengaduan' dan menu popup profil dengan penjangkaran sidebarRef dan flyout anti-scroll.",
+      "Doctor Sidebar (DoctorSidebar): Menambahkan dukungan dinamis submenu dengan anchored flyout dan accordion inline bersarang serta sinkronisasi penutupan otomatis (click outside).",
+      "Unified Multi-Role UX: Konsistensi visual dan perilaku interaksi navigasi 100% identik di seluruh panel (Admin, Pasien, dan Dokter)."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-286",
     "timestamp": "2026-08-25T11:01:38.615Z",
     "category": "ui-fix",

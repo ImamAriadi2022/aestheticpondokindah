@@ -937,6 +937,7 @@ export default function NewBookingFlow({
         isGuest: false,
       });
       setBookingsHistory((prev) => [newTicket, ...prev]);
+      setCurrentStep(1);
       setShowSuccessModal(true);
     } catch (err: any) {
       const fallbackTicket = {
@@ -957,6 +958,7 @@ export default function NewBookingFlow({
       };
       setActiveTicket(fallbackTicket);
       setBookingsHistory((prev) => [fallbackTicket, ...prev]);
+      setCurrentStep(1);
       setShowSuccessModal(true);
     } finally {
       setIsSubmitting(false);
@@ -2010,14 +2012,17 @@ export default function NewBookingFlow({
       {/* Success Modal Pop-up (Screenshot 5) */}
       <BookingSuccessModal
         isOpen={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigate("/dashboard/user");
+        }}
         onViewETicket={() => {
           setShowSuccessModal(false);
           setShowETicketModal(true);
         }}
         onGoHome={() => {
           setShowSuccessModal(false);
-          setViewMode("history");
+          navigate("/dashboard/user");
         }}
         bookingData={{
           code: activeTicket?.code,
@@ -2032,7 +2037,10 @@ export default function NewBookingFlow({
       {/* E-Ticket Modal / Detail Riwayat (Screenshot 7) */}
       <ETicketModal
         isOpen={showETicketModal}
-        onClose={() => setShowETicketModal(false)}
+        onClose={() => {
+          setShowETicketModal(false);
+          navigate("/dashboard/user");
+        }}
         onBookAgain={() => {
           setShowETicketModal(false);
           setViewMode("booking");

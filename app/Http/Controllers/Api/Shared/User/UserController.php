@@ -91,7 +91,8 @@ class UserController extends Controller
     {
         $doctors = User::query()
             ->where('role', 'doctor')
-            ->orderBy('id', 'asc')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->get()
             ->map(function (User $u) {
                 $domicile = $u->city;

@@ -170,7 +170,7 @@ export default function BookingSuccessModal({
             onClick={onGoHome}
             className="w-full h-11 rounded-xl border border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] font-semibold text-xs sm:text-sm transition-all cursor-pointer"
           >
-            Kembali ke Riwayat Reservasi
+            Kembali ke Dashboard Utama
           </Button>
         </div>
       </div>

@@ -12,7 +12,7 @@ class ClinicServiceAdminController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = ClinicService::query()->orderBy('sort_order')->orderBy('id');
+        $query = ClinicService::query()->orderBy('sort_order')->orderByDesc('id');
 
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {

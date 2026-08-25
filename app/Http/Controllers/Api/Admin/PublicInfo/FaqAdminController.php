@@ -11,7 +11,7 @@ class FaqAdminController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = Faq::query()->orderBy('sort_order')->orderBy('id');
+        $query = Faq::query()->orderBy('sort_order')->orderByDesc('id');
 
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {

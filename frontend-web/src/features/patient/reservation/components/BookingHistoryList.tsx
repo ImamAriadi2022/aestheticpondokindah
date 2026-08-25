@@ -59,27 +59,34 @@ export default function BookingHistoryList({
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredBookings = useMemo(() => {
-    return bookings.filter((item) => {
-      const s = (item.status || "").toLowerCase();
-      const isCompleted =
-        s === "completed" ||
-        s === "selesai" ||
-        s === "cancelled" ||
-        s === "dibatalkan" ||
-        s === "rejected" ||
-        s === "ditolak";
+    return bookings
+      .filter((item) => {
+        const s = (item.status || "").toLowerCase();
+        const isCompleted =
+          s === "completed" ||
+          s === "selesai" ||
+          s === "cancelled" ||
+          s === "dibatalkan" ||
+          s === "rejected" ||
+          s === "ditolak";
 
-      const matchesTab = activeTab === "aktif" ? !isCompleted : isCompleted;
-      if (!matchesTab) return false;
+        const matchesTab = activeTab === "aktif" ? !isCompleted : isCompleted;
+        if (!matchesTab) return false;
 
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        item.doctorName.toLowerCase().includes(q) ||
-        item.serviceName.toLowerCase().includes(q) ||
-        (item.code && item.code.toLowerCase().includes(q))
-      );
-    });
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          item.doctorName.toLowerCase().includes(q) ||
+          item.serviceName.toLowerCase().includes(q) ||
+          (item.code && item.code.toLowerCase().includes(q))
+        );
+      })
+      .sort((a, b) => {
+        const timeA = a.date ? new Date(a.date).getTime() : 0;
+        const timeB = b.date ? new Date(b.date).getTime() : 0;
+        if (timeB !== timeA) return timeB - timeA;
+        return Number(b.id || 0) - Number(a.id || 0);
+      });
   }, [bookings, activeTab, searchQuery]);
 
   return (

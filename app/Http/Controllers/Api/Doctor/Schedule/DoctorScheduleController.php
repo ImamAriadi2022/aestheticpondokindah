@@ -14,7 +14,7 @@ class DoctorScheduleController extends Controller
     {
         $doctorId = $request->query('doctorId');
 
-        $query = DoctorSchedule::query()->with('user')->orderBy('date')->orderBy('time_range');
+        $query = DoctorSchedule::query()->with('user')->orderByDesc('date')->orderByDesc('created_at')->orderByDesc('id');
         if ($doctorId) {
             $query->where('user_id', $doctorId);
         }

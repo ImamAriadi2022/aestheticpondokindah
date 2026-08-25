@@ -29,8 +29,8 @@ class ReservationController extends Controller
         $query = Reservation::query()
             ->with(['doctor', 'doctorSchedule'])
             ->where('user_id', $user->id)
-            ->orderByDesc('date')
-            ->orderByDesc('created_at');
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {

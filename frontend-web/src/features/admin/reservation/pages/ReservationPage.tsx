@@ -96,6 +96,11 @@ export default function ReservationPage({
         (sourceFilter === "member" && !isGuest);
 
       return matchesSearch && matchesStatus && matchesSource;
+    }).sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.date ? new Date(a.date).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.date ? new Date(b.date).getTime() : 0);
+      if (timeB !== timeA) return timeB - timeA;
+      return Number(b.id || 0) - Number(a.id || 0);
     });
   }, [reservations, searchQuery, statusFilter, sourceFilter]);
 

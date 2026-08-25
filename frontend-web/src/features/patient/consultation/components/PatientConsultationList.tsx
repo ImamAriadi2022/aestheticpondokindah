@@ -5,8 +5,14 @@ import type { ConsultationItem } from "@/features/patient/consultation/services/
 
 export default function PatientConsultationList({ consultations }: { consultations: ConsultationItem[] }) {
   const navigate = useNavigate();
-  const active = consultations.filter((item) => ["Menunggu", "Dijadwalkan", "Dibuka"].includes(item.status));
-  const history = consultations.filter((item) => !["Menunggu", "Dijadwalkan", "Dibuka"].includes(item.status));
+  const sorted = [...consultations].sort((a, b) => {
+    const timeA = a.date ? new Date(a.date).getTime() : 0;
+    const timeB = b.date ? new Date(b.date).getTime() : 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return Number(b.id || 0) - Number(a.id || 0);
+  });
+  const active = sorted.filter((item) => ["Menunggu", "Dijadwalkan", "Dibuka"].includes(item.status));
+  const history = sorted.filter((item) => !["Menunggu", "Dijadwalkan", "Dibuka"].includes(item.status));
 
   const renderItems = (items: ConsultationItem[], emptyMessage: string) => (
     items.length ? (

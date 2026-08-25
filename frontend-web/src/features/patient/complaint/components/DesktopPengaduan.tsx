@@ -85,11 +85,18 @@ export default function DesktopPengaduan() {
     }
   };
 
-  const filteredComplaints = complaints.filter(complaint => {
-    if (!searchQuery) return true;
-    return complaint.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           complaint.description.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const filteredComplaints = [...complaints]
+    .filter(complaint => {
+      if (!searchQuery) return true;
+      return complaint.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+             complaint.description.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .sort((a, b) => {
+      const timeA = a.date ? new Date(a.date).getTime() : 0;
+      const timeB = b.date ? new Date(b.date).getTime() : 0;
+      if (timeB !== timeA) return timeB - timeA;
+      return Number(b.id || 0) - Number(a.id || 0);
+    });
 
   // Success Screen
   if (view === "success") {
