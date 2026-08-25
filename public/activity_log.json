@@ -1,5 +1,51 @@
 [
   {
+    "id": "act-276",
+    "timestamp": "2026-08-24T18:22:30.458Z",
+    "category": "ui-enhancement",
+    "title": "Implementasi Pop-up Modal untuk Promo Khusus dan Riwayat Mutasi Poin Member",
+    "description": "Mengubah alur benefit Promo Khusus dan Riwayat Mutasi Poin menjadi pop-up modal interaktif di halaman Membership, serta menghilangkan tabel permanen di bagian bawah agar tampilan halaman tetap bersih, rapi, dan fokus.",
+    "details": [
+      "Promo Pop-up Modal: Membuka dialog daftar voucher/promo eksklusif dengan aksi salin kode promo (copy coupon) dan tombol langsung gunakan di form reservasi.",
+      "Point Ledger Pop-up Modal: Membuka dialog buku besar mutasi poin reward lengkap dengan ringkasan saldo, total poin didapat/ditukar, dan riwayat transaksi perawatan.",
+      "Clean Layout: Menghilangkan tabel permanen di bagian bawah halaman sehingga layout dashboard pasien tetap compact.",
+      "Build Verification: Terverifikasi lulus build Vite tanpa error dalam 27 detik."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-275",
+    "timestamp": "2026-08-24T18:19:04.371Z",
+    "category": "ui-enhancement",
+    "title": "Penyempurnaan Benefit Member Menjadi Kartu Interaktif Fungsional (Promo Khusus & Riwayat Poin)",
+    "description": "Mengganti mockup 4 kartu benefit statis dengan 2 kartu benefit utama yang interaktif dan sepenuhnya terhubung: (1) Promo Khusus Member yang langsung mengarahkan pasien ke halaman klaim promo perawatan, dan (2) Riwayat & Mutasi Poin yang otomatis melakukan scroll smooth dan highlight ke Buku Besar & Riwayat Mutasi Poin reward.",
+    "details": [
+      "Interactive Promo Benefit Card: Kartu Promo Khusus Member dengan animasi hover interaktif, badge eksklusif, dan navigasi langsung ke tab Promo Pasien.",
+      "Interactive Point Ledger Benefit Card: Kartu Riwayat & Mutasi Poin dengan live badge saldo poin, aksi smooth scroll otomatis ke tabel buku besar mutasi poin, dan efek visual highlight ring emas.",
+      "Eliminated Inactive Mockups: Menghilangkan mockup yang belum didukung backend agar tidak membingungkan pengguna.",
+      "Verified Build: Teruji lulus kompilasi TypeScript dan Vite build tanpa error."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-274",
+    "timestamp": "2026-08-24T18:15:55.537Z",
+    "category": "ui-fix",
+    "title": "Penyesuaian Visual Background Card & Pita Tier Membership Sesuai Tingkatan (Bronze, Gold, Platinum)",
+    "description": "Menyesuaikan latar belakang kartu digital membership dan pita lencana (ribbon badge) secara dinamis di halaman Membership pasien. Setiap tingkatan tier kini menggunakan aset gambar kartu dan pita yang sesuai: Bronze (cardbronze.png & bronze.png), Gold (cardgold.png & gold.png), dan Platinum (cardplatinum.png & platinum.png), baik pada preview kartu digital, banner progress tier, maupun modal unduh kartu PNG.",
+    "details": [
+      "Dynamic Card Background: Menggunakan cardbronze.png untuk Bronze, cardgold.png untuk Gold, dan cardplatinum.png untuk Platinum.",
+      "Dynamic Ribbon Badge: Menampilkan ikon pita sesuai tier (/dashboard/bronze.png, /dashboard/gold.png, /dashboard/platinum.png).",
+      "Digital Card Modal & Download: Modal kartu membership dan fitur Download PNG menggunakan background kartu dan pita yang sesuai level pengguna.",
+      "Dynamic Progress & Upgrade Banner: Menyesuaikan teks judul, deskripsi, dan tombol upgrade berdasarkan level aktif (Bronze -> Gold, Gold -> Platinum, Platinum -> Tier Tertinggi).",
+      "Asset Synchronization: Menyinkronkan cardgold.png dan cardplatinum.png ke direktori public/dashboard/ dan frontend-web/public/dashboard/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-273",
     "timestamp": "2026-08-24T17:21:05.503Z",
     "category": "fix",
