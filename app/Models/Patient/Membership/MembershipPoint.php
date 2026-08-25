@@ -42,4 +42,24 @@ class MembershipPoint extends Model
     {
         return $this->belongsTo(User::class, 'admin_id');
     }
+
+    public function scopeEarned($query)
+    {
+        return $query->where('type', 'earned');
+    }
+
+    public function scopeRedeemed($query)
+    {
+        return $query->where('type', 'redeemed');
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->where('type', 'expired');
+    }
+
+    public function scopeAdjusted($query)
+    {
+        return $query->where('type', 'adjusted');
+    }
 }

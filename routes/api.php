@@ -352,6 +352,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/payment/status/{transactionId}', [UserMembershipPaymentController::class, 'checkStatus']);
     });
 
+    // Patient Membership Aliases (for backward & frontend compatibility)
+    Route::prefix('patient/membership')->group(function () {
+        Route::get('/', [UserMembershipController::class, 'index']);
+        Route::get('/points', [UserMembershipController::class, 'getPoints']);
+        Route::get('/history', [UserMembershipController::class, 'getHistory']);
+        Route::get('/tiers', [UserMembershipController::class, 'tiers']);
+    });
+
     // =========================================================================
     // 5. DOCTOR PRACTITIONER ROUTES
     // =========================================================================

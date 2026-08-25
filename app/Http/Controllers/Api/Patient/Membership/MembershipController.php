@@ -126,16 +126,22 @@ class MembershipController extends Controller
         
         $points = $user->membershipPoints()
             ->latest()
-            ->paginate(20);
+            ->paginate(50);
 
-        $earned = $user->membershipPoints()->earned()->sum('points');
-        $redeemed = $user->membershipPoints()->redeemed()->sum('points');
-        $expired = $user->membershipPoints()->expired()->sum('points');
+        $earned = (int) $user->membershipPoints()->where(function ($q) {
+            $q->where('type', 'earned')
+              ->orWhere(function ($sq) {
+                  $sq->where('type', 'adjusted')->where('points', '>', 0);
+              });
+        })->sum('points');
+
+        $redeemed = (int) abs($user->membershipPoints()->where('type', 'redeemed')->sum('points'));
+        $expired = (int) abs($user->membershipPoints()->where('type', 'expired')->sum('points'));
 
         return response()->json([
             'success' => true,
             'data' => [
-                'current_balance' => $user->membership_points,
+                'current_balance' => (int) $user->membership_points,
                 'total_earned' => $earned,
                 'total_redeemed' => $redeemed,
                 'total_expired' => $expired,
