@@ -6,13 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Doctor\Schedule\DoctorSchedule;
 use App\Models\Shared\Reservation\Reservation;
 use App\Models\Shared\Reservation\ReservationAudit;
+use App\Models\Guest\Service\ClinicService;
+use App\Models\Admin\Settings\ClinicSetting;
 use App\Services\Shared\Notification\NotificationService;
+use App\Services\Patient\Membership\MembershipService;
 use App\Models\Shared\User\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ReservationController extends Controller
 {
+    protected MembershipService $membershipService;
+
+    public function __construct(MembershipService $membershipService)
+    {
+        $this->membershipService = $membershipService;
+    }
+
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -79,6 +89,8 @@ class ReservationController extends Controller
             'complaint' => ['nullable', 'string', 'max:500'],
             'source' => ['nullable', 'string', 'max:50'],
             'signature_data' => ['nullable', 'string'],
+            'redeem_points' => ['nullable', 'integer', 'min:0'],
+            'service_price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $user = $request->user();
@@ -117,6 +129,46 @@ class ReservationController extends Controller
             $date = now()->addDay()->format('Y-m-d');
         }
 
+        // Calculate Service Price & Point Redemption
+        $servicePrice = (float) ($validated['service_price'] ?? 0);
+        if ($servicePrice <= 0 && !empty($validated['treatment_interest'])) {
+            $svc = ClinicService::where('title', $validated['treatment_interest'])
+                ->orWhere('slug', $validated['treatment_interest'])
+                ->first();
+            if ($svc && $svc->price) {
+                $servicePrice = (float) $svc->price;
+            } else {
+                $servicePrice = 500000;
+            }
+        }
+
+        $redeemPoints = (int) ($validated['redeem_points'] ?? 0);
+        $pointDiscount = 0;
+        $finalPrice = $servicePrice;
+
+        if ($redeemPoints > 0) {
+            if ($user->membership_points < $redeemPoints) {
+                return response()->json([
+                    'message' => "Saldo poin Anda ({$user->membership_points} Pts) tidak mencukupi untuk menukarkan {$redeemPoints} poin."
+                ], 422);
+            }
+
+            $conversionRate = (int) ClinicSetting::getValue('point_conversion_rate', 1000);
+            $minRedeem = (int) ClinicSetting::getValue('min_redeem_points', 10);
+            $maxDiscountPct = (int) ClinicSetting::getValue('max_discount_percentage', 100);
+
+            if ($redeemPoints < $minRedeem) {
+                return response()->json([
+                    'message' => "Minimal penukaran poin adalah {$minRedeem} poin."
+                ], 422);
+            }
+
+            $calculatedDiscount = $redeemPoints * $conversionRate;
+            $maxAllowedDiscount = ($servicePrice * $maxDiscountPct) / 100;
+            $pointDiscount = min($calculatedDiscount, $maxAllowedDiscount, $servicePrice);
+            $finalPrice = max(0, $servicePrice - $pointDiscount);
+        }
+
         $reservation = Reservation::create([
             'user_id' => $user->id,
             'doctor_id' => $doctorId,
@@ -133,18 +185,37 @@ class ReservationController extends Controller
             'branch_name' => 'Aesthetic Pondok Indah Main Branch',
             'source' => $validated['source'] ?? 'user_dashboard',
             'status' => 'Baru',
-            'payment_status' => 'Belum Bayar',
+            'payment_status' => $finalPrice <= 0 ? 'Lunas (Poin Penuh)' : 'Belum Bayar',
+            'redeem_points' => $redeemPoints,
+            'point_discount' => $pointDiscount,
+            'service_price' => $servicePrice,
+            'final_price' => $finalPrice,
             'signature_data' => $validated['signature_data'] ?? null,
             'terms_accepted_at' => !empty($validated['signature_data']) ? now() : null,
         ]);
 
         $code = 'RSV-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT);
 
+        // Execute Point Deduction from User Balance & Record Ledger Mutation
+        if ($redeemPoints > 0) {
+            try {
+                $treatmentLabel = $reservation->treatment_interest ?? 'Perawatan Gigi';
+                $this->membershipService->redeemPoints(
+                    $user,
+                    $redeemPoints,
+                    "Penukaran {$redeemPoints} poin reward (potongan Rp " . number_format($pointDiscount, 0, ',', '.') . ") untuk reservasi #{$code} ({$treatmentLabel})",
+                    (string) $reservation->id
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to deduct points on booking: " . $e->getMessage());
+            }
+        }
+
         // Dispatch Backend Notification to Admins
         try {
             NotificationService::sendToAdmins(
                 '🔔 Reservasi Masuk dari Pasien',
-                'Pasien: ' . $user->name . ' - ' . ($reservation->treatment_interest ?? 'Layanan Gigi'),
+                'Pasien: ' . $user->name . ' - ' . ($reservation->treatment_interest ?? 'Layanan Gigi') . ($redeemPoints > 0 ? " (Diskon Poin: Rp " . number_format($pointDiscount, 0, ',', '.') . ")" : ""),
                 'appointment',
                 '/#/dashboard/clinic?tab=reservasi',
                 ['reservation_id' => $reservation->id, 'code' => $code]
@@ -235,6 +306,11 @@ class ReservationController extends Controller
             default => 'pending',
         };
 
+        $servicePrice = (float) ($reservation->service_price ?? 0);
+        $pointDiscount = (float) ($reservation->point_discount ?? 0);
+        $finalPrice = (float) ($reservation->final_price ?? $servicePrice);
+        $redeemPoints = (int) ($reservation->redeem_points ?? 0);
+
         return [
             'id' => (string) $reservation->id,
             'code' => 'RSV-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT),
@@ -255,6 +331,13 @@ class ReservationController extends Controller
             'status' => $status,
             'raw_status' => $reservation->status,
             'payment_status' => $reservation->payment_status ?? 'Belum Bayar',
+            'redeem_points' => $redeemPoints,
+            'point_discount' => $pointDiscount,
+            'service_price' => $servicePrice,
+            'final_price' => $finalPrice,
+            'point_discount_formatted' => 'Rp ' . number_format($pointDiscount, 0, ',', '.'),
+            'service_price_formatted' => 'Rp ' . number_format($servicePrice, 0, ',', '.'),
+            'final_price_formatted' => 'Rp ' . number_format($finalPrice, 0, ',', '.'),
             'notes' => $reservation->complaint,
             'admin_notes' => $reservation->admin_notes,
             'signature_data' => $reservation->signature_data,

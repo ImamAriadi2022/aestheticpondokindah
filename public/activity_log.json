@@ -1,5 +1,21 @@
 [
   {
+    "id": "act-280",
+    "timestamp": "2026-08-25T08:34:10.068Z",
+    "category": "feature",
+    "title": "Pembedaan Privilese Tier Member & Fitur Pemotongan Biaya Layanan Menggunakan Poin Reward",
+    "description": "Mengimplementasikan pembedaan hak istimewa (privilege) dan multiplier perolehan poin untuk seluruh tingkatan member (Bronze 1.0x, Gold 1.5x + diskon 5% + free konsultasi + prioritas antrean, Platinum 2.0x + diskon 10% + fast-track VIP + free scaling tahunan), menghapus fitur reminder kontrol yang belum ada pada Bronze, menambahkan panel konfigurasi nilai konversi 1 poin ke Rupiah di Admin Membership, serta mengaktifkan fitur penukaran poin langsung untuk memotong estimasi biaya perawatan pada langkah Konfirmasi Reservasi pasien.",
+    "details": [
+      "Tier Privileges & Multipliers: Menyesuaikan aturan bisnis benefit di MembershipService dengan multiplier poin (Bronze 1.0x, Gold 1.5x, Platinum 2.0x) dan diskon layanan eksklusif.",
+      "Dynamic Point-to-IDR Conversion: Mengaktifkan endpoint konfigurasi point_conversion_rate (1 Poin = Rp X), minimal penukaran, dan batas maksimal diskon yang dapat diedit langsung oleh Admin.",
+      "Reservation Point Redemption: Menambahkan migrasi kolom redeem_points, point_discount, service_price, dan final_price pada tabel reservations dengan validasi saldo poin ketat & pemotongan otomatis buku besar mutasi.",
+      "Interactive UI at Booking Step 4: Menambahkan toggle & slider 'Gunakan Poin Reward' di NewBookingFlow untuk pemotongan biaya perawatan langsung saat konfirmasi janji temu.",
+      "Admin Sync: Menampilkan rincian potongan poin dan harga akhir pada tabel reservasi Admin serta kartu pengaturan nilai konversi di Admin Membership."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-279",
     "timestamp": "2026-08-25T05:37:17.514Z",
     "category": "deployment",

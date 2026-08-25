@@ -522,6 +522,44 @@ export default function MembershipPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* 3. Privilese Tier & Pemotongan Biaya Layanan */}
+                  <div className="mt-4 p-4 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] text-left">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-[#8C6B1C]" />
+                      <h5 className="text-xs font-bold text-[#2C2416] uppercase tracking-wider">
+                        Hak Istimewa (Privilege) Tier {config.badge}
+                      </h5>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-[#5C5546] mb-3">
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-[#E6DECB]">
+                        <p className="text-[10px] font-bold text-[#8C6B1C] uppercase">Pengali Poin</p>
+                        <p className="font-extrabold text-[#2C2416] text-sm">
+                          {normalizedTier === 'platinum' ? '2.0x (2x Lipat)' : normalizedTier === 'gold' ? '1.5x Lebih Cepat' : '1.0x (Standar)'}
+                        </p>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-[#E6DECB]">
+                        <p className="text-[10px] font-bold text-[#8C6B1C] uppercase">Diskon Perawatan</p>
+                        <p className="font-extrabold text-[#2C2416] text-sm">
+                          {normalizedTier === 'platinum' ? '10% Khusus' : normalizedTier === 'gold' ? '5% Khusus' : 'Standar Promo'}
+                        </p>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-[#E6DECB]">
+                        <p className="text-[10px] font-bold text-[#8C6B1C] uppercase">Akses & Prioritas</p>
+                        <p className="font-extrabold text-[#2C2416] text-sm">
+                          {normalizedTier === 'platinum' ? 'VIP Fast-Track & Free Scaling' : normalizedTier === 'gold' ? 'Prioritas Antrean Booking' : 'Rekam Medis Digital'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2 text-[11px] text-[#8C6B1C] bg-white/60 p-2.5 rounded-xl border border-[#EADBBD]">
+                      <Coins className="w-4 h-4 text-[#C9A24A] shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">
+                        <strong>Kabar Gembira:</strong> Poin reward Anda kini dapat langsung digunakan untuk <strong>memotong biaya reservasi layanan klinik</strong> saat melakukan konfirmasi booking janji temu!
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>

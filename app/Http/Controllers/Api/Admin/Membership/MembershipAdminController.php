@@ -641,4 +641,66 @@ class MembershipAdminController extends Controller
         ]);
     }
 
+    /**
+     * Get Point Conversion Rate and Tier Point Settings
+     */
+    public function getPointSettings(Request $request): JsonResponse
+    {
+        $conversionRate = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('point_conversion_rate', 1000);
+        $minRedeemPoints = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('min_redeem_points', 10);
+        $maxDiscountPercentage = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('max_discount_percentage', 100);
+        $tierMultipliers = \App\Models\Admin\Settings\ClinicSetting::getValue('tier_multipliers', [
+            'bronze' => 1.0,
+            'gold' => 1.5,
+            'platinum' => 2.0,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'conversion_rate' => $conversionRate,
+                'min_redeem_points' => $minRedeemPoints,
+                'max_discount_percentage' => $maxDiscountPercentage,
+                'tier_multipliers' => $tierMultipliers,
+                'rate_formatted' => '1 Poin = Rp ' . number_format($conversionRate, 0, ',', '.'),
+            ],
+        ]);
+    }
+
+    /**
+     * Update Point Conversion Rate and Tier Point Settings
+     */
+    public function updatePointSettings(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'conversion_rate' => ['required', 'integer', 'min:1', 'max:1000000'],
+            'min_redeem_points' => ['required', 'integer', 'min:1', 'max:10000'],
+            'max_discount_percentage' => ['required', 'integer', 'min:1', 'max:100'],
+            'tier_multipliers' => ['nullable', 'array'],
+            'tier_multipliers.bronze' => ['nullable', 'numeric', 'min:0.1', 'max:10'],
+            'tier_multipliers.gold' => ['nullable', 'numeric', 'min:0.1', 'max:10'],
+            'tier_multipliers.platinum' => ['nullable', 'numeric', 'min:0.1', 'max:10'],
+        ]);
+
+        \App\Models\Admin\Settings\ClinicSetting::setValue('point_conversion_rate', $validated['conversion_rate']);
+        \App\Models\Admin\Settings\ClinicSetting::setValue('min_redeem_points', $validated['min_redeem_points']);
+        \App\Models\Admin\Settings\ClinicSetting::setValue('max_discount_percentage', $validated['max_discount_percentage']);
+
+        if (!empty($validated['tier_multipliers'])) {
+            \App\Models\Admin\Settings\ClinicSetting::setValue('tier_multipliers', $validated['tier_multipliers']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengaturan nilai konversi poin berhasil diperbarui.',
+            'data' => [
+                'conversion_rate' => $validated['conversion_rate'],
+                'min_redeem_points' => $validated['min_redeem_points'],
+                'max_discount_percentage' => $validated['max_discount_percentage'],
+                'tier_multipliers' => $validated['tier_multipliers'] ?? null,
+                'rate_formatted' => '1 Poin = Rp ' . number_format($validated['conversion_rate'], 0, ',', '.'),
+            ],
+        ]);
+    }
+
 }

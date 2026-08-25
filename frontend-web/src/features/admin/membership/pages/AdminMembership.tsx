@@ -181,6 +181,19 @@ export default function AdminMembershipPage() {
   const [memberHistoryItems, setMemberHistoryItems] = useState<PointLedgerItem[]>([]);
   const [loadingMemberHistory, setLoadingMemberHistory] = useState(false);
 
+  // Point Conversion Settings State
+  const [pointSettings, setPointSettings] = useState({
+    conversion_rate: 1000,
+    min_redeem_points: 10,
+    max_discount_percentage: 100,
+    tier_multipliers: {
+      bronze: 1.0,
+      gold: 1.5,
+      platinum: 2.0,
+    },
+  });
+  const [savingPointSettings, setSavingPointSettings] = useState(false);
+
   // Load Main Data with Stale-While-Revalidate (SWR) Caching
   const loadData = useCallback(async (silent = false) => {
     if (!silent && !hasCachedData) setLoading(true);
@@ -189,12 +202,13 @@ export default function AdminMembershipPage() {
       if (search.trim()) query.set("search", search.trim());
       if (levelFilter !== "all") query.set("level", levelFilter);
 
-      const [memberResponse, transactionResponse, rulesResponse, servicesResponse, ledgerResponse] = await Promise.all([
+      const [memberResponse, transactionResponse, rulesResponse, servicesResponse, ledgerResponse, pointSettingsRes] = await Promise.all([
         apiClient.get<{ data: { data: Member[] } }>(`/admin/membership${query.size ? `?${query}` : ""}`, { skipToast: true }),
         apiClient.get<{ data: { data: MembershipTransactionItem[] } }>("/admin/membership/upgrade-requests?status=all", { skipToast: true }),
         apiClient.get<{ data: PointRule[] }>("/admin/membership/rules", { skipToast: true }),
         apiClient.get<{ data: any[] }>("/services", { skipToast: true }).catch(() => ({ data: [] })),
         apiClient.get<{ data: { data: PointLedgerItem[] } }>("/admin/membership/points-ledger", { skipToast: true }).catch(() => ({ data: { data: [] } })),
+        apiClient.get<{ data: any }>("/admin/membership/point-settings", { skipToast: true }).catch(() => ({ data: null })),
       ]);
 
       const memberList = memberResponse?.data?.data || [];
@@ -202,6 +216,20 @@ export default function AdminMembershipPage() {
       const ruleList = rulesResponse?.data || [];
       const srvList = Array.isArray(servicesResponse?.data) ? servicesResponse.data : (servicesResponse as any)?.data?.data || [];
       const ldgList = ledgerResponse?.data?.data || [];
+      const psData = pointSettingsRes?.data;
+
+      if (psData) {
+        setPointSettings({
+          conversion_rate: Number(psData.conversion_rate ?? 1000),
+          min_redeem_points: Number(psData.min_redeem_points ?? 10),
+          max_discount_percentage: Number(psData.max_discount_percentage ?? 100),
+          tier_multipliers: psData.tier_multipliers || {
+            bronze: 1.0,
+            gold: 1.5,
+            platinum: 2.0,
+          },
+        });
+      }
 
       if (Array.isArray(memberList)) {
         setMembers(memberList);
@@ -235,6 +263,18 @@ export default function AdminMembershipPage() {
       setLoadingLedger(false);
     }
   }, [levelFilter, search, hasCachedData]);
+
+  const handleSavePointSettings = async () => {
+    try {
+      setSavingPointSettings(true);
+      await apiClient.put("/admin/membership/point-settings", pointSettings);
+      toast.success("Pengaturan nilai konversi poin dan privilese tier berhasil disimpan!");
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan pengaturan nilai poin.");
+    } finally {
+      setSavingPointSettings(false);
+    }
+  };
 
   // Initial & Realtime Polling Synchronization (SWR every 8 seconds)
   useEffect(() => {
@@ -641,6 +681,164 @@ export default function AdminMembershipPage() {
                 </div>
                 <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700">
                   <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 0: PENGATURAN NILAI KONVERSI POIN & PRIVILESE TIER */}
+            <div className="bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-[#E8DFC8] bg-gradient-to-r from-[#FAF8F5] to-[#FDFBF7] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-[#8C6B1C]" />
+                    Pengaturan Nilai Konversi Poin (*Point Redemption Value*) & Privilese Tier
+                  </h3>
+                  <p className="text-xs text-[#8C8272] mt-0.5">
+                    Atur nilai konversi 1 poin ke Rupiah untuk pemotongan biaya layanan pasien serta bobot privilese tiap tingkatan member.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleSavePointSettings}
+                  disabled={savingPointSettings}
+                  className="bg-[#8C6B1C] hover:bg-[#735514] text-white font-bold rounded-xl text-xs h-9 px-4 cursor-pointer shrink-0 shadow-xs flex items-center gap-1.5"
+                >
+                  {savingPointSettings ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Simpan Pengaturan Poin</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="p-5 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Konversi 1 Poin */}
+                  <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8DFC8] space-y-1.5">
+                    <label className="text-xs font-bold text-[#2C2416]">
+                      Nilai 1 Poin ke Rupiah (IDR) *
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 text-xs font-bold text-[#8C6B1C]">Rp</span>
+                      <Input
+                        type="number"
+                        min="1"
+                        step="100"
+                        value={pointSettings.conversion_rate}
+                        onChange={(e) => setPointSettings(prev => ({ ...prev, conversion_rate: Math.max(1, Number(e.target.value)) }))}
+                        className="pl-9 h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
+                      />
+                    </div>
+                    <p className="text-[10px] text-[#8C8272]">
+                      Contoh: 100 poin = Potongan <strong>Rp {new Intl.NumberFormat('id-ID').format(pointSettings.conversion_rate * 100)}</strong>
+                    </p>
+                  </div>
+
+                  {/* Minimal Poin Ditukar */}
+                  <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8DFC8] space-y-1.5">
+                    <label className="text-xs font-bold text-[#2C2416]">
+                      Minimal Poin Ditukar per Transaksi *
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="1"
+                        value={pointSettings.min_redeem_points}
+                        onChange={(e) => setPointSettings(prev => ({ ...prev, min_redeem_points: Math.max(1, Number(e.target.value)) }))}
+                        className="h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-bold text-[#8C6B1C]">Pts</span>
+                    </div>
+                    <p className="text-[10px] text-[#8C8272]">
+                      Setara potongan minimal <strong>Rp {new Intl.NumberFormat('id-ID').format(pointSettings.conversion_rate * pointSettings.min_redeem_points)}</strong>
+                    </p>
+                  </div>
+
+                  {/* Maksimal Potongan Biaya */}
+                  <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8DFC8] space-y-1.5">
+                    <label className="text-xs font-bold text-[#2C2416]">
+                      Maksimal Potongan Biaya Layanan (%) *
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={pointSettings.max_discount_percentage}
+                        onChange={(e) => setPointSettings(prev => ({ ...prev, max_discount_percentage: Math.min(100, Math.max(1, Number(e.target.value))) }))}
+                        className="h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-bold text-[#8C6B1C]">%</span>
+                    </div>
+                    <p className="text-[10px] text-[#8C8272]">
+                      Maksimal potongan dari total estimasi biaya (100% = bisa gratis jika poin cukup)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Ringkasan Matriks Privilese & Multiplier Tier Member */}
+                <div className="border border-[#E8DFC8] rounded-xl overflow-hidden">
+                  <div className="bg-[#FAF5EA] px-4 py-2.5 border-b border-[#EADBBD] flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#8C6B1C] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Matriks Privilese & Multiplier Poin per Tingkatan Member
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#8C6B1C]">Tersinkronisasi Otomatis</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[#E8DFC8] bg-white text-xs">
+                    {/* Bronze */}
+                    <div className="p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 text-[10px] uppercase">
+                          Bronze Member
+                        </span>
+                        <span className="font-black text-[#8C6B1C]">1.0x Poin</span>
+                      </div>
+                      <p className="text-[11px] text-[#5C5546] leading-relaxed">
+                        • Rekam Medis & Riwayat Digital<br/>
+                        • Poin Reward Standar Setiap Transaksi<br/>
+                        • Poin Langsung Potong Biaya Booking
+                      </p>
+                    </div>
+
+                    {/* Gold */}
+                    <div className="p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#A8843A] bg-[#FFF9EB] px-2 py-0.5 rounded-full border border-[#F0DFB6] text-[10px] uppercase">
+                          Gold Member
+                        </span>
+                        <span className="font-black text-[#A8843A]">1.5x Poin</span>
+                      </div>
+                      <p className="text-[11px] text-[#5C5546] leading-relaxed">
+                        • Prioritas Antrean Reservasi<br/>
+                        • Diskon Khusus Layanan 5%<br/>
+                        • Free Konsultasi Dokter Gigi<br/>
+                        • Voucher Ulang Tahun Spesial
+                      </p>
+                    </div>
+
+                    {/* Platinum */}
+                    <div className="p-3.5 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300 text-[10px] uppercase">
+                          Platinum Member
+                        </span>
+                        <span className="font-black text-purple-700">2.0x Poin</span>
+                      </div>
+                      <p className="text-[11px] text-[#5C5546] leading-relaxed">
+                        • Fast-Track Appointment VIP<br/>
+                        • Free Scaling Gigi 1x/Tahun<br/>
+                        • Prioritas Jadwal Dokter Spesialis<br/>
+                        • Diskon Khusus Layanan 10%<br/>
+                        • Dedicated Patient Care VIP
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

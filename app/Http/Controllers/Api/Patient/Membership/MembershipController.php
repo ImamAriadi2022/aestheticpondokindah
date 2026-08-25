@@ -454,4 +454,24 @@ class MembershipController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Get active point redemption settings for patients
+     */
+    public function getPointSettings(Request $request): JsonResponse
+    {
+        $conversionRate = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('point_conversion_rate', 1000);
+        $minRedeemPoints = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('min_redeem_points', 10);
+        $maxDiscountPercentage = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('max_discount_percentage', 100);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'conversion_rate' => $conversionRate,
+                'min_redeem_points' => $minRedeemPoints,
+                'max_discount_percentage' => $maxDiscountPercentage,
+                'rate_formatted' => '1 Poin = Rp ' . number_format($conversionRate, 0, ',', '.'),
+            ],
+        ]);
+    }
 }

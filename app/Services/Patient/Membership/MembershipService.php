@@ -217,14 +217,14 @@ class MembershipService
     /**
      * Redeem points
      */
-    public function redeemPoints(User $user, int $points, string $description, ?string $referenceId = null): bool
+    public function redeemPoints(User $user, int $points, string $description, ?string $referenceId = null): MembershipPoint
     {
-        if ($user->membership_points < $points) {
-            throw new \Exception('Insufficient points balance');
+        $pointsToDeduct = abs($points);
+        if ($pointsToDeduct <= 0) {
+            throw new \InvalidArgumentException("Jumlah poin yang ditukar harus lebih dari 0.");
         }
 
-        $this->addPoints($user, $points, 'redeemed', $description, $referenceId, 'redemption');
-        return true;
+        return $this->addPoints($user, $pointsToDeduct, 'redeemed', $description, $referenceId, 'reservation');
     }
 
     /**
@@ -249,39 +249,45 @@ class MembershipService
     {
         return match($level) {
             'bronze' => [
-                'birthday_voucher' => true,
-                'personalized_recommendation' => true,
-                'special_promo' => true,
+                'medical_record_digital' => true,
                 'booking_history' => true,
-                'treatment_reminder' => true,
+                'point_reward' => true,
+                'special_promo' => true,
+                'birthday_voucher' => false,
                 'discount_percentage' => 0,
-                'point_multiplier' => 0.5,
+                'point_multiplier' => 1.0,
+                'privilege_badge' => 'Standard Member',
             ],
             'gold' => [
-                'birthday_voucher' => true,
-                'personalized_recommendation' => true,
+                'medical_record_digital' => true,
+                'booking_history' => true,
+                'point_reward' => true,
                 'special_promo' => true,
                 'priority_booking' => true,
                 'free_consultation' => true,
-                'point_reward' => true,
+                'birthday_voucher' => true,
                 'exclusive_promo' => true,
-                'treatment_priority_reminder' => true,
                 'discount_percentage' => 5,
-                'point_multiplier' => 1,
+                'point_multiplier' => 1.5,
+                'privilege_badge' => 'Premium Privilege',
             ],
             'platinum' => [
-                'birthday_voucher' => true,
-                'personalized_recommendation' => true,
+                'medical_record_digital' => true,
+                'booking_history' => true,
+                'point_reward' => true,
                 'special_promo' => true,
                 'priority_booking' => true,
                 'priority_doctor_schedule' => true,
+                'fast_track_vip' => true,
                 'free_scaling_per_year' => 1,
-                'premium_treatment_benefit' => true,
-                'early_access_promo' => true,
-                'fast_track_appointment' => true,
+                'dedicated_patient_care' => true,
+                'free_consultation' => true,
+                'birthday_voucher' => true,
                 'birthday_special_voucher' => true,
+                'exclusive_promo' => true,
                 'discount_percentage' => 10,
-                'point_multiplier' => 1.5,
+                'point_multiplier' => 2.0,
+                'privilege_badge' => 'VIP Priority Privilege',
             ],
             default => [],
         };

@@ -210,6 +210,9 @@ Route::prefix('admin')->group(function () {
         // Membership (Admin)
         Route::prefix('membership')->group(function () {
             Route::get('/', [MembershipAdminController::class, 'index']);
+            Route::get('/point-settings', [MembershipAdminController::class, 'getPointSettings']);
+            Route::put('/point-settings', [MembershipAdminController::class, 'updatePointSettings']);
+            Route::post('/point-settings', [MembershipAdminController::class, 'updatePointSettings']);
             Route::get('/rules', [MembershipPointRuleAdminController::class, 'index']);
             Route::post('/rules', [MembershipPointRuleAdminController::class, 'store']);
             Route::put('/rules/{id}', [MembershipPointRuleAdminController::class, 'update']);
@@ -333,6 +336,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Membership (User)
     Route::prefix('membership')->group(function () {
         Route::get('/', [UserMembershipController::class, 'index']);
+        Route::get('/point-settings', [UserMembershipController::class, 'getPointSettings']);
         Route::get('/tiers', [UserMembershipController::class, 'tiers']);
         Route::get('/profile', [UserMembershipController::class, 'getProfile']);
         Route::post('/profile', [UserMembershipController::class, 'updateProfile']);
@@ -355,6 +359,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Patient Membership Aliases (for backward & frontend compatibility)
     Route::prefix('patient/membership')->group(function () {
         Route::get('/', [UserMembershipController::class, 'index']);
+        Route::get('/point-settings', [UserMembershipController::class, 'getPointSettings']);
         Route::get('/points', [UserMembershipController::class, 'getPoints']);
         Route::get('/history', [UserMembershipController::class, 'getHistory']);
         Route::get('/tiers', [UserMembershipController::class, 'tiers']);

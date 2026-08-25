@@ -32,6 +32,10 @@ class Reservation extends Model
         'source',
         'status',
         'payment_status',
+        'redeem_points',
+        'point_discount',
+        'service_price',
+        'final_price',
         'admin_notes',
         'signature_data',
         'terms_accepted_at',
@@ -45,6 +49,10 @@ class Reservation extends Model
             'birth_date' => 'date',
             'terms_accepted_at' => 'datetime',
             'rescheduled_at' => 'datetime',
+            'redeem_points' => 'integer',
+            'point_discount' => 'decimal:2',
+            'service_price' => 'decimal:2',
+            'final_price' => 'decimal:2',
         ];
     }
 

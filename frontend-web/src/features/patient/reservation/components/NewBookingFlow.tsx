@@ -24,6 +24,7 @@ import {
   PenTool,
   ChevronDown,
   CalendarOff,
+  Coins,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -446,6 +447,27 @@ export default function NewBookingFlow({
   );
   const [signatureData, setSignatureData] = useState<string | null>(null);
 
+  // Point Redemption State
+  const [userAvailablePoints, setUserAvailablePoints] = useState<number>(() => {
+    return Number((session as any)?.membership_points || 0);
+  });
+  const [pointConversionRate, setPointConversionRate] = useState<number>(1000);
+  const [minRedeemPoints, setMinRedeemPoints] = useState<number>(10);
+  const [maxDiscountPercentage, setMaxDiscountPercentage] = useState<number>(100);
+  const [usePoints, setUsePoints] = useState<boolean>(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
+
+  // Dynamic Service Pricing and Point Discount Calculations
+  const serviceBasePrice = Number(selectedService?.price || 500000);
+  const maxRedeemablePoints = Math.min(
+    userAvailablePoints,
+    Math.floor(((serviceBasePrice * maxDiscountPercentage) / 100) / pointConversionRate)
+  );
+  const calculatedDiscount = usePoints
+    ? Math.min(pointsToRedeem * pointConversionRate, (serviceBasePrice * maxDiscountPercentage) / 100, serviceBasePrice)
+    : 0;
+  const finalPrice = Math.max(0, serviceBasePrice - calculatedDiscount);
+
   // Modals
   const [showSignatureModal, setShowSignatureModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -688,6 +710,25 @@ export default function NewBookingFlow({
     fetchPatientProfile();
     fetchBookings(hasCachedBookings);
 
+    // Fetch point redemption settings & user points
+    apiClient.get<any>("/membership/point-settings", { skipToast: true })
+      .then((res) => {
+        const d = res?.data?.data || res?.data || res;
+        if (d?.conversion_rate) setPointConversionRate(Number(d.conversion_rate));
+        if (d?.min_redeem_points) setMinRedeemPoints(Number(d.min_redeem_points));
+        if (d?.max_discount_percentage) setMaxDiscountPercentage(Number(d.max_discount_percentage));
+      })
+      .catch(() => {});
+
+    apiClient.get<any>("/membership/points", { skipToast: true })
+      .then((res) => {
+        const payload = res?.data?.data || res?.data || res;
+        if (payload?.current_balance !== undefined) {
+          setUserAvailablePoints(Number(payload.current_balance));
+        }
+      })
+      .catch(() => {});
+
     // 2. Realtime Background Silent Polling every 6 seconds
     const pollInterval = setInterval(() => {
       fetchBookings(true);
@@ -851,6 +892,8 @@ export default function NewBookingFlow({
         complaint: notes || `Reservasi ${selectedService.name} bersama ${selectedDoctor.name}`,
         source: "user_dashboard",
         signature_data: signatureData,
+        redeem_points: usePoints ? pointsToRedeem : 0,
+        service_price: serviceBasePrice,
       };
 
       const res = await apiClient.post("/user/reservations", payload);
@@ -874,7 +917,10 @@ export default function NewBookingFlow({
         status: "confirmed",
         locationName: selectedBranch?.name || "Aesthetic Pondok Indah Main Branch",
         locationAddress: selectedBranch?.address || "Jl. Metro Pondok Indah No. 12, Jakarta Selatan",
-        totalAmount: selectedService.price,
+        totalAmount: finalPrice,
+        originalAmount: serviceBasePrice,
+        pointDiscount: calculatedDiscount,
+        redeemPoints: usePoints ? pointsToRedeem : 0,
         patientName: patientName,
         phone: patientPhone,
       };
@@ -1818,12 +1864,93 @@ export default function NewBookingFlow({
                     </div>
                   </div>
 
+                  {/* Point Redemption Option */}
+                  {userAvailablePoints > 0 && (
+                    <div className="border-t border-[#EDE5D6] pt-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="flex items-center gap-2 select-none cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={usePoints}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setUsePoints(checked);
+                              if (checked) {
+                                setPointsToRedeem(maxRedeemablePoints);
+                              } else {
+                                setPointsToRedeem(0);
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-[#D9D0BC] text-[#8C6B1C] focus:ring-[#8C6B1C] cursor-pointer"
+                          />
+                          <span className="text-xs font-bold text-[#2C2416] flex items-center gap-1">
+                            <Coins className="w-3.5 h-3.5 text-[#C9A24A]" />
+                            <span>Gunakan Poin Reward</span>
+                          </span>
+                        </label>
+                        <span className="text-[10px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2 py-0.5 rounded-md border border-[#EADBBD]">
+                          {userAvailablePoints} Pts Tersedia
+                        </span>
+                      </div>
+
+                      {usePoints && (
+                        <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EADBBD] space-y-2 animate-in fade-in duration-150">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="text-[#5C5546]">Poin Ditukarkan:</span>
+                            <span className="font-bold text-[#8C6B1C]">{pointsToRedeem} Pts</span>
+                          </div>
+
+                          <input
+                            type="range"
+                            min={minRedeemPoints}
+                            max={Math.max(minRedeemPoints, maxRedeemablePoints)}
+                            step={5}
+                            value={pointsToRedeem}
+                            onChange={(e) => setPointsToRedeem(Number(e.target.value))}
+                            className="w-full h-1.5 bg-[#E8DFC8] rounded-lg appearance-none cursor-pointer accent-[#8C6B1C]"
+                          />
+
+                          <div className="flex items-center justify-between text-[10px]">
+                            <span className="text-[#8C8272]">Min: {minRedeemPoints} Pts</span>
+                            <button
+                              type="button"
+                              onClick={() => setPointsToRedeem(maxRedeemablePoints)}
+                              className="text-[#8C6B1C] font-bold hover:underline cursor-pointer"
+                            >
+                              Gunakan Maksimal ({maxRedeemablePoints} Pts)
+                            </button>
+                          </div>
+
+                          <div className="pt-1.5 border-t border-[#E8DFC8] flex items-center justify-between text-xs">
+                            <span className="text-emerald-700 font-semibold">Potongan Biaya:</span>
+                            <span className="font-black text-emerald-600">
+                              - Rp {new Intl.NumberFormat("id-ID").format(calculatedDiscount)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Total Estimate */}
-                  <div className="border-t-2 border-dashed border-[#EDE5D6] pt-3 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-[#5C5546]">Estimasi Biaya</span>
-                    <span className="text-lg sm:text-xl font-bold text-[#8C6B1C]">
-                      {selectedService?.priceFormatted || "Rp 0"}
-                    </span>
+                  <div className="border-t-2 border-dashed border-[#EDE5D6] pt-3 space-y-1.5">
+                    {usePoints && calculatedDiscount > 0 && (
+                      <div className="flex items-center justify-between text-xs text-[#7C7365]">
+                        <span>Tarif Layanan Awal:</span>
+                        <span className="line-through">{selectedService?.priceFormatted || "Rp 0"}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-sm font-semibold text-[#5C5546]">Estimasi Biaya</span>
+                        {usePoints && calculatedDiscount > 0 && (
+                          <p className="text-[10px] text-emerald-600 font-bold">Termasuk Potongan Poin</p>
+                        )}
+                      </div>
+                      <span className="text-lg sm:text-xl font-bold text-[#8C6B1C]">
+                        {finalPrice <= 0 ? "GRATIS (POIN PENUH)" : `Rp ${new Intl.NumberFormat("id-ID").format(finalPrice)}`}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Desktop Primary Submit Button */}
@@ -1855,6 +1982,12 @@ export default function NewBookingFlow({
       {viewMode === "booking" && currentStep === 4 && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E6DECB] p-3 sm:p-4 shadow-xl">
           <div className="max-w-md mx-auto space-y-2">
+            <div className="flex items-center justify-between text-xs px-1">
+              <span className="text-[#5C5546]">Estimasi Biaya Akhir:</span>
+              <span className="font-extrabold text-sm text-[#8C6B1C]">
+                {finalPrice <= 0 ? "GRATIS (POIN)" : `Rp ${new Intl.NumberFormat("id-ID").format(finalPrice)}`}
+              </span>
+            </div>
             <Button
               type="button"
               disabled={!agreeTerms || !patientName.trim() || isSubmitting}
