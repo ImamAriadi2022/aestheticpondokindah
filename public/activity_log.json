@@ -1,5 +1,20 @@
 [
   {
+    "id": "act-279",
+    "timestamp": "2026-08-25T05:37:17.514Z",
+    "category": "deployment",
+    "title": "Pembaruan Script Otomasi Deployment (deploy.sh) Production-Ready",
+    "description": "Menyempurnakan seluruh alur script deploy.sh agar mencakup sinkronisasi aset kartu member digital, seeder konten lengkap (dokter, jadwal, layanan, promo, blog, galeri, testimoni, aplikasi mobile), pembuatan struktur storage terisolasi, kompilasi frontend Vite, verifikasi integritas webroot, serta caching optimasi Laravel tingkat tinggi.",
+    "details": [
+      "Comprehensive Storage Architecture: Membuat direktori storage lengkap untuk promo, popup, layanan, dokter, hero, galeri, testimoni, signatures, avatar, dashboard, download-apps, dan posts.",
+      "Member Card Asset Sync: Menyelaraskan kartu digital (card bronze/gold/platinum) dan pita badge ke direktori public/dashboard dan storage symlink.",
+      "Full Idempotent Seeders: Menjalankan rangkaian seeder resmi (Doctor, DoctorProfile, DoctorSchedule, ClinicService, Content, Promo, Branch, Wilayah, Normalize, dan DownloadApp).",
+      "Production Optimization: Menjalankan config:cache, route:cache, dan view:cache untuk performa maksimal di hosting cPanel, Plesk, DirectAdmin, atau VPS."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-278",
     "timestamp": "2026-08-25T02:27:46.185Z",
     "category": "bug-fix",
