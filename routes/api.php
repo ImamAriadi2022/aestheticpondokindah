@@ -133,6 +133,7 @@ Route::prefix('admin')->group(function () {
         // Doctor Schedules (Admin)
         Route::get('/doctor-schedules', [DoctorScheduleController::class, 'adminIndex']);
         Route::post('/doctor-schedules', [DoctorScheduleController::class, 'adminStore']);
+        Route::post('/doctor-schedules/sync', [DoctorScheduleController::class, 'adminSync']);
         Route::delete('/doctor-schedules/{schedule}', [DoctorScheduleController::class, 'adminDestroy']);
 
         // Branches (Admin)

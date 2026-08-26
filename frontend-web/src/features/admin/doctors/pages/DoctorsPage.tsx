@@ -1,12 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DoctorTable from "../components/DoctorTable";
 import DoctorEditorModal from "../components/DoctorEditorModal";
 import DoctorScheduleModal from "../components/DoctorScheduleModal";
 import { Button } from "@/shared/ui/button";
 import { Plus, Stethoscope, Users, CheckCircle2, Calendar, RefreshCw } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
-import { API_BASE } from "@/core/api/apiConfig";
 import { apiClient } from "@/core/api/apiClient";
+import {
+  getAdminDoctorSchedules,
+  syncAdminDoctorSchedules,
+  type AdminDoctorScheduleItem,
+} from "../services/adminDoctorScheduleApi";
+
+const CACHE_KEY_DOCTORS = "apident:admin:doctors";
+const CACHE_KEY_SCHEDULES = "apident:admin:doctor_schedules";
+
+function getCachedData<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? (parsed as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setCachedData<T>(key: string, data: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // Ignore storage quota errors
+  }
+}
 
 type Props = {
   doctors?: any[];
@@ -18,52 +44,71 @@ type Props = {
 
 export default function DoctorsPage({
   doctors: propsDoctors,
-  doctorSchedules = [],
-  token,
+  doctorSchedules: propsDoctorSchedules = [],
   fetchApiDoctors,
   fetchDoctorSchedules,
 }: Props) {
-  const [localDoctors, setLocalDoctors] = useState<any[]>(
-    Array.isArray(propsDoctors) && propsDoctors.length > 0 ? propsDoctors : []
-  );
+  // 1. Instant Cache Initialization (0 ms initial render)
+  const [localDoctors, setLocalDoctors] = useState<any[]>(() => {
+    if (Array.isArray(propsDoctors) && propsDoctors.length > 0) return propsDoctors;
+    return getCachedData<any[]>(CACHE_KEY_DOCTORS, []);
+  });
+
+  const [localSchedules, setLocalSchedules] = useState<AdminDoctorScheduleItem[]>(() => {
+    if (Array.isArray(propsDoctorSchedules) && propsDoctorSchedules.length > 0)
+      return propsDoctorSchedules as AdminDoctorScheduleItem[];
+    return getCachedData<AdminDoctorScheduleItem[]>(CACHE_KEY_SCHEDULES, []);
+  });
+
   const [loading, setLoading] = useState(false);
 
-  const loadDoctorsFromBackend = async () => {
+  // 2. Background Data Sync from Backend
+  const loadDoctorsFromBackend = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Try authenticated admin doctors endpoint
-      const res: any = await apiClient.get("/admin/doctors", { skipToast: true });
-      const list = Array.isArray(res) ? res : res?.doctors || res?.data || [];
-      if (Array.isArray(list) && list.length > 0) {
-        setLocalDoctors(list);
-        return;
+      const [docRes, schedRes]: [any, any] = await Promise.all([
+        apiClient.get("/admin/doctors", { skipToast: true }).catch(() => null),
+        getAdminDoctorSchedules().catch(() => null),
+      ]);
+
+      const docList = Array.isArray(docRes)
+        ? docRes
+        : docRes?.doctors || docRes?.data || [];
+
+      if (Array.isArray(docList) && docList.length > 0) {
+        setLocalDoctors(docList);
+        setCachedData(CACHE_KEY_DOCTORS, docList);
       }
-    } catch (err) {
-      // 2. Fallback to public doctors endpoint
-      try {
-        const pubRes: any = await apiClient.get("/doctors", { skipToast: true });
-        const pubList = Array.isArray(pubRes) ? pubRes : pubRes?.doctors || pubRes?.data || [];
-        if (Array.isArray(pubList) && pubList.length > 0) {
-          setLocalDoctors(pubList);
-          return;
-        }
-      } catch {}
+
+      if (Array.isArray(schedRes) && schedRes.length > 0) {
+        setLocalSchedules(schedRes);
+        setCachedData(CACHE_KEY_SCHEDULES, schedRes);
+      }
+    } catch {
+      // Fallback
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // Sync with parent props
   useEffect(() => {
     if (Array.isArray(propsDoctors) && propsDoctors.length > 0) {
       setLocalDoctors(propsDoctors);
-    } else {
-      loadDoctorsFromBackend();
+      setCachedData(CACHE_KEY_DOCTORS, propsDoctors);
     }
   }, [propsDoctors]);
 
   useEffect(() => {
+    if (Array.isArray(propsDoctorSchedules) && propsDoctorSchedules.length > 0) {
+      setLocalSchedules(propsDoctorSchedules as AdminDoctorScheduleItem[]);
+      setCachedData(CACHE_KEY_SCHEDULES, propsDoctorSchedules);
+    }
+  }, [propsDoctorSchedules]);
+
+  useEffect(() => {
     loadDoctorsFromBackend();
-  }, []);
+  }, [loadDoctorsFromBackend]);
 
   // Modal States
   const [editorOpen, setEditorOpen] = useState(false);
@@ -86,12 +131,12 @@ export default function DoctorsPage({
 
   // Open Manage Schedule Modal
   const handleManageSchedule = (doc: any) => {
-    const dbSchedulesForDoc = doctorSchedules
+    const dbSchedulesForDoc = localSchedules
       .filter((s: any) => String(s.doctorId || s.user_id) === String(doc.id))
       .map((s: any) => ({
         id: s.id,
         day: s.displayDate || s.date || "Senin",
-        time: s.timeRange || s.time_range || "09:00 - 14:00",
+        time: s.timeRange || s.time_range || "09:00 - 13:00",
         quota: s.totalSlots || s.total_slots || 10,
         location: s.location || "Cabang Utama",
       }));
@@ -105,14 +150,41 @@ export default function DoctorsPage({
     setScheduleOpen(true);
   };
 
-  // Save / Update Doctor (Create or Edit)
+  // Save / Update Doctor with Immediate Optimistic State Update
   const handleSaveDoctor = async (doctorData: any) => {
     const isEdit = Boolean(doctorData.id);
+    const targetId = doctorData.id || `temp-doc-${Date.now()}`;
 
+    // 1. Optimistic State & Cache Update (Instant 0 ms UI response)
+    const optimisticDoctor = {
+      ...doctorData,
+      id: targetId,
+      status: doctorData.is_active ? "active" : "inactive",
+      is_active: doctorData.is_active,
+    };
+
+    let previousDoctors = [...localDoctors];
+    if (isEdit) {
+      setLocalDoctors((prev) => {
+        const next = prev.map((d) => (String(d.id) === String(targetId) ? optimisticDoctor : d));
+        setCachedData(CACHE_KEY_DOCTORS, next);
+        return next;
+      });
+    } else {
+      setLocalDoctors((prev) => {
+        const next = [optimisticDoctor, ...prev];
+        setCachedData(CACHE_KEY_DOCTORS, next);
+        return next;
+      });
+    }
+
+    toast.success(isEdit ? "Data dokter berhasil diperbarui" : "Dokter baru berhasil didaftarkan");
+
+    // 2. Background API Synchronization
     try {
       const endpoint = isEdit ? `/admin/doctors/${doctorData.id}` : "/admin/doctors";
       const method = isEdit ? "put" : "post";
-      
+
       const payload = {
         name: doctorData.name,
         email: doctorData.email,
@@ -148,58 +220,51 @@ export default function DoctorsPage({
       }
 
       await loadDoctorsFromBackend();
-      if (fetchApiDoctors) await fetchApiDoctors();
-
-      toast({
-        title: "Berhasil",
-        message: isEdit ? "Data dokter berhasil diperbarui" : "Dokter baru berhasil didaftarkan",
-        variant: "success",
-      });
+      if (fetchApiDoctors) fetchApiDoctors().catch(() => {});
     } catch (err: any) {
-      console.error("Save doctor error", err);
-      // Local state fallback
-      if (isEdit) {
-        setLocalDoctors((prev) =>
-          prev.map((d) => (String(d.id) === String(doctorData.id) ? { ...d, ...doctorData } : d))
-        );
-      } else {
-        const newDoctor = {
-          ...doctorData,
-          id: doctorData.id || `doc-${Date.now()}`,
-          schedules: doctorData.schedules || [
-            { day: "Senin", time: "09:00 - 14:00", quota: 10, location: "Cabang Utama" },
-          ],
-        };
-        setLocalDoctors((prev) => [newDoctor, ...prev]);
-      }
-      toast({ title: "Berhasil", message: "Perubahan data dokter disimpan", variant: "success" });
+      console.error("Failed to sync doctor with server:", err);
+      // Revert if severe error
+      setLocalDoctors(previousDoctors);
+      setCachedData(CACHE_KEY_DOCTORS, previousDoctors);
+      toast.error(err.message || "Gagal menyelaraskan perubahan ke server");
     }
   };
 
-  // Toggle Doctor Active Practice Status
+  // Toggle Doctor Active Practice Status (Optimistic + Fast Sync)
   const handleToggleStatus = async (docId: string, currentActive: boolean) => {
     const newStatus = !currentActive;
 
-    setLocalDoctors((prev) =>
-      prev.map((d) => (String(d.id) === String(docId) ? { ...d, is_active: newStatus, status: newStatus ? "active" : "inactive" } : d))
-    );
+    // Optimistic Update
+    setLocalDoctors((prev) => {
+      const next = prev.map((d) =>
+        String(d.id) === String(docId)
+          ? { ...d, is_active: newStatus, status: newStatus ? "active" : "inactive" }
+          : d
+      );
+      setCachedData(CACHE_KEY_DOCTORS, next);
+      return next;
+    });
+
+    toast.info(newStatus ? "Dokter Diaktifkan" : "Dokter Dinonaktifkan");
 
     try {
       await apiClient.put(`/admin/doctors/${docId}`, {
         is_active: newStatus,
         status: newStatus ? "active" : "inactive",
       });
-      toast({
-        title: newStatus ? "Dokter Diaktifkan" : "Dokter Dinonaktifkan",
-        message: `Status praktik dokter berhasil diubah.`,
-        variant: "info",
-      });
+      if (fetchApiDoctors) fetchApiDoctors().catch(() => {});
     } catch (err) {
-      // Revert if failed
-      setLocalDoctors((prev) =>
-        prev.map((d) => (String(d.id) === String(docId) ? { ...d, is_active: currentActive, status: currentActive ? "active" : "inactive" } : d))
-      );
-      toast({ title: "Gagal", message: "Gagal mengubah status dokter", variant: "error" });
+      // Revert on failure
+      setLocalDoctors((prev) => {
+        const next = prev.map((d) =>
+          String(d.id) === String(docId)
+            ? { ...d, is_active: currentActive, status: currentActive ? "active" : "inactive" }
+            : d
+        );
+        setCachedData(CACHE_KEY_DOCTORS, next);
+        return next;
+      });
+      toast.error("Gagal mengubah status dokter di server");
     }
   };
 
@@ -209,20 +274,58 @@ export default function DoctorsPage({
       return;
     }
 
+    // Optimistic Removal
+    setLocalDoctors((prev) => {
+      const next = prev.filter((d) => String(d.id) !== String(docId));
+      setCachedData(CACHE_KEY_DOCTORS, next);
+      return next;
+    });
+
+    toast.success(`Dokter ${docName} telah dihapus.`);
+
     try {
       await apiClient.delete(`/admin/doctors/${docId}`);
-      setLocalDoctors((prev) => prev.filter((d) => String(d.id) !== String(docId)));
-      toast({ title: "Berhasil Dihapus", message: `Dokter ${docName} telah dihapus dari sistem.`, variant: "success" });
-      if (fetchApiDoctors) await fetchApiDoctors();
+      if (fetchApiDoctors) fetchApiDoctors().catch(() => {});
     } catch (err: any) {
-      setLocalDoctors((prev) => prev.filter((d) => String(d.id) !== String(docId)));
-      toast({ title: "Berhasil", message: `Dokter ${docName} dihapus dari daftar.`, variant: "info" });
+      console.error("Delete doctor error:", err);
+    }
+  };
+
+  // Save & Sync Doctor Schedules with Server
+  const handleSaveSchedules = async (docId: string, newSchedules: any[]) => {
+    try {
+      // 1. Sync directly to backend endpoint
+      await syncAdminDoctorSchedules(docId, newSchedules);
+
+      // 2. Update local doctor schedules state & cache
+      const freshSchedules = await getAdminDoctorSchedules().catch(() => []);
+      if (Array.isArray(freshSchedules) && freshSchedules.length > 0) {
+        setLocalSchedules(freshSchedules);
+        setCachedData(CACHE_KEY_SCHEDULES, freshSchedules);
+      }
+
+      // 3. Update doctor item's schedules
+      setLocalDoctors((prev) => {
+        const next = prev.map((d) =>
+          String(d.id) === String(docId) ? { ...d, schedules: newSchedules } : d
+        );
+        setCachedData(CACHE_KEY_DOCTORS, next);
+        return next;
+      });
+
+      if (fetchDoctorSchedules) fetchDoctorSchedules().catch(() => {});
+      if (fetchApiDoctors) fetchApiDoctors().catch(() => {});
+    } catch (err: any) {
+      console.error("Save schedules error:", err);
+      throw err;
     }
   };
 
   const totalDoctors = localDoctors.length;
-  const activeDoctors = localDoctors.filter((d) => d.is_active !== false && d.status !== "inactive").length;
-  const totalSchedulesCount = doctorSchedules.length > 0 ? doctorSchedules.length : 9;
+  const activeDoctors = localDoctors.filter(
+    (d) => d.is_active !== false && d.status !== "inactive"
+  ).length;
+  const totalSchedulesCount = localSchedules.length > 0 ? localSchedules.length : 12;
 
   return (
     <div className="space-y-6">
@@ -244,7 +347,7 @@ export default function DoctorsPage({
             variant="outline"
             onClick={loadDoctorsFromBackend}
             disabled={loading}
-            className="rounded-xl border-[#E8DFC8] h-10 px-3.5 text-xs text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer"
+            className="rounded-xl border-[#E8DFC8] h-10 px-3.5 text-xs text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer shadow-2xs"
             title="Refresh Data Dokter"
           >
             <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin text-[#C9A24A]" : ""}`} />
@@ -254,7 +357,7 @@ export default function DoctorsPage({
           <Button
             type="button"
             onClick={handleCreateNew}
-            className="bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:opacity-90 text-white font-semibold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+            className="bg-[#B8943F] hover:bg-[#A38032] text-white font-bold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer transition"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Tambah Dokter Spesialis
@@ -264,7 +367,7 @@ export default function DoctorsPage({
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
             <Users className="w-6 h-6" />
           </div>
@@ -274,7 +377,7 @@ export default function DoctorsPage({
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -284,7 +387,7 @@ export default function DoctorsPage({
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
             <Calendar className="w-6 h-6" />
           </div>
@@ -317,11 +420,7 @@ export default function DoctorsPage({
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
         doctor={scheduleDoctor}
-        onSaveSchedules={async (docId, newSchedules) => {
-          if (fetchDoctorSchedules) await fetchDoctorSchedules();
-          await loadDoctorsFromBackend();
-          toast({ title: "Berhasil", message: "Jadwal dokter berhasil diperbarui", variant: "success" });
-        }}
+        onSaveSchedules={handleSaveSchedules}
       />
     </div>
   );

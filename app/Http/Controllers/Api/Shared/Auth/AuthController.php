@@ -49,7 +49,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Email/WhatsApp atau password salah.'], 401);
         }
 
-        if (($user->status ?? 'active') !== 'active') {
+        if (($user->status ?? 'active') !== 'active' && $user->role !== 'doctor') {
             return response()->json(['message' => 'Akun tidak aktif.'], 403);
         }
 

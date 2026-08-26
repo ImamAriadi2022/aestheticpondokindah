@@ -89,6 +89,73 @@ class DoctorScheduleController extends Controller
         return response()->json(['message' => 'Jadwal dokter berhasil dihapus']);
     }
 
+    public function adminSync(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+            'schedules' => 'required|array',
+            'schedules.*.day' => 'required|string',
+            'schedules.*.time' => 'required|string',
+            'schedules.*.quota' => 'nullable|integer|min:1',
+            'schedules.*.location' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $userId = $request->input('user_id');
+        $schedules = $request->input('schedules', []);
+
+        $dayMap = [
+            'Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4,
+            'Jumat' => 5, 'Sabtu' => 6, 'Minggu' => 7,
+            'Monday' => 1, 'Tuesday' => 2, 'Wednesday' => 3, 'Thursday' => 4,
+            'Friday' => 5, 'Saturday' => 6, 'Sunday' => 7,
+        ];
+
+        // Clean future unbooked schedules to apply fresh recurring slots
+        DoctorSchedule::where('user_id', $userId)
+            ->where('booked_slots', 0)
+            ->whereDate('date', '>=', now()->toDateString())
+            ->delete();
+
+        $created = 0;
+        foreach ($schedules as $slot) {
+            $dayName = $slot['day'] ?? 'Senin';
+            $targetDayOfWeek = $dayMap[$dayName] ?? 1;
+            $timeRange = $slot['time'] ?? '09:00 - 13:00';
+            $quota = (int) ($slot['quota'] ?? 10);
+            $location = $slot['location'] ?? 'Cabang Utama';
+
+            for ($week = 0; $week < 4; $week++) {
+                $targetDate = now()->startOfWeek()->addWeeks($week)->addDays($targetDayOfWeek - 1);
+                if ($targetDate->toDateString() < now()->toDateString()) {
+                    continue;
+                }
+
+                DoctorSchedule::firstOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'date' => $targetDate->toDateString(),
+                        'time_range' => $timeRange,
+                    ],
+                    [
+                        'location' => $location,
+                        'total_slots' => $quota,
+                        'booked_slots' => 0,
+                    ]
+                );
+                $created++;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Jadwal sesi praktik dokter berhasil disinkronkan',
+            'created_count' => $created,
+        ]);
+    }
+
     public function publicIndex(Request $request): JsonResponse
     {
         $doctorId = $request->query('doctorId') ?? $request->query('doctor_id');
@@ -96,6 +163,9 @@ class DoctorScheduleController extends Controller
         $startDate = $request->query('startDate') ?? $request->query('start_date');
 
         $query = DoctorSchedule::query()
+            ->whereHas('user', function ($q) {
+                $q->where('status', 'active');
+            })
             ->with('user')
             ->orderBy('date')
             ->orderBy('time_range');

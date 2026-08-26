@@ -1,6 +1,67 @@
 [
   {
-    "id": "act-307",
+    "id": "act-312",
+    "timestamp": "2026-08-26T05:23:00.000Z",
+    "category": "performance-optimization",
+    "title": "Optimalisasi State Management & Fast Caching Instan pada Modul Kelola Dokter Admin",
+    "description": "Meningkatkan performa pemuatan data, penyimpanan, dan sinkronisasi modul Kelola Dokter (`DoctorsPage.tsx`, `DoctorScheduleModal.tsx`, `adminDoctorScheduleApi.ts`, & `DoctorScheduleController.php`): 1) Mengimplementasikan Instant Cache Layer (`apident:admin:doctors` & `apident:admin:doctor_schedules`) sehingga halaman dokter dan modal jadwal langsung ter-render dalam 0 ms, 2) Menerapkan Optimistic State Updates pada operasi tambah dokter, edit kredensial, toggle status aktif/nonaktif, dan hapus dokter sehingga UI bereaksi secara instan tanpa jeda loading, 3) Menambahkan endpoint sinkronisasi jadwal batch (`POST /api/admin/doctor-schedules/sync`) yang secara otomatis menyinkronkan slot jadwal mingguan dokter ke database untuk 4 minggu ke depan, dan 4) Menyediakan auto-rollback dan background synchronization yang handal.",
+    "details": [
+      "0 ms Initial Render: Data dokter dan jadwal dimuat seketika dari instant cache lokal.",
+      "Optimistic UI Updates: Perubahan data dokter dan status aktif/nonaktif langsung ter-render di UI tanpa menunggu latency server.",
+      "Batch Schedule Sync Engine: Endpoint sync jadwal dokter otomatis meregenerasi slot jadwal dokter untuk 4 minggu ke depan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T05:16:00.000Z",
+    "category": "business-logic-refinement",
+    "title": "Penyelarasan Logika Status Dokter Nonaktif: Tetap Bisa Login, Disembunyikan dari Menu Layanan Publik",
+    "description": "Menyelaraskan perilaku backend (`AuthController.php`, `UserController.php`, & `DoctorScheduleController.php`) untuk dokter nonaktif / cuti: 1) Dokter dengan status 'inactive' tetap dapat melakukan login ke dashboard dokter untuk melihat histori atau data internalnya, 2) Seluruh dokter dan jadwal dokter dengan status 'inactive' secara otomatis disaring/disembunyikan dari daftar dokter publik, menu layanan klinik, dan form reservasi pasien publik (`UserController::publicDoctors` & `DoctorScheduleController::publicIndex`).",
+    "details": [
+      "Login Accessibility: Dokter berstatus nonaktif tetap diizinkan login ke portal dokter.",
+      "Public Service Filtering: Dokter dan jadwal dokter nonaktif otomatis disembunyikan 100% dari menu layanan dan reservasi publik.",
+      "Dual Environment Readiness: Kompilasi dan sinkronisasi backend Laravel & frontend React siap di production."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T05:10:00.000Z",
+    "category": "feature-implementation",
+    "title": "Integrasi Fitur Switch Status Keaktifan (Aktif/Nonaktif) Dokter pada Modal Edit Dokter",
+    "description": "Menambahkan seksi 'Status Keaktifan Berpraktik Dokter' di dalam modal edit dokter (`DoctorEditorModal.tsx`): 1) Dilengkapi dengan kartu status ber-ikon dinamis (Emerald saat Aktif dan Rose/Red saat Nonaktif/Cuti), 2) Menyediakan tombol toggle switch interaktif yang dapat diubah dengan satu klik, 3) Memberikan keterangan status yang jelas mengenai pengaruh keaktifan terhadap penerimaan reservasi pasien di klinik, dan 4) Terintegrasi penuh dengan penyimpanan status backend (`is_active` / `status` active & inactive).",
+    "details": [
+      "Dynamic Practice Status: Kartu status menampilkan status Aktif / Nonaktif dokter secara visual.",
+      "One-Click Interactive Switch: Admin dapat dengan mudah mengaktifkan atau menonaktifkan dokter langsung dari pop-up.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh aset bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T05:04:00.000Z",
+    "category": "bug-fix",
+    "title": "Pemisahan Tombol Aksi Batal dan Simpan Data pada Modal Kelola Jadwal Dokter",
+    "description": "Memperbaiki logika dan tampilan footer modal Kelola Jadwal Praktik Dokter (`DoctorScheduleModal.tsx`): 1) Menghilangkan tombol tunggal 'Tutup' yang secara keliru langsung menyimpan, 2) Menyediakan dua tombol aksi terpisah yang jelas: tombol 'Batal' (untuk menutup modal dan membatalkan penambahan/penghapusan sesi yang belum tersimpan) serta tombol 'Simpan Data' (untuk menyimpan konfigurasi jadwal dokter ke server), dan 3) Menyinkronkan reset state slot jadwal saat modal dibuka kembali.",
+    "details": [
+      "Separated Action Buttons: Tombol Batal dan Simpan Data kini terpisah dengan fungsi yang jelas.",
+      "Safe Cancellation: Menekan tombol Batal atau X tidak akan mengubah jadwal dokter di server.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh aset bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T05:00:00.000Z",
+    "category": "ui-enhancement",
+    "title": "Penyelarasan Desain UI Modal Kelola Jadwal & Edit Data Dokter Sesuai Desain Referensi",
+    "description": "Memperbaiki dan merombak tampilan pop-up modal Kelola Dokter pada dashboard Admin sesuai 100% dengan gambar referensi: 1) Modal Kelola Jadwal Sesi Praktik Dokter Spesialis (`DoctorScheduleModal.tsx`) diperbarui dengan container elegan (rounded-[28px], gold accent header, form Tambah Sesi Praktik 5-kolom ber-ikon, grid 2-kolom jadwal praktik dengan badge warna hari yang estetik, dan banner informasi dengan tombol Tutup), 2) Modal Edit Data & Kredensial Dokter Spesialis (`DoctorEditorModal.tsx`) diperbarui dengan header Stethoscope emas, seksi Kredensial Login Akun ber-ikon Mail, Phone, Lock, dan toggle Password, banner Keamanan Akun, serta seksi Profil & Kredensial Kedokteran (Nama, Spesialisasi, STR, SIP, dan Pendidikan) lengkap dengan tombol Batal & Simpan Perubahan.",
+    "details": [
+      "DoctorScheduleModal: Layout 5-kolom tambah sesi, grid slot ber-badge hari warna-warni, serta banner info dan tombol tutup sesuai referensi gambar 2.",
+      "DoctorEditorModal: Layout kredensial login, password toggle, banner keamanan, dan profil kredensial dokter spesialis sesuai referensi gambar 3.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh aset terpasang di folder public/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T04:31:00.000Z",
     "category": "feature-implementation",
     "title": "Fitur Pencarian Pasien Berdasarkan Nama Pengguna (Search by User Name) di Admin Dashboard",

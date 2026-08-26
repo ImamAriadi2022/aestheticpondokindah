@@ -42,3 +42,22 @@ export async function getAdminDoctorSchedules(params?: {
   if (!res.ok) throw new Error("Gagal memuat jadwal dokter");
   return res.json();
 }
+
+export async function syncAdminDoctorSchedules(
+  doctorId: string | number,
+  schedules: any[]
+): Promise<any> {
+  const res = await fetch(`${API_BASE}/admin/doctor-schedules/sync`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      user_id: doctorId,
+      schedules,
+    }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || "Gagal menyinkronkan jadwal dokter");
+  }
+  return res.json();
+}
