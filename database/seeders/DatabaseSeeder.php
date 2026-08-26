@@ -38,6 +38,14 @@ class DatabaseSeeder extends Seeder
                 'role' => 'patient',
                 'status' => 'active',
             ],
+            [
+                'name' => 'Imam Ariadi (Developer)',
+                'email' => 'imamariadi775@gmail.com',
+                'whatsapp' => '+62887437525399',
+                'password' => 'Persib1933',
+                'role' => 'developer',
+                'status' => 'active',
+            ],
         ];
 
         foreach ($defaultUsers as $userData) {

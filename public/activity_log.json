@@ -1,6 +1,45 @@
 [
   {
-    "id": "act-292",
+    "id": "act-295",
+    "timestamp": "2026-08-26T01:48:00.000Z",
+    "category": "feature-implementation",
+    "title": "Integrasi Swagger API Documentation ke React Router SPA (/docs-api & /doc-api)",
+    "description": "Menghubungkan antarmuka Swagger REST API Documentation & Live Test Console langsung ke dalam sistem routing React SPA di rute `/#/docs-api` (dan alias `/#/doc-api`): 1) Membuat komponen halaman React khusus `DocsApiPage.tsx` di `features/developer/pages/`, 2) Mengintegrasikan Developer Authentication Gate dengan otentikasi login email `imamariadi775@gmail.com` dan password terenkripsi `Persib1933`, 3) Menghubungkan library Swagger UI dengan spec OpenAPI 3.0.3 komprehensif seluruh modul klinik, 4) Menyediakan fitur uji coba interaktif live testing console dengan cuplikan kode otomatis multi-bahasa (Fetch JS, Axios, cURL, Python, PHP), dan 5) Mengotomatiskan otorisasi Sanctum Bearer Token begitu Developer masuk.",
+    "details": [
+      "React SPA Route: Rute /docs-api dan /doc-api kini terhubung penuh di App.tsx.",
+      "Embedded Developer Gate: Form login email developer terintegrasi langsung di dalam komponen React.",
+      "Live Testing & Multi-Language Snippets: Fitur tryItOutEnabled aktif secara bawaan dengan cuplikan kode Fetch, Axios, cURL, Python, PHP.",
+      "Build Synchronization: npm run build sukses 100% dan seluruh aset SPA telah ter-bundle di direktori public/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T01:45:00.000Z",
+    "category": "security-update",
+    "title": "Pembuatan Aktor Developer & Pengamanan Gerbang Swagger API Docs (/doc-api.php & /docs-api.php)",
+    "description": "Menambahkan aktor baru 'developer' dan mengunci akses dokumentasi Swagger API hanya untuk pengguna terautentikasi sebagai Developer: 1) Membuat akun Developer baru terenkripsi (Bcrypt/Hash) dengan email `imamariadi775@gmail.com` dan role `developer`, 2) Menambahkan berkas migrasi `2026_08_26_000002_create_developer_user.php` dan memperbarui DatabaseSeeder, 3) Memperbarui `AuthController.php` agar mendukung login fleksibel via WhatsApp maupun Email, 4) Menerapkan Developer Auth Gate pada `public/doc-api.php` dan `public/docs-api.php` yang mewajibkan login email dan password developer sebelum Swagger UI dan test console dapat diakses, serta 5) Mengotomatiskan injeksi Sanctum Bearer Token begitu Developer berhasil login.",
+    "details": [
+      "New Developer Role: Akun imamariadi775@gmail.com berhasil dibuat dengan password terenkripsi kuat dan role developer.",
+      "Developer Login Gate: Mengunci /doc-api.php dan /docs-api.php dengan halaman login eksklusif bergaya gelap mewah.",
+      "Flexible Login Controller: AuthController::login kini mendukung login dengan email atau nomor WhatsApp.",
+      "Auto Pre-Authorization: Sesi login developer langsung mengaktifkan token Bearer pada Swagger UI console secara otomatis."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T01:38:00.000Z",
+    "category": "feature-implementation",
+    "title": "Pembuatan Swagger UI Interaktif & Test Console Lengkap di /doc-api.php",
+    "description": "Mengembangkan antarmuka dokumentasi REST API Swagger UI interaktif lengkap pada `public/doc-api.php` yang dapat diakses langsung via https://aestheticpondokindah.com/doc-api.php: 1) Mendokumentasikan seluruh endpoint REST API klinik (Authentication, Public/Guest, Admin CMS, Doctor Portal & EMR, Patient Dashboard, Membership, Web Push, dan Wilayah), 2) Menyediakan contoh kode multi-bahasa terintegrasi (JavaScript Fetch, Axios, cURL, Python Requests, PHP cURL) untuk setiap endpoint, 3) Mengaktifkan fitur uji coba interaktif langsung ('Try it out' & 'Execute') dengan pre-filled request body dan parameter riil, 4) Menyediakan fitur Quick Token Bar untuk otentikasi Sanctum Bearer Token instan tanpa ribet, dan 5) Menerapkan desain mewah elegan bertema Aesthetic Pondok Indah (Champagne Gold & Deep Charcoal).",
+    "details": [
+      "Interactive Swagger UI: Tersedia di https://aestheticpondokindah.com/doc-api.php dengan spec OpenAPI 3.0.3 lengkap.",
+      "Multi-Language Code Snippets: Setiap endpoint dilengkapi tab cuplikan kode Fetch JS, Axios, cURL, Python, dan PHP.",
+      "Live Testing Console: tryItOutEnabled diaktifkan secara default untuk pengujian live API langsung dari browser.",
+      "Quick Bearer Auth Helper: Input token cepat di topbar yang otomatis meng-authorize sesi pengujian API."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T01:35:00.000Z",
     "category": "bug-fix",
     "title": "Perbaikan Error Penyimpanan Pengaturan Klinik & Sinkronisasi Backend Production Plesk Hosting",

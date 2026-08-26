@@ -14,7 +14,10 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'whatsapp' => 'required|string|max:20',
+            'login' => 'nullable|string|max:100',
+            'email' => 'nullable|string|max:100',
+            'whatsapp' => 'nullable|string|max:100',
+            'identifier' => 'nullable|string|max:100',
             'password' => 'required|string',
             'device_name' => 'nullable|string|max:255',
         ]);
@@ -23,11 +26,27 @@ class AuthController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $identifier = trim((string) (
+            $request->input('login')
+            ?: ($request->input('email')
+            ?: ($request->input('identifier')
+            ?: $request->input('whatsapp')))
+        ));
+
+        if (empty($identifier)) {
+            return response()->json(['message' => 'Email atau nomor WhatsApp wajib diisi.'], 422);
+        }
+
         /** @var User|null $user */
-        $user = User::query()->where('whatsapp', $request->string('whatsapp')->toString())->first();
+        $user = User::query()
+            ->where(function ($q) use ($identifier) {
+                $q->where('email', $identifier)
+                  ->orWhere('whatsapp', $identifier);
+            })
+            ->first();
 
         if (!$user || !Hash::check($request->string('password')->toString(), $user->password)) {
-            return response()->json(['message' => 'WhatsApp atau password salah.'], 401);
+            return response()->json(['message' => 'Email/WhatsApp atau password salah.'], 401);
         }
 
         if (($user->status ?? 'active') !== 'active') {

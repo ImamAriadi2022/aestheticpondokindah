@@ -123,6 +123,9 @@ const BookingRequestDetailPage = lazy(() => import("@/features/guest/reservation
 const OnboardingPage = lazy(() => import("@/features/guest/onboarding/pages/Onboarding"));
 const MobileLoginPage = lazy(() => import("@/core/auth/pages/MobileLogin"));
 
+// Developer API Documentation
+const DocsApiPage = lazy(() => import("@/features/developer/pages/DocsApiPage"));
+
 // Wrapper component to conditionally show ChatBot
 function ChatBotWrapper() {
   const location = useLocation();
@@ -134,8 +137,9 @@ function ChatBotWrapper() {
   const isHelp = location.pathname === "/help";
   const isOnboarding = location.pathname === "/onboarding" || location.pathname === "/mobile-login";
   const isGuestKonsultasi = location.pathname.startsWith("/konsultasi");
+  const isDocsApi = location.pathname === "/docs-api" || location.pathname === "/doc-api";
 
-  if (isDashboard || isSettings || isProfile || isMembership || isSecurity || isHelp || isOnboarding || isGuestKonsultasi) return null;
+  if (isDashboard || isSettings || isProfile || isMembership || isSecurity || isHelp || isOnboarding || isGuestKonsultasi || isDocsApi) return null;
   return <ChatBot />;
 }
 
@@ -377,6 +381,10 @@ export default function App() {
               {/* Onboarding & Mobile PWA Routes */}
               <Route path="/onboarding" element={<OnboardingPage />} />
               <Route path="/mobile-login" element={<MobileLoginPage />} />
+
+              {/* Developer REST API Documentation */}
+              <Route path="/docs-api" element={<DocsApiPage />} />
+              <Route path="/doc-api" element={<Navigate to="/docs-api" replace />} />
             </Routes>
           </RouteTransition>
         </ErrorBoundary>
