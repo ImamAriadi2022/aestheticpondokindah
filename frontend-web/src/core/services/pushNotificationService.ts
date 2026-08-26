@@ -225,6 +225,9 @@ export function dispatchDeviceSystemNotification(payload: PushNotificationPayloa
       if (payload.type === "complaint" && localStorage.getItem("apident:notifications_complaints_enabled") === "false") {
         return;
       }
+      if (payload.role === "doctor" && localStorage.getItem("doctor_browser_notif_enabled") === "false") {
+        return;
+      }
     }
   } catch {}
 

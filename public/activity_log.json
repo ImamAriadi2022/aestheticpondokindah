@@ -1,5 +1,20 @@
 [
   {
+    "id": "act-346",
+    "timestamp": "2026-08-26T16:06:00.000Z",
+    "category": "doctor-browser-notification-toggle",
+    "title": "Implementasi Toggle Switch Preferensi Notifikasi Browser Dokter",
+    "description": "Menambahkan tombol sakelar (toggle switch) interaktif untuk mengaktifkan dan menonaktifkan preferensi notifikasi browser pada pengaturan dokter ([`Settings.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/doctor/settings/pages/Settings.tsx), [`pushNotificationService.ts`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/services/pushNotificationService.ts)): 1) Menampilkan status toggle switch 'Aktif' / 'Nonaktif' dengan animasi smooth champagne gold, 2) Menyimpan preferensi ke localStorage ('doctor_browser_notif_enabled') dan meminta izin browser secara dinamis jika belum diizinkan, 3) Memastikan layanan push notification mematuhi preferensi sakelar dokter saat trigger pembaruan jadwal dan reservasi.",
+    "details": [
+      "Interactive Toggle Switch: Dokter dapat menyalakan atau mematikan notifikasi pop-up browser kapan saja secara mandiri.",
+      "Permission Flow: Meminta izin browser secara otomatis saat sakelar dinyalakan pertama kali dan memberikan instruksi jika izin diblokir browser.",
+      "Preference Synchronization: ServiceWorker dan popup OS notifikasi memeriksa status toggle sakelar dokter sebelum menampilkan alert.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-345",
     "timestamp": "2026-08-26T15:37:00.000Z",
     "category": "doctor-schedule-search-and-sort",

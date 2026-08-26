@@ -33,6 +33,14 @@ export default function DoctorSettingsPage() {
   const navigate = useNavigate();
 
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
+  const [browserNotifEnabled, setBrowserNotifEnabled] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    const saved = localStorage.getItem("doctor_browser_notif_enabled");
+    if (saved !== null) {
+      return saved === "true";
+    }
+    return "Notification" in window && Notification.permission === "granted";
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
@@ -40,22 +48,62 @@ export default function DoctorSettingsPage() {
     }
   }, []);
 
-  const requestNotifPermission = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      const perm = await Notification.requestPermission();
-      setNotifPermission(perm);
-      if (perm === "granted") {
+  const isBrowserNotifActive = notifPermission === "granted" && browserNotifEnabled;
+
+  const handleToggleBrowserNotif = async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) {
+      toast({
+        title: "Tidak Didukung",
+        message: "Browser ini tidak mendukung fitur Web Notification.",
+        variant: "error",
+      });
+      return;
+    }
+
+    if (isBrowserNotifActive) {
+      setBrowserNotifEnabled(false);
+      localStorage.setItem("doctor_browser_notif_enabled", "false");
+      toast({
+        title: "Notifikasi Dinonaktifkan",
+        message: "Preferensi notifikasi browser untuk dokter telah dimatikan.",
+        variant: "info",
+      });
+    } else {
+      if (Notification.permission === "granted") {
+        setNotifPermission("granted");
+        setBrowserNotifEnabled(true);
+        localStorage.setItem("doctor_browser_notif_enabled", "true");
         toast({
-          title: "Notifikasi Browser Diizinkan",
-          message: "Anda akan menerima notifikasi reservasi dan jadwal praktik dari sistem klinik.",
+          title: "Notifikasi Diaktifkan",
+          message: "Notifikasi browser aktif untuk jadwal dan reservasi pasien baru.",
           variant: "info",
         });
-      } else {
+      } else if (Notification.permission === "denied") {
         toast({
-          title: "Notifikasi Ditolak",
-          message: "Izin notifikasi ditolak oleh browser Anda.",
+          title: "Izin Notifikasi Diblokir",
+          message: "Browser Anda memblokir izin notifikasi. Silakan klik ikon gembok di bilah URL browser untuk mengizinkannya.",
           variant: "error",
         });
+      } else {
+        const perm = await Notification.requestPermission();
+        setNotifPermission(perm);
+        if (perm === "granted") {
+          setBrowserNotifEnabled(true);
+          localStorage.setItem("doctor_browser_notif_enabled", "true");
+          toast({
+            title: "Notifikasi Diaktifkan",
+            message: "Notifikasi browser aktif untuk jadwal dan reservasi pasien baru.",
+            variant: "info",
+          });
+        } else {
+          setBrowserNotifEnabled(false);
+          localStorage.setItem("doctor_browser_notif_enabled", "false");
+          toast({
+            title: "Notifikasi Ditolak",
+            message: "Izin notifikasi browser belum diberikan.",
+            variant: "error",
+          });
+        }
       }
     }
   };
@@ -268,7 +316,7 @@ export default function DoctorSettingsPage() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  {notifPermission === "granted" ? (
+                  {isBrowserNotifActive ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   ) : (
                     <BellOff className="w-4 h-4 text-gray-400" />
@@ -276,24 +324,39 @@ export default function DoctorSettingsPage() {
                   Notifikasi Browser
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {notifPermission === "granted"
+                  {isBrowserNotifActive
                     ? "Notifikasi browser aktif untuk jadwal dan reservasi pasien baru."
-                    : "Izinkan notifikasi browser untuk menerima pembaruan jadwal dan pasien."}
+                    : "Notifikasi browser nonaktif. Aktifkan untuk menerima pembaruan jadwal dan pasien baru."}
                 </p>
               </div>
-              {notifPermission !== "granted" ? (
-                <Button
-                  size="sm"
-                  className="rounded-xl bg-[#c9a24a] hover:bg-[#a8843a] text-white"
-                  onClick={requestNotifPermission}
+
+              <div className="flex items-center gap-3">
+                <span
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition-colors ${
+                    isBrowserNotifActive
+                      ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                      : "text-gray-500 bg-gray-50 border-gray-200"
+                  }`}
                 >
-                  Aktifkan Notifikasi
-                </Button>
-              ) : (
-                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-                  Aktif
+                  {isBrowserNotifActive ? "Aktif" : "Nonaktif"}
                 </span>
-              )}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={isBrowserNotifActive}
+                  onClick={handleToggleBrowserNotif}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:ring-offset-2 ${
+                    isBrowserNotifActive ? "bg-[#C9A24A]" : "bg-gray-200"
+                  }`}
+                  title={isBrowserNotifActive ? "Nonaktifkan notifikasi browser" : "Aktifkan notifikasi browser"}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      isBrowserNotifActive ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>
