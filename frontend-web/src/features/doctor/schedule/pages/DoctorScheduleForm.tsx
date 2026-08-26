@@ -176,20 +176,40 @@ export default function DoctorScheduleFormPage() {
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Date Field */}
+              {/* Date Field with Live Day & Date Resolution */}
               <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm font-semibold text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#a8843a]" />
-                    Tanggal Praktik
-                  </div>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="date" className="text-sm font-semibold text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[#a8843a]" />
+                      Tanggal Praktik
+                    </div>
+                  </Label>
+                  {date && (
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-50 text-[#8C6B1C] border border-[#E8DFC8]">
+                      {(() => {
+                        try {
+                          const d = new Date(date + "T00:00:00");
+                          if (isNaN(d.getTime())) return date;
+                          const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+                          const monthNames = [
+                            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                          ];
+                          return `Hari: ${dayNames[d.getDay()]}, ${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+                        } catch {
+                          return date;
+                        }
+                      })()}
+                    </span>
+                  )}
+                </div>
                 <Input
                   id="date"
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="rounded-lg border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]"
+                  className="rounded-lg border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a] cursor-pointer"
                   required
                 />
                 {errors.date && <p className="text-xs text-red-500 mt-1">{errors.date}</p>}
@@ -240,34 +260,21 @@ export default function DoctorScheduleFormPage() {
                 </p>
               </div>
 
-              {/* Location Branch Select Field */}
+              {/* Location Field */}
               <div className="space-y-2">
                 <Label htmlFor="location" className="text-sm font-semibold text-gray-700">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-[#a8843a]" />
-                    Cabang / Lokasi Praktik Klinik (Database)
+                    Lokasi Praktik Klinik
                   </div>
                 </Label>
-                {loadingBranches ? (
-                  <div className="flex items-center gap-2 p-2.5 text-xs text-gray-500 bg-gray-50 rounded-lg">
-                    <Loader2 className="w-4 h-4 animate-spin text-[#c9a24a]" /> Memuat daftar cabang...
-                  </div>
-                ) : (
-                  <select
-                    id="location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="w-full rounded-lg border border-gray-200 p-2.5 text-sm font-medium focus:border-[#c9a24a] focus:ring-[#c9a24a] bg-white"
-                    required
-                  >
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.name}>
-                        {b.name} {b.address ? `(${b.address})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {errors.location && <p className="text-xs text-red-500 mt-1">{errors.location}</p>}
+                <Input
+                  id="location"
+                  type="text"
+                  readOnly
+                  value="Aesthetic Pondok Indah"
+                  className="rounded-lg border-gray-200 bg-gray-50 text-gray-800 font-semibold cursor-default select-none shadow-2xs"
+                />
               </div>
 
               {/* Slots Field */}

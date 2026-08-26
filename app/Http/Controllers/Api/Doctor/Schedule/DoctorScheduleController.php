@@ -94,7 +94,9 @@ class DoctorScheduleController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
             'schedules' => 'required|array',
-            'schedules.*.day' => 'required|string',
+            'schedules.*.date' => 'nullable|string',
+            'schedules.*.day' => 'nullable|string',
+            'schedules.*.displayDate' => 'nullable|string',
             'schedules.*.time' => 'required|string',
             'schedules.*.quota' => 'nullable|integer|min:1',
             'schedules.*.location' => 'nullable|string',
@@ -122,22 +124,18 @@ class DoctorScheduleController extends Controller
 
         $created = 0;
         foreach ($schedules as $slot) {
+            $specificDate = $slot['date'] ?? null;
             $dayName = $slot['day'] ?? 'Senin';
-            $targetDayOfWeek = $dayMap[$dayName] ?? 1;
             $timeRange = $slot['time'] ?? '09:00 - 13:00';
             $quota = (int) ($slot['quota'] ?? 10);
-            $location = $slot['location'] ?? 'Cabang Utama';
+            $location = !empty($slot['location']) ? $slot['location'] : 'Aesthetic Pondok Indah';
 
-            for ($week = 0; $week < 4; $week++) {
-                $targetDate = now()->startOfWeek()->addWeeks($week)->addDays($targetDayOfWeek - 1);
-                if ($targetDate->toDateString() < now()->toDateString()) {
-                    continue;
-                }
-
+            if ($specificDate && preg_match('/^\d{4}-\d{2}-\d{2}$/', $specificDate)) {
+                // If an exact date is specified, register directly for that date
                 DoctorSchedule::firstOrCreate(
                     [
                         'user_id' => $userId,
-                        'date' => $targetDate->toDateString(),
+                        'date' => $specificDate,
                         'time_range' => $timeRange,
                     ],
                     [
@@ -147,6 +145,28 @@ class DoctorScheduleController extends Controller
                     ]
                 );
                 $created++;
+            } else {
+                $targetDayOfWeek = $dayMap[$dayName] ?? 1;
+                for ($week = 0; $week < 4; $week++) {
+                    $targetDate = now()->startOfWeek()->addWeeks($week)->addDays($targetDayOfWeek - 1);
+                    if ($targetDate->toDateString() < now()->toDateString()) {
+                        continue;
+                    }
+
+                    DoctorSchedule::firstOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'date' => $targetDate->toDateString(),
+                            'time_range' => $timeRange,
+                        ],
+                        [
+                            'location' => $location,
+                            'total_slots' => $quota,
+                            'booked_slots' => 0,
+                        ]
+                    );
+                    $created++;
+                }
             }
         }
 

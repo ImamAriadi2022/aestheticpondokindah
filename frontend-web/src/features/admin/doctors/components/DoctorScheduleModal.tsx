@@ -14,11 +14,14 @@ import {
   Info,
   CalendarDays,
   Loader2,
+  CalendarCheck,
 } from "lucide-react";
 
-type ScheduleSlot = {
+export type ScheduleSlot = {
   id?: string | number;
+  date?: string;
   day: string;
+  displayDate?: string;
   time: string;
   quota: number;
   location: string;
@@ -31,22 +34,55 @@ type DoctorScheduleModalProps = {
   onSaveSchedules: (doctorId: string, schedules: ScheduleSlot[]) => Promise<void>;
 };
 
-const DAYS_OF_WEEK = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
 const CLINIC_BRANCHES = [
-  "Cabang Utama",
-  "Aesthetic Pondok Indah - Cabang Utama",
-  "Aesthetic Pondok Indah - Bintaro",
-  "Aesthetic Pondok Indah - TB Simatupang",
+  "Aesthetic Pondok Indah",
 ];
+
+// Helper to format Date string to Indonesian Day Name and Full Date
+export function formatDayAndDate(dateStr: string) {
+  if (!dateStr) {
+    return { dayName: "Senin", formattedDate: "-", shortFormattedDate: "-", fullLabel: "-" };
+  }
+  try {
+    const d = new Date(dateStr.includes("T") ? dateStr : dateStr + "T00:00:00");
+    if (isNaN(d.getTime())) {
+      return { dayName: "Senin", formattedDate: dateStr, shortFormattedDate: dateStr, fullLabel: dateStr };
+    }
+
+    const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const monthNames = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
+    const dayName = dayNames[d.getDay()];
+    const formattedDate = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    const shortFormattedDate = `${d.getDate()} ${monthNames[d.getMonth()].substring(0, 3)} ${d.getFullYear()}`;
+    const fullLabel = `${dayName}, ${formattedDate}`;
+
+    return { dayName, formattedDate, shortFormattedDate, fullLabel };
+  } catch {
+    return { dayName: "Senin", formattedDate: dateStr, shortFormattedDate: dateStr, fullLabel: dateStr };
+  }
+}
+
+// Get today formatted as YYYY-MM-DD
+function getTodayString(): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSaveSchedules }: DoctorScheduleModalProps) {
   const [schedules, setSchedules] = useState<ScheduleSlot[]>([]);
 
-  const [newDay, setNewDay] = useState("Senin");
+  const [newDate, setNewDate] = useState(getTodayString());
   const [newTimeStart, setNewTimeStart] = useState("09:00");
   const [newTimeEnd, setNewTimeEnd] = useState("14:00");
   const [newQuota, setNewQuota] = useState(10);
-  const [newLocation, setNewLocation] = useState("Cabang Utama");
+  const [newLocation, setNewLocation] = useState("Aesthetic Pondok Indah");
 
   const [saving, setSaving] = useState(false);
 
@@ -54,36 +90,62 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
   useEffect(() => {
     if (open) {
       if (doctor?.schedules && Array.isArray(doctor.schedules) && doctor.schedules.length > 0) {
-        setSchedules(doctor.schedules);
+        setSchedules(
+          doctor.schedules.map((s: any) => {
+            const dateVal = s.date || s.displayDate;
+            const parsed = formatDayAndDate(dateVal);
+            return {
+              id: s.id,
+              date: s.date || getTodayString(),
+              day: s.day || parsed.dayName,
+              displayDate: s.displayDate || parsed.formattedDate,
+              time: s.time || s.timeRange || s.time_range || "09:00 - 13:00",
+              quota: Number(s.quota || s.totalSlots || s.total_slots || 10),
+              location: s.location || "Aesthetic Pondok Indah",
+            };
+          })
+        );
       } else {
+        const today = getTodayString();
+        const parsed = formatDayAndDate(today);
         setSchedules([
-          { day: "Senin", time: "09:00 - 13:00", quota: 10, location: "Cabang Utama" },
-          { day: "Rabu", time: "14:00 - 18:00", quota: 10, location: "Cabang Utama" },
-          { day: "Jumat", time: "09:00 - 13:00", quota: 10, location: "Cabang Utama" },
+          { date: today, day: parsed.dayName, displayDate: parsed.formattedDate, time: "09:00 - 13:00", quota: 10, location: "Aesthetic Pondok Indah" },
         ]);
       }
-      setNewDay("Senin");
+      setNewDate(getTodayString());
       setNewTimeStart("09:00");
       setNewTimeEnd("14:00");
       setNewQuota(10);
-      setNewLocation("Cabang Utama");
+      setNewLocation("Aesthetic Pondok Indah");
     }
   }, [open, doctor]);
 
+  // Current selected date information (Hari & Tanggal)
+  const selectedDateInfo = formatDayAndDate(newDate);
+
   const handleAddSlot = () => {
+    if (!newDate) {
+      toast.error("Tanggal praktik wajib dipilih");
+      return;
+    }
     if (!newTimeStart || !newTimeEnd) {
       toast.error("Jam mulai dan jam selesai wajib diisi");
       return;
     }
     const timeFormatted = `${newTimeStart} - ${newTimeEnd}`;
+    const dayInfo = formatDayAndDate(newDate);
+
     const newSlot: ScheduleSlot = {
-      day: newDay,
+      date: newDate,
+      day: dayInfo.dayName,
+      displayDate: dayInfo.formattedDate,
       time: timeFormatted,
       quota: newQuota || 10,
       location: newLocation || "Cabang Utama",
     };
+
     setSchedules([...schedules, newSlot]);
-    toast.success(`Slot jadwal hari ${newDay} berhasil ditambahkan`);
+    toast.success(`Jadwal hari ${dayInfo.dayName} (${dayInfo.formattedDate}) berhasil ditambahkan`);
   };
 
   const handleRemoveSlot = (index: number) => {
@@ -117,12 +179,20 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
     switch (day) {
       case "Senin":
         return { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", pillBg: "bg-[#FAF5EA]", pillText: "text-[#8C6B1C]" };
+      case "Selasa":
+        return { bg: "bg-orange-50", text: "text-orange-700", border: "border-orange-200", pillBg: "bg-orange-50", pillText: "text-orange-800" };
       case "Rabu":
         return { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", pillBg: "bg-emerald-50", pillText: "text-emerald-800" };
+      case "Kamis":
+        return { bg: "bg-teal-50", text: "text-teal-700", border: "border-teal-200", pillBg: "bg-teal-50", pillText: "text-teal-800" };
       case "Jumat":
         return { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200", pillBg: "bg-purple-50", pillText: "text-purple-800" };
-      default:
+      case "Sabtu":
         return { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", pillBg: "bg-blue-50", pillText: "text-blue-800" };
+      case "Minggu":
+        return { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", pillBg: "bg-rose-50", pillText: "text-rose-800" };
+      default:
+        return { bg: "bg-stone-50", text: "text-stone-700", border: "border-stone-200", pillBg: "bg-stone-50", pillText: "text-stone-800" };
     }
   };
 
@@ -166,29 +236,32 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
         <div className="p-6 sm:p-7 pt-4 space-y-5 overflow-y-auto flex-1 bg-white min-h-0">
           {/* Card 1: TAMBAH SESI PRAKTIK BARU */}
           <div className="p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] bg-[#FCFAF6] space-y-3.5 shadow-2xs">
-            <h4 className="text-xs font-bold text-[#8C6B1C] uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-4 h-4 rounded-full bg-amber-100 text-[#8C6B1C] flex items-center justify-center text-xs font-black">+</span>
-              <span>TAMBAH SESI PRAKTIK BARU</span>
-            </h4>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h4 className="text-xs font-bold text-[#8C6B1C] uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-amber-100 text-[#8C6B1C] flex items-center justify-center text-xs font-black">+</span>
+                <span>TAMBAH SESI PRAKTIK BARU</span>
+              </h4>
 
-            {/* Row 1: 5 Columns (Hari, Jam Mulai, Jam Selesai, Kuota, Button Aksi) */}
+              {/* Resolved Day & Date Live Badge */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50/80 border border-amber-200 text-xs font-semibold text-[#8C6B1C] shadow-2xs">
+                <CalendarCheck className="w-3.5 h-3.5 text-[#C9A24A]" />
+                <span>Hari: <strong className="text-stone-900 font-bold">{selectedDateInfo.dayName}</strong> ({selectedDateInfo.formattedDate})</span>
+              </div>
+            </div>
+
+            {/* Row 1: 5 Columns (Tanggal, Jam Mulai, Jam Selesai, Kuota, Button Aksi) */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
-              {/* Hari Praktik */}
+              {/* Input Tanggal Praktik */}
               <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-stone-600 block">Hari Praktik</label>
+                <label className="text-[11px] font-semibold text-stone-600 block">Tanggal Praktik</label>
                 <div className="relative">
                   <Calendar className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <select
-                    value={newDay}
-                    onChange={(e) => setNewDay(e.target.value)}
-                    className="w-full pl-9 pr-7 h-10 bg-white border border-[#E8DFC8] rounded-xl text-xs font-medium text-stone-800 outline-none focus:border-[#C9A24A] focus:ring-1 focus:ring-[#C9A24A] shadow-2xs cursor-pointer appearance-none"
-                  >
-                    {DAYS_OF_WEEK.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                    type="date"
+                    value={newDate}
+                    onChange={(e) => setNewDate(e.target.value)}
+                    className="w-full pl-9 pr-2 h-10 bg-white border border-[#E8DFC8] rounded-xl text-xs font-medium text-stone-800 outline-none focus:border-[#C9A24A] focus:ring-1 focus:ring-[#C9A24A] shadow-2xs cursor-pointer"
+                  />
                 </div>
               </div>
 
@@ -252,20 +325,15 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
 
             {/* Row 2: Lokasi / Cabang Praktik */}
             <div className="space-y-1 pt-1">
-              <label className="text-[11px] font-semibold text-stone-600 block">Lokasi / Cabang Praktik</label>
+              <label className="text-[11px] font-semibold text-stone-600 block">Lokasi Praktik Klinik</label>
               <div className="relative">
                 <MapPin className="w-4 h-4 text-[#8C6B1C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <select
-                  value={newLocation}
-                  onChange={(e) => setNewLocation(e.target.value)}
-                  className="w-full pl-9 pr-8 h-10 bg-white border border-[#E8DFC8] rounded-xl text-xs font-medium text-stone-800 outline-none focus:border-[#C9A24A] focus:ring-1 focus:ring-[#C9A24A] shadow-2xs cursor-pointer appearance-none"
-                >
-                  {CLINIC_BRANCHES.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  readOnly
+                  value="Aesthetic Pondok Indah"
+                  className="w-full pl-9 pr-3 h-10 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl text-xs font-bold text-stone-800 outline-none select-none cursor-default shadow-2xs"
+                />
               </div>
             </div>
           </div>
@@ -300,8 +368,11 @@ export default function DoctorScheduleModal({ open, onOpenChange, doctor, onSave
                           <Calendar className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-xs font-black text-stone-900">{slot.day}</span>
+                            <span className="text-[11px] font-semibold text-stone-600 bg-stone-100 px-2 py-0.5 rounded-md border border-stone-200">
+                              {slot.displayDate || slot.date}
+                            </span>
                             <span className={`text-xs font-bold ${theme.pillText} ${theme.pillBg} px-2.5 py-0.5 rounded-full border border-[#F0E6D3]`}>
                               {slot.time}
                             </span>

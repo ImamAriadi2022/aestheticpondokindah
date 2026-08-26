@@ -1,6 +1,30 @@
 [
   {
-    "id": "act-312",
+    "id": "act-314",
+    "timestamp": "2026-08-26T08:21:00.000Z",
+    "category": "data-standardization",
+    "title": "Standardisasi Lokasi Praktik Tunggal 'Aesthetic Pondok Indah' pada Seluruh Modul Jadwal & Dokter",
+    "description": "Menyesuaikan seluruh opsi lokasi cabang praktik dokter menjadi lokasi klinik tunggal ('Aesthetic Pondok Indah') tanpa opsi cabang lain (`DoctorScheduleModal.tsx`, `DoctorScheduleForm.tsx`, `DoctorEditorModal.tsx`, & `DoctorScheduleController.php`): 1) Mengunci field lokasi praktik menjadi 'Aesthetic Pondok Indah', 2) Menghilangkan pilihan cabang tiruan (mock branches), dan 3) Menjaga konsistensi data alamat klinik di seluruh database dan antarmuka.",
+    "details": [
+      "Single Clinic Standardization: Lokasi praktik dokter distandardisasi menjadi 'Aesthetic Pondok Indah'.",
+      "Read-Only Precision: Form jadwal menampilkan nama klinik tunggal secara rapi dan konsisten.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh bundle aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T08:18:00.000Z",
+    "category": "feature-enhancement",
+    "title": "Pembaruan Input Jadwal Dokter: Pemilihan Tanggal dengan Resolusi Nama Hari Otomatis",
+    "description": "Memperbarui form input jadwal dokter pada modal kelola jadwal (`DoctorScheduleModal.tsx`), form jadwal dokter (`DoctorScheduleForm.tsx`), serta backend (`DoctorScheduleController.php`): 1) Mengganti input select hari statis menjadi input tanggal (`type='date'`), 2) Mengintegrasikan kalkulasi nama hari dan tanggal bahasa Indonesia secara live (misal: 'Hari: Jumat (28 Agustus 2026)') sehingga pengguna langsung mengetahui hari dan tanggal yang dipilih, 3) Menampilkan kombinasi nama hari, tanggal, jam, dan kuota pada kartu sesi jadwal terdaftar, 4) Menyinkronkan tanggal sesi secara persis ke database backend untuk reservasi pasien.",
+    "details": [
+      "Dynamic Date-to-Day Resolution: Otomatis menghitung dan menampilkan nama hari (Senin - Minggu) dan tanggal lengkap dalam bahasa Indonesia.",
+      "Dual Actor Support: Berlaku pada modal Kelola Jadwal di sisi Admin dan Form Tambah/Edit Jadwal di sisi Dokter.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh bundle aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T05:23:00.000Z",
     "category": "performance-optimization",
     "title": "Optimalisasi State Management & Fast Caching Instan pada Modul Kelola Dokter Admin",
