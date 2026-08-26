@@ -26,6 +26,9 @@ import {
   markNotificationAsRead,
   clearNotificationHistory,
   isNotificationRead,
+  triggerPushNotification,
+  generateNotificationKey,
+  isNotificationAlreadyDelivered,
 } from "@/core/services/pushNotificationService";
 import { getSession, clearSession } from "@/core/auth/services/session";
 import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
@@ -265,6 +268,16 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         if (unreadItems.length > 0) {
           setUnreadCount(unreadItems.length);
           localStorage.setItem("apig_push_unread_count", String(unreadItems.length));
+
+          // Trigger native OS banner & in-app toast & chime for incoming unread items that haven't been delivered
+          mapped
+            .filter((item) => !item.isRead)
+            .forEach((item) => {
+              const notifKey = generateNotificationKey(item);
+              if (!isNotificationAlreadyDelivered(notifKey)) {
+                triggerPushNotification(item);
+              }
+            });
         } else {
           setUnreadCount(0);
           localStorage.setItem("apig_push_unread_count", "0");

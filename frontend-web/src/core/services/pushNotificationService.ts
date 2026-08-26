@@ -201,6 +201,8 @@ export async function requestPushPermission(): Promise<NotificationPermission> {
   return "denied";
 }
 
+import { toast } from "@/shared/ui/toast";
+
 /**
  * Dispatch OS notification to Windows Action Center / Android Notification Shade with Anti-Duplicate Tag
  */
@@ -235,49 +237,58 @@ export function dispatchDeviceSystemNotification(payload: PushNotificationPayloa
   );
 
   const origin = window.location.origin || "";
-  const iconUrl = `${origin}/logo/logo.png`;
+  const iconUrl = `${origin}/logo/logo.webp`;
   // Stable tag without timestamp so the OS collapses/replaces identical items
   const stableTag = `apid_${notifKey}`;
 
   const triggerActualNotifications = async () => {
+    let delivered = false;
+
+    // 1. Preferred: ServiceWorker Notification (for background / OS push)
     try {
       const swReg = await getServiceWorkerRegistration();
       if (swReg && "showNotification" in swReg) {
-        // Preferred: ServiceWorker Notification
         await swReg.showNotification(payload.title, {
           body: payload.message,
           icon: iconUrl,
           badge: iconUrl,
           vibrate: [200, 100, 200],
           tag: stableTag,
-          renotify: false, // DO NOT spam sound/renotify if tag is identical
+          renotify: true,
           requireInteraction: false,
           data: {
             url: targetUrl,
             bookingCode: payload.bookingCode,
           },
         } as any);
-        return;
+        delivered = true;
       }
     } catch {}
 
-    // Fallback: Direct Window Notification (Only if SW is not ready)
-    try {
-      const notif = new Notification(payload.title, {
-        body: payload.message,
-        icon: iconUrl,
-        badge: iconUrl,
-        tag: stableTag,
-      } as any);
+    // 2. Direct Window Notification (Standard Desktop / Chrome Action Center Banner)
+    if (!delivered) {
+      try {
+        const notif = new Notification(payload.title, {
+          body: payload.message,
+          icon: iconUrl,
+          badge: iconUrl,
+          tag: stableTag,
+          requireInteraction: false,
+        } as any);
 
-      notif.onclick = () => {
-        window.focus();
-        if (payload.onClick) payload.onClick();
-        else if (payload.url) window.location.href = payload.url;
-        notif.close();
-      };
-    } catch (e) {
-      console.warn("[DeviceNotification] Notification fallback error:", e);
+        notif.onclick = () => {
+          window.focus();
+          if (payload.onClick) {
+            payload.onClick();
+          } else if (targetUrl) {
+            const cleanUrl = targetUrl.replace(/^#/, "");
+            window.location.hash = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
+          }
+          notif.close();
+        };
+      } catch (e) {
+        console.warn("[DeviceNotification] Notification fallback error:", e);
+      }
     }
   };
 
@@ -315,7 +326,28 @@ export function triggerPushNotification(payload: PushNotificationPayload) {
   // 4. Dispatch to OS Desktop / Mobile Notification Bar
   dispatchDeviceSystemNotification(payload, notifKey);
 
-  // 5. Notify in-app TopBar UI listeners
+  // 5. Trigger In-App Visual Toast Banner
+  try {
+    toast({
+      title: payload.title || "🔔 Notifikasi Klinik",
+      message: payload.message,
+      variant: "info",
+      durationMs: 6000,
+      action: payload.url ? {
+        label: "Buka",
+        onClick: () => {
+          if (payload.onClick) {
+            payload.onClick();
+          } else if (payload.url) {
+            const cleanUrl = payload.url.replace(/^#/, "");
+            window.location.hash = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
+          }
+        },
+      } : undefined,
+    });
+  } catch {}
+
+  // 6. Notify in-app TopBar UI listeners
   listeners.forEach((listener) => listener(payload));
 }
 

@@ -28,7 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/shared/ui/dialog";
-import { playNotificationChime } from "@/core/services/pushNotificationService";
+import { playNotificationChime, dispatchDeviceSystemNotification } from "@/core/services/pushNotificationService";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -138,6 +138,42 @@ export default function SettingsPage() {
         title: "Notifikasi Dinonaktifkan",
         message: "Pemberitahuan notifikasi browser telah dimatikan.",
         variant: "info",
+      });
+    }
+  };
+
+  const handleTestNotification = async () => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission !== "granted") {
+        const perm = await Notification.requestPermission();
+        setNotifPermission(perm);
+        if (perm !== "granted") {
+          toast({
+            title: "Izin Notifikasi Belum Diberikan",
+            message: "Silakan klik Izinkan pada permintaan izin notifikasi browser.",
+            variant: "warning",
+          });
+          return;
+        }
+      }
+
+      playNotificationChime("new_booking");
+
+      const testPayload = {
+        id: "test_" + Date.now(),
+        title: "🔔 Uji Coba Banner Notifikasi",
+        message: "Notifikasi browser & banner Aesthetic Pondok Indah berfungsi dengan baik!",
+        role: sessionRole === "clinic" ? ("admin" as const) : ("patient" as const),
+        type: "general",
+        url: window.location.hash || "/#/settings",
+      };
+
+      dispatchDeviceSystemNotification(testPayload, "test_" + Date.now());
+
+      toast({
+        title: "🔔 Uji Coba Banner Notifikasi",
+        message: "Notifikasi banner browser & aplikasi berhasil dikirimkan!",
+        variant: "success",
       });
     }
   };
@@ -405,8 +441,18 @@ export default function SettingsPage() {
                 </p>
               </div>
 
-              {/* Master Toggle Switch */}
+              {/* Master Toggle Switch & Test Button */}
               <div className="flex items-center gap-3 shrink-0">
+                {notifEnabled && (
+                  <button
+                    type="button"
+                    onClick={handleTestNotification}
+                    className="text-xs font-bold text-[#8C6B1C] bg-[#FAF5EA] hover:bg-[#F3ECD8] px-3 py-1.5 rounded-xl border border-[#EADBBD] transition-all cursor-pointer shadow-2xs"
+                    title="Uji coba kirim banner notifikasi ke layar"
+                  >
+                    Uji Banner
+                  </button>
+                )}
                 <span className="text-xs font-bold text-[#4A3F35]">
                   {notifEnabled ? "Aktif" : "Non-Aktif"}
                 </span>

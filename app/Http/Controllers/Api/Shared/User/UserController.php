@@ -579,18 +579,44 @@ class UserController extends Controller
     {
         $user = $request->user();
 
-        // Older clients submit Indonesian display labels while the
-        // membership_profiles enum stores canonical values.
-        if ($request->has('gender')) {
-            $request->merge([
-                'gender' => $this->normalizeGender($request->input('gender')),
-            ]);
+        $input = $request->all();
+
+        // Convert empty strings to null for clean validation & DB storage
+        foreach ($input as $k => $v) {
+            if (is_string($v) && trim($v) === '') {
+                $input[$k] = null;
+            }
         }
+
+        if (isset($input['phone']) && !isset($input['whatsapp'])) {
+            $input['whatsapp'] = $input['phone'];
+        }
+
+        if (isset($input['gender'])) {
+            $input['gender'] = $this->normalizeGender($input['gender']);
+        }
+
+        // Format whatsapp if provided
+        if (!empty($input['whatsapp'])) {
+            $digits = preg_replace('/[^\d]/', '', (string)$input['whatsapp']);
+            if (!empty($digits)) {
+                if (str_starts_with($digits, '62')) {
+                    $input['whatsapp'] = '+' . $digits;
+                } elseif (str_starts_with($digits, '0')) {
+                    $input['whatsapp'] = '+62' . substr($digits, 1);
+                } else {
+                    $input['whatsapp'] = '+62' . $digits;
+                }
+            }
+        }
+
+        $request->replace($input);
 
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'whatsapp' => 'nullable|string|max:20|unique:users,whatsapp,' . $user->id,
+            'phone' => 'nullable|string|max:20',
             'avatar' => 'nullable|string',
             'birthDate' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',

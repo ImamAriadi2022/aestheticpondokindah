@@ -295,25 +295,50 @@ export default function ProfileEditPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      updateSessionProfile(profile);
-
       const token = localStorage.getItem("apident:token");
-      if (token) {
-        const res = await fetch(`${API_BASE}/user/profile`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
-          },
-          body: JSON.stringify(profile),
+      if (!token) {
+        toast({
+          title: "Sesi Habis",
+          message: "Silakan login kembali untuk menyimpan profil Anda.",
+          variant: "error",
         });
-
-        if (res.ok) {
-          const updatedUser = await res.json();
-          updateSessionProfile(updatedUser);
-        }
+        return;
       }
+
+      // Clean payload: map phone to whatsapp, convert empty strings to null
+      const payload: Record<string, any> = { ...profile };
+      payload.whatsapp = profile.phone || (profile as any).whatsapp;
+      Object.keys(payload).forEach((k) => {
+        if (typeof payload[k] === "string" && payload[k].trim() === "") {
+          payload[k] = null;
+        }
+      });
+
+      const res = await fetch(`${API_BASE}/user/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        const errMsg =
+          errorData?.message ||
+          (errorData?.errors ? Object.values(errorData.errors).flat().join(", ") : "Gagal memperbarui data profil.");
+        toast({
+          title: "Gagal Menyimpan Profil",
+          message: errMsg,
+          variant: "error",
+        });
+        return;
+      }
+
+      const updatedUser = await res.json();
+      updateSessionProfile(updatedUser);
 
       toast({
         title: "Berhasil",
@@ -322,11 +347,11 @@ export default function ProfileEditPage() {
       });
 
       navigate("/profile");
-    } catch (err) {
+    } catch (err: any) {
       logger.error("Failed to update profile:", err);
       toast({
         title: "Gagal",
-        message: "Terjadi kesalahan saat menyimpan profil",
+        message: err?.message || "Terjadi kesalahan saat menyimpan profil",
         variant: "error",
       });
     } finally {

@@ -161,7 +161,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
         <div className="mx-5 h-px bg-gradient-to-r from-transparent via-[#C9A24A]/40 to-transparent" />
 
         {/* Navigation */}
-        <nav className="relative z-10 flex-1 flex flex-col gap-2 px-3 py-4 overflow-y-auto overflow-x-hidden">
+        <nav className="relative z-10 flex-1 flex flex-col gap-2 px-3 py-4 overflow-visible">
           {mainMenus.map(({ label, href, icon: Icon }) => {
             const active = isActive(href);
             return (

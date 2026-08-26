@@ -1,5 +1,48 @@
 [
   {
+    "id": "act-340",
+    "timestamp": "2026-08-26T14:32:00.000Z",
+    "category": "fix-profile-edit-save-persistence",
+    "title": "Perbaikan Penyimpanan & Persistensi Data Edit Profil Pasien ke Database",
+    "description": "Menyempurnakan alur penyimpanan dan sanitasi input form edit profil ([`UserController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Shared/User/UserController.php), [`ProfileEdit.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/profile/pages/ProfileEdit.tsx)): 1) Menambahkan konversi otomatis string kosong menjadi null pada backend agar validasi email/tanggal lahir/jenis kelamin tidak menolak input kosong, 2) Menambahkan pemetaan phone ke whatsapp pada endpoint PUT /user/profile, 3) Memperbaiki penanganan response error pada frontend sehingga jika ada kesalahan validasi akan dimunculkan pesan error yang jelas dan sesi pengguna langsung tersinkronisasi saat berhasil disimpan.",
+    "details": [
+      "Robust Input Sanitization: Field opsional yang tidak diisi kini diubah menjadi null secara aman tanpa memicu error validasi email atau date di Laravel.",
+      "Reliable Data Persistence: Data profil pasien (tanggal lahir, jenis kelamin, alamat, domisili, kuesioner) kini tersimpan permanen ke database dan langsung tampil pada Detail Profil.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-339",
+    "timestamp": "2026-08-26T14:28:00.000Z",
+    "category": "ui-user-sidebar-flyout-visibility",
+    "title": "Perbaikan Visibilitas Floating Dropdown Bantuan & Pengaduan pada Sidebar Pasien",
+    "description": "Memperbaiki properti overflow container navigasi sidebar ([`AccountSidebar.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/layouts/AccountSidebar.tsx)): Mengubah kelas nav dari overflow-y-auto overflow-x-hidden menjadi overflow-visible sehingga panel flyout menu Bantuan & Pengaduan tidak lagi terpotong (clipped) secara horizontal dan melayang sempurna di atas konten utama.",
+    "details": [
+      "No More Clipping: Panel flyout menu Bantuan & Pengaduan kini tampil penuh dan jelas di sebelah kanan sidebar tanpa tertutup atau terpotong kontainer.",
+      "High Stacking Priority: Dropdown berada di atas main content dengan visual champagne-gold floating glassmorphism yang rapi.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-338",
+    "timestamp": "2026-08-26T14:24:00.000Z",
+    "category": "notification-banner-realtime-trigger",
+    "title": "Aktivasi Real-time Pop-up Banner & OS Notification Saat Ada Notifikasi Masuk",
+    "description": "Menyempurnakan alur pemicu notifikasi banner desktop/browser ([`pushNotificationService.ts`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/services/pushNotificationService.ts), [`DashboardTopBar.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/layouts/DashboardTopBar.tsx), [`Settings.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/profile/pages/Settings.tsx)): 1) Menambahkan pemanggilan triggerPushNotification otomatis saat polling database mendeteksi item unread baru sehingga memunculkan pop-up banner toast dan Windows Action Center notification, 2) Memperbaiki path logo icon ke /logo/logo.webp agar notifikasi OS native tidak gagal render, 3) Menyediakan tombol 'Uji Banner' di halaman preferensi agar admin/pasien dapat langsung menguji munculnya banner notifikasi.",
+    "details": [
+      "Instant Banner Pop-up: Setiap notifikasi yang masuk kini memunculkan pop-up banner interaktif (toast) dan notifikasi OS Chrome/Windows.",
+      "Fixed Logo Icon: Memastikan aset icon logo.webp terbaca sempurna oleh API Notification browser.",
+      "Interactive Test Feature: Tombol 'Uji Banner' tersedia di halaman Pengaturan/Preferensi untuk memverifikasi banner secara instan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-337",
     "timestamp": "2026-08-26T14:08:00.000Z",
     "category": "fix-profile-edit-dummy-defaults",
