@@ -173,16 +173,13 @@ function VisitTracker() {
   const location = useLocation();
 
   useEffect(() => {
-    const isDashboard = location.pathname.startsWith("/dashboard");
-    if (isDashboard) return;
-
     const url = new URL(window.location.href);
     const utmSource = url.searchParams.get("utm_source");
     const utmMedium = url.searchParams.get("utm_medium");
     const utmCampaign = url.searchParams.get("utm_campaign");
 
     trackVisit({
-      landingPage: location.pathname,
+      landingPage: location.pathname || "/",
       referrer: document.referrer,
       utmSource,
       utmMedium,

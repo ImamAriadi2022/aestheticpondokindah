@@ -61,39 +61,58 @@ export const createComplaint = async (data: {
   return res.complaint || (res as any);
 };
 
+import { setCachedComplaints, updateSingleCachedComplaint, getCachedComplaints } from "@/features/admin/complaints/services/complaintCache";
+
 export const getAllComplaints = async (params: {
   status?: string;
   search?: string;
+  skipCache?: boolean;
 }): Promise<{ data: ComplaintItem[] }> => {
+  const isDefaultQuery = (!params.status || params.status === "all") && !params.search;
+
   const query = new URLSearchParams();
   if (params.status && params.status !== "all") query.set("status", params.status);
   if (params.search) query.set("search", params.search);
+  query.set("per_page", "100");
+  query.set("all", "1");
   const qs = query.toString() ? `?${query.toString()}` : "";
+
   const res = await apiClient.get<any>(`/admin/complaints${qs}`);
   const rawList = Array.isArray(res) ? res : res.data || res.complaints || [];
-  return {
-    data: rawList.map((c: any) => ({
-      id: c.id,
-      user_id: c.user_id,
-      user: c.user,
-      title: c.title || c.subject || "Pengaduan",
-      subject: c.subject || c.title,
-      category: c.category || "Pelayanan",
-      description: c.description || c.complaint || "",
-      status: c.status || "pending",
-      date: c.date || (c.created_at ? new Date(c.created_at).toLocaleDateString("id-ID") : "-"),
-      adminResponse: c.admin_response || c.adminResponse || c.response,
-      admin_response: c.admin_response || c.adminResponse || c.response,
-      created_at: c.created_at || new Date().toISOString(),
-      updated_at: c.updated_at,
-    })),
-  };
+  const transformed = rawList.map((c: any) => ({
+    id: c.id,
+    user_id: c.user_id,
+    user: c.user,
+    title: c.title || c.subject || "Pengaduan",
+    subject: c.subject || c.title,
+    category: c.category || "Pelayanan",
+    description: c.description || c.complaint || "",
+    status: c.status || "pending",
+    date: c.date || (c.created_at ? new Date(c.created_at).toLocaleDateString("id-ID") : "-"),
+    adminResponse: c.admin_response || c.adminResponse || c.response,
+    admin_response: c.admin_response || c.adminResponse || c.response,
+    created_at: c.created_at || new Date().toISOString(),
+    updated_at: c.updated_at,
+  }));
+
+  if (isDefaultQuery && transformed.length > 0) {
+    setCachedComplaints(transformed);
+  }
+
+  return { data: transformed };
 };
 
 export const updateComplaintStatus = async (
   id: number | string,
   data: { status: string; admin_response?: string }
 ): Promise<ComplaintItem> => {
+  // Optimistic update in cache
+  updateSingleCachedComplaint({ id, ...data });
+
   const res = await apiClient.put<{ complaint: ComplaintItem }>(`/admin/complaints/${id}`, data);
-  return res.complaint || (res as any);
+  const result = res.complaint || (res as any);
+  if (result) {
+    updateSingleCachedComplaint(result);
+  }
+  return result;
 };

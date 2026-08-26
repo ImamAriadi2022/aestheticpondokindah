@@ -49,6 +49,8 @@ class ComplaintController extends Controller
             'attachment_url' => $attachmentUrl,
         ]);
 
+        \Illuminate\Support\Facades\Cache::forget('admin_complaints_list');
+
         return response()->json($this->transform($complaint), 201);
     }
 

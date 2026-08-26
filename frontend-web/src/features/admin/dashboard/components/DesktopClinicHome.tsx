@@ -92,18 +92,10 @@ export default function DesktopClinicHome({
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
       trendValue: "15%",
-      trendLabel: "Minggu ini",
+      trendLabel: "Trafik website",
       sparklineData: visitorSparkline,
     },
   ];
-
-  const today = new Date();
-  const monthNames = [
-    "JAN", "FEB", "MAR", "APR", "MEI", "JUN",
-    "JUL", "AGU", "SEP", "OKT", "NOV", "DES",
-  ];
-  const currentMonthStr = monthNames[today.getMonth()];
-  const currentDayStr = String(today.getDate()).padStart(2, "0");
 
   void complaints;
 
@@ -135,46 +127,36 @@ export default function DesktopClinicHome({
             </div>
           </div>
 
-          {/* Hero Illustration */}
-          <div className="hidden lg:flex items-center justify-center relative w-64 h-40 shrink-0">
-            {/* Dashboard monitor */}
-            <div className="relative w-48 h-32 bg-white rounded-2xl shadow-lg border border-[#E8D4A2]/30 flex flex-col p-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <div className="w-2 h-2 rounded-full bg-[#C9A24A]/40" />
-                <div className="w-2 h-2 rounded-full bg-[#C9A24A]/40" />
-                <div className="w-2 h-2 rounded-full bg-[#C9A24A]/40" />
-              </div>
-              <div className="flex-1 flex gap-2">
-                <div className="flex-1 flex flex-col gap-1.5">
-                  <div className="h-2 bg-[#F5E6C8] rounded-full w-3/4" />
-                  <div className="h-2 bg-[#F5E6C8] rounded-full w-1/2" />
-                  <div className="mt-auto h-14 bg-[#FDF6EC] rounded-xl border border-[#E8D4A2]/20 relative overflow-hidden">
-                    <svg className="absolute bottom-0 left-0 w-full h-10" viewBox="0 0 100 40" preserveAspectRatio="none">
-                      <path d="M0,35 Q15,20 30,25 T60,15 T90,20 T100,10" fill="none" stroke="#C9A24A" strokeWidth="1.5" />
-                      <circle cx="100" cy="10" r="2" fill="#C9A24A" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="w-14 flex flex-col items-center gap-1">
-                  <div className="w-10 h-10 rounded-full border-4 border-[#C9A24A] border-t-transparent" />
-                  <div className="w-8 h-8 rounded-full bg-[#F5E6C8] flex items-center justify-center">
-                    <div className="w-4 h-4 rounded-full bg-[#C9A24A]" />
-                  </div>
-                </div>
-              </div>
+          {/* Hero Doctor Illustration with Floating Animation & Sparkles */}
+          <div className="hidden lg:flex items-center justify-center relative w-64 h-48 shrink-0 -my-4 -mr-2">
+            {/* Golden Ambient Blur Glow */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-40 h-40 rounded-full bg-gradient-to-br from-[#C9A24A]/25 via-[#E8C547]/15 to-transparent blur-2xl animate-pulse" />
             </div>
-            {/* Dynamic Date Badge */}
-            <div className="absolute -bottom-2 -left-2 w-14 h-14 bg-white rounded-xl shadow-md border border-[#E8D4A2]/30 flex flex-col items-center justify-center">
-              <span className="text-[8px] font-bold text-[#C9A24A] uppercase tracking-wide">{currentMonthStr}</span>
-              <span className="text-lg font-bold text-[#4A3F35]">{currentDayStr}</span>
+
+            {/* Soft Floor Shadow */}
+            <div className="absolute bottom-1 w-44 h-3.5 bg-gradient-to-r from-transparent via-[#C9A24A]/25 to-transparent rounded-full blur-sm" />
+
+            {/* Floating Animated Doctor Character */}
+            <div className="relative z-10 w-full h-full flex items-center justify-center animate-float">
+              <img 
+                src="/dashboard/sapadokter.webp" 
+                alt="Dokter Klinik" 
+                className="w-full h-full object-contain object-bottom drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
+              />
             </div>
-            {/* Tooth */}
-            <div className="absolute -top-2 -right-2 w-12 h-12 bg-white rounded-xl shadow-md border border-[#E8D4A2]/30 flex items-center justify-center">
-              <img src="/dashboard/gigi.webp" alt="Tooth" className="w-8 h-8 object-contain" />
+
+            {/* Decorative Tooth Badge Top Right */}
+            <div className="absolute -top-1 -right-1 w-11 h-11 bg-white rounded-2xl shadow-md border border-[#E8D4A2]/50 flex items-center justify-center z-20">
+              <img src="/dashboard/gigi.webp" alt="Tooth" className="w-7 h-7 object-contain" />
             </div>
-            {/* Sparkle */}
-            <Sparkles className="absolute top-4 right-16 w-4 h-4 text-[#C9A24A]/60" />
-            <Sparkles className="absolute bottom-6 right-8 w-3 h-3 text-[#C9A24A]/40" />
+
+            {/* Sparkles */}
+            <Sparkles className="absolute top-3 left-2 w-4 h-4 text-[#C9A24A]/70 animate-pulse z-20" />
+            <Sparkles className="absolute bottom-7 right-3 w-3.5 h-3.5 text-[#C9A24A]/60 animate-pulse z-20" />
           </div>
         </div>
       </div>

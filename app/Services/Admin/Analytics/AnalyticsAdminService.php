@@ -25,6 +25,7 @@ class AnalyticsAdminService
         $daily = PageVisit::query()
             ->whereBetween('visited_at', [$from, $to])
             ->selectRaw('DATE(visited_at) as day')
+            ->selectRaw('COUNT(*) as visits')
             ->selectRaw('COUNT(DISTINCT COALESCE(visitor_id, CONCAT(ip_address, "|", SUBSTRING(user_agent, 1, 120)))) as visitors')
             ->groupBy('day')
             ->orderBy('day')
@@ -34,44 +35,62 @@ class AnalyticsAdminService
 
         $labels = [];
         $visitors = [];
+        $visits = [];
         $cursor = $from->copy()->startOfDay();
         $end = $to->copy()->startOfDay();
         while ($cursor->lte($end)) {
             $key = $cursor->toDateString();
             $labels[] = $key;
-            $visitors[] = (int) optional($dailyMap->get($key))->visitors;
+            $row = $dailyMap->get($key);
+            $visitors[] = (int) ($row->visits ?? $row->visitors ?? 0);
+            $visits[] = (int) ($row->visits ?? 0);
             $cursor->addDay();
         }
 
         $sources = PageVisit::query()
             ->whereBetween('visited_at', [$from, $to])
-            ->selectRaw('COALESCE(source, "unknown") as source')
+            ->selectRaw('COALESCE(source, "direct") as source')
             ->selectRaw('COUNT(*) as visits')
             ->groupBy('source')
             ->orderByDesc('visits')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(fn ($s) => ['label' => (string) $s->source, 'value' => (int) $s->visits])
+            ->values();
 
-        $totalVisitors = PageVisit::query()
+        // Total page visits/clicks in range
+        $totalVisits = PageVisit::query()
             ->whereBetween('visited_at', [$from, $to])
-            ->selectRaw('COUNT(DISTINCT COALESCE(visitor_id, CONCAT(ip_address, "|", SUBSTRING(user_agent, 1, 120)))) as total')
-            ->value('total');
+            ->count();
+
+        // Total all-time page visits as dynamic traffic counter
+        $allTimeVisits = PageVisit::query()->count();
+        $effectiveTotalVisitors = max($totalVisits, $allTimeVisits);
 
         $totalReservations = Reservation::query()
             ->whereBetween('created_at', [$from, $to])
             ->count();
 
         $conversionRate = 0.0;
-        if ($totalVisitors && $totalVisitors > 0) {
-            $conversionRate = round(($totalReservations / $totalVisitors) * 100, 2);
+        if ($effectiveTotalVisitors > 0) {
+            $conversionRate = round(($totalReservations / $effectiveTotalVisitors) * 100, 2);
         }
 
         return [
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
-            'total_visitors' => (int) ($totalVisitors ?? 0),
+            'total_visitors' => (int) $effectiveTotalVisitors,
             'total_reservations' => (int) $totalReservations,
             'conversion_rate' => $conversionRate,
+            'totals' => [
+                'visitors' => (int) $effectiveTotalVisitors,
+                'visits' => (int) $effectiveTotalVisitors,
+                'bookings' => (int) $totalReservations,
+            ],
+            'daily' => [
+                'labels' => $labels,
+                'visitors' => $visitors,
+            ],
             'traffic_trend' => [
                 'labels' => $labels,
                 'visitors' => $visitors,

@@ -6,14 +6,37 @@ use App\Http\Controllers\Controller;
 use App\Models\Patient\Complaint\Complaint;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class ComplaintAdminController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $hasFilters = $request->has('status') || $request->has('search');
+
+        if (!$hasFilters) {
+            $data = Cache::remember('admin_complaints_list', 120, function () {
+                return Complaint::with('user')
+                    ->orderByDesc('created_at')
+                    ->get()
+                    ->map(fn($c) => $this->transform($c))
+                    ->values()
+                    ->all();
+            });
+
+            return response()->json([
+                'data' => $data,
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'total' => count($data),
+                ]
+            ]);
+        }
+
         $query = Complaint::with('user')->orderByDesc('created_at');
 
-        if ($request->has('status')) {
+        if ($request->has('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
@@ -28,7 +51,8 @@ class ComplaintAdminController extends Controller
             });
         }
 
-        $complaints = $query->paginate($request->input('per_page', 15));
+        $perPage = (int) $request->input('per_page', 100);
+        $complaints = $query->paginate($perPage);
 
         return response()->json([
             'data' => collect($complaints->items())->map(fn($c) => $this->transform($c)),
@@ -48,6 +72,7 @@ class ComplaintAdminController extends Controller
         ]);
 
         $complaint->update($validated);
+        Cache::forget('admin_complaints_list');
 
         return response()->json($this->transform($complaint));
     }
@@ -55,6 +80,7 @@ class ComplaintAdminController extends Controller
     public function destroy(Complaint $complaint): JsonResponse
     {
         $complaint->delete();
+        Cache::forget('admin_complaints_list');
         return response()->json(['message' => 'Complaint deleted successfully']);
     }
 

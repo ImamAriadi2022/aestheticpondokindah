@@ -16,28 +16,26 @@ class AnalyticsVisitService
      */
     public function recordVisit(Request $request): PageVisit
     {
-        $validated = $request->validate([
-            'path' => ['required', 'string', 'max:255'],
-            'full_url' => ['nullable', 'string', 'max:1000'],
-            'referrer' => ['nullable', 'string', 'max:1000'],
-            'source' => ['nullable', 'string', 'max:50'],
-            'campaign' => ['nullable', 'string', 'max:100'],
-            'visitor_id' => ['nullable', 'string', 'max:64'],
-            'device_type' => ['nullable', 'string', 'max:30'],
-            'screen_resolution' => ['nullable', 'string', 'max:30'],
-        ]);
+        $path = $request->input('path') ?? $request->input('landingPage') ?? $request->input('landing_page') ?? '/';
+        $fullUrl = $request->input('full_url') ?? $request->input('fullUrl') ?? $request->fullUrl();
+        $referrer = $request->input('referrer') ?? $request->header('referer');
+        $source = $request->input('source') ?? $request->input('utmSource') ?? $request->input('utm_source') ?? 'direct';
+        $campaign = $request->input('campaign') ?? $request->input('utmCampaign') ?? $request->input('utm_campaign');
+        $visitorId = $request->input('visitor_id') ?? $request->input('visitorId');
+        $deviceType = $request->input('device_type') ?? $request->input('deviceType');
+        $screenResolution = $request->input('screen_resolution') ?? $request->input('screenResolution');
 
         return PageVisit::create([
-            'path' => $validated['path'],
-            'full_url' => $validated['full_url'] ?? null,
-            'referrer' => $validated['referrer'] ?? null,
-            'source' => $validated['source'] ?? 'direct',
-            'campaign' => $validated['campaign'] ?? null,
-            'visitor_id' => $validated['visitor_id'] ?? null,
+            'path' => substr((string) $path, 0, 255),
+            'full_url' => substr((string) $fullUrl, 0, 1000),
+            'referrer' => $referrer ? substr((string) $referrer, 0, 1000) : null,
+            'source' => substr((string) $source, 0, 50),
+            'campaign' => $campaign ? substr((string) $campaign, 0, 100) : null,
+            'visitor_id' => $visitorId ? substr((string) $visitorId, 0, 64) : null,
             'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'device_type' => $validated['device_type'] ?? null,
-            'screen_resolution' => $validated['screen_resolution'] ?? null,
+            'user_agent' => substr((string) $request->userAgent(), 0, 500),
+            'device_type' => $deviceType ? substr((string) $deviceType, 0, 30) : null,
+            'screen_resolution' => $screenResolution ? substr((string) $screenResolution, 0, 30) : null,
             'visited_at' => Carbon::now(),
         ]);
     }

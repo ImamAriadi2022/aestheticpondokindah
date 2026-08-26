@@ -25,6 +25,7 @@ export type TrafficSourceItem = { label: string; value: number };
 export type AnalyticsSummaryResponse = {
   from: string;
   to: string;
+  total_visitors?: number;
   daily: {
     labels: string[];
     visitors: number[];
@@ -35,8 +36,8 @@ export type AnalyticsSummaryResponse = {
     visits: number;
     bookings: number;
   };
-  booking_status: { status: string; count: number }[];
-  top_pages: { page: string; views: number }[];
+  booking_status?: { status: string; count: number }[];
+  top_pages?: { page: string; views: number }[];
 };
 
 export async function trackVisit(input: {
@@ -60,9 +61,12 @@ export async function trackVisit(input: {
       Accept: "application/json",
     },
     body: JSON.stringify({
+      visitor_id: visitorId,
       visitorId,
-      landingPage: input.landingPage,
+      path: input.landingPage || "/",
+      landingPage: input.landingPage || "/",
       referrer: input.referrer ?? document.referrer ?? null,
+      source: input.utmSource ?? "direct",
       utmSource: input.utmSource ?? null,
       utmMedium: input.utmMedium ?? null,
       utmCampaign: input.utmCampaign ?? null,

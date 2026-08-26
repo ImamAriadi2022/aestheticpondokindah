@@ -21,7 +21,7 @@ interface ComplaintResponseModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   complaint: any | null;
-  onSaved: () => void;
+  onSaved: (updated?: any) => void;
 }
 
 export default function ComplaintResponseModal({
@@ -59,7 +59,7 @@ export default function ComplaintResponseModal({
 
     setSaving(true);
     try {
-      await updateComplaintStatus(complaint.id, {
+      const result = await updateComplaintStatus(complaint.id, {
         status,
         admin_response: adminResponse.trim(),
       });
@@ -70,7 +70,7 @@ export default function ComplaintResponseModal({
         variant: "success",
       });
 
-      onSaved();
+      onSaved(result);
       onOpenChange(false);
     } catch (err: any) {
       toast({

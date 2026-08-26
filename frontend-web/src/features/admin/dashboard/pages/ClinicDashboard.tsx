@@ -281,11 +281,13 @@ export default function ClinicDashboardPage() {
     if (activeTab === "settings") fetchClinicSettings();
   }, [activeTab]);
 
+  const visitorsCount = analyticsData?.totals?.visitors ?? analyticsData?.total_visitors ?? 0;
+
   const stats = [
     { title: "Total Pengguna", value: users.length, subtitle: "Pengguna terdaftar" },
     { title: "Artikel", value: apiPosts.length, subtitle: "Konten terpublikasi" },
     { title: "Jadwal Dokter", value: doctorSchedules.length, subtitle: "Jadwal aktif" },
-    { title: "Pengunjung", value: analyticsData?.totals?.visitors ?? 0, subtitle: "Pengunjung bulan ini" },
+    { title: "Pengunjung", value: visitorsCount, subtitle: "Trafik website" },
   ];
 
   const renderContent = () => {
