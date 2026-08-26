@@ -18,6 +18,11 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
   useEffect(() => {
     try {
       localStorage.removeItem("apident:cached_popup");
+      if (sessionStorage.getItem("apident:welcome_popup_dismissed") === "true") {
+        setActivePopups([]);
+        onOpenChange(false);
+        return;
+      }
     } catch {}
 
     fetch(`${API_BASE}/public/popups/active?_t=${Date.now()}`)
@@ -48,6 +53,9 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
     if (currentIndex < totalPopups - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
+      try {
+        sessionStorage.setItem("apident:welcome_popup_dismissed", "true");
+      } catch {}
       onOpenChange(false);
     }
   };
@@ -89,7 +97,7 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
     }}>
       <DialogContent
         showCloseButton={false}
-        className="p-0 overflow-hidden w-[calc(100vw-32px)] max-w-[320px] sm:max-w-3xl rounded-2xl sm:rounded-3xl border border-[#E8DFC8] bg-white shadow-2xl mx-auto my-auto relative"
+        className="!p-0 overflow-hidden w-[calc(100vw-32px)] max-w-[320px] sm:max-w-3xl rounded-2xl sm:rounded-3xl border border-[#E8DFC8] bg-white shadow-2xl"
       >
         {/* Custom Header Badge & Sequential (X) Close Button */}
         <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
