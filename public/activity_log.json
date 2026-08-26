@@ -1,5 +1,19 @@
 [
   {
+    "id": "act-344",
+    "timestamp": "2026-08-26T15:19:00.000Z",
+    "category": "fix-consumption-habits-persistence",
+    "title": "Perbaikan Persistensi Gaya Hidup & Kebiasaan Konsumsi (Kopi/Teh & Perokok)",
+    "description": "Menyempurnakan sinkronisasi data kebiasaan konsumsi pasien ([`UserController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Shared/User/UserController.php), [`ProfileEdit.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/profile/pages/ProfileEdit.tsx)): 1) Menyelaraskan penyimpanan field is_coffee_drinker dan is_smoker di tabel users dengan array consumption_habits pada tabel user_profiles, 2) Memperbaiki fungsi serialize agar membaca status kebiasaan secara akurat dari kedua tabel, 3) Memastikan centang 'Peminum Kopi / Teh Rutin' dan 'Perokok / Vaper' tersimpan dan tampil tepat pada Detail Profil.",
+    "details": [
+      "Full Table Synchronization: Nilai centang boolean kini disinkronkan dua arah ke kolom user dan relasi profile (consumption_habits).",
+      "Accurate Profile View: Halaman Detail Profil kini menampilkan status 'Ya, Rutin' dan 'Perokok / Vaper' sesuai input yang dicentang.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-343",
     "timestamp": "2026-08-26T15:09:00.000Z",
     "category": "membership-card-modal-balance-layout",

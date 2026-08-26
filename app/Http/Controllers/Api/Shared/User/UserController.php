@@ -717,6 +717,8 @@ class UserController extends Controller
         $profileKeys = [
             'interests',
             'consumptionHabits',
+            'isCoffeeDrinker',
+            'isSmoker',
             'dentalComplaints',
             'desiredServices',
             'currentDentalConditions',
@@ -775,9 +777,28 @@ class UserController extends Controller
             if (array_key_exists('consumptionHabits', $data)) {
                 $habits = is_array($data['consumptionHabits']) ? $data['consumptionHabits'] : [];
                 $profile->consumption_habits = array_values(array_unique($habits));
-                // Sync backward to users table for backward compatibility
                 $user->is_coffee_drinker = in_array('coffee_tea', $habits, true);
                 $user->is_smoker = in_array('smoker', $habits, true);
+                $user->save();
+            } else {
+                $habits = is_array($profile->consumption_habits) ? $profile->consumption_habits : [];
+                if (array_key_exists('isCoffeeDrinker', $data)) {
+                    $user->is_coffee_drinker = (bool) $data['isCoffeeDrinker'];
+                    if ($data['isCoffeeDrinker']) {
+                        $habits[] = 'coffee_tea';
+                    } else {
+                        $habits = array_values(array_diff($habits, ['coffee_tea']));
+                    }
+                }
+                if (array_key_exists('isSmoker', $data)) {
+                    $user->is_smoker = (bool) $data['isSmoker'];
+                    if ($data['isSmoker']) {
+                        $habits[] = 'smoker';
+                    } else {
+                        $habits = array_values(array_diff($habits, ['smoker']));
+                    }
+                }
+                $profile->consumption_habits = array_values(array_unique($habits));
                 $user->save();
             }
 
@@ -894,8 +915,9 @@ class UserController extends Controller
             'district' => $user->district,
             'postalCode' => $user->postal_code,
             'interests' => $profile?->interests ?? $user->interests ?? [],
-            'isCoffeeDrinker' => in_array('coffee_tea', $profile?->consumption_habits ?? []),
-            'isSmoker' => in_array('smoker', $profile?->consumption_habits ?? []),
+            'isCoffeeDrinker' => (bool) ($user->is_coffee_drinker || in_array('coffee_tea', $profile?->consumption_habits ?? [], true)),
+            'isSmoker' => (bool) ($user->is_smoker || in_array('smoker', $profile?->consumption_habits ?? [], true)),
+            'consumptionHabits' => $profile?->consumption_habits ?? [],
             'sourceInfo' => $user->source_info,
             'insuranceProvider' => $user->insurance_provider,
             'dentalComplaints' => $profile?->dental_complaints ?? [],

@@ -308,6 +308,13 @@ export default function ProfileEditPage() {
       // Clean payload: map phone to whatsapp, convert empty strings to null
       const payload: Record<string, any> = { ...profile };
       payload.whatsapp = profile.phone || (profile as any).whatsapp;
+      const consumptionHabits: string[] = [];
+      if (profile.isCoffeeDrinker) consumptionHabits.push('coffee_tea');
+      if (profile.isSmoker) consumptionHabits.push('smoker');
+      payload.consumptionHabits = consumptionHabits;
+      payload.isCoffeeDrinker = Boolean(profile.isCoffeeDrinker);
+      payload.isSmoker = Boolean(profile.isSmoker);
+
       Object.keys(payload).forEach((k) => {
         if (typeof payload[k] === "string" && payload[k].trim() === "") {
           payload[k] = null;
