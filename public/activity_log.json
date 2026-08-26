@@ -1,5 +1,34 @@
 [
   {
+    "id": "act-343",
+    "timestamp": "2026-08-26T15:09:00.000Z",
+    "category": "membership-card-modal-balance-layout",
+    "title": "Penyelarasan Kartu Modal & Penambahan Ringkasan Data Pengguna pada Halaman Membership",
+    "description": "Menyempurnakan tata letak dan estetika halaman membership ([`Membership.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/membership/pages/Membership.tsx)): 1) Menyamakan layout dan tipografi kartu membership di dalam pop-up dialog agar 100% identik dengan kartu utama di halaman (posisi teks, ukuran font, hierarchy MEMBER ID, dan pita reward), 2) Menambahkan seksi Data Profil Pengguna (Nama, No. WhatsApp, Email, dan Status Akun) di bagian bawah kolom kiri cokelat gelap sehingga tingginya berimbang sempurna dengan kolom kanan.",
+    "details": [
+      "Identical Modal Card: Kartu digital di modal pop-up kini memiliki ukuran, proporsi teks, dan posisi logo yang presisi sama dengan kartu di halaman utama.",
+      "Balanced Aesthetic Layout: Kolom kiri kini diisi ringkasan data profil pengguna terverifikasi sehingga memanjang ke bawah dan seimbang dengan konten kanan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-342",
+    "timestamp": "2026-08-26T15:05:00.000Z",
+    "category": "fix-profile-dropdowns-placeholders-popper",
+    "title": "Standardisasi Placeholder & Posisi Popper Dropdown Form Edit Profil",
+    "description": "Menghapus nilai default hardcode dan membenahi tata letak dropdown ([`ProfileEdit.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/profile/pages/ProfileEdit.tsx)): 1) Mengubah seluruh Select value menjadi profile.field || undefined sehingga menampilkan placeholder murni saat kosong (seperti 'Pilih Golongan Darah', 'Pilih Jenis Kelamin', 'Pilih Provinsi', dll.), 2) Memastikan opsi yang dipilih langsung tersimpan ke state dan database secara akurat, 3) Menambahkan position='popper' pada SelectContent sehingga popup dropdown terikat tepat di bawah form input masing-masing dengan max-height dan scrollbar internal yang rapi tanpa melayang ke atas layar.",
+    "details": [
+      "Clean Placeholders: Tidak ada lagi default semu (seperti 'O' atau 'Laki-laki') pada akun baru yang belum mengisi data.",
+      "Direct Selection Persistence: Pemilihan opsi apapun langsung terdaftar dan tersimpan tanpa perlu bolak-balik mengubah opsi.",
+      "Popper Dropdown Layout: Menu pilihan wilayah dan preferensi terbuka pas di bawah kotak input dengan scrollbar rapi dan tidak melayang ke atas layar.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-341",
     "timestamp": "2026-08-26T14:49:00.000Z",
     "category": "fix-validation-unique-profile",

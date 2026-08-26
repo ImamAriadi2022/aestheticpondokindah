@@ -23,6 +23,8 @@ import {
   Copy,
   CheckCircle2,
   Lock,
+  User,
+  Pencil,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { toast } from "@/shared/ui/toast";
@@ -574,6 +576,45 @@ export default function MembershipPage() {
               >
                 Lihat Detail Membership <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
               </Button>
+
+              {/* Data User / Ringkasan Akun Pasien untuk Keseimbangan Estetika */}
+              <div className="mt-5 pt-4 border-t border-[#3A3228] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-[#E8C547]" />
+                    <span className="text-xs font-bold text-[#FAF5EA] tracking-wide">Data Profil Pengguna</span>
+                  </div>
+                  <button
+                    onClick={() => navigate('/profile/edit')}
+                    className="text-[11px] font-semibold text-[#E8C547] hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    <span>Edit Data</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="p-2.5 bg-[#26211B] rounded-xl border border-[#3A3228] flex items-center justify-between">
+                    <span className="text-gray-400 text-[11px]">Nama Lengkap</span>
+                    <span className="font-semibold text-white truncate max-w-[150px]">{session?.name || "-"}</span>
+                  </div>
+                  <div className="p-2.5 bg-[#26211B] rounded-xl border border-[#3A3228] flex items-center justify-between">
+                    <span className="text-gray-400 text-[11px]">No. WhatsApp</span>
+                    <span className="font-semibold text-[#E8C547]">{(session as any)?.whatsapp || (session as any)?.phone || "-"}</span>
+                  </div>
+                  <div className="p-2.5 bg-[#26211B] rounded-xl border border-[#3A3228] flex items-center justify-between">
+                    <span className="text-gray-400 text-[11px]">Email Akun</span>
+                    <span className="font-semibold text-gray-200 truncate max-w-[150px]">{session?.email || "-"}</span>
+                  </div>
+                  <div className="p-2.5 bg-[#26211B] rounded-xl border border-[#3A3228] flex items-center justify-between">
+                    <span className="text-gray-400 text-[11px]">Status Akun</span>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Aktif (Terverifikasi)
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -766,30 +807,36 @@ export default function MembershipPage() {
               </div>
 
               <div
-                className="w-full aspect-[1.586/1] rounded-2xl p-5 flex flex-col justify-between text-white shadow-xl text-left border border-[#D4AF37]/30"
+                className="w-full aspect-[1.586/1] rounded-2xl relative p-5 flex flex-col justify-between shadow-2xl overflow-hidden border border-[#D4AF37]/30 select-none text-left group"
                 style={{
                   backgroundImage: `url(${currentCardBg})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between relative z-10">
                   <div>
-                    <span className="text-[8px] font-bold tracking-[0.2em] text-white/70 block uppercase">AESPI DIGITAL</span>
-                    <span className="text-[10px] font-extrabold tracking-wider text-white">MEMBERSHIP CARD</span>
+                    <span className="text-[9px] font-bold tracking-[0.2em] text-white/70 block uppercase">AESPI DIGITAL</span>
+                    <span className="text-[11px] font-extrabold tracking-wider text-white drop-shadow">MEMBERSHIP CARD</span>
                   </div>
-                  <img src="/logo/logo.webp" alt="Logo" className="h-5 w-auto brightness-0 invert opacity-90" />
+                  <img src="/logo/logo.webp" alt="Aesthetic" className="h-6 w-auto object-contain brightness-0 invert opacity-90" />
                 </div>
-                <div>
-                  <span className="text-[8px] font-bold text-[#EADBBD] uppercase">{config.badge} MEMBER</span>
-                  <h4 className="text-base font-black text-white uppercase truncate">{session?.name || "PASIEN MEMBER"}</h4>
+
+                <div className="relative z-10 my-auto">
+                  <span className="text-[9px] font-bold text-[#EADBBD] tracking-wider block uppercase">
+                    {config.badge} MEMBER
+                  </span>
+                  <h4 className="text-lg sm:text-xl font-black text-white tracking-wide uppercase drop-shadow truncate">
+                    {session?.name || "PASIEN MEMBER"}
+                  </h4>
                 </div>
-                <div className="flex items-end justify-between">
+
+                <div className="flex items-end justify-between relative z-10">
                   <div>
-                    <span className="text-[7px] font-bold text-white/60">MEMBER ID</span>
-                    <span className="text-[11px] font-mono font-bold text-[#FAF5EA]">{membershipId}</span>
+                    <span className="text-[8px] font-bold text-white/60 tracking-wider block">MEMBER ID</span>
+                    <span className="text-xs font-mono font-bold text-[#FAF5EA] tracking-wider">{membershipId}</span>
                   </div>
-                  <img src={currentRibbon} alt="Ribbon" className="w-8 h-8 object-contain" />
+                  <img src={currentRibbon} alt="Ribbon" className="w-10 h-10 object-contain drop-shadow" />
                 </div>
               </div>
 

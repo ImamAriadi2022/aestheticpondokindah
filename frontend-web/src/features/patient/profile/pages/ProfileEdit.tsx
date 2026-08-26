@@ -565,13 +565,13 @@ export default function ProfileEditPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Jenis Kelamin</label>
                 <Select
-                  value={profile.gender || "Laki-laki"}
+                  value={profile.gender || undefined}
                   onValueChange={(val) => setProfile((prev) => ({ ...prev, gender: val }))}
                 >
                   <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm">
                     <SelectValue placeholder="Pilih Jenis Kelamin" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                  <SelectContent position="popper" className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                     {GENDER_OPTIONS.map((g) => (
                       <SelectItem key={g} value={g} className="text-gray-900 font-medium hover:bg-[#c9a24a]/10 hover:text-[#c9a24a]">
                         {g}
@@ -585,13 +585,13 @@ export default function ProfileEditPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Golongan Darah</label>
                 <Select
-                  value={profile.bloodType || "O"}
+                  value={profile.bloodType || undefined}
                   onValueChange={(val) => setProfile((prev) => ({ ...prev, bloodType: val }))}
                 >
                   <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm">
                     <SelectValue placeholder="Pilih Golongan Darah" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                  <SelectContent position="popper" className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                     {BLOOD_TYPE_OPTIONS.map((b) => (
                       <SelectItem key={b} value={b} className="text-gray-900 font-medium hover:bg-[#c9a24a]/10 hover:text-[#c9a24a]">
                         {b}
@@ -605,13 +605,13 @@ export default function ProfileEditPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Pekerjaan</label>
                 <Select
-                  value={profile.job || "Karyawan Swasta"}
+                  value={profile.job || undefined}
                   onValueChange={(val) => setProfile((prev) => ({ ...prev, job: val }))}
                 >
                   <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm">
                     <SelectValue placeholder="Pilih Pekerjaan" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                  <SelectContent position="popper" className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                     {JOB_OPTIONS.map((j) => (
                       <SelectItem key={j} value={j} className="text-gray-900 font-medium hover:bg-[#c9a24a]/10 hover:text-[#c9a24a]">
                         {j}
@@ -647,13 +647,13 @@ export default function ProfileEditPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Provinsi</label>
                 <Select
-                  value={profile.provinceId || "18"}
+                  value={profile.provinceId || undefined}
                   onValueChange={handleProvinceChange}
                 >
                   <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm">
                     <SelectValue placeholder="Pilih Provinsi" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                  <SelectContent position="popper" className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                     {provinces.map((p) => (
                       <SelectItem key={p.id} value={p.id} className="text-gray-900 font-medium hover:bg-[#c9a24a]/10 hover:text-[#c9a24a]">
                         {p.name}
@@ -667,13 +667,14 @@ export default function ProfileEditPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Kota / Kabupaten</label>
                 <Select
-                  value={profile.cityId || "18.02"}
+                  value={profile.cityId || undefined}
                   onValueChange={handleCityChange}
+                  disabled={!profile.provinceId || regencies.length === 0}
                 >
-                  <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm">
-                    <SelectValue placeholder="Pilih Kota/Kabupaten" />
+                  <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm disabled:opacity-50">
+                    <SelectValue placeholder={profile.provinceId ? "Pilih Kota / Kabupaten" : "Pilih Provinsi Terlebih Dahulu"} />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                  <SelectContent position="popper" className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                     {regencies.map((r) => (
                       <SelectItem key={r.id} value={r.id} className="text-gray-900 font-medium hover:bg-[#c9a24a]/10 hover:text-[#c9a24a]">
                         {r.name}
@@ -687,13 +688,14 @@ export default function ProfileEditPage() {
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Kecamatan</label>
                 <Select
-                  value={profile.districtId || "Punggur"}
+                  value={profile.districtId || undefined}
                   onValueChange={handleDistrictChange}
+                  disabled={!profile.cityId || districts.length === 0}
                 >
-                  <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm">
-                    <SelectValue placeholder="Pilih Kecamatan" />
+                  <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm disabled:opacity-50">
+                    <SelectValue placeholder={profile.cityId ? "Pilih Kecamatan" : "Pilih Kota/Kab Terlebih Dahulu"} />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                  <SelectContent position="popper" className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                     {districts.map((d) => (
                       <SelectItem key={d.id} value={d.id} className="text-gray-900 font-medium hover:bg-[#c9a24a]/10 hover:text-[#c9a24a]">
                         {d.name}
@@ -734,13 +736,13 @@ export default function ProfileEditPage() {
                   Terakhir Kunjungan Gigi
                 </label>
                 <Select
-                  value={profile.lastDentalVisit || "< 6 Bulan Lalu"}
+                  value={profile.lastDentalVisit || undefined}
                   onValueChange={(val) => setProfile((prev) => ({ ...prev, lastDentalVisit: val }))}
                 >
                   <SelectTrigger className="w-full h-10 rounded-xl border-gray-200 bg-white text-gray-900 font-medium text-sm">
                     <SelectValue placeholder="Pilih Waktu Kunjungan Terakhir" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                  <SelectContent position="popper" className="bg-white border border-gray-200 text-gray-900 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                     {LAST_DENTAL_VISIT_OPTIONS.map((opt) => (
                       <SelectItem key={opt} value={opt} className="text-gray-900 font-medium hover:bg-[#c9a24a]/10 hover:text-[#c9a24a]">
                         {opt}
