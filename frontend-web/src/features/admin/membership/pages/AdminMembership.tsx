@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import DashboardLayout from "@/core/layouts/DashboardLayout";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -38,6 +38,7 @@ type Member = {
   id: number;
   name: string;
   email: string;
+  role?: string;
   whatsapp: string | null;
   membership_level: Tier | null;
   membership_status: string | null;
@@ -159,9 +160,16 @@ export default function AdminMembershipPage() {
   // Rule Form Modal State
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<PointRule | null>(null);
-  const [ruleFormData, setRuleFormData] = useState({
+  const [ruleFormData, setRuleFormData] = useState<{
+    name: string;
+    service_id: number | string;
+    service_name: string;
+    points: number | string;
+    is_active: boolean;
+    description: string;
+  }>({
     name: "",
-    service_id: "" as number | string,
+    service_id: "",
     service_name: "",
     points: 50,
     is_active: true,
@@ -172,7 +180,7 @@ export default function AdminMembershipPage() {
   // Manual Adjustment Modal State
   const [adjustmentMember, setAdjustmentMember] = useState<Member | null>(null);
   const [adjustmentAction, setAdjustmentAction] = useState<"add" | "deduct">("add");
-  const [adjustmentAmount, setAdjustmentAmount] = useState<number>(0);
+  const [adjustmentAmount, setAdjustmentAmount] = useState<number | string>(50);
   const [adjustmentReason, setAdjustmentReason] = useState("");
   const [savingAdjustment, setSavingAdjustment] = useState(false);
 
@@ -181,10 +189,20 @@ export default function AdminMembershipPage() {
   const [memberHistoryItems, setMemberHistoryItems] = useState<PointLedgerItem[]>([]);
   const [loadingMemberHistory, setLoadingMemberHistory] = useState(false);
 
-  // Point Conversion Settings State
-  const [pointSettings, setPointSettings] = useState({
+  // Point Conversion Settings State (Supports empty string while typing)
+  const pointSettingsInitialized = useRef(false);
+  const [pointSettings, setPointSettings] = useState<{
+    conversion_rate: number | string;
+    min_redeem_points: number | string;
+    max_discount_percentage: number | string;
+    tier_multipliers: {
+      bronze: number;
+      gold: number;
+      platinum: number;
+    };
+  }>({
     conversion_rate: 1000,
-    min_redeem_points: 10,
+    min_redeem_points: 100,
     max_discount_percentage: 100,
     tier_multipliers: {
       bronze: 1.0,
@@ -218,10 +236,10 @@ export default function AdminMembershipPage() {
       const ldgList = ledgerResponse?.data?.data || [];
       const psData = pointSettingsRes?.data;
 
-      if (psData) {
+      if (psData && (!pointSettingsInitialized.current || !silent)) {
         setPointSettings({
           conversion_rate: Number(psData.conversion_rate ?? 1000),
-          min_redeem_points: Number(psData.min_redeem_points ?? 10),
+          min_redeem_points: Number(psData.min_redeem_points ?? 100),
           max_discount_percentage: Number(psData.max_discount_percentage ?? 100),
           tier_multipliers: psData.tier_multipliers || {
             bronze: 1.0,
@@ -229,6 +247,7 @@ export default function AdminMembershipPage() {
             platinum: 2.0,
           },
         });
+        pointSettingsInitialized.current = true;
       }
 
       if (Array.isArray(memberList)) {
@@ -267,7 +286,13 @@ export default function AdminMembershipPage() {
   const handleSavePointSettings = async () => {
     try {
       setSavingPointSettings(true);
-      await apiClient.put("/admin/membership/point-settings", pointSettings);
+      const payload = {
+        conversion_rate: Number(pointSettings.conversion_rate) || 1000,
+        min_redeem_points: Number(pointSettings.min_redeem_points) || 10,
+        max_discount_percentage: Math.min(100, Math.max(1, Number(pointSettings.max_discount_percentage) || 100)),
+        tier_multipliers: pointSettings.tier_multipliers,
+      };
+      await apiClient.put("/admin/membership/point-settings", payload);
       toast.success("Pengaturan nilai konversi poin dan privilese tier berhasil disimpan!");
     } catch (err: any) {
       toast.error(err.message || "Gagal menyimpan pengaturan nilai poin.");
@@ -344,7 +369,7 @@ export default function AdminMembershipPage() {
 
   const handleSaveRule = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ruleFormData.name.trim() || ruleFormData.points <= 0) {
+    if (!ruleFormData.name.trim() || Number(ruleFormData.points) <= 0) {
       toast({ title: "Data Tidak Lengkap", message: "Nama aturan dan jumlah poin harus diisi dengan benar.", variant: "warning" });
       return;
     }
@@ -452,7 +477,8 @@ export default function AdminMembershipPage() {
   };
 
   const handleSaveManualAdjustment = async () => {
-    if (!adjustmentMember || adjustmentAmount <= 0) {
+    const numericAmount = Number(adjustmentAmount);
+    if (!adjustmentMember || numericAmount <= 0) {
       toast({ title: "Jumlah Poin Tidak Valid", message: "Masukkan jumlah poin positif.", variant: "warning" });
       return;
     }
@@ -464,14 +490,14 @@ export default function AdminMembershipPage() {
     setSavingAdjustment(true);
     try {
       await apiClient.post(`/admin/membership/${adjustmentMember.id}/manual-adjustment`, {
-        points: adjustmentAmount,
+        points: numericAmount,
         action: adjustmentAction,
         reason: adjustmentReason.trim(),
       });
 
       toast({
         title: "Koreksi Manual Berhasil",
-        message: `Koreksi poin ${adjustmentAction === "add" ? "+" : "-"}${adjustmentAmount} pts berhasil dicatat untuk ${adjustmentMember.name}.`,
+        message: `Koreksi poin ${adjustmentAction === "add" ? "+" : "-"}${numericAmount} pts berhasil dicatat untuk ${adjustmentMember.name}.`,
         variant: "success",
       });
 
@@ -512,6 +538,7 @@ export default function AdminMembershipPage() {
 
   const filteredMembers = useMemo(() => {
     return members.filter((member) => {
+      if (member.role && member.role !== "patient") return false;
       const tier = member.membership_level || "bronze";
       if (levelFilter !== "all" && tier !== levelFilter) return false;
 
@@ -543,16 +570,17 @@ export default function AdminMembershipPage() {
   }, [ledgerItems, ledgerTypeFilter, search]);
 
   const metrics = useMemo(() => {
-    const totalPoints = members.reduce((sum, m) => sum + (Number(m.membership_points) || 0), 0);
+    const validMembers = members.filter((m) => !m.role || m.role === "patient");
+    const totalPoints = validMembers.reduce((sum, m) => sum + (Number(m.membership_points) || 0), 0);
     const paidTrx = transactions.filter((t) => ["paid", "approved", "completed", "settlement", "success"].includes((t.status || "").toLowerCase()));
     const totalRevenue = paidTrx.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     const activeRulesCount = rules.filter((r) => r.is_active).length;
 
     return {
-      totalMembers: members.length,
-      platinumCount: members.filter((m) => m.membership_level === "platinum").length,
-      goldCount: members.filter((m) => m.membership_level === "gold").length,
-      bronzeCount: members.filter((m) => !m.membership_level || m.membership_level === "bronze").length,
+      totalMembers: validMembers.length,
+      platinumCount: validMembers.filter((m) => m.membership_level === "platinum").length,
+      goldCount: validMembers.filter((m) => m.membership_level === "gold").length,
+      bronzeCount: validMembers.filter((m) => !m.membership_level || m.membership_level === "bronze").length,
       totalTransactions: transactions.length,
       paidTransactionsCount: paidTrx.length,
       totalRevenue,
@@ -571,7 +599,7 @@ export default function AdminMembershipPage() {
             <p className="text-xs font-bold text-[#8C6B1C] uppercase tracking-wider">Admin Klinik</p>
             <h1 className="text-xl sm:text-2xl font-black text-[#2C2416] mt-0.5">Kelola Membership & Poin</h1>
             <p className="text-xs text-[#8C8272] mt-1">
-              Sistem perolehan poin otomatis berbasis aturan (*Point Rules*), verifikasi transaksi Midtrans, dan ledger audit mutasi poin.
+              Sistem perolehan poin otomatis berbasis aturan, verifikasi transaksi Midtrans, dan ledger audit mutasi poin.
             </p>
           </div>
           <Button
@@ -597,7 +625,7 @@ export default function AdminMembershipPage() {
             }`}
           >
             <Coins className="w-4 h-4" />
-            <span>Kelola Point (Aturan & Ledger)</span>
+            <span>Kelola Poin</span>
             <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
               activeTab === "poin" ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900"
             }`}>
@@ -652,7 +680,7 @@ export default function AdminMembershipPage() {
               <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-bold text-[#8C8272]">Total Saldo Poin Beredar</span>
-                  <p className="text-2xl font-black text-[#8C6B1C] mt-0.5">{metrics.totalPoints} Poin</p>
+                  <p className="text-2xl font-black text-[#8C6B1C] mt-0.5 whitespace-nowrap">{new Intl.NumberFormat("id-ID").format(metrics.totalPoints)} Poin</p>
                 </div>
                 <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C]">
                   <Coins className="w-5 h-5" />
@@ -691,7 +719,7 @@ export default function AdminMembershipPage() {
                 <div>
                   <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
                     <Coins className="w-4 h-4 text-[#8C6B1C]" />
-                    Pengaturan Nilai Konversi Poin (*Point Redemption Value*) & Privilese Tier
+                    Pengaturan Nilai Konversi Poin & Privilese Tier
                   </h3>
                   <p className="text-xs text-[#8C8272] mt-0.5">
                     Atur nilai konversi 1 poin ke Rupiah untuk pemotongan biaya layanan pasien serta bobot privilese tiap tingkatan member.
@@ -730,12 +758,15 @@ export default function AdminMembershipPage() {
                         min="1"
                         step="100"
                         value={pointSettings.conversion_rate}
-                        onChange={(e) => setPointSettings(prev => ({ ...prev, conversion_rate: Math.max(1, Number(e.target.value)) }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPointSettings(prev => ({ ...prev, conversion_rate: val }));
+                        }}
                         className="pl-9 h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
                       />
                     </div>
                     <p className="text-[10px] text-[#8C8272]">
-                      Contoh: 100 poin = Potongan <strong>Rp {new Intl.NumberFormat('id-ID').format(pointSettings.conversion_rate * 100)}</strong>
+                      Contoh: 100 poin = Potongan <strong>Rp {new Intl.NumberFormat('id-ID').format((Number(pointSettings.conversion_rate) || 0) * 100)}</strong>
                     </p>
                   </div>
 
@@ -749,13 +780,16 @@ export default function AdminMembershipPage() {
                         type="number"
                         min="1"
                         value={pointSettings.min_redeem_points}
-                        onChange={(e) => setPointSettings(prev => ({ ...prev, min_redeem_points: Math.max(1, Number(e.target.value)) }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPointSettings(prev => ({ ...prev, min_redeem_points: val }));
+                        }}
                         className="h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
                       />
                       <span className="absolute right-3 top-2.5 text-xs font-bold text-[#8C6B1C]">Pts</span>
                     </div>
                     <p className="text-[10px] text-[#8C8272]">
-                      Setara potongan minimal <strong>Rp {new Intl.NumberFormat('id-ID').format(pointSettings.conversion_rate * pointSettings.min_redeem_points)}</strong>
+                      Setara potongan minimal <strong>Rp {new Intl.NumberFormat('id-ID').format((Number(pointSettings.conversion_rate) || 0) * (Number(pointSettings.min_redeem_points) || 0))}</strong>
                     </p>
                   </div>
 
@@ -770,7 +804,10 @@ export default function AdminMembershipPage() {
                         min="1"
                         max="100"
                         value={pointSettings.max_discount_percentage}
-                        onChange={(e) => setPointSettings(prev => ({ ...prev, max_discount_percentage: Math.min(100, Math.max(1, Number(e.target.value))) }))}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPointSettings(prev => ({ ...prev, max_discount_percentage: val }));
+                        }}
                         className="h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
                       />
                       <span className="absolute right-3 top-2.5 text-xs font-bold text-[#8C6B1C]">%</span>
@@ -849,7 +886,7 @@ export default function AdminMembershipPage() {
                 <div>
                   <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
                     <Sliders className="w-4 h-4 text-[#8C6B1C]" />
-                    Aturan Perolehan Poin Otomatis (*Point Rules*)
+                    Aturan Perolehan Poin Otomatis
                   </h3>
                   <p className="text-xs text-[#8C8272] mt-0.5">
                     Tentukan jumlah poin yang didapat pasien saat tindakan perawatan selesai. Sistem akan menghitung dan memberikan poin otomatis tanpa input manual.
@@ -895,7 +932,7 @@ export default function AdminMembershipPage() {
                       rules.map((r) => (
                         <tr key={r.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
                           <td className="px-5 py-3.5">
-                            <p className="font-bold text-[#2C2416] text-xs">{r.name}</p>
+                            <p className="font-bold text-[#2C2416] text-xs">{r.name.replace(/\s*\(.*?\)/g, "")}</p>
                             {r.service_name && (
                               <p className="text-[10px] text-[#8C8272] mt-0.5">
                                 Kategori Layanan: <span className="font-semibold text-[#8C6B1C]">{r.service_name}</span>
@@ -962,7 +999,7 @@ export default function AdminMembershipPage() {
                 <div>
                   <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
                     <FileSpreadsheet className="w-4 h-4 text-[#8C6B1C]" />
-                    Buku Besar Mutasi Poin (*Point Audit Ledger*)
+                    Buku Besar Mutasi Poin
                   </h3>
                   <p className="text-xs text-[#8C8272] mt-0.5">
                     Catatan audit setiap perolehan, penukaran, dan penyesuaian poin seluruh member beserta saldo sebelum dan sesudah mutasi.
@@ -981,7 +1018,7 @@ export default function AdminMembershipPage() {
                             : "text-[#6B5E4F] hover:bg-[#FAF5EA] hover:text-[#8C6B1C]"
                         }`}
                       >
-                        {t === "all" ? "Semua Mutasi" : t === "earned" ? "Perolehan (Earned)" : t === "adjusted" ? "Koreksi Manual (Adjusted)" : "Penukaran (Redeemed)"}
+                        {t === "all" ? "Semua Mutasi" : t === "earned" ? "Perolehan" : t === "adjusted" ? "Koreksi Manual" : "Penukaran"}
                       </button>
                     ))}
                   </div>
@@ -1211,9 +1248,9 @@ export default function AdminMembershipPage() {
                                 Aktif
                               </span>
                             </td>
-                            <td className="px-5 py-3.5">
-                              <span className="font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-1 rounded-lg border border-[#EADBBD]">
-                                {member.membership_points || 0} Poin
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              <span className="font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-1 rounded-lg border border-[#EADBBD] inline-flex items-center gap-1 shrink-0 whitespace-nowrap">
+                                {new Intl.NumberFormat("id-ID").format(Number(member.membership_points) || 0)} Poin
                               </span>
                             </td>
                             <td className="px-5 py-3.5 font-semibold text-[#2C2416]">
@@ -1511,8 +1548,8 @@ export default function AdminMembershipPage() {
                   type="number"
                   required
                   min="1"
-                  value={ruleFormData.points || ""}
-                  onChange={(e) => setRuleFormData({ ...ruleFormData, points: Math.max(1, parseInt(e.target.value, 10) || 0) })}
+                  value={ruleFormData.points}
+                  onChange={(e) => setRuleFormData({ ...ruleFormData, points: e.target.value })}
                   placeholder="50"
                   className="bg-[#FAF8F5] border-[#E8DFC8] rounded-xl text-xs pr-12 font-bold text-[#8C6B1C]"
                 />
@@ -1559,7 +1596,7 @@ export default function AdminMembershipPage() {
             <DialogTitle className="text-base font-bold text-[#2C2416]">Riwayat Buku Besar Poin Member</DialogTitle>
             <DialogDescription className="text-xs text-[#8C8272] mt-0.5">
               Member: <span className="font-bold text-[#2C2416]">{historyMember?.name}</span> ({historyMember?.email}) — Saldo Saat Ini:{" "}
-              <strong className="text-[#8C6B1C] font-black">{historyMember?.membership_points || 0} Poin</strong>
+              <strong className="text-[#8C6B1C] font-black whitespace-nowrap">{new Intl.NumberFormat("id-ID").format(Number(historyMember?.membership_points) || 0)} Poin</strong>
             </DialogDescription>
           </div>
 
@@ -1646,7 +1683,7 @@ export default function AdminMembershipPage() {
           <div className="px-5 py-4 bg-gradient-to-r from-[#FAF8F5] via-[#FAF5EA] to-[#F5EFE6] border-b border-[#E8DFC8]">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-amber-600" />
-              <DialogTitle className="text-base font-bold text-[#2C2416]">Koreksi Poin Manual (Adjustment)</DialogTitle>
+              <DialogTitle className="text-base font-bold text-[#2C2416]">Koreksi Poin Manual</DialogTitle>
             </div>
             <DialogDescription className="text-xs text-[#8C8272] mt-0.5">
               Gunakan hanya untuk kompensasi kesalahan sistem atau koreksi manual. Setiap koreksi akan dicatat permanen dalam buku besar audit.
@@ -1658,7 +1695,7 @@ export default function AdminMembershipPage() {
               <p className="text-[#8C8272]">Member Terpilih:</p>
               <p className="font-bold text-[#2C2416] text-sm mt-0.5">{adjustmentMember?.name}</p>
               <p className="text-[11px] text-[#8C6B1C] mt-0.5">
-                Saldo Poin Saat Ini: <strong>{adjustmentMember?.membership_points || 0} Poin</strong>
+                Saldo Poin Saat Ini: <strong className="whitespace-nowrap">{new Intl.NumberFormat("id-ID").format(Number(adjustmentMember?.membership_points) || 0)} Poin</strong>
               </p>
             </div>
 
@@ -1676,7 +1713,7 @@ export default function AdminMembershipPage() {
                       : "border-[#E8DFC8] text-[#6B5E4F] hover:bg-[#FAF8F5]"
                   }`}
                 >
-                  <Plus className="h-4 w-4 text-emerald-600" /> Tambah Poin (+)
+                  <Plus className="h-4 w-4 text-emerald-600" /> Tambah Poin
                 </button>
                 <button
                   type="button"
@@ -1687,7 +1724,7 @@ export default function AdminMembershipPage() {
                       : "border-[#E8DFC8] text-[#6B5E4F] hover:bg-[#FAF8F5]"
                   }`}
                 >
-                  <Minus className="h-4 w-4 text-rose-600" /> Kurangi Poin (-)
+                  <Minus className="h-4 w-4 text-rose-600" /> Kurangi Poin
                 </button>
               </div>
             </div>
@@ -1699,8 +1736,8 @@ export default function AdminMembershipPage() {
               <Input
                 type="number"
                 min="1"
-                value={adjustmentAmount || ""}
-                onChange={(e) => setAdjustmentAmount(Math.max(1, parseInt(e.target.value, 10) || 0))}
+                value={adjustmentAmount}
+                onChange={(e) => setAdjustmentAmount(e.target.value)}
                 placeholder="Contoh: 50"
                 className="bg-[#FAF8F5] border-[#E8DFC8] rounded-xl text-xs font-bold"
               />
@@ -1719,16 +1756,16 @@ export default function AdminMembershipPage() {
               />
             </div>
 
-            {adjustmentMember && adjustmentAmount > 0 && (
+            {adjustmentMember && Number(adjustmentAmount) > 0 && (
               <div className="rounded-xl border border-[#EADBBD] bg-[#FAF8F5] p-3 text-xs text-[#8C6B1C]">
                 <p>
                   Proyeksi Saldo Akhir:{" "}
                   <strong>
-                    {adjustmentMember.membership_points} {adjustmentAction === "add" ? "+" : "-"} {adjustmentAmount} ={" "}
-                    {adjustmentAction === "add" ? adjustmentMember.membership_points + adjustmentAmount : adjustmentMember.membership_points - adjustmentAmount} Poin
+                    {new Intl.NumberFormat("id-ID").format(adjustmentMember.membership_points)} {adjustmentAction === "add" ? "+" : "-"} {new Intl.NumberFormat("id-ID").format(Number(adjustmentAmount))} ={" "}
+                    {new Intl.NumberFormat("id-ID").format(adjustmentAction === "add" ? adjustmentMember.membership_points + Number(adjustmentAmount) : adjustmentMember.membership_points - Number(adjustmentAmount))} Poin
                   </strong>
                 </p>
-                {adjustmentAction === "deduct" && adjustmentMember.membership_points - adjustmentAmount < 0 && (
+                {adjustmentAction === "deduct" && adjustmentMember.membership_points - Number(adjustmentAmount) < 0 && (
                   <p className="mt-1 font-bold text-rose-600">⚠️ Peringatan: Saldo tidak cukup untuk pengurangan ini!</p>
                 )}
               </div>

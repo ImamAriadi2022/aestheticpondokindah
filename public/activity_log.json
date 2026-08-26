@@ -1,6 +1,55 @@
 [
   {
-    "id": "act-314",
+    "id": "act-318",
+    "timestamp": "2026-08-26T08:59:00.000Z",
+    "category": "data-filtering",
+    "title": "Penyaringan Daftar Member Admin: Khusus Pengguna Berperan Pasien (Role 'patient')",
+    "description": "Mengisolasi query dan tampilan data pada modul Kelola Membership Admin (`MembershipAdminController.php`, `MembershipService.php`, dan `AdminMembership.tsx`): 1) Membatasi endpoint `GET /api/admin/membership` dengan klausa `where('role', 'patient')` sehingga hanya pengguna pasien yang dikembalikan, 2) Mengecualikan akun dokter, admin klinik, dan developer dari tabel daftar member, 3) Menghitung metrik total member dan distribusi tier secara presisi hanya untuk pasien.",
+    "details": [
+      "Patient Role Isolation: Hanya akun dengan role 'patient' yang ditampilkan pada tabel kelola member.",
+      "Accurate Analytics & Metrics: Ringkasan statistik total member dan tier breakdown dihitung eksklusif untuk pasien.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh bundle aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T08:53:00.000Z",
+    "category": "copywriting-refinement",
+    "title": "Pembersihan Copywriting Teks dalam Kurung pada Modul Kelola Poin & Membership",
+    "description": "Menghapus seluruh teks penjelasan dalam kurung pada modul Kelola Poin Admin (`AdminMembership.tsx` dan database `membership_point_rules`): 1) Menghapus teks kurung pada judul seksi ('Aturan Perolehan Poin Otomatis', 'Buku Besar Mutasi Poin', 'Pengaturan Nilai Konversi Poin & Privilese Tier'), 2) Menghapus teks kurung pada filter tab ledger ('Semua Mutasi', 'Perolehan', 'Koreksi Manual', 'Penukaran'), 3) Menghapus teks kurung pada modal koreksi dan tombol aksi ('Koreksi Poin Manual', 'Tambah Poin', 'Kurangi Poin'), dan 4) Membersihkan nama layanan aturan poin di database dan antarmuka ('Scaling & Polishing', 'Dental Fillings, Inlays & Onlays', 'Dental Extraction & Wisdom Tooth', 'Dental Whitening').",
+    "details": [
+      "Clean UI Copywriting: Seluruh judul, sub-judul, tab filter, dan modal terbebas dari teks dalam kurung yang berlebihan.",
+      "Database & UI Synchronization: Nama aturan poin di database dan frontend telah dibersihkan secara konsisten.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh bundle aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T08:46:00.000Z",
+    "category": "ui-fix",
+    "title": "Perbaikan Layout Header Flyout Submenu Sidebar: Teks Jumlah Menu Sebaris (No-Wrap)",
+    "description": "Memperbaiki layout header popover flyout submenu pada sidebar yang collapsed (`DashboardLayout.tsx` & `AccountSidebar.tsx`): 1) Memperlebar container popover (`min-w-[220px] w-max max-w-[260px]`), 2) Menambahkan 'whitespace-nowrap' dan 'shrink-0' pada teks jumlah menu (misal: '3 Menu'), dan 3) Memastikan judul grup dan counter menu selalu tampil sejajar dalam satu baris horizontal tanpa terjadi pemisahan baris (newline).",
+    "details": [
+      "Inline Submenu Counter: Teks '3 Menu' kini selalu tampil sejajar dan rapi dalam satu baris.",
+      "Optimized Container Width: Flyout menu memiliki ruang horizontal yang memadai untuk judul dan indikator counter.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh bundle aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T08:42:00.000Z",
+    "category": "bug-fix",
+    "title": "Perbaikan Formatting Titik Poin, Proteksi Auto-Refresh Form, dan Fleksibilitas Input Angka Membership",
+    "description": "Menyelesaikan 3 permasalahan pada halaman Kelola Membership Admin (`AdminMembership.tsx`): 1) Mengoreksi tampilan teks saldo poin member yang terpotong/turun ke baris baru dengan menambahkan separator titik ribuan (misal: '10.200 Poin') dan 'whitespace-nowrap', 2) Mencegah polling otomatis di latar belakang menimpa (*wipe*) input konfigurasi nilai konversi poin saat admin sedang mengetik, dan 3) Memungkinkan seluruh input angka (nilai konversi, minimal tukar, maksimal diskon, poin aturan, jumlah koreksi manual) dihapus hingga kosong/null tanpa memaksa kembali ke angka 0/1 secara prematur.",
+    "details": [
+      "Thousand Separator & No-Wrap: Saldo poin diformat rapi dengan titik ribuan dan tidak membungkus ke bawah.",
+      "Input Protection from SWR: Polling interval 8 detik tidak lagi me-reset form pengaturan poin yang sedang diedit.",
+      "Clean Empty Inputs: Input angka dapat dikosongkan sepenuhnya dengan Backspace tanpa bug terkunci.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh bundle aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T08:21:00.000Z",
     "category": "data-standardization",
     "title": "Standardisasi Lokasi Praktik Tunggal 'Aesthetic Pondok Indah' pada Seluruh Modul Jadwal & Dokter",

@@ -335,10 +335,10 @@ class MembershipService
     public function getAnalytics(): array
     {
         return [
-            'total_members' => User::whereIn('role', ['user', 'patient'])->count(),
-            'bronze_members' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'bronze')->count(),
-            'gold_members' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'gold')->where('membership_status', 'active')->count(),
-            'platinum_members' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'platinum')->where('membership_status', 'active')->count(),
+            'total_members' => User::where('role', 'patient')->count(),
+            'bronze_members' => User::where('role', 'patient')->where('membership_level', 'bronze')->count(),
+            'gold_members' => User::where('role', 'patient')->where('membership_level', 'gold')->where('membership_status', 'active')->count(),
+            'platinum_members' => User::where('role', 'patient')->where('membership_level', 'platinum')->where('membership_status', 'active')->count(),
             'total_points_issued' => MembershipPoint::earned()->sum('points'),
             'total_points_redeemed' => MembershipPoint::redeemed()->sum('points'),
             'total_revenue' => MembershipTransaction::completed()->sum('amount'),

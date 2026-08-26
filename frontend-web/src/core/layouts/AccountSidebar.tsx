@@ -314,7 +314,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
             {!expanded && helpDropdownOpen && (
               <div
                 className="
-                  absolute left-full top-0 ml-3.5 z-50 min-w-[210px]
+                  absolute left-full top-0 ml-3.5 z-50 min-w-[220px] w-max max-w-[260px]
                   bg-[#1a1612] backdrop-blur-md
                   border-2 border-[#C9A24A]/50 rounded-2xl
                   shadow-[0_12px_40px_rgba(0,0,0,0.6)]
@@ -324,11 +324,11 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
               >
                 <div className="absolute -left-[7px] top-6 -translate-y-1/2 w-3.5 h-3.5 bg-[#1a1612] border-l-2 border-b-2 border-[#C9A24A]/50 rotate-45 pointer-events-none" />
 
-                <div className="px-3 py-1.5 border-b border-[#C9A24A]/20 flex items-center justify-between mb-1">
-                  <span className="text-[11px] font-bold text-[#E8C547] uppercase tracking-wider">
+                <div className="px-3 py-1.5 border-b border-[#C9A24A]/20 flex items-center justify-between gap-3 mb-1">
+                  <span className="text-[11px] font-bold text-[#E8C547] uppercase tracking-wider whitespace-nowrap">
                     Bantuan & Pengaduan
                   </span>
-                  <span className="text-[10px] text-[#A89F91] font-medium">
+                  <span className="text-[10px] text-[#A89F91] font-semibold whitespace-nowrap shrink-0">
                     {helpSubMenus.length} Menu
                   </span>
                 </div>

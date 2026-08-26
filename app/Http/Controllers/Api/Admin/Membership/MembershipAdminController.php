@@ -27,7 +27,7 @@ class MembershipAdminController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = User::with(['membershipProfile']);
+        $query = User::with(['membershipProfile'])->where('role', 'patient');
 
         // Filter by membership level
         if ($request->has('level')) {
@@ -206,11 +206,11 @@ class MembershipAdminController extends Controller
         // Revenue by membership level
         $revenueByLevel = [
             'bronze' => 0,  // Gratis, tidak ada revenue langsung dari langganan
-            'gold' => User::whereIn('role', ['user', 'patient'])
+            'gold' => User::where('role', 'patient')
                 ->where('membership_level', 'gold')
                 ->where('membership_status', 'active')
                 ->sum('total_transactions'),
-            'platinum' => User::whereIn('role', ['user', 'patient'])
+            'platinum' => User::where('role', 'patient')
                 ->where('membership_level', 'platinum')
                 ->where('membership_status', 'active')
                 ->sum('total_transactions'),
@@ -231,9 +231,9 @@ class MembershipAdminController extends Controller
     public function levelDistribution(Request $request): JsonResponse
     {
         $distribution = [
-            'bronze' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'bronze')->count(),
-            'gold' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'gold')->count(),
-            'platinum' => User::whereIn('role', ['user', 'patient'])->where('membership_level', 'platinum')->count(),
+            'bronze' => User::where('role', 'patient')->where('membership_level', 'bronze')->count(),
+            'gold' => User::where('role', 'patient')->where('membership_level', 'gold')->count(),
+            'platinum' => User::where('role', 'patient')->where('membership_level', 'platinum')->count(),
         ];
 
         $total = array_sum($distribution);
