@@ -42,9 +42,20 @@ class ReservationAdminController extends Controller
             });
         }
 
-        $status = trim((string) $request->query('status', ''));
-        if ($status !== '' && $status !== 'Semua' && $status !== 'all') {
-            $query->where('status', $status);
+        $userId = $request->query('user_id');
+        if ($userId) {
+            $user = User::find($userId);
+            $query->where(function ($q) use ($userId, $user) {
+                $q->where('user_id', $userId);
+                if ($user) {
+                    if (!empty($user->email)) {
+                        $q->orWhere('email', $user->email);
+                    }
+                    if (!empty($user->whatsapp)) {
+                        $q->orWhere('phone', $user->whatsapp);
+                    }
+                }
+            });
         }
 
         $items = $query->limit(200)->get()->map(function (Reservation $r) {

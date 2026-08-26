@@ -4,9 +4,10 @@ import { Button } from "@/shared/ui/button";
 type Props = {
   users: any[];
   onSelect: (user: any) => void;
+  isSearching?: boolean;
 };
 
-export default function UserTable({ users, onSelect }: Props) {
+export default function UserTable({ users, onSelect, isSearching }: Props) {
   return (
     <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
       <Table>
@@ -23,7 +24,7 @@ export default function UserTable({ users, onSelect }: Props) {
           {users.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-8 text-xs text-[#8A7B6B]">
-                Belum ada data pengguna terdaftar.
+                {isSearching ? "Tidak ada pengguna dengan nama tersebut." : "Belum ada data pengguna terdaftar."}
               </TableCell>
             </TableRow>
           ) : (
@@ -44,11 +45,11 @@ export default function UserTable({ users, onSelect }: Props) {
                 </TableCell>
                 <TableCell>
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FDF8F0] text-[#B8943F] border border-[#F5E6C8]">
-                    {user.membership_tier || "Bronze"}
+                    {user.membership_tier || user.membership_level || "Bronze"}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button size="sm" variant="ghost" onClick={() => onSelect(user)} className="h-8 text-xs text-[#B8943F]">
+                  <Button size="sm" variant="ghost" onClick={() => onSelect(user)} className="h-8 text-xs text-[#B8943F] cursor-pointer hover:bg-amber-50">
                     Detail
                   </Button>
                 </TableCell>

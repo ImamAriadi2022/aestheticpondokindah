@@ -110,12 +110,13 @@ Route::prefix('auth')->group(function () {
 // 3. ADMIN CLINIC ROUTES
 // =========================================================================
 Route::prefix('admin')->group(function () {
-    Route::middleware(['auth:sanctum', 'role:clinic_admin'])->group(function () {
+    Route::middleware(['auth:sanctum', 'role:clinic_admin,admin,developer'])->group(function () {
         // Analytics
         Route::get('/analytics/summary', [AnalyticsAdminController::class, 'summary']);
 
         // User / Patient Management
         Route::get('/users', [UserController::class, 'index']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
         Route::put('/users/{user}', [UserController::class, 'update']);
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);

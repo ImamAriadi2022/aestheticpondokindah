@@ -107,12 +107,40 @@ export default function ClinicDashboardPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${API_BASE}/admin/users`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(Array.isArray(data) ? data : data?.data || []);
+      const data: any = await apiClient.get("/admin/users", { skipToast: true });
+      const list = Array.isArray(data) ? data : data?.data || data?.users || [];
+      if (Array.isArray(list) && list.length > 0) {
+        setUsers(list);
+      } else {
+        const authToken = token || localStorage.getItem("apident:token") || localStorage.getItem("auth_token");
+        const res = await fetch(`${API_BASE}/admin/users`, {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+        if (res.ok) {
+          const rawData = await res.json();
+          setUsers(Array.isArray(rawData) ? rawData : rawData?.data || []);
+        }
       }
-    } catch (e) { logger.error("Gagal memuat pengguna", e); }
+    } catch (e) {
+      try {
+        const authToken = token || localStorage.getItem("apident:token") || localStorage.getItem("auth_token");
+        const res = await fetch(`${API_BASE}/admin/users`, {
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+        });
+        if (res.ok) {
+          const rawData = await res.json();
+          setUsers(Array.isArray(rawData) ? rawData : rawData?.data || []);
+        }
+      } catch (err) {
+        logger.error("Gagal memuat pengguna", err);
+      }
+    }
   };
 
   const fetchApiDoctors = async () => {

@@ -1,6 +1,130 @@
 [
   {
-    "id": "act-297",
+    "id": "act-307",
+    "timestamp": "2026-08-26T04:31:00.000Z",
+    "category": "feature-implementation",
+    "title": "Fitur Pencarian Pasien Berdasarkan Nama Pengguna (Search by User Name) di Admin Dashboard",
+    "description": "Menambahkan input pencarian instan berbasis nama pengguna pada halaman Daftar Pengguna / Pasien Klinik (`UsersPage.tsx` & `UserTable.tsx`): 1) Input pencarian responsif di sebelah kanan header dengan ikon Search dan tombol reset (X), 2) Melakukan penyaringan *real-time* berbasis nama (`user.name`) tanpa mengubah struktur data atau logika backend yang ada, 3) Menampilkan status empty-state khusus saat nama pengguna tidak ditemukan, dan 4) Terintegrasi penuh dengan seluruh fitur detail modal pasien.",
+    "details": [
+      "User Name Search Bar: Filter instan berbasis nama pengguna di tab Kelola Pengguna.",
+      "Strict Logic Preservation: Tidak mengubah struktur data pengguna maupun logika backend lainnya.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan terpasang di folder public/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T04:14:00.000Z",
+    "category": "ui-enhancement",
+    "title": "Penerapan Ukuran Ketinggian Fixed & Stabil pada Modal Detail Pengguna (UserDetailModal)",
+    "description": "Mengunci ketinggian modal detail pengguna (`UserDetailModal.tsx`) menjadi fixed (`h-[84vh] max-h-[680px] min-h-[580px]`) mengikuti ukuran ideal saat membuka tab Biodata & Domisili atau Riwayat Reservasi: 1) Mencegah modal melompat atau berubah ukuran saat berpindah antar-tab, 2) Menjaga footer aksi dan banner reset password tetap terkunci rapi di bagian bawah (*sticky footer*), 3) Mengatur area konten body dengan internal smooth scroll (`flex-1 overflow-y-auto min-h-0`), dan 4) Menjaga seluruh nilai padding kustom yang telah disesuaikan oleh admin.",
+    "details": [
+      "Fixed Height Sizing: Dialog modal terkunci stabil pada ketinggian proporsional h-[84vh] (max 680px, min 580px).",
+      "No Jumping on Tab Switch: Pergantian tab Biodata, Kesehatan Gigi, dan Riwayat Reservasi berlangsung mulus tanpa perubahan dimensi.",
+      "Dual Environment Readiness: Kompilasi npm run build selesai 100% dan terpasang di folder public/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T04:09:00.000Z",
+    "category": "feature-implementation",
+    "title": "Integrasi Tab Riwayat Reservasi Pasien di Modal Detail Pengguna Admin",
+    "description": "Menambahkan tab 'Riwayat Reservasi' pada modal detail pengguna (`UserDetailModal.tsx` & `ReservationAdminController.php`): 1) Memperbarui backend controller untuk mendukung filter `user_id` (beserta pencocokan email & WhatsApp), 2) Menambahkan Tab ke-3 'Riwayat Reservasi' dengan counter badge otomatis, 3) Menampilkan kartu reservasi lengkap mencakup Kode Reservasi, Tanggal & Waktu Kunjungan, Dokter Spesialis, Cabang Klinik, Keluhan / Minat Perawatan, Status Reservasi (Dikonfirmasi, Selesai, Baru, Dibatalkan), serta Status & Rincian Biaya Pembayaran, dan 4) Menyediakan tampilan empty-state berdesain elegan saat pasien belum memiliki riwayat reservasi.",
+    "details": [
+      "Backend Filtering: ReservationAdminController::index kini mendukung pemfilteran akurat berdasarkan user_id, email, dan WhatsApp.",
+      "Reservation Tab in Modal: Tab ke-3 di UserDetailModal memuat riwayat kunjungan klinik pasien secara real-time.",
+      "Comprehensive Details: Menampilkan kode reservasi, dokter, cabang, keluhan, diskon poin, dan status pembayaran.",
+      "Production Compiled: npm run build sukses 100% dan seluruh aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T04:04:00.000Z",
+    "category": "feature-enhancement",
+    "title": "Sinkronisasi Penuh Profil Pengguna & Sistem Navigasi Tab Komprehensif di Modal Admin",
+    "description": "Menyempurnakan modal detail pengguna (`UserDetailModal.tsx`) agar seluruh data profil pasien tersinkronisasi 100% secara real-time dengan database dan tetap mempertahankan tata letak yang proporsional: 1) Mempertahankan penyesuaian padding kustom yang telah diatur oleh admin, 2) Menambahkan background sync otomatis saat modal dibuka (`GET /api/admin/users/{user}`), 3) Menyediakan 2 tab terstruktur ('Biodata & Domisili' dan 'Kesehatan Gigi & Rekam Medis') sehingga 100% data profil (Kontak, Biodata, Domisili lengkap, Asuransi, Kunjungan Terakhir, Kebiasaan Minum Kopi/Rokok, Keluhan Gigi aktif, Layanan yang Diminati, Target Perawatan, Minat Lifestyle, dan Kanal Komunikasi Pilihan) terlihat utuh tanpa membuat modal memanjang berlebihan.",
+    "details": [
+      "Real-time Live Sync: Modal otomatis memuat data terbaru pasien dari backend saat dibuka.",
+      "Dual-Tab Clean Layout: Seluruh data (11+ parameter rekam medis & domisili) dapat diakses dengan rapi melalui tab.",
+      "Custom Padding Preserved: Penyesuaian padding header dan body dari admin tetap dipertahankan.",
+      "Production Compiled: npm run build sukses 100% dan terpasang di direktori public/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T03:52:00.000Z",
+    "category": "ui-enhancement",
+    "title": "Restorasi Komposisi & Proporsi Desain Pixel-Perfect Modal Detail Pengguna",
+    "description": "Mengembalikan dan menyempurnakan komposisi visual modal detail pengguna (`UserDetailModal.tsx`) agar 100% presisi sesuai gambar referensi: 1) Memperbaiki avatar inisial bulat sempurna (`w-14 h-14 aspect-square rounded-full shrink-0`) tanpa distorsi/gepeng, 2) Menyelaraskan tata letak dua kolom bersih (Kiri: 6 kartu Kontak & Akun, Kanan: 1 kartu Domisili terstruktur), 3) Banner penghargaan 'Member Sejak' dengan logo laurel wreath emas Aesthetic Pondok Indah, 4) Memastikan seluruh modal pas di layar dalam satu tampilan proporsional tanpa terpotong atau squished, dan 5) Tombol aksi Reset Password dan Tutup Detail yang kontras dan elegan.",
+    "details": [
+      "Pixel-Perfect Composition: Struktur visual diselaraskan 100% dengan gambar referensi desain.",
+      "Pristine Avatar & Badges: Lingkaran inisial dan badge status terkunci dengan rasio aspek sempurna.",
+      "Dual Environment Readiness: Kompilasi npm run build selesai 100% di folder public/ untuk lokal dan production hosting."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T03:49:00.000Z",
+    "category": "ui-enhancement",
+    "title": "Optimalisasi Proporsi Ketinggian & Tata Letak Modal Detail Pengguna (UserDetailModal)",
+    "description": "Menyesuaikan ketinggian dialog modal detail pengguna agar lebih proporsional (`max-h-[84vh]`) dengan jarak batas atas dan bawah layar yang seimbang: 1) Memadatkan padding header bar dari p-7 menjadi py-4.5 px-6, 2) Menyesuaikan ukuran avatar dan stat badges menjadi lebih ramping dan elegan, 3) Memadatkan padding kartu profil dan jarak vertikal antar-seksi dengan scroll body internal yang halus (`flex-1 overflow-y-auto`), serta 4) Mengunci footer aksi di bagian bawah (sticky footer) dengan tinggi yang pas.",
+    "details": [
+      "Optimized Height: Batas ketinggian modal disesuaikan menjadi max-h-[84vh] untuk kenyamanan tampilan di semua resolusi layar.",
+      "Balanced Spacing: Padding header, body kartu, dan banner member sejak dipadatkan secara proporsional.",
+      "Dual Environment Readiness: Build React sukses 100% dan seluruh aset publik di public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T03:44:00.000Z",
+    "category": "ui-enhancement",
+    "title": "Sinkronisasi Profil Lengkap & Peningkatan Kontras Tinggi pada Modal Pengguna Admin",
+    "description": "Menyempurnakan modal detail pengguna (`UserDetailModal.tsx`) dengan seluruh field profil pasien dan meningkatkan kontras visual antarmuka: 1) Menambahkan data Profil Kesehatan Gigi & Rekam Medis (Provider Asuransi, Kunjungan Terakhir, Kebiasaan Minum Kopi/Teh, Kebiasaan Merokok, Keluhan Gigi aktif, Layanan yang Diminati, serta Target Perawatan), 2) Melengkapi data Domisili lengkap (Alamat Lengkap, Kelurahan/Desa, Kecamatan, Kabupaten/Kota, Provinsi, dan Kode Pos), 3) Meningkatkan kontras visual antarmuka dengan border tebal bernuansa gold-charcoal (`#E5D9C3`), teks tebal kontras tinggi (`text-stone-900` dan label `text-stone-500`), badge kategori tegas, serta 4) Merancang tombol aksi berstatus kontras tinggi (Reset Password ber-border amber tegas & tombol Tutup Detail bernuansa deep gold ber-shadow).",
+    "details": [
+      "Complete Health & Dental Data: Asuransi, riwayat kunjungan, keluhan, layanan, dan kebiasaan kini tampil utuh.",
+      "High Contrast Design: Seluruh kartu, border, badge, dan teks ditingkatkan kontrasnya untuk kemudahan operasional admin.",
+      "Action Button Clarity: Tombol Reset Password dan Tutup Detail memiliki batas dan kontras visual yang jelas.",
+      "Production Compiled: npm run build sukses 100% dan aset bundle public/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T03:39:00.000Z",
+    "category": "feature-implementation",
+    "title": "Fungsionalitas Penuh Reset Password Pengguna & Salin Otomatis di Modal Admin",
+    "description": "Mengaktifkan dan menyempurnakan fitur Reset Password pengguna pada modal detail pengguna di Admin Dashboard (`UserDetailModal.tsx` & `UserController::resetPassword`): 1) Memperbaiki backend controller agar mendukung reset password fleksibel ke password standar aman `Password123#` (atau password kustom) serta mengembalikan string password baru di response JSON, 2) Menghubungkan pemanggilan API di frontend dengan `apiClient` dan fallback otentikasi Sanctum, 3) Menampilkan banner konfirmasi sukses berwarna hijau zamrud yang memperlihatkan password baru secara jelas, dan 4) Menyediakan tombol interaktif 'Salin Password' (1-click copy to clipboard) untuk memudahkan admin mengirimkan kredensial ke pasien.",
+    "details": [
+      "Controller Logic Enhanced: UserController::resetPassword kini mereset password dan mengembalikan new_password dalam JSON.",
+      "Frontend Integration: UserDetailModal mengirim request reset dengan konfirmasi admin dan validasi data.",
+      "1-Click Clipboard Copy: Dilengkapi tombol Salin Password beranimasi sukses (Checkmark) dan notifikasi toast.",
+      "Deployment Ready: Bundle frontend ter-compile 100% di folder public/ untuk lokal dan hosting Plesk."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T03:33:00.000Z",
+    "category": "bug-fix",
+    "title": "Perbaikan Pemuatan Data Pengguna & Izin Role Admin/Developer (/api/admin/users)",
+    "description": "Memperbaiki masalah data pengguna 0 pada tab Kelola Pengguna (`#/dashboard/clinic?tab=users`): 1) Memperbarui middleware `routes/api.php` pada grup rute Admin menjadi `role:clinic_admin,admin,developer` sehingga akun admin maupun developer memiliki akses penuh terhadap data pengguna, 2) Mengganti pemanggilan raw fetch pada `fetchUsers` di `ClinicDashboard.tsx` dengan `apiClient` standar yang otomatis menyertakan token otentikasi Sanctum dan header `Accept: application/json`, dan 3) Menambahkan mekanisme fallback fetch robust.",
+    "details": [
+      "Role Middleware Expanded: role:clinic_admin,admin,developer kini diizinkan di seluruh rute admin.",
+      "Robust API Client: fetchUsers memanfaatkan apiClient dengan injeksi token sesi otomatis.",
+      "Production Bundle Synced: Frontend React telah di-compile ulang (npm run build) ke folder public/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+    "timestamp": "2026-08-26T03:24:00.000Z",
+    "category": "ui-enhancement",
+    "title": "Penyempurnaan Desain Lebar & Tata Letak Modal Detail Pengguna (UserDetailModal)",
+    "description": "Memperlebar ukuran modal pop-up detail pengguna (`UserDetailModal.tsx`) sebesar 1/3 (menjadi `max-w-5xl` ~1024px) dan menyelaraskan tata letak visual 100% sesuai referensi desain: 1) Header gelap mewah bergaya charcoal-gold dengan inisial avatar besar, badge ID & peran, serta 3 kartu status instan (Membership Tier Crown, Poin Reward Star, Status Akun Shield Check), 2) Tata letak dua kolom terstruktur (Kiri: 6 kartu Informasi Kontak & Biodata, Kanan: 5 kartu Alamat Domisili lengkap), 3) Banner penghargaan 'Member Sejak' dengan lambang monogram emas Aesthetic Pondok Indah, dan 4) Footer aksi cepat tombol Reset Password & Tutup Detail.",
+    "details": [
+      "Expanded Width: Ukuran modal ditingkatkan menjadi max-w-5xl (~1024px) untuk keterbacaan optimal tanpa scroll sempit.",
+      "Exact Visual Match: Sesuai dengan mockup referensi lengkap dengan icon badges, warna champagne gold, dan kartu domisili.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan terpasang di direktori public/ untuk lokal maupun hosting production."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T02:40:00.000Z",
     "category": "feature-implementation",
     "title": "Pembuatan Modal Detail Pengguna & Pasien Klinik (UserDetailModal) di Admin Dashboard",

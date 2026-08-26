@@ -302,8 +302,8 @@ class UserController extends Controller
 
     public function show(string $id)
     {
-        $user = User::findOrFail($id);
-        return response()->json($user);
+        $user = User::with(['profile', 'membershipProfile'])->findOrFail($id);
+        return response()->json($this->serialize($user));
     }
 
     public function update(Request $request, User $user): JsonResponse
@@ -551,18 +551,21 @@ class UserController extends Controller
 
     public function resetPassword(Request $request, User $user): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'password' => 'required|string|min:6',
-        ]);
+        $newPassword = $request->filled('password')
+            ? $request->string('password')->toString()
+            : 'Password123#';
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        if (strlen($newPassword) < 6) {
+            return response()->json(['message' => 'Password minimal harus 6 karakter.'], 422);
         }
 
-        $user->password = Hash::make($request->string('password')->toString());
+        $user->password = Hash::make($newPassword);
         $user->save();
 
-        return response()->json(['message' => 'Password berhasil direset']);
+        return response()->json([
+            'message' => 'Password berhasil direset',
+            'new_password' => $newPassword,
+        ]);
     }
 
     public function showProfile(Request $request): JsonResponse
