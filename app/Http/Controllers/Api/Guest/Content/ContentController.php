@@ -173,7 +173,9 @@ class ContentController extends Controller
     {
         $now = now();
         $promos = Promo::query()
-            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->where('is_active', true)->orWhere('is_active', 1)->orWhereNull('is_active');
+            })
             ->where(function ($q) use ($now) {
                 $q->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
             })
@@ -186,14 +188,22 @@ class ContentController extends Controller
             ->map(fn (Promo $p) => [
                 'id' => (string) $p->id,
                 'title' => $p->title,
-                'slug' => $p->slug,
+                'slug' => $p->slug ?: \Illuminate\Support\Str::slug($p->title ?: 'promo-' . $p->id),
+                'headline' => $p->headline,
                 'description' => $p->description,
+                'discount_text' => $p->discount_text,
                 'category' => $p->category,
+                'target_tier' => $p->target_tier,
                 'image_url' => $this->formatMediaUrl($p->image_path),
+                'image_path' => $p->image_path,
                 'button_label' => $p->button_label,
                 'contact_whatsapp' => $p->contact_whatsapp,
+                'is_active' => (bool) ($p->is_active ?? true),
                 'starts_at' => optional($p->starts_at)->toISOString(),
                 'ends_at' => optional($p->ends_at)->toISOString(),
+                'sort_order' => (int) $p->sort_order,
+                'created_at' => optional($p->created_at)->toISOString(),
+                'updated_at' => optional($p->updated_at)->toISOString(),
             ])
             ->values();
 
@@ -238,22 +248,38 @@ class ContentController extends Controller
     public function promoBySlug(string $slug): JsonResponse
     {
         $p = Promo::query()
-            ->where('is_active', true)
-            ->where('slug', $slug)
-            ->firstOrFail();
+            ->where(function ($q) use ($slug) {
+                $q->where('slug', $slug)->orWhere('id', $slug);
+            })
+            ->first();
+
+        if (!$p) {
+            $all = Promo::all();
+            $p = $all->first(fn ($item) => \Illuminate\Support\Str::slug($item->title) === $slug);
+            if (!$p) {
+                return response()->json(['error' => 'Promo tidak ditemukan'], 404);
+            }
+        }
 
         return response()->json([
             'id' => (string) $p->id,
             'title' => $p->title,
-            'slug' => $p->slug,
+            'slug' => $p->slug ?: \Illuminate\Support\Str::slug($p->title ?: 'promo-' . $p->id),
+            'headline' => $p->headline,
             'description' => $p->description,
+            'discount_text' => $p->discount_text,
             'content_html' => $p->content_html,
             'category' => $p->category,
+            'target_tier' => $p->target_tier,
             'image_url' => $this->formatMediaUrl($p->image_path),
+            'image_path' => $p->image_path,
             'button_label' => $p->button_label,
             'contact_whatsapp' => $p->contact_whatsapp,
+            'is_active' => (bool) ($p->is_active ?? true),
             'starts_at' => optional($p->starts_at)->toISOString(),
             'ends_at' => optional($p->ends_at)->toISOString(),
+            'created_at' => optional($p->created_at)->toISOString(),
+            'updated_at' => optional($p->updated_at)->toISOString(),
         ]);
     }
 }

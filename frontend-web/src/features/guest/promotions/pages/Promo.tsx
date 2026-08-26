@@ -7,17 +7,47 @@ import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
 import { updateMetaTags, resetMetaTags } from "@/features/guest/seo/services/metaTags";
 
 export default function PromoPage() {
-  const [promos, setPromos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [promos, setPromos] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_public_promos");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(promos.length === 0);
 
   useEffect(() => {
-    fetch(`${API_BASE}/public/promos`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        setPromos(data || []);
+    const fetchPromos = async () => {
+      try {
+        let data: any = null;
+        try {
+          const res = await fetch(`${API_BASE}/promos`, { headers: { Accept: "application/json" } });
+          if (res.ok) data = await res.json();
+        } catch {}
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          try {
+            const res = await fetch(`${API_BASE}/public/promos`, { headers: { Accept: "application/json" } });
+            if (res.ok) data = await res.json();
+          } catch {}
+        }
+
+        const rawList = Array.isArray(data) ? data : data?.data || [];
+        if (Array.isArray(rawList) && rawList.length > 0) {
+          const activeList = rawList.filter((p: any) => p.is_active !== false && p.enabled !== false);
+          setPromos(activeList);
+          try {
+            localStorage.setItem("apig_cached_public_promos", JSON.stringify(activeList));
+          } catch {}
+        }
+      } catch (err) {
+        console.warn("Failed fetching promos", err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+    fetchPromos();
 
     updateMetaTags({
       title: "Promo Spesial Aesthetic Pondok Indah Dental Clinic",

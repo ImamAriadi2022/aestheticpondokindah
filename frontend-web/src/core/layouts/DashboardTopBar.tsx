@@ -18,12 +18,14 @@ import {
   LogOut,
   ChevronDown,
   FileText,
+  Check,
 } from "lucide-react";
 import {
   subscribeToPushNotifications,
   type PushNotificationPayload,
   markNotificationAsRead,
   clearNotificationHistory,
+  isNotificationRead,
 } from "@/core/services/pushNotificationService";
 import { getSession, clearSession } from "@/core/auth/services/session";
 import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
@@ -64,6 +66,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [filterTab, setFilterTab] = useState<"all" | "unread">("all");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -185,21 +188,70 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     return session?.name ? `${session.name} (Pasien Member)` : "Pasien Member";
   };
 
+  const checkIsRead = (item: PushNotificationPayload): boolean => {
+    if (item.isRead === true) return true;
+    return isNotificationRead(item);
+  };
+
+  const formatNotificationTime = (dateStr?: string): string => {
+    if (!dateStr) {
+      return new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }).replace(".", ":");
+    }
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return "Baru saja";
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+      const timeStr = date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }).replace(".", ":");
+
+      if (diffMins < 1) return `Baru saja (${timeStr})`;
+      if (diffMins < 60) return `${diffMins} mnt lalu (${timeStr})`;
+
+      const isToday =
+        date.getDate() === now.getDate() &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear();
+      if (isToday) return `Hari ini, ${timeStr}`;
+
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isYesterday =
+        date.getDate() === yesterday.getDate() &&
+        date.getMonth() === yesterday.getMonth() &&
+        date.getFullYear() === yesterday.getFullYear();
+      if (isYesterday) return `Kemarin, ${timeStr}`;
+
+      return `${date.toLocaleDateString("id-ID", { day: "numeric", month: "short" })}, ${timeStr}`;
+    } catch {
+      return "Baru saja";
+    }
+  };
+
   const fetchDatabaseNotifications = async () => {
     try {
       const res: any = await apiClient.get("/user/notifications", { skipToast: true });
       const list = res?.notifications || res?.data?.notifications || res?.data || (Array.isArray(res) ? res : []);
       if (Array.isArray(list) && list.length > 0) {
-        const mapped: PushNotificationPayload[] = list.map((item: any) => ({
-          id: String(item.id),
-          title: item.title || "🔔 Notifikasi Klinik",
-          message: item.body || item.message || "",
-          sender: item.type === "appointment" ? "Sistem Reservasi" : "Aesthetic Pondok Indah",
-          role: role === "clinic" ? "admin" : role === "doctor" ? "doctor" : "patient",
-          type: item.type || "general",
-          bookingCode: item.data?.code || item.data?.bookingCode,
-          url: item.data?.url || (role === "clinic" ? "/dashboard/clinic?tab=reservasi" : "/dashboard/user?tab=reservasi"),
-        }));
+        const mapped: PushNotificationPayload[] = list.map((item: any) => {
+          const isRead = !!(item.read_at || item.is_read);
+          const timeStamp = item.created_at || item.createdAt || item.timestamp || item.receivedAt || new Date().toISOString();
+          return {
+            id: String(item.id),
+            title: item.title || "🔔 Notifikasi Klinik",
+            message: item.body || item.message || "",
+            sender: item.type === "appointment" ? "Sistem Reservasi" : "Aesthetic Pondok Indah",
+            role: role === "clinic" ? "admin" : role === "doctor" ? "doctor" : "patient",
+            type: item.type || "general",
+            bookingCode: item.data?.code || item.data?.bookingCode,
+            url: item.data?.url || (role === "clinic" ? "/dashboard/clinic?tab=reservasi" : "/dashboard/user?tab=reservasi"),
+            receivedAt: timeStamp,
+            createdAt: timeStamp,
+            isRead: isRead,
+          };
+        });
 
         setNotifications((prev: PushNotificationPayload[]) => {
           const combined = [...mapped, ...prev.filter((p: PushNotificationPayload) => !mapped.some((m: PushNotificationPayload) => m.id === p.id))];
@@ -222,8 +274,16 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     fetchDatabaseNotifications();
 
     const unsubscribe = subscribeToPushNotifications((payload: PushNotificationPayload) => {
+      const timeStamp = payload.receivedAt || payload.createdAt || new Date().toISOString();
+      const enrichedPayload = {
+        ...payload,
+        receivedAt: timeStamp,
+        createdAt: timeStamp,
+        isRead: false,
+      };
+
       setNotifications((prev: PushNotificationPayload[]) => {
-        const updated = [payload, ...prev.filter((p: PushNotificationPayload) => p.id !== payload.id)];
+        const updated = [enrichedPayload, ...prev.filter((p: PushNotificationPayload) => p.id !== payload.id)];
         try {
           localStorage.setItem("apig_recent_push_notifications", JSON.stringify(updated.slice(0, 30)));
         } catch {}
@@ -277,9 +337,16 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   const handleMarkAllAsRead = async () => {
     setUnreadCount(0);
     localStorage.setItem("apig_push_unread_count", "0");
-    notifications.forEach((n: PushNotificationPayload) => {
-      if (n.id) markNotificationAsRead(`id_${n.id}`);
-      if (n.bookingCode) markNotificationAsRead(`code_${n.type || "gen"}_${n.bookingCode}`);
+    setNotifications((prev) => {
+      const updated = prev.map((n) => {
+        if (n.id) markNotificationAsRead(`id_${n.id}`);
+        if (n.bookingCode) markNotificationAsRead(`code_${n.type || "gen"}_${n.bookingCode}`);
+        return { ...n, isRead: true };
+      });
+      try {
+        localStorage.setItem("apig_recent_push_notifications", JSON.stringify(updated));
+      } catch {}
+      return updated;
     });
     try {
       await apiClient.post("/user/notifications/read-all", {}, { skipToast: true });
@@ -290,6 +357,18 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     setIsDropdownOpen(false);
     if (item.id) markNotificationAsRead(`id_${item.id}`);
     if (item.bookingCode) markNotificationAsRead(`code_${item.type || "gen"}_${item.bookingCode}`);
+
+    setNotifications((prev) => {
+      const updated = prev.map((n) =>
+        (n.id && n.id === item.id) || (n.bookingCode && n.bookingCode === item.bookingCode)
+          ? { ...n, isRead: true }
+          : n
+      );
+      try {
+        localStorage.setItem("apig_recent_push_notifications", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
 
     if (item.id) {
       try {
@@ -311,6 +390,11 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       navigate("/dashboard/user?tab=reservasi");
     }
   };
+
+  const displayedNotifications =
+    filterTab === "unread"
+      ? notifications.filter((n) => !checkIsRead(n))
+      : notifications;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
@@ -354,17 +438,18 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
           {/* Notification Dropdown Panel */}
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-[#E8DFC8] rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-150 text-left">
+              {/* Header */}
               <div className="px-4 py-3 bg-[#FAF8F5] border-b border-[#E8DFC8] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Bell className="w-4 h-4 text-[#8C6B1C]" />
                   <span className="text-xs font-bold text-[#2C2416]">Notifikasi Masuk</span>
                   {unreadCount > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-md bg-[#8C6B1C] text-white text-[9px] font-bold">
+                    <span className="px-1.5 py-0.5 rounded-md bg-[#8C6B1C] text-white text-[9px] font-bold">
                       {unreadCount} baru
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
                     <button
                       type="button"
@@ -378,7 +463,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                     <button
                       type="button"
                       onClick={handleClearAll}
-                      className="text-[10px] text-rose-600 hover:text-rose-700 font-semibold cursor-pointer ml-1"
+                      className="text-[10px] text-rose-600 hover:text-rose-700 font-semibold cursor-pointer"
                     >
                       Hapus
                     </button>
@@ -386,39 +471,119 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                 </div>
               </div>
 
-              <div className="max-h-80 overflow-y-auto divide-y divide-[#F0EAE1]">
-                {notifications.length === 0 ? (
+              {/* Filter Tabs: Semua vs Belum Dibaca */}
+              <div className="flex items-center border-b border-gray-100 bg-white px-3 py-1.5 gap-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setFilterTab("all")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    filterTab === "all"
+                      ? "bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  Semua ({notifications.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab("unread")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    filterTab === "unread"
+                      ? "bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  Belum Dibaca ({unreadCount})
+                </button>
+              </div>
+
+              {/* Notification List */}
+              <div className="max-h-84 overflow-y-auto divide-y divide-[#F0EAE1]">
+                {displayedNotifications.length === 0 ? (
                   <div className="py-8 text-center px-4 space-y-1">
                     <CheckCircle2 className="w-7 h-7 text-emerald-500 mx-auto stroke-1" />
-                    <p className="text-xs font-semibold text-[#2C2416]">Tidak Ada Notifikasi Baru</p>
-                    <p className="text-[10px] text-[#8C8272]">Semua notifikasi dan janji temu telah ditinjau.</p>
+                    <p className="text-xs font-semibold text-[#2C2416]">
+                      {filterTab === "unread" ? "Tidak Ada Notifikasi Belum Dibaca" : "Tidak Ada Notifikasi"}
+                    </p>
+                    <p className="text-[10px] text-[#8C8272]">
+                      {filterTab === "unread"
+                        ? "Semua notifikasi masuk telah Anda tandai sebagai dibaca."
+                        : "Semua notifikasi dan janji temu telah ditinjau."}
+                    </p>
                   </div>
                 ) : (
-                  notifications.map((item: PushNotificationPayload, idx: number) => (
-                    <div
-                      key={item.id || idx}
-                      onClick={() => handleItemClick(item)}
-                      className="p-3.5 hover:bg-[#FAF8F5] transition-colors cursor-pointer space-y-1"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-[#8C6B1C] shrink-0" />
-                          <p className="text-xs font-bold text-[#2C2416] line-clamp-1">{item.title}</p>
+                  displayedNotifications.map((item: PushNotificationPayload, idx: number) => {
+                    const isRead = checkIsRead(item);
+                    const formattedTime = formatNotificationTime(item.receivedAt || item.createdAt);
+
+                    return (
+                      <div
+                        key={item.id || idx}
+                        onClick={() => handleItemClick(item)}
+                        className={`p-3.5 transition-colors cursor-pointer space-y-1.5 ${
+                          !isRead
+                            ? "bg-[#FAF7F0] hover:bg-[#F3EDE0] border-l-[3.5px] border-l-[#C9A24A]"
+                            : "bg-white hover:bg-gray-50/80 border-l-[3.5px] border-l-transparent opacity-85 hover:opacity-100"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {!isRead ? (
+                              <span className="w-2 h-2 rounded-full bg-[#C9A24A] shrink-0 shadow-2xs ring-2 ring-[#C9A24A]/25" />
+                            ) : (
+                              <span className="w-2 h-2 rounded-full bg-gray-300 shrink-0" />
+                            )}
+                            <p
+                              className={`text-xs truncate ${
+                                !isRead ? "font-bold text-[#2C2416]" : "font-medium text-gray-700"
+                              }`}
+                            >
+                              {item.title}
+                            </p>
+                          </div>
+
+                          {/* Time & Read Status Pill */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            {!isRead ? (
+                              <span className="text-[9px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-1.5 py-0.5 rounded border border-[#EADBBD]">
+                                {formattedTime}
+                              </span>
+                            ) : (
+                              <span className="text-[9px] text-gray-400 font-normal">
+                                {formattedTime}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className="text-[9px] text-[#8C8272] shrink-0">
-                          {(item as any).receivedAt ? new Date((item as any).receivedAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "Baru"}
-                        </span>
+
+                        <p
+                          className={`text-xs pl-3.5 line-clamp-2 leading-relaxed ${
+                            !isRead ? "text-[#5C5546]" : "text-gray-500"
+                          }`}
+                        >
+                          {item.message}
+                        </p>
+
+                        <div className="flex items-center justify-between pl-3.5 pt-0.5">
+                          {item.bookingCode ? (
+                            <span className="inline-block px-1.5 py-0.5 rounded bg-[#FAF5EA] border border-[#EADBBD] text-[9px] font-mono font-bold text-[#8C6B1C]">
+                              {item.bookingCode}
+                            </span>
+                          ) : <span />}
+
+                          {!isRead ? (
+                            <span className="text-[9px] font-bold text-[#8C6B1C] flex items-center gap-0.5">
+                              ● Belum Dibaca
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-gray-400 flex items-center gap-0.5">
+                              <Check className="w-3 h-3 text-emerald-500" /> Sudah Dibaca
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-xs text-[#5C5546] pl-3.5 line-clamp-2 leading-relaxed">{item.message}</p>
-                      {item.bookingCode && (
-                        <div className="pl-3.5 pt-0.5">
-                          <span className="inline-block px-1.5 py-0.5 rounded bg-[#FAF5EA] border border-[#EADBBD] text-[9px] font-mono font-bold text-[#8C6B1C]">
-                            {item.bookingCode}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -459,97 +624,89 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
           {/* Profile Dropdown Menu */}
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white border border-[#E8DFC8] rounded-2xl shadow-xl overflow-hidden z-50 animate-in fade-in-50 zoom-in-95 duration-150 text-left">
-              <div className="p-3.5 bg-gradient-to-br from-[#FAF8F5] to-[#F5EFE6] border-b border-[#E8DFC8] flex items-center gap-3">
-                {(session as any)?.avatar ? (
-                  <img
-                    src={(session as any).avatar.includes("storage/data:image") ? (session as any).avatar.substring((session as any).avatar.indexOf("data:image")) : (session as any).avatar}
-                    alt={session?.name || "User"}
-                    className="w-10 h-10 rounded-xl object-cover ring-2 ring-[#C9A24A]/40 shrink-0 shadow-xs"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#C9A24A] to-[#A8843A] flex items-center justify-center text-white font-bold text-sm shadow-xs shrink-0">
-                    {(session?.name || "A").charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-[#4A3F35] truncate">{session?.name || "Admin Klinik"}</p>
-                  <p className="text-[10px] text-[#8A7B6B] truncate">{session?.email || "admin@aestheticpondokindah.id"}</p>
-                  <span className="inline-block px-1.5 py-0.2 rounded bg-white text-[#8C6B1C] border border-[#EADBBD] text-[9px] font-bold mt-1">
-                    {role === "clinic" ? "Super Admin" : role === "doctor" ? "Dokter Spesialis" : "Member"}
-                  </span>
-                </div>
+            <div className="absolute right-0 mt-2 w-56 bg-white border border-[#E8DFC8] rounded-2xl shadow-xl py-1.5 z-50 animate-in fade-in-50 zoom-in-95 duration-150 text-left">
+              <div className="px-4 py-2.5 border-b border-[#F0EAE1]">
+                <p className="text-xs font-bold text-[#2C2416] truncate">{session?.name || "User"}</p>
+                <p className="text-[10px] text-[#8C8272] truncate">{session?.email || ""}</p>
               </div>
 
-              <div className="p-2 space-y-1 text-xs">
-                {role === "clinic" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      navigate("/dashboard/clinic?tab=settings");
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-bold text-[#8C6B1C] bg-[#FAF5EA] hover:bg-[#F3EAD8] border border-[#EADBBD] transition-all text-left cursor-pointer"
-                  >
-                    <FileText className="w-4 h-4 text-[#C9A24A] shrink-0" />
-                    <div>
-                      <p className="text-xs font-bold text-[#4A3F35]">Pengaturan Klinik</p>
-                      <p className="text-[9px] text-[#8A7B6B] font-normal">Kop Surat, Logo, Syarat & Perjanjian</p>
-                    </div>
-                  </button>
+              <div className="py-1">
+                {role === "clinic" ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/dashboard/clinic?tab=settings");
+                      }}
+                      className="w-full px-4 py-2 text-xs font-semibold text-[#4A3F35] hover:text-[#8C6B1C] hover:bg-[#FAF8F5] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                    >
+                      <Settings className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                      Pengaturan Klinik (Kop & S&K)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/settings");
+                      }}
+                      className="w-full px-4 py-2 text-xs font-semibold text-[#4A3F35] hover:text-[#8C6B1C] hover:bg-[#FAF8F5] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                    >
+                      <Bell className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                      Preferensi Notifikasi
+                    </button>
+                  </>
+                ) : role === "doctor" ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/dashboard/doctor?tab=settings");
+                      }}
+                      className="w-full px-4 py-2 text-xs font-semibold text-[#4A3F35] hover:text-[#8C6B1C] hover:bg-[#FAF8F5] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                    >
+                      <Settings className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                      Pengaturan Akun Dokter
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/profile");
+                      }}
+                      className="w-full px-4 py-2 text-xs font-semibold text-[#4A3F35] hover:text-[#8C6B1C] hover:bg-[#FAF8F5] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                    >
+                      <User className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                      Profil Pasien
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        navigate("/settings");
+                      }}
+                      className="w-full px-4 py-2 text-xs font-semibold text-[#4A3F35] hover:text-[#8C6B1C] hover:bg-[#FAF8F5] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
+                    >
+                      <Settings className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                      Pengaturan Akun & Keamanan
+                    </button>
+                  </>
                 )}
+              </div>
 
+              <div className="pt-1 border-t border-[#F0EAE1]">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    navigate("/profile");
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-700 hover:text-[#8C6B1C] hover:bg-[#FAF8F5] transition-colors text-left cursor-pointer"
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer text-left"
                 >
-                  <User className="w-4 h-4 text-gray-400 shrink-0" />
-                  <span>Detail Profil Akun</span>
+                  <LogOut className="w-3.5 h-3.5" />
+                  Keluar / Logout
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    navigate("/settings");
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-700 hover:text-[#8C6B1C] hover:bg-[#FAF8F5] transition-colors text-left cursor-pointer"
-                >
-                  <ShieldCheck className="w-4 h-4 text-gray-400 shrink-0" />
-                  <span>Keamanan & Password</span>
-                </button>
-
-                {role === "clinic" && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      navigate("/dashboard/clinic?tab=content-download");
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-gray-700 hover:text-[#8C6B1C] hover:bg-[#FAF8F5] transition-colors text-left cursor-pointer"
-                  >
-                    <Upload className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span>Upload & Rilis Aplikasi</span>
-                  </button>
-                )}
-
-                <div className="pt-1.5 border-t border-gray-100 mt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      handleLogout();
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-semibold transition-colors text-left cursor-pointer"
-                  >
-                    <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
-                    <span>Keluar Sesi</span>
-                  </button>
-                </div>
               </div>
             </div>
           )}

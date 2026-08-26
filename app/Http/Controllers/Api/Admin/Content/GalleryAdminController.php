@@ -52,8 +52,13 @@ class GalleryAdminController extends Controller
         return response()->json($this->serialize($item), 201);
     }
 
-    public function update(Request $request, GalleryItem $galleryItem): JsonResponse
+    public function update(Request $request, $galleryItem): JsonResponse
     {
+        $item = $galleryItem instanceof GalleryItem ? $galleryItem : GalleryItem::find($galleryItem);
+        if (!$item) {
+            return response()->json(['error' => 'Foto galeri tidak ditemukan'], 404);
+        }
+
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:255',
             'category' => 'nullable|string|max:255',
@@ -69,27 +74,33 @@ class GalleryAdminController extends Controller
 
         $data = $validator->validated();
 
-        if (array_key_exists('title', $data)) $galleryItem->title = $data['title'];
-        if (array_key_exists('category', $data)) $galleryItem->category = $data['category'];
-        if (array_key_exists('description', $data)) $galleryItem->description = $data['description'];
-        if (array_key_exists('sort_order', $data)) $galleryItem->sort_order = (int)$data['sort_order'];
-        if (array_key_exists('is_published', $data)) $galleryItem->is_published = (bool)$data['is_published'];
+        if (array_key_exists('title', $data)) $item->title = $data['title'];
+        if (array_key_exists('category', $data)) $item->category = $data['category'];
+        if (array_key_exists('description', $data)) $item->description = $data['description'];
+        if (array_key_exists('sort_order', $data)) $item->sort_order = (int)$data['sort_order'];
+        if (array_key_exists('is_published', $data)) $item->is_published = (bool)$data['is_published'];
 
         if ($request->hasFile('image')) {
-            if ($galleryItem->image_path) {
-                Storage::disk('public')->delete($galleryItem->image_path);
+            if ($item->image_path) {
+                Storage::disk('public')->delete($item->image_path);
             }
-            $galleryItem->image_path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'gallery', 1600, 1600, 82);
+            $item->image_path = \App\Services\Shared\Media\ImageOptimizationService::optimizeAndStore($request->file('image'), 'gallery', 1600, 1600, 82);
         }
 
-        $galleryItem->save();
-        return response()->json($this->serialize($galleryItem));
+        $item->save();
+        return response()->json($this->serialize($item));
     }
 
-    public function destroy(GalleryItem $galleryItem): JsonResponse
+    public function destroy($galleryItem): JsonResponse
     {
-        Storage::disk('public')->delete($galleryItem->image_path);
-        $galleryItem->delete();
+        $item = $galleryItem instanceof GalleryItem ? $galleryItem : GalleryItem::find($galleryItem);
+        if (!$item) {
+            return response()->json(['error' => 'Foto galeri tidak ditemukan'], 404);
+        }
+        if ($item->image_path) {
+            Storage::disk('public')->delete($item->image_path);
+        }
+        $item->delete();
         return response()->json(['ok' => true]);
     }
 

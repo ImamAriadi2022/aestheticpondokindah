@@ -31,6 +31,8 @@ export interface PdfTermsSettings {
   docTitle: string;
   docSubtitle: string;
   docVersion: string;
+  bodyHtml?: string; // Rich text editor content (TipTap/Word format)
+  baseFontSize?: string; // Base document font size (e.g. "9.5pt", "10pt", "11pt")
   sections: TermsSection[];
   footerNote: string;
 }
@@ -46,8 +48,71 @@ export interface PdfConsentSettings {
   docTitle: string;
   docSubtitle: string;
   docCode: string;
+  bodyHtml?: string; // Rich text editor content (TipTap/Word format)
+  baseFontSize?: string; // Base document font size (e.g. "9.5pt", "10pt", "11pt")
   clausuls: ConsentClausul[];
   closingStatement: string;
+}
+
+export const DEFAULT_TERMS_HTML = `
+<h3>1. Ketentuan Reservasi & Janji Temu</h3>
+<p>Permintaan reservasi yang diajukan secara daring akan diproses oleh staf admin dan dikonfirmasi melalui sistem notifikasi resmi dan WhatsApp. Pasien dimohon memberikan data kontak aktif untuk keperluan verifikasi jadwal.</p>
+
+<h3>2. Waktu Kedatangan & Keterlambatan</h3>
+<p>Pasien diharapkan hadir di klinik minimal <strong>10 menit sebelum waktu janji temu</strong>. Keterlambatan lebih dari 15 menit tanpa konfirmasi dapat menyebabkan penyesuaian urutan antrean demi kenyamanan pasien lain.</p>
+
+<h3>3. Kebijakan Pembatalan & Penjadwalan Ulang (Reschedule)</h3>
+<p>Pembatalan atau perubahan jadwal wajib diinformasikan selambat-lambatnya <strong>2 jam sebelum waktu kunjungan</strong> agar slot konsultasi dokter dapat dialihkan secara efisien.</p>
+
+<h3>4. Rekam Medis & Kerahasiaan Data</h3>
+<p>Seluruh data riwayat medis, foto rontgen gigi (panoramic/periapikal), dan identitas pasien tersimpan dalam sistem <strong>Rekam Medis Elektronik (EMR)</strong> berenkripsi dan dilindungi kerahasiaannya sesuai regulasi perundang-undangan kesehatan Republik Indonesia.</p>
+
+<h3>5. Pembayaran, Biaya & Kebijakan Transaksi</h3>
+<p>Biaya tindakan medis disesuaikan dengan jenis perawatan, tingkat kesulitan klinis, dan bahan medis yang disetujui pasien dalam rencana perawatan (<em>treatment plan</em>) sebelum tindakan medis dimulai. Pembayaran dapat dilakukan via tunai, debit, kartu kredit, transfer, maupun QRIS resmi klinik.</p>
+
+<h3>6. Garansi & Perawatan Pasca Tindakan</h3>
+<p>Klinik memberikan jaminan kualitas pengerjaan medis sesuai standar baku profesi kedokteran gigi dengan syarat pasien mematuhi anjuran kontrol pasca tindakan dan petunjuk perawatan di rumah.</p>
+`;
+
+export const DEFAULT_CONSENT_HTML = `
+<h3>Pasal 1: Penjelasan Rencana Tindakan Medis</h3>
+<p>Dokter gigi yang merawat telah memberikan penjelasan secara lengkap, jelas, dan transparan mengenai <strong>diagnosa klinis, tujuan perawatan, tata cara tindakan medis, manfaat, serta alternatif perawatan</strong> yang tersedia bagi pasien.</p>
+
+<h3>Pasal 2: Pemahaman Risiko & Respon Biologis</h3>
+<p>Pasien memahami dan menerima bahwa setiap tindakan medis kedokteran gigi memiliki risiko dan kemungkinan komplikasi wajar (seperti rasa ngilu sementara, pembengkakan ringan, atau penyesuaian gigitan) yang bergantung pada respon biologis jaringan tubuh dan anatomi gigi pasien.</p>
+
+<h3>Pasal 3: Persetujuan Tindakan Anestesi & Sedasi</h3>
+<p>Pasien menyetujui pemberian anestesi lokal, desensitisasi, atau obat-obatan pendukung yang dinilai perlu secara medis oleh dokter gigi untuk kelancaran dan kenyamanan prosedur tindakan.</p>
+
+<h3>Pasal 4: Komitmen Pasca Perawatan & Kontrol Evaluasi</h3>
+<p>Pasien berkomitmen untuk mematuhi seluruh petunjuk perawatan pasca tindakan (<em>post-treatment care</em>) serta menghadiri jadwal kontrol evaluasi medis yang telah ditetapkan demi hasil perawatan optimal.</p>
+
+<h3>Pasal 5: Pernyataan Kesadaran Penuh & Tanda Tangan Digital</h3>
+<p>Surat persetujuan tindakan medis ini disetujui dan ditandatangani secara sadar tanpa paksaan dari pihak manapun, serta disahkan melalui <strong>tanda tangan digital / persetujuan elektronik</strong> yang memiliki kekuatan hukum pembuktian resmi.</p>
+`;
+
+export function getTermsBodyHtml(terms: Partial<PdfTermsSettings> | null | undefined): string {
+  if (terms?.bodyHtml && terms.bodyHtml.trim().length > 0) {
+    return terms.bodyHtml;
+  }
+  if (terms?.sections && terms.sections.length > 0) {
+    return terms.sections
+      .map((s) => `<h3>${s.title}</h3><p>${s.content}</p>`)
+      .join("\n");
+  }
+  return DEFAULT_TERMS_HTML.trim();
+}
+
+export function getConsentBodyHtml(consent: Partial<PdfConsentSettings> | null | undefined): string {
+  if (consent?.bodyHtml && consent.bodyHtml.trim().length > 0) {
+    return consent.bodyHtml;
+  }
+  if (consent?.clausuls && consent.clausuls.length > 0) {
+    return consent.clausuls
+      .map((c) => `<h3>${c.title}</h3><p>${c.content}</p>`)
+      .join("\n");
+  }
+  return DEFAULT_CONSENT_HTML.trim();
 }
 
 // Default Fallback Configurations
@@ -74,6 +139,8 @@ export const DEFAULT_TERMS_SETTINGS: PdfTermsSettings = {
   docTitle: "SYARAT DAN KETENTUAN LAYANAN & PERAWATAN GIGI",
   docSubtitle: "Pedoman Resmi Pasien Aesthetic Pondok Indah Dental Clinic",
   docVersion: "Versi 2.4 - Berlaku Resmi Tahun 2026",
+  bodyHtml: DEFAULT_TERMS_HTML.trim(),
+  baseFontSize: "9.5pt",
   sections: [
     {
       id: "sec-1",
@@ -122,6 +189,8 @@ export const DEFAULT_CONSENT_SETTINGS: PdfConsentSettings = {
   docTitle: "SURAT PERSETUJUAN TINDAKAN KEDOKTERAN GIGI (INFORMED CONSENT)",
   docSubtitle: "Pernyataan Persetujuan Tindakan Medis & Prosedur Perawatan Pasien",
   docCode: "IC-APID-2026",
+  bodyHtml: DEFAULT_CONSENT_HTML.trim(),
+  baseFontSize: "9.5pt",
   clausuls: [
     {
       id: "clausul-1",

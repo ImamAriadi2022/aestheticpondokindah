@@ -13,6 +13,19 @@ class RegistrationController extends Controller
 {
     public function register(Request $request): JsonResponse
     {
+        $rawWa = trim((string) $request->input('whatsapp', ''));
+        $digits = preg_replace('/[^\d]/', '', $rawWa);
+        if (!empty($digits)) {
+            if (str_starts_with($digits, '62')) {
+                $normalizedWa = '+' . $digits;
+            } elseif (str_starts_with($digits, '0')) {
+                $normalizedWa = '+62' . substr($digits, 1);
+            } else {
+                $normalizedWa = '+62' . $digits;
+            }
+            $request->merge(['whatsapp' => $normalizedWa]);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255|unique:users,email',

@@ -37,11 +37,33 @@ class AuthController extends Controller
             return response()->json(['message' => 'Email atau nomor WhatsApp wajib diisi.'], 422);
         }
 
+        $variants = [$identifier];
+        $cleanPhone = preg_replace('/[^\d]/', '', $identifier);
+        if (!empty($cleanPhone)) {
+            if (str_starts_with($cleanPhone, '62')) {
+                $variants[] = '+' . $cleanPhone;
+                $variants[] = $cleanPhone;
+                $variants[] = '0' . substr($cleanPhone, 2);
+                $variants[] = substr($cleanPhone, 2);
+            } elseif (str_starts_with($cleanPhone, '0')) {
+                $variants[] = '+62' . substr($cleanPhone, 1);
+                $variants[] = '62' . substr($cleanPhone, 1);
+                $variants[] = $cleanPhone;
+                $variants[] = substr($cleanPhone, 1);
+            } else {
+                $variants[] = '+62' . $cleanPhone;
+                $variants[] = '62' . $cleanPhone;
+                $variants[] = '0' . $cleanPhone;
+                $variants[] = $cleanPhone;
+            }
+        }
+        $variants = array_unique(array_filter($variants));
+
         /** @var User|null $user */
         $user = User::query()
-            ->where(function ($q) use ($identifier) {
+            ->where(function ($q) use ($identifier, $variants) {
                 $q->where('email', $identifier)
-                  ->orWhere('whatsapp', $identifier);
+                  ->orWhereIn('whatsapp', $variants);
             })
             ->first();
 

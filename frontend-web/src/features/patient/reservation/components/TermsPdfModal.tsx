@@ -64,7 +64,7 @@ export default function TermsPdfModal({
     const w = customTerms?.kop?.logoWidth || 75;
     const h = customTerms?.kop?.logoHeight || 75;
 
-    const sectionsHtml = customTerms?.sections && customTerms.sections.length > 0
+    const sectionsHtml = customTerms?.bodyHtml || (customTerms?.sections && customTerms.sections.length > 0
       ? customTerms.sections.map((s: any) => `
           <div class="section-title">${s.title}</div>
           <p>${s.content}</p>
@@ -78,7 +78,7 @@ export default function TermsPdfModal({
           <p>Seluruh tindakan perawatan gigi dan estetik dilakukan oleh dokter gigi spesialis berizin praktik resmi.</p>
           <div class="section-title">4. Kebijakan Pembayaran & Garansi Layanan</div>
           <p>Biaya tindakan disesuaikan dengan jenis perawatan dan bahan medis yang disetujui pasien sebelum tindakan.</p>
-        `;
+        `);
 
     const printContent = `
       <!DOCTYPE html>
@@ -102,7 +102,7 @@ export default function TermsPdfModal({
               line-height: 1.5;
               margin: 0;
               padding: 0;
-              font-size: 9.5pt;
+              font-size: ${customTerms?.baseFontSize || "9.5pt"};
               background: #fff;
             }
             .kop-header {
@@ -267,65 +267,72 @@ export default function TermsPdfModal({
             </div>
 
             {/* Content Sections */}
-            <div className="space-y-4 text-xs sm:text-sm leading-relaxed text-[#3D332A]">
-              {/* Pasal 1 */}
-              <div className="space-y-1.5">
-                <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                  1. Ketentuan Umum & Pendaftaran Layanan
-                </h3>
-                <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                  <li>Seluruh reservasi konsultasi dan tindakan medis gigi di Aesthetic Pondok Indah Dental Clinic wajib didaftarkan melalui platform reservasi resmi klinik atau bagian resepsionis.</li>
-                  <li>Pasien atau wali sah wajib memberikan data identitas diri, nomor kontak aktif, serta riwayat medis yang akurat dan dapat dipertanggungjawabkan.</li>
-                  <li>Klinik berhak memverifikasi identitas pasien saat kedatangan untuk keperluan administrasi dan rekam medis elektronik.</li>
-                </ol>
-              </div>
+            {customTerms?.bodyHtml ? (
+              <div
+                className="wp-editor-content prose max-w-none text-xs sm:text-sm leading-relaxed text-[#3D332A]"
+                dangerouslySetInnerHTML={{ __html: customTerms.bodyHtml }}
+              />
+            ) : (
+              <div className="space-y-4 text-xs sm:text-sm leading-relaxed text-[#3D332A]">
+                {/* Pasal 1 */}
+                <div className="space-y-1.5">
+                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
+                    1. Ketentuan Umum & Pendaftaran Layanan
+                  </h3>
+                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
+                    <li>Seluruh reservasi konsultasi dan tindakan medis gigi di Aesthetic Pondok Indah Dental Clinic wajib didaftarkan melalui platform reservasi resmi klinik atau bagian resepsionis.</li>
+                    <li>Pasien atau wali sah wajib memberikan data identitas diri, nomor kontak aktif, serta riwayat medis yang akurat dan dapat dipertanggungjawabkan.</li>
+                    <li>Klinik berhak memverifikasi identitas pasien saat kedatangan untuk keperluan administrasi dan rekam medis elektronik.</li>
+                  </ol>
+                </div>
 
-              {/* Pasal 2 */}
-              <div className="space-y-1.5">
-                <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                  2. Ketentuan Penjadwalan, Kedatangan & Reschedule
-                </h3>
-                <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                  <li>Pasien diharapkan hadir di klinik minimal 15 (lima belas) menit sebelum estimasi jam tindakan untuk proses registrasi dan pengecekan awal.</li>
-                  <li>Keterlambatan lebih dari 20 menit dari waktu jadwal yang telah dikonfirmasi dapat mengakibatkan penyesuaian durasi perawatan atau penjadwalan ulang (*reschedule*) demi kenyamanan antrean pasien berikutnya.</li>
-                  <li>Permohonan perubahan jadwal (*reschedule*) dapat dilakukan maksimal 4 (empat) jam sebelum jadwal tindakan melalui sistem atau staf klinik.</li>
-                </ol>
-              </div>
+                {/* Pasal 2 */}
+                <div className="space-y-1.5">
+                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
+                    2. Ketentuan Penjadwalan, Kedatangan & Reschedule
+                  </h3>
+                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
+                    <li>Pasien diharapkan hadir di klinik minimal 15 (lima belas) menit sebelum estimasi jam tindakan untuk proses registrasi dan pengecekan awal.</li>
+                    <li>Keterlambatan lebih dari 20 menit dari waktu jadwal yang telah dikonfirmasi dapat mengakibatkan penyesuaian durasi perawatan atau penjadwalan ulang (*reschedule*) demi kenyamanan antrean pasien berikutnya.</li>
+                    <li>Permohonan perubahan jadwal (*reschedule*) dapat dilakukan maksimal 4 (empat) jam sebelum jadwal tindakan melalui sistem atau staf klinik.</li>
+                  </ol>
+                </div>
 
-              {/* Pasal 3 */}
-              <div className="space-y-1.5">
-                <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                  3. Tata Tertib & Prosedur Medis Klinik
-                </h3>
-                <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                  <li>Sebelum tindakan medis dilakukan, dokter gigi yang bertugas akan melakukan pemeriksaan klinis dan menjelaskan rencana perawatan, indikasi, serta estimasi biaya.</li>
-                  <li>Tindakan medis invasif, bedah minor, restorasi lanjutan, dan estetik memerlukan penandatanganan <strong>Surat Pernyataan dan Persetujuan Pasien (Informed Consent)</strong> yang sah.</li>
-                  <li>Pasien wajib mematuhi seluruh instruksi pra-tindakan dan pasca-tindakan yang diberikan oleh dokter gigi demi efektivitas dan keamanan hasil perawatan.</li>
-                </ol>
-              </div>
+                {/* Pasal 3 */}
+                <div className="space-y-1.5">
+                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
+                    3. Tata Tertib & Prosedur Medis Klinik
+                  </h3>
+                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
+                    <li>Sebelum tindakan medis dilakukan, dokter gigi yang bertugas akan melakukan pemeriksaan klinis dan menjelaskan rencana perawatan, indikasi, serta estimasi biaya.</li>
+                    <li>Tindakan medis invasif, bedah minor, restorasi lanjutan, dan estetik memerlukan penandatanganan <strong>Surat Pernyataan dan Persetujuan Pasien (Informed Consent)</strong> yang sah.</li>
+                    <li>Pasien wajib mematuhi seluruh instruksi pra-tindakan dan pasca-tindakan yang diberikan oleh dokter gigi demi efektivitas dan keamanan hasil perawatan.</li>
+                  </ol>
+                </div>
 
-              {/* Pasal 4 */}
-              <div className="space-y-1.5">
-                <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                  4. Kebijakan Pembayaran & Jaminan Layanan
-                </h3>
-                <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                  <li>Pembayaran tagihan tindakan dapat dilakukan secara tunai, kartu debit/kredit, transfer bank, maupun metode pembayaran digital resmi yang disediakan klinik.</li>
-                  <li>Setiap perawatan bergaransi (seperti pemasangan veneer porselen atau implan tertentu) tunduk pada syarat kontrol berkala sesuai rekomendasi dokter penanggung jawab.</li>
-                </ol>
-              </div>
+                {/* Pasal 4 */}
+                <div className="space-y-1.5">
+                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
+                    4. Kebijakan Pembayaran & Jaminan Layanan
+                  </h3>
+                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
+                    <li>Pembayaran tagihan tindakan dapat dilakukan secara tunai, kartu debit/kredit, transfer bank, maupun metode pembayaran digital resmi yang disediakan klinik.</li>
+                    <li>Setiap perawatan bergaransi (seperti pemasangan veneer porselen atau implan tertentu) tunduk pada syarat kontrol berkala sesuai rekomendasi dokter penanggung jawab.</li>
+                  </ol>
+                </div>
 
-              {/* Pasal 5 */}
-              <div className="space-y-1.5">
-                <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                  5. Kerahasiaan Data Pribadi & Rekam Medis
-                </h3>
-                <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                  <li>Aesthetic Pondok Indah menjamin kerahasiaan data pribadi dan rekam medis pasien sesuai dengan peraturan perundang-undangan kesehatan yang berlaku di Republik Indonesia.</li>
-                  <li>Dokumentasi klinis (foto gigi intraoral/ekstraoral dan rontgen panoramic) digunakan secara ketat untuk kepentingan diagnosis medis dan rekam jejak kesehatan gigi pasien.</li>
-                </ol>
+                {/* Pasal 5 */}
+                <div className="space-y-1.5">
+                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
+                    5. Kerahasiaan Data Pribadi & Rekam Medis
+                  </h3>
+                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
+                    <li>Aesthetic Pondok Indah menjamin kerahasiaan data pribadi dan rekam medis pasien sesuai dengan peraturan perundang-undangan kesehatan yang berlaku di Republik Indonesia.</li>
+                    <li>Dokumentasi klinis (foto gigi intraoral/ekstraoral dan rontgen panoramic) digunakan secara ketat untuk kepentingan diagnosis medis dan rekam jejak kesehatan gigi pasien.</li>
+                  </ol>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Certification Footer Note */}
             <div className="pt-4 border-t border-[#E8DFC8] text-center text-[11px] text-[#7A6E60] space-y-1">

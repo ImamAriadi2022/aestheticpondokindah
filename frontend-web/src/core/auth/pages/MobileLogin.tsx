@@ -47,10 +47,28 @@ export default function MobileLoginPage() {
     }
   }, [navigate, location]);
 
+  const normalizePhoneInput = (val: string) => {
+    let cleaned = val.replace(/[^\d]/g, "");
+    if (cleaned.startsWith("62")) {
+      cleaned = cleaned.slice(2);
+    } else if (cleaned.startsWith("0")) {
+      cleaned = cleaned.replace(/^0+/, "");
+    }
+    return cleaned;
+  };
+
+  const getFullPhone = (val: string) => {
+    const digits = normalizePhoneInput(val);
+    return digits ? `+62${digits}` : "";
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
     setIsLoading(true);
+
+    const isEmail = loginForm.whatsapp.includes("@");
+    const finalIdentifier = isEmail ? loginForm.whatsapp.trim() : getFullPhone(loginForm.whatsapp);
 
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
@@ -60,7 +78,8 @@ export default function MobileLoginPage() {
           "Accept": "application/json",
         },
         body: JSON.stringify({
-          whatsapp: loginForm.whatsapp,
+          whatsapp: finalIdentifier,
+          identifier: finalIdentifier,
           password: loginForm.password,
           device_name: "web_browser",
         }),
@@ -103,7 +122,7 @@ export default function MobileLoginPage() {
         body: JSON.stringify({
           name: registerForm.name,
           email: registerForm.email || null,
-          whatsapp: registerForm.whatsapp,
+          whatsapp: getFullPhone(registerForm.whatsapp),
           password: registerForm.password,
         }),
       });
@@ -234,16 +253,23 @@ export default function MobileLoginPage() {
             {/* WhatsApp Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                Email atau No. WhatsApp
+                No. WhatsApp / Email
               </label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
+              <div className="flex items-center w-full h-14 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#c9a24a]/30 focus-within:border-[#c9a24a] transition-all">
+                <div className="flex items-center gap-1 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
+                  <span className="text-base leading-none">🇮🇩</span>
+                  <span>+62</span>
+                </div>
+                <input
                   type="text"
-                  placeholder="Contoh: 08123456789"
+                  placeholder="857xxxxxxxx atau email"
                   value={loginForm.whatsapp}
-                  onChange={(e) => setLoginForm({ ...loginForm, whatsapp: e.target.value })}
-                  className="w-full h-14 pl-12 pr-4 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const clean = val.includes("@") ? val : normalizePhoneInput(val);
+                    setLoginForm({ ...loginForm, whatsapp: clean });
+                  }}
+                  className="w-full h-full px-3.5 text-base font-semibold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal"
                   required
                 />
               </div>
@@ -369,14 +395,18 @@ export default function MobileLoginPage() {
             {/* WhatsApp */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">No. WhatsApp</label>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
+              <div className="flex items-center w-full h-14 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#c9a24a]/30 focus-within:border-[#c9a24a] transition-all">
+                <div className="flex items-center gap-1 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
+                  <span className="text-base leading-none">🇮🇩</span>
+                  <span>+62</span>
+                </div>
+                <input
                   type="tel"
-                  placeholder="Contoh: 08123456789"
+                  inputMode="numeric"
+                  placeholder="857xxxxxxxx"
                   value={registerForm.whatsapp}
-                  onChange={(e) => setRegisterForm({ ...registerForm, whatsapp: e.target.value })}
-                  className="w-full h-14 pl-12 pr-4 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
+                  onChange={(e) => setRegisterForm({ ...registerForm, whatsapp: normalizePhoneInput(e.target.value) })}
+                  className="w-full h-full px-3.5 text-base font-semibold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal"
                   required
                 />
               </div>

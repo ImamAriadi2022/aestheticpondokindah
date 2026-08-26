@@ -5,8 +5,67 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
+import { Mark, mergeAttributes } from "@tiptap/core";
 import { API_BASE } from "@/core/api/apiConfig";
 import { logger } from "@/core/utils/logger";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    fontSize: {
+      setFontSize: (size: string) => ReturnType;
+      unsetFontSize: () => ReturnType;
+    };
+  }
+}
+
+// Custom FontSize Extension for TipTap
+export const FontSize = Mark.create({
+  name: "fontSize",
+
+  addAttributes() {
+    return {
+      size: {
+        default: null,
+        parseHTML: (element) => element.style.fontSize || null,
+        renderHTML: (attributes) => {
+          if (!attributes.size) {
+            return {};
+          }
+          return {
+            style: `font-size: ${attributes.size}`,
+          };
+        },
+      },
+    };
+  },
+
+  parseHTML() {
+    return [
+      {
+        style: "font-size",
+      },
+    ];
+  },
+
+  renderHTML({ HTMLAttributes }) {
+    return ["span", mergeAttributes(HTMLAttributes), 0];
+  },
+
+  addCommands() {
+    return {
+      setFontSize:
+        (size: string) =>
+        ({ chain }: any) => {
+          return chain().setMark(this.name, { size }).run();
+        },
+      unsetFontSize:
+        () =>
+        ({ chain }: any) => {
+          return chain().unsetMark(this.name).run();
+        },
+    };
+  },
+});
 
 type WpEditorProps = {
   value: string;
@@ -24,15 +83,36 @@ const HEADING_OPTIONS: { value: HeadingLevel; label: string }[] = [
   { value: 4, label: "Heading 4" },
 ];
 
+const FONT_SIZE_STEPS = ["9px", "10px", "11px", "12px", "13px", "14px", "16px", "18px", "20px", "24px", "28px", "32px", "36px"];
+
+const FONT_SIZE_OPTIONS = [
+  { value: "", label: "Ukuran Font" },
+  { value: "9px", label: "9px (Sangat Kecil)" },
+  { value: "10px", label: "10px (Kecil)" },
+  { value: "11px", label: "11px" },
+  { value: "12px", label: "12px (Standar Dokumen)" },
+  { value: "13px", label: "13px" },
+  { value: "14px", label: "14px (Normal / Body)" },
+  { value: "16px", label: "16px (Sedang)" },
+  { value: "18px", label: "18px (Besar)" },
+  { value: "20px", label: "20px (Subjudul)" },
+  { value: "24px", label: "24px (Judul H2)" },
+  { value: "28px", label: "28px (Judul H1)" },
+  { value: "32px", label: "32px (Sangat Besar)" },
+  { value: "36px", label: "36px (Jumbo)" },
+];
+
 export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [mode, setMode] = useState<"visual" | "code">("visual");
   const [codeValue, setCodeValue] = useState(value);
   const [uploading, setUploading] = useState(false);
   const [, setEditorTick] = useState(0);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
+      FontSize,
       Link.configure({
         openOnClick: false,
         autolink: true,
@@ -45,14 +125,14 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
         types: ["heading", "paragraph"],
       }),
       Placeholder.configure({
-        placeholder: "Mulai menulis...",
+        placeholder: "Mulai menulis isi dokumen atau pasal di sini...",
       }),
     ],
     content: value,
     editorProps: {
       attributes: {
         class:
-          "min-h-[320px] w-full rounded-sm border border-gray-200 bg-white p-4 text-sm text-gray-900 outline-none",
+          "min-h-[340px] w-full rounded-sm border border-gray-200 bg-white p-4 text-sm text-gray-900 outline-none leading-relaxed",
       },
     },
     onUpdate: ({ editor }) => {
@@ -101,25 +181,60 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
     }
   };
 
+  const getCurrentFontSize = (): string => {
+    if (!editor) return "";
+    const attrs = editor.getAttributes("fontSize");
+    return attrs?.size || "";
+  };
+
+  const applyFontSize = (size: string) => {
+    if (!editor) return;
+    if (!size) {
+      (editor.commands as any).unsetFontSize();
+    } else {
+      (editor.commands as any).setFontSize(size);
+    }
+  };
+
+  const stepFontSize = (direction: "up" | "down") => {
+    if (!editor) return;
+    const current = getCurrentFontSize() || "14px";
+    let index = FONT_SIZE_STEPS.indexOf(current);
+    if (index === -1) {
+      const num = parseInt(current, 10) || 14;
+      index = FONT_SIZE_STEPS.findIndex((s) => parseInt(s, 10) >= num);
+      if (index === -1) index = 5; // default 14px
+    }
+
+    if (direction === "up" && index < FONT_SIZE_STEPS.length - 1) {
+      applyFontSize(FONT_SIZE_STEPS[index + 1]);
+    } else if (direction === "down" && index > 0) {
+      applyFontSize(FONT_SIZE_STEPS[index - 1]);
+    }
+  };
+
   const ToolbarButton = ({
     active,
     disabled,
     onClick,
+    title,
     children,
   }: {
     active?: boolean;
     disabled?: boolean;
     onClick: () => void;
+    title?: string;
     children: React.ReactNode;
   }) => (
     <button
       type="button"
+      title={title}
       disabled={disabled}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={`px-2 py-1 rounded-sm text-xs border transition-colors ${
+      className={`px-2 py-1 rounded-sm text-xs border transition-colors cursor-pointer ${
         active
-          ? "bg-gray-900 text-white border-gray-900"
+          ? "bg-gray-900 text-white border-gray-900 font-bold"
           : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
@@ -129,10 +244,11 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
 
   return (
     <div className="rounded-sm border border-gray-200 bg-white">
-      <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 p-2">
+      {/* Main Toolbar */}
+      <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 p-2 bg-[#FAFAFA]">
         <button
           type="button"
-          className="px-3 py-1.5 rounded-sm text-xs border bg-white text-gray-700 border-gray-200 hover:bg-gray-50 font-semibold"
+          className="px-2.5 py-1 rounded-sm text-xs border bg-white text-gray-700 border-gray-200 hover:bg-gray-50 font-semibold cursor-pointer shadow-2xs"
           onClick={() => fileInputRef.current?.click()}
           disabled={mode === "code" || uploading}
         >
@@ -159,8 +275,8 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
               const res = await fetch(`${API_BASE}/admin/media`, {
                 method: "POST",
                 headers: {
-                  "Authorization": `Bearer ${token}`,
-                  "Accept": "application/json",
+                  Authorization: `Bearer ${token}`,
+                  Accept: "application/json",
                 },
                 body: formData,
               });
@@ -189,11 +305,11 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
           }}
         />
 
-        <div className="flex items-center gap-1 mr-2 ml-1">
+        <div className="flex items-center gap-1 mr-1 ml-1">
           <button
             type="button"
             onClick={() => setMode("visual")}
-            className={`px-2 py-1 rounded-sm text-xs border font-semibold ${
+            className={`px-2 py-1 rounded-sm text-xs border font-semibold cursor-pointer ${
               mode === "visual"
                 ? "bg-gray-900 text-white border-gray-900"
                 : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
@@ -204,7 +320,7 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
           <button
             type="button"
             onClick={() => setMode("code")}
-            className={`px-2 py-1 rounded-sm text-xs border font-semibold ${
+            className={`px-2 py-1 rounded-sm text-xs border font-semibold cursor-pointer ${
               mode === "code"
                 ? "bg-gray-900 text-white border-gray-900"
                 : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
@@ -216,26 +332,12 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
 
         <div className="w-px h-5 bg-gray-200 mx-1" />
 
-        <ToolbarButton
-          active={editor?.isActive("bold")}
-          disabled={!editor}
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-        >
-          B
-        </ToolbarButton>
-        <ToolbarButton
-          active={editor?.isActive("italic")}
-          disabled={!editor}
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-        >
-          I
-        </ToolbarButton>
+        {/* Heading Level Dropdown */}
         <select
           value={getCurrentHeading()}
           disabled={!editor || mode === "code"}
-          onMouseDown={(e) => e.preventDefault()}
           onChange={(e) => applyHeading(Number(e.target.value) as HeadingLevel)}
-          className="h-[26px] min-w-[108px] rounded-sm border border-gray-200 bg-white px-2 text-xs text-gray-700 outline-none hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-[28px] min-w-[105px] rounded border border-gray-300 bg-white px-2 text-xs font-semibold text-gray-800 outline-none hover:border-gray-400 focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-2xs"
           aria-label="Format heading"
         >
           {HEADING_OPTIONS.map((opt) => (
@@ -244,76 +346,165 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
             </option>
           ))}
         </select>
+
+        {/* Font Size Dropdown & Quick Scalers */}
+        <div className="flex items-center gap-1">
+          <select
+            value={getCurrentFontSize()}
+            disabled={!editor || mode === "code"}
+            onChange={(e) => applyFontSize(e.target.value)}
+            className="h-[28px] min-w-[130px] rounded border border-gray-300 bg-white px-2 text-xs font-semibold text-gray-800 outline-none hover:border-gray-400 focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-2xs"
+            aria-label="Pilih Ukuran Font"
+            title="Pilih besar kecil font teks yang dipilih"
+          >
+            {FONT_SIZE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+
+          <ToolbarButton
+            disabled={!editor || mode === "code"}
+            onClick={() => stepFontSize("down")}
+            title="Kecilkan Ukuran Font (A-)"
+          >
+            <span className="font-bold text-[10px]">A-</span>
+          </ToolbarButton>
+
+          <ToolbarButton
+            disabled={!editor || mode === "code"}
+            onClick={() => stepFontSize("up")}
+            title="Besarkan Ukuran Font (A+)"
+          >
+            <span className="font-bold text-[11px]">A+</span>
+          </ToolbarButton>
+
+          {getCurrentFontSize() && (
+            <ToolbarButton
+              disabled={!editor || mode === "code"}
+              onClick={() => applyFontSize("")}
+              title="Reset ke Ukuran Font Normal"
+            >
+              <span className="text-[10px] text-rose-600 font-bold">Reset</span>
+            </ToolbarButton>
+          )}
+        </div>
+
+        <div className="w-px h-5 bg-gray-200 mx-1" />
+
+        {/* Basic Text Formatting */}
+        <ToolbarButton
+          active={editor?.isActive("bold")}
+          disabled={!editor || mode === "code"}
+          onClick={() => editor?.chain().focus().toggleBold().run()}
+          title="Tebal (Bold)"
+        >
+          <span className="font-bold">B</span>
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor?.isActive("italic")}
+          disabled={!editor || mode === "code"}
+          onClick={() => editor?.chain().focus().toggleItalic().run()}
+          title="Miring (Italic)"
+        >
+          <span className="italic">I</span>
+        </ToolbarButton>
+        <ToolbarButton
+          active={editor?.isActive("strike")}
+          disabled={!editor || mode === "code"}
+          onClick={() => editor?.chain().focus().toggleStrike().run()}
+          title="Coret (Strikethrough)"
+        >
+          <span className="line-through">S</span>
+        </ToolbarButton>
+
+        {/* Lists & Quotes */}
         <ToolbarButton
           active={editor?.isActive("bulletList")}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().toggleBulletList().run()}
+          title="Daftar Poin (Bullet List)"
         >
           • List
         </ToolbarButton>
         <ToolbarButton
           active={editor?.isActive("orderedList")}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+          title="Daftar Nomor (Numbered List)"
         >
           1. List
         </ToolbarButton>
         <ToolbarButton
           active={editor?.isActive("blockquote")}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+          title="Kutipan (Blockquote)"
         >
           “ ”
         </ToolbarButton>
 
+        <div className="w-px h-5 bg-gray-200 mx-1" />
+
+        {/* Text Alignment */}
         <ToolbarButton
           active={editor?.isActive({ textAlign: "left" })}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().setTextAlign("left").run()}
+          title="Rata Kiri"
         >
           Left
         </ToolbarButton>
         <ToolbarButton
           active={editor?.isActive({ textAlign: "center" })}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().setTextAlign("center").run()}
+          title="Rata Tengah"
         >
           Center
         </ToolbarButton>
         <ToolbarButton
           active={editor?.isActive({ textAlign: "right" })}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().setTextAlign("right").run()}
+          title="Rata Kanan"
         >
           Right
         </ToolbarButton>
         <ToolbarButton
           active={editor?.isActive({ textAlign: "justify" })}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().setTextAlign("justify").run()}
+          title="Rata Kanan-Kiri (Justify)"
         >
           Justify
         </ToolbarButton>
+
         <ToolbarButton
           active={editor?.isActive("codeBlock")}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+          title="Blok Kode"
         >
-          {'</>'}
+          {"</>"}
         </ToolbarButton>
         <ToolbarButton
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().setHorizontalRule().run()}
+          title="Garis Pembatas Horizontal"
         >
           ─
         </ToolbarButton>
+
+        {/* Links */}
         <ToolbarButton
           active={editor?.isActive("link")}
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => {
             if (!editor) return;
             const previousUrl = editor.getAttributes("link").href as string | undefined;
-            const url = window.prompt("Masukkan URL", previousUrl || "https://");
+            const url = window.prompt("Masukkan URL Link:", previousUrl || "https://");
             if (url === null) return;
             if (url === "") {
               editor.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -321,31 +512,37 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
             }
             editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
           }}
+          title="Sisipkan Link"
         >
           Link
         </ToolbarButton>
         <ToolbarButton
-          disabled={!editor}
+          disabled={!editor || mode === "code"}
           onClick={() => editor?.chain().focus().unsetLink().run()}
+          title="Hapus Link"
         >
           Unlink
         </ToolbarButton>
 
         <div className="w-px h-5 bg-gray-200 mx-1" />
 
+        {/* History Undo / Redo */}
         <ToolbarButton
-          disabled={!editor || !editor.can().chain().focus().undo().run()}
+          disabled={!editor || mode === "code" || !editor.can().chain().focus().undo().run()}
           onClick={() => editor?.chain().focus().undo().run()}
+          title="Undo (Urungkan)"
         >
           Undo
         </ToolbarButton>
         <ToolbarButton
-          disabled={!editor || !editor.can().chain().focus().redo().run()}
+          disabled={!editor || mode === "code" || !editor.can().chain().focus().redo().run()}
           onClick={() => editor?.chain().focus().redo().run()}
+          title="Redo (Ulangi)"
         >
           Redo
         </ToolbarButton>
       </div>
+
       {mode === "visual" ? (
         <div className="wp-editor-content [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-sm [&_img]:border [&_img]:border-gray-200 [&_img]:my-3">
           <EditorContent editor={editor} />
@@ -358,7 +555,8 @@ export default function WpEditor({ value, onChange, postId }: WpEditorProps) {
             setCodeValue(html);
             onChange(html);
           }}
-          className="min-h-[320px] w-full rounded-sm border-t border-gray-200 bg-white p-4 text-sm text-gray-900 outline-none"
+          className="min-h-[340px] w-full rounded-sm border-t border-gray-200 bg-white p-4 text-xs font-mono text-gray-900 outline-none leading-relaxed"
+          placeholder="Tulis kode HTML langsung di sini..."
         />
       )}
     </div>

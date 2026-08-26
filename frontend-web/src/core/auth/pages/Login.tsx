@@ -86,6 +86,21 @@ export default function LoginPage() {
 
   const [error, setError] = useState<string | null>(null);
 
+  const normalizePhoneInput = (val: string) => {
+    let cleaned = val.replace(/[^\d]/g, "");
+    if (cleaned.startsWith("62")) {
+      cleaned = cleaned.slice(2);
+    } else if (cleaned.startsWith("0")) {
+      cleaned = cleaned.replace(/^0+/, "");
+    }
+    return cleaned;
+  };
+
+  const getFullPhone = (val: string) => {
+    const digits = normalizePhoneInput(val);
+    return digits ? `+62${digits}` : "";
+  };
+
   const onSubmit = (role: LoginRole) => async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -93,6 +108,8 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     const { identifier, password } = form[role];
+    const isPhoneLogin = role === "user" || role === "clinic" || role === "doctor";
+    const finalIdentifier = isPhoneLogin ? getFullPhone(identifier) : identifier;
 
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
@@ -102,7 +119,8 @@ export default function LoginPage() {
           "Accept": "application/json",
         },
         body: JSON.stringify({
-          whatsapp: identifier,
+          whatsapp: finalIdentifier,
+          identifier: finalIdentifier,
           password: password,
           device_name: "web_browser",
         }),
@@ -149,7 +167,7 @@ export default function LoginPage() {
         body: JSON.stringify({
           name: registerForm.name,
           email: registerForm.email || null,
-          whatsapp: registerForm.phone,
+          whatsapp: getFullPhone(registerForm.phone),
           password: registerForm.password,
           gender: registerForm.gender || null,
           blood_type: registerForm.bloodType || null,
@@ -196,17 +214,26 @@ export default function LoginPage() {
     return (
       <form className="mt-7 space-y-4" onSubmit={onSubmit(role)}>
         <div className="space-y-2">
-          <Label htmlFor={`${role}-identifier`}>{(isUser || isClinic || isDoctor) ? "Nomor WhatsApp" : "Alamat Email"}</Label>
-          <Input
-            id={`${role}-identifier`}
-            type={(isUser || isClinic || isDoctor) ? "tel" : "email"}
-            placeholder={(isUser || isClinic || isDoctor) ? "Contoh: +62812xxxxxx" : "Alamat Email"}
-            value={form[role].identifier}
-            onChange={(e) =>
-              setForm((prev) => ({ ...prev, [role]: { ...prev[role], identifier: e.target.value } }))
-            }
-            required
-          />
+          <Label htmlFor={`${role}-identifier`}>Nomor WhatsApp</Label>
+          <div className="relative flex items-center w-full rounded-xl border border-[#E8DFC8] bg-white focus-within:border-[#C9A24A] focus-within:ring-2 focus-within:ring-[#C9A24A]/20 transition-all overflow-hidden h-12 shadow-xs">
+            <div className="flex items-center gap-1.5 px-3.5 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
+              <span className="text-base leading-none">🇮🇩</span>
+              <span>+62</span>
+            </div>
+            <input
+              id={`${role}-identifier`}
+              type="tel"
+              inputMode="numeric"
+              placeholder="857xxxxxxxx"
+              value={form[role].identifier}
+              onChange={(e) => {
+                const clean = normalizePhoneInput(e.target.value);
+                setForm((prev) => ({ ...prev, [role]: { ...prev[role], identifier: clean } }));
+              }}
+              className="w-full h-full px-3.5 text-sm font-semibold text-[#2C2416] bg-transparent outline-none placeholder:text-[#A89F91] placeholder:font-normal font-body"
+              required
+            />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${role}-password`}>Password</Label>
@@ -296,13 +323,25 @@ export default function LoginPage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="register-phone">Nomor WhatsApp</Label>
-          <Input
-            id="register-phone"
-            placeholder="Contoh: +62812xxxxxx"
-            value={registerForm.phone}
-            onChange={(e) => setRegisterForm((p) => ({ ...p, phone: e.target.value }))}
-            required
-          />
+          <div className="relative flex items-center w-full rounded-xl border border-[#E8DFC8] bg-white focus-within:border-[#C9A24A] focus-within:ring-2 focus-within:ring-[#C9A24A]/20 transition-all overflow-hidden h-12 shadow-xs">
+            <div className="flex items-center gap-1.5 px-3.5 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
+              <span className="text-base leading-none">🇮🇩</span>
+              <span>+62</span>
+            </div>
+            <input
+              id="register-phone"
+              type="tel"
+              inputMode="numeric"
+              placeholder="857xxxxxxxx"
+              value={registerForm.phone}
+              onChange={(e) => {
+                const clean = normalizePhoneInput(e.target.value);
+                setRegisterForm((p) => ({ ...p, phone: clean }));
+              }}
+              className="w-full h-full px-3.5 text-sm font-semibold text-[#2C2416] bg-transparent outline-none placeholder:text-[#A89F91] placeholder:font-normal font-body"
+              required
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

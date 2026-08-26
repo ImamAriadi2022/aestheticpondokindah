@@ -439,7 +439,15 @@ export default function ServicesSection() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [promos, setPromos] = useState<PromoItem[]>([]);
+  // Promo state with instant local cache
+  const [promos, setPromos] = useState<PromoItem[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_public_promos");
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [loadingPromos, setLoadingPromos] = useState(false);
 
   // Dynamic Services with LocalStorage Cache
@@ -469,32 +477,56 @@ export default function ServicesSection() {
 
   // Fetch promos on mount
   useEffect(() => {
+    let isMounted = true;
     const fetchPromos = async () => {
-      setLoadingPromos(true);
+      setLoadingPromos(promos.length === 0);
       try {
-        const res = await fetch(`${API_BASE}/public/promos`, {
-          headers: { "Accept": "application/json" },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          // Filter only active promos and sort by newest
-          const activePromos = data
-            .filter((p: PromoItem) => p.is_active)
-            .sort((a: PromoItem, b: PromoItem) => {
-              const dateA = new Date(a.created_at || 0).getTime();
-              const dateB = new Date(b.created_at || 0).getTime();
+        let data: any = null;
+        try {
+          const res = await fetch(`${API_BASE}/promos`, {
+            headers: { Accept: "application/json" },
+          });
+          if (res.ok) {
+            data = await res.json();
+          }
+        } catch {}
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          try {
+            const res = await fetch(`${API_BASE}/public/promos`, {
+              headers: { Accept: "application/json" },
+            });
+            if (res.ok) {
+              data = await res.json();
+            }
+          } catch {}
+        }
+
+        const rawList = Array.isArray(data) ? data : data?.data || [];
+        if (isMounted && Array.isArray(rawList) && rawList.length > 0) {
+          const activePromos = rawList
+            .filter((p: any) => p.is_active !== false && p.enabled !== false)
+            .sort((a: any, b: any) => {
+              const dateA = new Date(a.created_at || a.starts_at || 0).getTime();
+              const dateB = new Date(b.created_at || b.starts_at || 0).getTime();
               return dateB - dateA;
             })
-            .slice(0, 3); // Take only 3 latest
+            .slice(0, 3);
           setPromos(activePromos);
+          try {
+            localStorage.setItem("apig_cached_public_promos", JSON.stringify(activePromos));
+          } catch {}
         }
       } catch (e) {
         logger.error("Gagal fetch promos", e);
       } finally {
-        setLoadingPromos(false);
+        if (isMounted) setLoadingPromos(false);
       }
     };
     fetchPromos();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const selectedService = useMemo(() => {
@@ -640,36 +672,53 @@ export default function ServicesSection() {
               {promos.map((promo) => (
                 <div
                   key={promo.id}
-                  className="group rounded-2xl bg-white border border-brand-gold/20 shadow-lg shadow-brand-gold/5 hover:shadow-xl hover:shadow-brand-gold/10 transition-all overflow-hidden"
+                  className="group rounded-2xl bg-white border border-brand-gold/20 shadow-lg shadow-brand-gold/5 hover:shadow-xl hover:shadow-brand-gold/10 transition-all overflow-hidden flex flex-col justify-between"
                 >
-                  <div className="aspect-[16/10] overflow-hidden bg-brand-cream">
-                    <img
-                      src={getStorageUrl(promo.image_url || promo.image_path) || "/dashboard/placeholder.webp"}
-                      alt={promo.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Percent className="w-4 h-4 text-brand-gold" />
-                      <span className="text-xs font-bold text-brand-gold uppercase tracking-wide">Promo</span>
+                  <Link to={`/promo/${(promo as any).slug || promo.id}`} className="block">
+                    <div className="aspect-[16/10] overflow-hidden bg-brand-cream relative">
+                      <img
+                        src={getStorageUrl(promo.image_url || promo.image_path) || "/dashboard/placeholder.webp"}
+                        alt={promo.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp";
+                        }}
+                      />
+                      {(promo as any).discount_text && (
+                        <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#C9A24A] text-white text-[11px] font-bold shadow-md">
+                          {(promo as any).discount_text}
+                        </span>
+                      )}
                     </div>
-                    <h3 className="text-lg font-bold text-brand-charcoal mb-2 line-clamp-1">
-                      {promo.title}
-                    </h3>
-                    <p className="text-sm text-brand-warm-gray font-body line-clamp-2 mb-4">
-                      {promo.description}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-brand-warm-gray">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>
-                        {promo.starts_at && promo.ends_at
-                          ? `${new Date(promo.starts_at).toLocaleDateString("id-ID")} - ${new Date(promo.ends_at).toLocaleDateString("id-ID")}`
-                          : "Periode terbatas"}
-                      </span>
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Percent className="w-4 h-4 text-brand-gold" />
+                        <span className="text-xs font-bold text-brand-gold uppercase tracking-wide">
+                          {(promo as any).category || "Promo Spesial"}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold text-brand-charcoal mb-2 line-clamp-1 group-hover:text-brand-gold transition-colors">
+                        {promo.title}
+                      </h3>
+                      <p className="text-sm text-brand-warm-gray font-body line-clamp-2 mb-4">
+                        {promo.description || (promo as any).headline || "-"}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-brand-warm-gray pt-2 border-t border-brand-gold/10">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-brand-gold" />
+                          <span>
+                            {promo.starts_at && promo.ends_at
+                              ? `${new Date(promo.starts_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })} - ${new Date(promo.ends_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}`
+                              : "Penawaran Terbatas"}
+                          </span>
+                        </div>
+                        <span className="text-brand-gold font-semibold flex items-center gap-1 text-[11px]">
+                          Klaim <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               ))}
             </div>

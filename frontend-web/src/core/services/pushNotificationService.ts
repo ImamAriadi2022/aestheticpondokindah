@@ -16,6 +16,9 @@ export interface PushNotificationPayload {
   dateStr?: string;
   timeStr?: string;
   url?: string;
+  receivedAt?: string;
+  createdAt?: string;
+  isRead?: boolean;
   onClick?: () => void;
 }
 
@@ -65,6 +68,13 @@ export function isNotificationAlreadyDelivered(key: string): boolean {
   return seen.has(key) || read.has(key);
 }
 
+export function isNotificationRead(payload: PushNotificationPayload): boolean {
+  if (payload.isRead) return true;
+  const key = generateNotificationKey(payload);
+  const read = getStoredKeys(READ_NOTIFS_KEY);
+  return read.has(key);
+}
+
 export function markNotificationAsDelivered(key: string) {
   const seen = getStoredKeys(SEEN_NOTIFS_KEY);
   seen.add(key);
@@ -91,6 +101,9 @@ export function clearNotificationHistory() {
  */
 export function playNotificationChime(type: "new_booking" | "confirmed" | "general" = "new_booking") {
   try {
+    if (typeof localStorage !== "undefined" && localStorage.getItem("apident:notifications_sound_enabled") === "false") {
+      return;
+    }
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return;
 
@@ -196,6 +209,23 @@ export function dispatchDeviceSystemNotification(payload: PushNotificationPayloa
     return;
   }
 
+  try {
+    if (typeof localStorage !== "undefined") {
+      if (localStorage.getItem("apident:notifications_enabled") === "false") {
+        return;
+      }
+      if (payload.type === "reservation_new" && localStorage.getItem("apident:notifications_booking_enabled") === "false") {
+        return;
+      }
+      if (payload.type === "consultation" && localStorage.getItem("apident:notifications_consultation_enabled") === "false") {
+        return;
+      }
+      if (payload.type === "complaint" && localStorage.getItem("apident:notifications_complaints_enabled") === "false") {
+        return;
+      }
+    }
+  } catch {}
+
   const targetUrl = payload.url || (
     payload.role === "doctor"
       ? "/#/dashboard/doctor?tab=reservasi"
@@ -264,6 +294,10 @@ export function dispatchDeviceSystemNotification(payload: PushNotificationPayloa
  * Trigger Realtime Push Notification (With Strict Spam Protection)
  */
 export function triggerPushNotification(payload: PushNotificationPayload) {
+  if (!payload.receivedAt) {
+    payload.receivedAt = new Date().toISOString();
+  }
+  payload.isRead = false;
   const notifKey = generateNotificationKey(payload);
 
   // 1. Anti-Spam Check: If already seen/read, DO NOT re-trigger!

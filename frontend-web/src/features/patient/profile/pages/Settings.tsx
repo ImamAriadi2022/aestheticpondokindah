@@ -20,39 +20,171 @@ import {
   AlertTriangle,
   CheckCircle2,
   BellOff,
+  Volume2,
+  CalendarCheck,
+  MessageSquare,
+  MessageCircleQuestion,
+  Check,
+  X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/shared/ui/dialog";
+import { playNotificationChime } from "@/core/services/pushNotificationService";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
 
-  // Browser notification permission state
+  // Browser notification state & preferences
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>("default");
+  const [notifEnabled, setNotifEnabled] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("apident:notifications_enabled") !== "false";
+    } catch {
+      return true;
+    }
+  });
+
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("apident:notifications_sound_enabled") !== "false";
+    } catch {
+      return true;
+    }
+  });
+
+  const [bookingNotif, setBookingNotif] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("apident:notifications_booking_enabled") !== "false";
+    } catch {
+      return true;
+    }
+  });
+
+  const [consultationNotif, setConsultationNotif] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("apident:notifications_consultation_enabled") !== "false";
+    } catch {
+      return true;
+    }
+  });
+
+  const [complaintNotif, setComplaintNotif] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("apident:notifications_complaints_enabled") !== "false";
+    } catch {
+      return true;
+    }
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
       setNotifPermission(Notification.permission);
+      if (Notification.permission === "denied") {
+        setNotifEnabled(false);
+      }
     }
   }, []);
 
-  const requestNotifPermission = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      const perm = await Notification.requestPermission();
-      setNotifPermission(perm);
-      if (perm === "granted") {
-        toast({
-          title: "Notifikasi Browser Diizinkan",
-          message: "Anda akan menerima notifikasi otomatis dari sistem klinik.",
-          variant: "info",
-        });
+  const handleToggleMasterNotification = async () => {
+    if (!notifEnabled) {
+      // Trying to enable notification
+      if (typeof window !== "undefined" && "Notification" in window) {
+        if (Notification.permission === "default") {
+          const perm = await Notification.requestPermission();
+          setNotifPermission(perm);
+          if (perm === "granted") {
+            setNotifEnabled(true);
+            localStorage.setItem("apident:notifications_enabled", "true");
+            playNotificationChime("new_booking");
+            toast({
+              title: "Notifikasi Browser Diizinkan",
+              message: "Notifikasi browser aktif. Anda akan menerima pemberitahuan otomatis saat ada aktivitas baru.",
+              variant: "success",
+            });
+          } else {
+            setNotifEnabled(false);
+            localStorage.setItem("apident:notifications_enabled", "false");
+            toast({
+              title: "Izin Notifikasi Ditolak",
+              message: "Izin notifikasi tidak diberikan oleh browser Anda.",
+              variant: "error",
+            });
+          }
+        } else if (Notification.permission === "denied") {
+          toast({
+            title: "Izin Browser Diblokir",
+            message: "Izin notifikasi saat ini diblokir di setelan browser. Klik ikon gembok di sebelah URL browser untuk mengizinkan.",
+            variant: "error",
+          });
+        } else {
+          // Already granted
+          setNotifEnabled(true);
+          localStorage.setItem("apident:notifications_enabled", "true");
+          playNotificationChime("new_booking");
+          toast({
+            title: "Notifikasi Diaktifkan",
+            message: "Pemberitahuan push browser berhasil diaktifkan.",
+            variant: "success",
+          });
+        }
       } else {
-        toast({
-          title: "Notifikasi Ditolak",
-          message: "Izin notifikasi ditolak oleh browser Anda.",
-          variant: "error",
-        });
+        setNotifEnabled(true);
+        localStorage.setItem("apident:notifications_enabled", "true");
       }
+    } else {
+      // Disabling notification
+      setNotifEnabled(false);
+      localStorage.setItem("apident:notifications_enabled", "false");
+      toast({
+        title: "Notifikasi Dinonaktifkan",
+        message: "Pemberitahuan notifikasi browser telah dimatikan.",
+        variant: "info",
+      });
     }
+  };
+
+  const handleToggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    localStorage.setItem("apident:notifications_sound_enabled", next ? "true" : "false");
+    if (next) {
+      playNotificationChime("confirmed");
+      toast({ title: "Suara Notifikasi Aktif", message: "Nada dering chime akan berbunyi saat notifikasi masuk.", variant: "info" });
+    } else {
+      toast({ title: "Suara Notifikasi Dinonaktifkan", message: "Notifikasi akan masuk tanpa nada dering.", variant: "info" });
+    }
+  };
+
+  const handleToggleBooking = () => {
+    const next = !bookingNotif;
+    setBookingNotif(next);
+    localStorage.setItem("apident:notifications_booking_enabled", next ? "true" : "false");
+    toast({
+      title: next ? "Notifikasi Reservasi Diizinkan" : "Notifikasi Reservasi Dimatikan",
+      message: next ? "Anda akan diberitahu saat ada booking reservasi baru masuk." : "Alert reservasi baru dinonaktifkan.",
+      variant: "info",
+    });
+  };
+
+  const handleToggleConsultation = () => {
+    const next = !consultationNotif;
+    setConsultationNotif(next);
+    localStorage.setItem("apident:notifications_consultation_enabled", next ? "true" : "false");
+    toast({
+      title: next ? "Notifikasi Konsultasi Diizinkan" : "Notifikasi Konsultasi Dimatikan",
+      message: next ? "Anda akan diberitahu saat ada pesan chat konsultasi baru." : "Alert pesan konsultasi dinonaktifkan.",
+      variant: "info",
+    });
+  };
+
+  const handleToggleComplaint = () => {
+    const next = !complaintNotif;
+    setComplaintNotif(next);
+    localStorage.setItem("apident:notifications_complaints_enabled", next ? "true" : "false");
+    toast({
+      title: next ? "Notifikasi Pengaduan Diizinkan" : "Notifikasi Pengaduan Dimatikan",
+      message: next ? "Anda akan diberitahu saat ada tiket masukan/keluhan baru." : "Alert pengaduan dinonaktifkan.",
+      variant: "info",
+    });
   };
 
   // Security Modals state
@@ -133,9 +265,11 @@ export default function SettingsPage() {
   const session = getSession();
   const sessionRole = (session?.role as any) || "user";
 
+  const isGrantedAndActive = notifEnabled && notifPermission === "granted";
+
   return (
     <DashboardLayout role={sessionRole}>
-      <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="w-full max-w-4xl mx-auto px-4 py-6 space-y-6 text-left">
         {/* Header */}
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -143,10 +277,10 @@ export default function SettingsPage() {
               <Settings className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {sessionRole === "clinic" ? "Preferensi Administrator" : "Preferensi"}
               </h1>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
                 {sessionRole === "clinic"
                   ? "Atur preferensi notifikasi browser dan pengingat operasional admin"
                   : "Kelola preferensi keamanan dan notifikasi akun Anda"}
@@ -177,7 +311,7 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
                   onClick={() => setChangePasswordOpen(true)}
                 >
                   Ubah
@@ -196,7 +330,7 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer"
                   onClick={() => setChangeEmailOpen(true)}
                 >
                   Ganti Email
@@ -215,7 +349,7 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50"
+                  className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 cursor-pointer"
                   onClick={handleLogoutAllDevices}
                 >
                   Logout Semua
@@ -227,44 +361,215 @@ export default function SettingsPage() {
 
         {/* Section 2: Notifikasi Website Browser */}
         <Card className="rounded-2xl border-gray-100 shadow-sm overflow-hidden">
-          <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-              <Bell className="w-4 h-4" />
+          <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-[#8C6B1C]">
+                <Bell className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-base">Notifikasi Browser Website</h3>
+                <p className="text-xs text-gray-500">Konfigurasi izin dan peringatan aktivitas sistem</p>
+              </div>
             </div>
-            <h3 className="font-bold text-gray-900 text-base">Notifikasi Browser Website</h3>
+
+            {/* Status Pill Badge */}
+            {isGrantedAndActive ? (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                Diizinkan / Aktif
+              </span>
+            ) : !notifEnabled ? (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200 shadow-2xs">
+                <BellOff className="w-3.5 h-3.5 text-gray-500" />
+                Tidak Diizinkan / Non-Aktif
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                Perlu Izin Browser
+              </span>
+            )}
           </div>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-amber-50/40 p-4 rounded-2xl border border-amber-100/60">
-              <div className="space-y-1">
+
+          <CardContent className="p-6 space-y-6">
+            {/* Master Push Toggle Card */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#FAF8F5] p-4 sm:p-5 rounded-2xl border border-[#E8DFC8]/80">
+              <div className="space-y-1 pr-2">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-gray-900">Notifikasi Push Browser</p>
-                  {notifPermission === "granted" ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Aktif
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                      <BellOff className="w-3 h-3" />
-                      Belum Diizinkan
-                    </span>
-                  )}
+                  <p className="text-sm font-bold text-[#2C2416]">Notifikasi Push Browser Utama</p>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#6B5E4F] leading-relaxed">
                   {sessionRole === "clinic"
-                    ? "Terima pemberitahuan push langsung di browser saat ada reservasi booking baru atau pesan konsultasi pasien masuk."
-                    : "Terima pemberitahuan konfirmasi reservasi, panggilan konsultasi, dan pengingat jadwal langsung di browser Anda."}
+                    ? "Terima pemberitahuan push langsung di layar komputer/browser saat ada reservasi booking baru, pesan chat konsultasi, atau pengaduan pasien."
+                    : "Terima pemberitahuan konfirmasi reservasi, panggilan konsultasi dokter, dan pengingat jadwal langsung di layar browser Anda."}
                 </p>
               </div>
 
-              {notifPermission !== "granted" && (
-                <Button
-                  onClick={requestNotifPermission}
-                  className="bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:opacity-90 text-white font-semibold rounded-xl text-xs px-4 h-10 shrink-0"
+              {/* Master Toggle Switch */}
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-xs font-bold text-[#4A3F35]">
+                  {notifEnabled ? "Aktif" : "Non-Aktif"}
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={notifEnabled}
+                  onClick={handleToggleMasterNotification}
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#8C6B1C] focus:ring-offset-2 ${
+                    notifEnabled ? "bg-[#8C6B1C]" : "bg-gray-300"
+                  }`}
+                  title={notifEnabled ? "Klik untuk menonaktifkan notifikasi" : "Klik untuk mengizinkan/mengaktifkan notifikasi"}
                 >
-                  Aktifkan Notifikasi Browser
-                </Button>
-              )}
+                  <span
+                    className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out flex items-center justify-center ${
+                      notifEnabled ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  >
+                    {notifEnabled ? (
+                      <Check className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                    ) : (
+                      <X className="w-3.5 h-3.5 text-gray-400" />
+                    )}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Granular Notification Channels (For Admin & Staff) */}
+            <div className="space-y-4 pt-1">
+              <h4 className="text-xs font-bold text-[#8C8272] uppercase tracking-wider">
+                Kategori Notifikasi Operasional:
+              </h4>
+
+              <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden bg-white">
+                {/* 1. Reservasi Booking */}
+                <div className="p-4 flex items-center justify-between gap-4 hover:bg-gray-50/60 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-amber-50 text-[#8C6B1C] flex items-center justify-center shrink-0">
+                      <CalendarCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs sm:text-sm font-bold text-gray-900">Reservasi Booking Pasien Baru</p>
+                      <p className="text-[11px] text-gray-500">Pemberitahuan instan saat ada permintaan janji temu baru diajukan oleh pasien</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    disabled={!notifEnabled}
+                    aria-checked={bookingNotif && notifEnabled}
+                    onClick={handleToggleBooking}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      bookingNotif && notifEnabled ? "bg-[#8C6B1C]" : "bg-gray-200"
+                    } ${!notifEnabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        bookingNotif && notifEnabled ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* 2. Pesan Chat Konsultasi */}
+                <div className="p-4 flex items-center justify-between gap-4 hover:bg-gray-50/60 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <MessageSquare className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs sm:text-sm font-bold text-gray-900">Pesan Chat & Konsultasi Online</p>
+                      <p className="text-[11px] text-gray-500">Pemberitahuan saat ada pesan konsultasi atau pertanyaan baru dari pasien</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    disabled={!notifEnabled}
+                    aria-checked={consultationNotif && notifEnabled}
+                    onClick={handleToggleConsultation}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      consultationNotif && notifEnabled ? "bg-[#8C6B1C]" : "bg-gray-200"
+                    } ${!notifEnabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        consultationNotif && notifEnabled ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* 3. Pengaduan & Masukan Pasien */}
+                {sessionRole === "clinic" && (
+                  <div className="p-4 flex items-center justify-between gap-4 hover:bg-gray-50/60 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                        <MessageCircleQuestion className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs sm:text-sm font-bold text-gray-900">Pengaduan & Masukan Pasien</p>
+                        <p className="text-[11px] text-gray-500">Pemberitahuan saat ada tiket keluhan atau saran baru yang masuk</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      disabled={!notifEnabled}
+                      aria-checked={complaintNotif && notifEnabled}
+                      onClick={handleToggleComplaint}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        complaintNotif && notifEnabled ? "bg-[#8C6B1C]" : "bg-gray-200"
+                      } ${!notifEnabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          complaintNotif && notifEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
+
+                {/* 4. Suara Nada Dering (Audio Chime) */}
+                <div className="p-4 flex items-center justify-between gap-4 hover:bg-gray-50/60 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Volume2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs sm:text-sm font-bold text-gray-900">Bunyi Suara Notifikasi (Audio Chime)</p>
+                        <button
+                          type="button"
+                          onClick={() => playNotificationChime("new_booking")}
+                          className="text-[10px] font-bold text-[#8C6B1C] hover:underline bg-[#FAF5EA] px-2 py-0.5 rounded-md border border-[#EADBBD] cursor-pointer"
+                          title="Putar contoh nada dering notifikasi"
+                        >
+                          Tes Suara
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-gray-500">Bunyikan nada dering halus saat pemberitahuan push masuk</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    disabled={!notifEnabled}
+                    aria-checked={soundEnabled && notifEnabled}
+                    onClick={handleToggleSound}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      soundEnabled && notifEnabled ? "bg-[#8C6B1C]" : "bg-gray-200"
+                    } ${!notifEnabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        soundEnabled && notifEnabled ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -318,7 +623,7 @@ export default function SettingsPage() {
               </div>
               <Button
                 variant="destructive"
-                className="rounded-xl px-5 h-10 bg-rose-600 hover:bg-rose-700 font-semibold text-xs text-white"
+                className="rounded-xl px-5 h-10 bg-rose-600 hover:bg-rose-700 font-semibold text-xs text-white cursor-pointer"
                 onClick={() => setDeleteAccountOpen(true)}
               >
                 Hapus Akun Saya
@@ -369,10 +674,10 @@ export default function SettingsPage() {
               />
             </div>
             <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setChangePasswordOpen(false)} className="rounded-xl">
+              <Button type="button" variant="outline" onClick={() => setChangePasswordOpen(false)} className="rounded-xl cursor-pointer">
                 Batal
               </Button>
-              <Button type="submit" className="bg-[#c9a24a] hover:bg-[#a8843a] text-white rounded-xl">
+              <Button type="submit" className="bg-[#c9a24a] hover:bg-[#a8843a] text-white rounded-xl cursor-pointer">
                 Simpan Password
               </Button>
             </DialogFooter>
@@ -402,10 +707,10 @@ export default function SettingsPage() {
               />
             </div>
             <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setChangeEmailOpen(false)} className="rounded-xl">
+              <Button type="button" variant="outline" onClick={() => setChangeEmailOpen(false)} className="rounded-xl cursor-pointer">
                 Batal
               </Button>
-              <Button type="submit" className="bg-[#c9a24a] hover:bg-[#a8843a] text-white rounded-xl">
+              <Button type="submit" className="bg-[#c9a24a] hover:bg-[#a8843a] text-white rounded-xl cursor-pointer">
                 Kirim Verifikasi
               </Button>
             </DialogFooter>
@@ -434,10 +739,10 @@ export default function SettingsPage() {
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleteAccountOpen(false)} className="rounded-xl">
+            <Button type="button" variant="outline" onClick={() => setDeleteAccountOpen(false)} className="rounded-xl cursor-pointer">
               Batal
             </Button>
-            <Button type="button" variant="destructive" onClick={handleDeleteAccount} className="rounded-xl text-white">
+            <Button type="button" variant="destructive" onClick={handleDeleteAccount} className="rounded-xl text-white cursor-pointer">
               Hapus Permanen
             </Button>
           </DialogFooter>

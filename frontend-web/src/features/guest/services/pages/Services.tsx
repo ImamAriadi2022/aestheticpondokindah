@@ -216,11 +216,6 @@ export default function ServicesPage() {
                           {service.category}
                         </div>
                       )}
-                      {service.price && (
-                        <div className="absolute bottom-3 right-3 bg-[#3D332A]/85 backdrop-blur-md px-2.5 py-1 rounded-lg text-[11px] font-bold text-white shadow-xs">
-                          {service.price}
-                        </div>
-                      )}
                     </div>
 
                     <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
@@ -427,20 +422,15 @@ export default function ServicesPage() {
                       </h3>
                     </DialogTitle>
 
-                    {/* Price & Duration Badges */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      {selectedService.price && (
-                        <span className="px-3 py-1 bg-[#FAF4E8] rounded-xl text-xs font-bold text-[#8A6B2B] border border-[#E8D4A2]/50">
-                          {selectedService.price}
-                        </span>
-                      )}
-                      {selectedService.duration && (
+                    {/* Duration Badge */}
+                    {selectedService.duration && (
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
                         <span className="px-3 py-1 bg-[#F5ECE0] rounded-xl text-xs font-semibold text-[#7A6E60] flex items-center gap-1">
                           <Clock className="w-3 h-3 text-[#B8943F]" />
                           {selectedService.duration}
                         </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     <div className="h-px bg-[#F0E6D3] my-4" />
 

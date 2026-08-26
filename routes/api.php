@@ -171,6 +171,13 @@ Route::prefix('admin')->group(function () {
         Route::put('/gallery-items/{galleryItem}', [GalleryAdminController::class, 'update']);
         Route::delete('/gallery-items/{galleryItem}', [GalleryAdminController::class, 'destroy']);
 
+        // Gallery aliases
+        Route::get('/gallery', [GalleryAdminController::class, 'index']);
+        Route::post('/gallery', [GalleryAdminController::class, 'store']);
+        Route::post('/gallery/{galleryItem}', [GalleryAdminController::class, 'update']);
+        Route::put('/gallery/{galleryItem}', [GalleryAdminController::class, 'update']);
+        Route::delete('/gallery/{galleryItem}', [GalleryAdminController::class, 'destroy']);
+
         Route::get('/testimonials', [TestimonialAdminController::class, 'index']);
         Route::post('/testimonials', [TestimonialAdminController::class, 'store']);
         Route::post('/testimonials/{testimonial}', [TestimonialAdminController::class, 'update']);
@@ -463,6 +470,8 @@ Route::prefix('public')->group(function () {
     Route::get('/testimonials', [ContentController::class, 'testimonials']);
     Route::get('/promos', [ContentController::class, 'promos']);
     Route::get('/promos/{slug}', [ContentController::class, 'promoBySlug']);
+    Route::get('/public/promos', [ContentController::class, 'promos']);
+    Route::get('/public/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
     Route::get('/doctors', [UserController::class, 'publicDoctors']);
     Route::get('/specializations', [UserController::class, 'specializations']);

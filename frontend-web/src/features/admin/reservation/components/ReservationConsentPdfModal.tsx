@@ -94,7 +94,7 @@ export default function ReservationConsentPdfModal({
     const w = customConsent?.kop?.logoWidth || 75;
     const h = customConsent?.kop?.logoHeight || 75;
 
-    const clausesHtml = customConsent?.clausuls && customConsent.clausuls.length > 0
+    const clausesHtml = customConsent?.bodyHtml || (customConsent?.clausuls && customConsent.clausuls.length > 0
       ? customConsent.clausuls.map((c: any) => `
           <div class="section-title">${c.title}</div>
           <p>${c.content}</p>
@@ -114,7 +114,7 @@ export default function ReservationConsentPdfModal({
 
           <div class="section-title">5. Pembayaran & Kebijakan Pembatalan</div>
           <p>Pembayaran biaya tindakan dapat dilakukan secara tunai, kartu debit/kredit, QRIS, atau transfer bank kasir klinik. Pembatalan sepihak saat hari H tanpa alasan darurat medis dapat memengaruhi kuota prioritas reservasi berikutnya.</p>
-        `;
+        `);
 
     const printContent = `
       <!DOCTYPE html>
@@ -138,7 +138,7 @@ export default function ReservationConsentPdfModal({
               line-height: 1.5;
               margin: 0;
               padding: 0;
-              font-size: 9.5pt;
+              font-size: ${customConsent?.baseFontSize || "9.5pt"};
               background: #fff;
             }
             .kop-header {
@@ -465,54 +465,63 @@ export default function ReservationConsentPdfModal({
               </div>
             )}
 
-            {/* Standard Legal Clauses */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-[#443E33] leading-relaxed">
-              <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                <h4 className="font-bold text-[#2C2416]">
-                  1. Ketentuan Kedatangan & Registrasi Pasien
-                </h4>
-                <p className="text-xs text-[#555]">
-                  Pasien diwajibkan hadir di klinik sekurang-kurangnya <strong>15 (lima belas) menit</strong> sebelum waktu jadwal reservasi yang telah disepakati untuk keperluan verifikasi identitas, registrasi ulang, dan anamnesis awal.
-                </p>
-              </div>
+            {/* Standard / Rich Legal Clauses */}
+            {customConsent?.bodyHtml ? (
+              <div
+                className="wp-editor-content prose max-w-none text-xs sm:text-sm text-[#443E33] leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: customConsent.bodyHtml }}
+              />
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-[#443E33] leading-relaxed">
+                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
+                    <h4 className="font-bold text-[#2C2416]">
+                      1. Ketentuan Kedatangan & Registrasi Pasien
+                    </h4>
+                    <p className="text-xs text-[#555]">
+                      Pasien diwajibkan hadir di klinik sekurang-kurangnya <strong>15 (lima belas) menit</strong> sebelum waktu jadwal reservasi yang telah disepakati untuk keperluan verifikasi identitas, registrasi ulang, dan anamnesis awal.
+                    </p>
+                  </div>
 
-              <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                <h4 className="font-bold text-[#2C2416]">
-                  2. Kebijakan Keterlambatan & Penjadwalan Ulang
-                </h4>
-                <p className="text-xs text-[#555]">
-                  Apabila pasien mengalami keterlambatan lebih dari 15 menit dari jadwal tanpa pemberitahuan, antrean dialihkan. Penjadwalan ulang (reschedule) bebas biaya dilakukan selambatnya <strong>1 x 24 jam</strong> sebelum jadwal.
-                </p>
-              </div>
+                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
+                    <h4 className="font-bold text-[#2C2416]">
+                      2. Kebijakan Keterlambatan & Penjadwalan Ulang
+                    </h4>
+                    <p className="text-xs text-[#555]">
+                      Apabila pasien mengalami keterlambatan lebih dari 15 menit dari jadwal tanpa pemberitahuan, antrean dialihkan. Penjadwalan ulang (reschedule) bebas biaya dilakukan selambatnya <strong>1 x 24 jam</strong> sebelum jadwal.
+                    </p>
+                  </div>
 
-              <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                <h4 className="font-bold text-[#2C2416]">
-                  3. Persetujuan Tindakan Medis (Informed Consent)
-                </h4>
-                <p className="text-xs text-[#555]">
-                  Dengan membubuhkan tanda tangan digital pada lembar ini, pasien memberikan persetujuan kepada dokter gigi spesialis untuk pemeriksaan klinis, diagnostik rontgen bila diperlukan, dan perawatan yang disepakati.
-                </p>
-              </div>
+                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
+                    <h4 className="font-bold text-[#2C2416]">
+                      3. Persetujuan Tindakan Medis (Informed Consent)
+                    </h4>
+                    <p className="text-xs text-[#555]">
+                      Dengan membubuhkan tanda tangan digital pada lembar ini, pasien memberikan persetujuan kepada dokter gigi spesialis untuk pemeriksaan klinis, diagnostik rontgen bila diperlukan, dan perawatan yang disepakati.
+                    </p>
+                  </div>
 
-              <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                <h4 className="font-bold text-[#2C2416]">
-                  4. Kerahasiaan Rekam Medis & Privasi Pasien
-                </h4>
-                <p className="text-xs text-[#555]">
-                  Seluruh data rekam medis elektronik (EMR), riwayat kesehatan, dan hasil pemeriksaan gigi pasien dilindungi kerahasiaannya sesuai regulasi hukum kesehatan Republik Indonesia.
-                </p>
-              </div>
-            </div>
+                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
+                    <h4 className="font-bold text-[#2C2416]">
+                      4. Kerahasiaan Rekam Medis & Privasi Pasien
+                    </h4>
+                    <p className="text-xs text-[#555]">
+                      Seluruh data rekam medis elektronik (EMR), riwayat kesehatan, dan hasil pemeriksaan gigi pasien dilindungi kerahasiaannya sesuai regulasi hukum kesehatan Republik Indonesia.
+                    </p>
+                  </div>
+                </div>
 
-            {/* Pasal 5 */}
-            <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6] text-xs sm:text-sm text-[#443E33]">
-              <h4 className="font-bold text-[#2C2416]">
-                5. Pembayaran & Kebijakan Pembatalan
-              </h4>
-              <p className="text-xs text-[#555]">
-                Pembayaran biaya tindakan dapat dilakukan secara tunai, kartu debit/kredit, QRIS, atau transfer kasir klinik. Pembatalan sepihak hari H tanpa alasan medis darurat dapat memengaruhi kuota prioritas booking berikutnya.
-              </p>
-            </div>
+                {/* Pasal 5 */}
+                <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6] text-xs sm:text-sm text-[#443E33]">
+                  <h4 className="font-bold text-[#2C2416]">
+                    5. Pembayaran & Kebijakan Pembatalan
+                  </h4>
+                  <p className="text-xs text-[#555]">
+                    Pembayaran biaya tindakan dapat dilakukan secara tunai, kartu debit/kredit, QRIS, atau transfer kasir klinik. Pembatalan sepihak hari H tanpa alasan medis darurat dapat memengaruhi kuota prioritas booking berikutnya.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Official Digital Signature & Validation Block */}
             <div className="pt-4 border-t-2 border-[#2C2416] grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">

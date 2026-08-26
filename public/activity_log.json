@@ -1,5 +1,141 @@
 [
   {
+    "id": "act-331",
+    "timestamp": "2026-08-26T13:29:00.000Z",
+    "category": "ui-auth-enhancement",
+    "title": "Implementasi Prefix Statis +62 dan Normalisasi Otomatis pada Form Login & Registrasi",
+    "description": "Menambahkan prefix visual statis `🇮🇩 +62` pada seluruh input nomor WhatsApp di antarmuka autentikasi ([`Login.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/auth/pages/Login.tsx), [`MobileLogin.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/auth/pages/MobileLogin.tsx), [`AuthController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Shared/Auth/AuthController.php), [`RegistrationController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Shared/Auth/RegistrationController.php)): 1) Menampilkan badge statis +62 berbingkai emas di sisi kiri input sehingga pengguna cukup mengetik angka setelahnya (misal '857...'), 2) Menambahkan sanitasi/normalisasi otomatis jika user mengetik/menempel awalan '08...', '+628...', atau '628...', 3) Memperluas query login backend agar mendukung variasi format nomor (lokal, internasional, atau E.164) sehingga autentikasi selalu cocok.",
+    "details": [
+      "Static +62 Prefix Badge: Badge visual +62 dengan bendera Indonesia di sisi kiri kolom WhatsApp.",
+      "Smart Auto-Sanitization: Otomatis memangkas angka 0 atau 62 di depan jika di-paste oleh user.",
+      "Multi-Format Backend Matching: AuthController mencocokkan nomor WhatsApp dalam format +62, 62, 08, maupun digit polos.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-330",
+    "timestamp": "2026-08-26T13:21:00.000Z",
+    "category": "ui-refinement-services",
+    "title": "Penyembunyian Tampilan Harga Layanan pada Halaman Katalog Layanan Publik & Landing Page",
+    "description": "Menghapus tampilan badge/pill harga pada kartu layanan dan modal detail tindakan di halaman publik ([`Services.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/guest/services/pages/Services.tsx)): 1) Menghilangkan overlay badge harga hitam di sudut kanan bawah kartu foto layanan, 2) Menghilangkan badge harga di dalam modal pop-up detail layanan sehingga informasi berfokus murni pada nama perawatan, intro, tahapan medis, dan estimasi durasi.",
+    "details": [
+      "Removed Card Price Badge: Overlay harga pada kartu katalog layanan telah dihilangkan.",
+      "Clean Detail Modal: Modal pop-up layanan kini bersih dan hanya menampilkan nama, durasi, tahapan prosedur, serta dokter penanggung jawab.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-329",
+    "timestamp": "2026-08-26T13:18:00.000Z",
+    "category": "bugfix-public-promotions",
+    "title": "Perbaikan Pengambilan Data Promo Publik & Landing Page Production",
+    "description": "Menyelaraskan dan memperbaiki proses fetching data promo di Beranda (`ServicesSection.tsx`), Halaman Promo (`Promo.tsx`), dan Backend Laravel (`ContentController.php`, `routes/api.php`): 1) Menambahkan alias route `/public/promos` dan `/public/promos/{slug}` di `routes/api.php` agar selaras dengan `/promos`, 2) Memperbaiki serialisasi controller publik `ContentController::promos` agar menyertakan status `is_active`, `headline`, `discount_text`, `target_tier`, `created_at`, dan slug yang valid sehingga tidak terfilter keluar saat parsing frontend, 3) Menambahkan dual-fallback fetching dan local cache `apig_cached_public_promos` di `ServicesSection.tsx` dan `Promo.tsx` untuk rendering instan tanpa jeda kosong.",
+    "details": [
+      "Fixed Promo Fetch Endpoints: Menambahkan /public/promos dan /public/promos/{slug} di Laravel routes.",
+      "Complete Serialization: Memastikan field is_active, discount_text, category, image_url, dan tanggal aktif disertakan.",
+      "Instant 0ms Cache: Menambahkan caching lokal agar banner promo langsung muncul tanpa menunggu jaringan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-328",
+    "timestamp": "2026-08-26T13:12:00.000Z",
+    "category": "bugfix-gallery-management",
+    "title": "Perbaikan Endpoint Hapus dan Integrasi Modal Editor Interaktif pada Fitur Galeri Klinik",
+    "description": "Memperbaiki kendala penghapusan dan pengeditan foto galeri pada dashboard admin (`GalleryPage.tsx`, `GalleryEditorModal.tsx`, `GalleryAdminController.php`, `routes/api.php`): 1) Menyelaraskan endpoint DELETE dari sebelumnya `/admin/gallery/{id}` (404) menjadi `/admin/gallery-items/{id}` serta menambahkan route alias `/gallery/{galleryItem}` di backend, 2) Menambahkan parsing fleksibel id dan model pada `GalleryAdminController.php` sehingga proses update dan destroy berjalan tanpa hambatan, 3) Mengganti sistem navigasi editor URL lama dengan Modal Editor Interaktif (`GalleryEditorModal.tsx`) yang mendukung pratinjau instan foto WebP, pengaturan kategori preset, deskripsi lengkap, urutan tampil, serta switch visibilitas publik.",
+    "details": [
+      "Fixed Gallery Deletion: Endpoint DELETE disinkronkan ke /admin/gallery-items/{id} dengan fallback alias dan proteksi ID model.",
+      "Interactive Gallery Modal: Admin dapat menambah dan mengedit foto galeri secara instan melalui modal popup elegan.",
+      "Instant Live Preview & WebP Compressor: Foto yang diunggah langsung terkompresi cepat dan dipratinjau dalam modal.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-327",
+    "timestamp": "2026-08-26T13:01:00.000Z",
+    "category": "notifications-enhancement",
+    "title": "Penyempurnaan Penanda Status Baca/Belum Dibaca & Format Waktu Presisi pada Panel Notifikasi",
+    "description": "Menyempurnakan dropdown notifikasi sistem (`DashboardTopBar.tsx` dan `pushNotificationService.ts`): 1) Menambahkan pembeda visual kontras antara notifikasi 'Belum Dibaca' (background hangat, border emas di sisi kiri, dot emas aktif berkilau, dan badge '● Belum Dibaca') dengan notifikasi 'Sudah Dibaca' (background putih bersih, dot abu-abu, dan status centang '✓ Sudah Dibaca'), 2) Menambahkan filter tab 'Semua' vs 'Belum Dibaca' pada header dropdown notifikasi, 3) Memperbaiki parsing timestamp `receivedAt` dan `createdAt` sehingga jam dibuatnya notifikasi tampil secara presisi ('Baru saja (19:45)', '5 mnt lalu (19:40)', 'Hari ini, 14:20', atau tanggal resmi) menggantikan teks statis 'Baru'.",
+    "details": [
+      "Read vs Unread Visual Distinction: Notifikasi belum dibaca memiliki highlight emas dan penanda status yang jelas.",
+      "Accurate Timestamp Display: Jam dan waktu pembuatan notifikasi tercatat serta terformat presisi.",
+      "Notification Filter Tabs: Tab filter cepat untuk melihat semua notifikasi atau hanya yang belum dibaca.",
+      "Instant Read Sync: Mengklik item atau 'Tandai Dibaca' seketika mengubah status menjadi dibaca dan memperbarui counter badge.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-326",
+    "timestamp": "2026-08-26T12:57:00.000Z",
+    "category": "preferences-notification-toggle",
+    "title": "Implementasi Toggle Switch Mengizinkan / Aktif & Non-Aktif Notifikasi di Preferensi Administrator",
+    "description": "Menambahkan kontrol toggle switch interaktif untuk mengizinkan/mengaktifkan dan menonaktifkan notifikasi push browser pada halaman Preferensi Pengguna & Admin (`Settings.tsx` dan `pushNotificationService.ts`): 1) Membangun Master Toggle Switch yang mendukung transisi status 'Diizinkan / Aktif' dan 'Tidak Diizinkan / Non-Aktif' secara real-time dengan sinkronisasi izin Web API Notification, 2) Menyediakan sub-toggle granular untuk kategori operasional: Reservasi Booking Pasien Baru, Pesan Chat Konsultasi Online, Pengaduan Pasien, serta Bunyi Suara Notifikasi (Audio Chime) dengan tombol uji coba suara, 3) Memperbarui service push notification agar mematuhi filter preferensi pengguna.",
+    "details": [
+      "Interactive Master Switch: Toggle visual yang elegan untuk mengizinkan dan menonaktifkan notifikasi browser.",
+      "Granular Channel Controls: Pengaturan terpisah untuk notifikasi booking, konsultasi, pengaduan, dan nada dering chime.",
+      "Audio Chime Test Button: Tombol pengujian bunyi suara notifikasi instan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-325",
+    "timestamp": "2026-08-26T12:53:00.000Z",
+    "category": "bugfix-editor",
+    "title": "Perbaikan Interaktivitas Dropdown Heading & Font Size pada TipTap WpEditor",
+    "description": "Memperbaiki kendala klik dropdown menu pada toolbar editor dokumen (`WpEditor.tsx`): 1) Menghilangkan event `onMouseDown={(e) => e.preventDefault()}` pada elemen `<select>` dropdown Heading dan Ukuran Font yang sebelumnya memblokir aksi klik pembukaan menu dropdown bawaan browser, 2) Memperhalus visual focus state dan border dropdown sehingga nyaman diklik dan mudah memilih level heading (Paragraf s/d H4) serta skala font (9px s/d 36px) secara responsif.",
+    "details": [
+      "Fixed Select Click Interactivity: Dropdown Heading dan Ukuran Font kini dapat diklik dan dipilih dengan lancar tanpa hambatan.",
+      "Instant Refocus: Pemilihan opsi langsung menerapkan format teks dan memfokuskan kursor kembali ke area penulisan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-324",
+    "timestamp": "2026-08-26T12:51:00.000Z",
+    "category": "typography-customization",
+    "title": "Integrasi Kontrol Ukuran Font Dinamis (Besar/Kecil) pada Editor Dokumen & PDF Syarat Ketentuan dan Surat Perjanjian",
+    "description": "Menambahkan sistem pengaturan ukuran font dinamis baik pada tingkat teks individual (WYSIWYG Editor) maupun tingkat dokumen global (`WpEditor.tsx`, `SettingsPage.tsx`, `clinicSettingsService.ts`, `TermsPdfModal.tsx`, `ReservationConsentPdfModal.tsx`): 1) Membangun custom TipTap Extension `FontSize` yang memungkinkan admin mengubah besar-kecil font teks terpilih dengan dropdown pilihan (9px hingga 36px), tombol penambah cepat (A+), tombol pengurang cepat (A-), serta reset ukuran font, 2) Menambahkan selector 'Ukuran Font Dokumen PDF' (8.5pt Kompak, 9.0pt, 9.5pt Standar Resmi, 10.0pt, 10.5pt, 11.0pt, 12.0pt Ekstra Besar) pada tab S&K dan Surat Perjanjian, 3) Mengintegrasikan base font size ke dalam template pratinjau dan lembar cetak PDF A4.",
+    "details": [
+      "Custom TipTap FontSize Mark: Admin dapat membesarkan atau mengecilkan kata/kalimat/pasal tertentu secara bebas di dalam editor.",
+      "Quick Scaler Buttons: Tombol A+ dan A- untuk menaikkan/menurunkan ukuran font secara instan.",
+      "Document Base Font Size: Pilihan skala font dokumen PDF (8.5pt s/d 12.0pt) untuk menyesuaikan kepadatan isi dokumen pada kertas A4.",
+      "Live PDF Preview & Print Sync: Cetakan PDF dan modal pratinjau langsung mengikuti konfigurasi ukuran font yang dipilih.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-323",
+    "timestamp": "2026-08-26T12:44:00.000Z",
+    "category": "document-management",
+    "title": "Integrasi Word / WYSIWYG Rich Text Editor pada Pengaturan Dokumen Syarat & Ketentuan dan Surat Perjanjian Medis",
+    "description": "Mengubah modul pengaturan isi dokumen Syarat & Ketentuan dan Surat Persetujuan Tindakan Medis / Informed Consent (`SettingsPage.tsx`, `clinicSettingsService.ts`, `TermsPdfModal.tsx`, `ReservationConsentPdfModal.tsx`): 1) Menggantikan form input klausul statis dengan Rich Text / WYSIWYG TipTap Editor (`WpEditor.tsx`) layaknya Microsoft Word atau Blog Editor, 2) Memungkinkan admin memformat teks secara dinamis (Heading H1-H4, Paragraf, Tebal/Bold, Miring/Italic, Poin Angka/Bullet, Kutipan/Blockquote, Perataan Teks, dan Link) pada seluruh isi klausul dokumen, 3) Mempertahankan fleksibilitas pengaturan Kop Surat & Logo visual (dimensi lebar/tinggi dan preset), 4) Menyediakan tombol reset cepat ke template standar klinik, 5) Memperbarui modal dan lembar cetak PDF agar merender dokumen dengan tata letak surat resmi yang elegan.",
+    "details": [
+      "Microsoft Word-Style WYSIWYG Editor: Admin dapat menyusun dan mengedit seluruh isi S&K serta Surat Perjanjian secara fleksibel dengan formatting kaya teks.",
+      "Customizable Kop & Logo: Kop surat resmi dan ukuran logo tetap dapat dikonfigurasi secara visual dengan live preview.",
+      "Instant PDF Print & Live Preview: Tampilan dokumen cetak dan modal pratinjau merender hasil styling teks berformat profesional.",
+      "Template Reset Action: Opsi cepat untuk mengembalikan isi teks ke format template hukum standar klinik dengan satu klik.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-322",
     "timestamp": "2026-08-26T12:15:00.000Z",
     "category": "performance-caching",
