@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -614,8 +615,18 @@ class UserController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
-            'whatsapp' => 'nullable|string|max:20|unique:users,whatsapp,' . $user->id,
+            'email' => [
+                'nullable',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'whatsapp' => [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('users', 'whatsapp')->ignore($user->id),
+            ],
             'phone' => 'nullable|string|max:20',
             'avatar' => 'nullable|string',
             'birthDate' => 'nullable|date',
@@ -656,10 +667,18 @@ class UserController extends Controller
             'bio' => 'nullable|string',
             'primaryBranch' => 'nullable|string|max:255',
             'consultationFee' => 'nullable|numeric|min:0',
+        ], [
+            'email.unique' => 'Alamat email ini sudah digunakan oleh akun lain. Silakan gunakan email lain atau kosongkan jika belum ingin mengisi email.',
+            'whatsapp.unique' => 'Nomor WhatsApp ini sudah terdaftar pada akun lain.',
+            'email.email' => 'Format alamat email tidak valid.',
+            'birthDate.date' => 'Format tanggal lahir tidak valid.',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
         }
 
         $data = $validator->validated();

@@ -1,5 +1,19 @@
 [
   {
+    "id": "act-341",
+    "timestamp": "2026-08-26T14:49:00.000Z",
+    "category": "fix-validation-unique-profile",
+    "title": "Perbaikan Validasi Unik Email & WhatsApp pada Edit Profil Pasien",
+    "description": "Mengoptimalkan aturan validasi unik database ([`UserController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Shared/User/UserController.php)): Menggunakan Rule::unique('users', 'email')->ignore($user->id) dan Rule::unique('users', 'whatsapp')->ignore($user->id) serta pesan kesalahan bahasa Indonesia yang ramah, sehingga pengguna dapat menyimpan profil tanpa terhalang error 'validation.unique'.",
+    "details": [
+      "Explicit Rule Exemption: ID pengguna saat ini diabaikan secara tepat pada validasi email dan whatsapp sehingga tidak memicu error unique milik diri sendiri.",
+      "Clear Indonesian Messages: Pesan kesalahan validasi disajikan dalam bahasa Indonesia yang komunikatif.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-340",
     "timestamp": "2026-08-26T14:32:00.000Z",
     "category": "fix-profile-edit-save-persistence",
