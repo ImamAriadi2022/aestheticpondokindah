@@ -246,8 +246,9 @@ class DoctorScheduleController extends Controller
         }
 
         $schedules = $query
-            ->orderBy('date')
-            ->orderBy('time_range')
+            ->orderByDesc('date')
+            ->orderByDesc('time_range')
+            ->orderByDesc('id')
             ->get()
             ->map(function (DoctorSchedule $s) {
                 return [

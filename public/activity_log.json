@@ -1,5 +1,20 @@
 [
   {
+    "id": "act-345",
+    "timestamp": "2026-08-26T15:37:00.000Z",
+    "category": "doctor-schedule-search-and-sort",
+    "title": "Penambahan Fitur Pencarian & Pengurutan Jadwal Praktik Dokter (Terbaru ke Terlama)",
+    "description": "Menyempurnakan halaman kelola jadwal dokter ([`DoctorScheduleController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Doctor/Schedule/DoctorScheduleController.php), [`DoctorSchedulePage.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/doctor/schedule/pages/DoctorSchedulePage.tsx), [`DoctorScheduleTable.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/doctor/schedule/components/DoctorScheduleTable.tsx)): 1) Menambahkan bar pencarian real-time (search tanggal, jam praktik, dan lokasi) dengan counter hasil dan tombol reset pencarian, 2) Mengurutkan daftar jadwal dokter dari tanggal terbaru ke terlama secara otomatis baik di sisi backend API maupun frontend rendering.",
+    "details": [
+      "Real-time Search Bar: Dokter dapat langsung mencari jadwal berdasarkan tanggal, jam, kuota, atau lokasi cabang.",
+      "Newest-to-Oldest Ordering: Urutan jadwal praktik kini tampil dari tanggal yang paling baru menuju tanggal yang lebih lama (descending).",
+      "Search Empty State: Tampilan kosong ramah pengguna dengan tombol 'Reset Pencarian' ketika kata kunci tidak ditemukan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-344",
     "timestamp": "2026-08-26T15:19:00.000Z",
     "category": "fix-consumption-habits-persistence",

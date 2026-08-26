@@ -1,11 +1,13 @@
 import { Button } from "@/shared/ui/button";
-import { Calendar, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Calendar, Pencil, Trash2, Loader2, SearchX } from "lucide-react";
 import type { DoctorScheduleItem } from "../services/doctorScheduleApi";
 
 interface DoctorScheduleTableProps {
   schedules: DoctorScheduleItem[];
   loading: boolean;
   deletingId: string | null;
+  searchQuery?: string;
+  onResetSearch?: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -14,6 +16,8 @@ export default function DoctorScheduleTable({
   schedules,
   loading,
   deletingId,
+  searchQuery,
+  onResetSearch,
   onEdit,
   onDelete,
 }: DoctorScheduleTableProps) {
@@ -28,12 +32,35 @@ export default function DoctorScheduleTable({
             <p className="text-[#4A3F35] font-medium">Memuat jadwal...</p>
           </div>
         ) : schedules.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-14 h-14 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-7 h-7 text-[#B8A99A]" />
-            </div>
-            <p className="text-[#4A3F35] font-medium">Belum ada jadwal</p>
-            <p className="text-sm text-[#B8A99A] mt-1">Jadwal praktik Anda akan muncul di sini</p>
+          <div className="text-center py-12 px-4">
+            {searchQuery ? (
+              <>
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto mb-4 text-[#8C6B1C]">
+                  <SearchX className="w-7 h-7" />
+                </div>
+                <p className="text-[#4A3F35] font-bold text-base">Tidak ada jadwal yang cocok</p>
+                <p className="text-xs text-[#8A7B6B] mt-1 max-w-sm mx-auto">
+                  Tidak ditemukan jadwal praktik yang sesuai dengan kata kunci &quot;<span className="font-semibold text-[#8C6B1C]">{searchQuery}</span>&quot;.
+                </p>
+                {onResetSearch && (
+                  <Button
+                    onClick={onResetSearch}
+                    variant="outline"
+                    className="mt-4 h-9 px-4 rounded-xl border-[#EADBBD] text-[#8C6B1C] hover:bg-[#FAF8F5] text-xs font-semibold"
+                  >
+                    Reset Pencarian
+                  </Button>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="w-14 h-14 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="w-7 h-7 text-[#B8A99A]" />
+                </div>
+                <p className="text-[#4A3F35] font-medium">Belum ada jadwal</p>
+                <p className="text-sm text-[#B8A99A] mt-1">Jadwal praktik Anda akan muncul di sini</p>
+              </>
+            )}
           </div>
         ) : (
           <table className="w-full">
