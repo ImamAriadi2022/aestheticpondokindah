@@ -1,6 +1,18 @@
 [
   {
-    "id": "act-295",
+    "id": "act-296",
+    "timestamp": "2026-08-26T02:08:00.000Z",
+    "category": "infrastructure-update",
+    "title": "Perbaikan .gitignore & Penyesuaian Pelacakan Berkas Storage untuk Deployment Production",
+    "description": "Menghapus pengabaian `/public/storage` pada berkas `.gitignore` utama serta memperbarui `.gitignore` di `storage/app/public` dan `public/storage`: Seluruh media aset klinik, foto dokter, banner promo, gambar layanan, dan berkas unggahan yang diperlukan di server production Plesk kini dapat dilacak oleh Git sehingga otomatis ikut terunggah saat `git push` dan sinkron saat `git pull` di server hosting.",
+    "details": [
+      "Root .gitignore Adjusted: Menghapus baris /public/storage agar folder storage publik tidak lagi diabaikan.",
+      "Storage .gitignore Updated: Memperbarui storage/app/public/.gitignore dan public/storage/.gitignore agar file media dan gambar aktif dilacak Git.",
+      "Full Production Sync: Seluruh aset di public/storage/ kini siap di-commit dan di-deploy ke Plesk hosting."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T01:48:00.000Z",
     "category": "feature-implementation",
     "title": "Integrasi Swagger API Documentation ke React Router SPA (/docs-api & /doc-api)",
