@@ -149,7 +149,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/clinic-settings', [ClinicSettingAdminController::class, 'index']);
         Route::post('/clinic-settings/batch', [ClinicSettingAdminController::class, 'saveBatch']);
         Route::get('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'show']);
-        Route::put('/clinic-settings/{key}', [ClinicSettingAdminController::class, 'update']);
+        Route::match(['put', 'post'], '/clinic-settings/{key}', [ClinicSettingAdminController::class, 'update']);
 
         // Content Management
         Route::get('/posts', [PostAdminController::class, 'index']);
@@ -264,13 +264,13 @@ Route::prefix('admin')->group(function () {
         Route::delete('/contact-messages/{contactMessage}', [ContactMessageAdminController::class, 'destroy']);
 
         Route::get('/about', [AboutAdminController::class, 'show']);
-        Route::put('/about', [AboutAdminController::class, 'update']);
+        Route::match(['put', 'post'], '/about', [AboutAdminController::class, 'update']);
 
         Route::get('/home', [HomeAdminController::class, 'show']);
-        Route::put('/home', [HomeAdminController::class, 'update']);
+        Route::match(['put', 'post'], '/home', [HomeAdminController::class, 'update']);
 
         Route::get('/legal/{type}', [LegalAdminController::class, 'show']);
-        Route::put('/legal/{type}', [LegalAdminController::class, 'update']);
+        Route::match(['put', 'post'], '/legal/{type}', [LegalAdminController::class, 'update']);
     });
 });
 

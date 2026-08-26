@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('clinic_settings', function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique();
-            $table->text('value')->nullable();
+            $table->longText('value')->nullable();
             $table->string('type')->default('text'); // text, textarea, json, boolean
             $table->string('label')->nullable();
             $table->text('description')->nullable();

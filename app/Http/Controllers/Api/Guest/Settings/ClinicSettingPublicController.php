@@ -1,10 +1,10 @@
 <?php
 
-namespace AppHttpControllersApiGuestSettings;
+namespace App\Http\Controllers\Api\Guest\Settings;
 
-use AppHttpControllersController;
-use AppModelsAdminSettingsClinicSetting;
-use IlluminateHttpJsonResponse;
+use App\Http\Controllers\Controller;
+use App\Models\Admin\Settings\ClinicSetting;
+use Illuminate\Http\JsonResponse;
 
 class ClinicSettingPublicController extends Controller
 {

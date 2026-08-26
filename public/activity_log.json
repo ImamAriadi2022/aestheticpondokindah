@@ -1,6 +1,19 @@
 [
   {
-    "id": "act-288",
+    "id": "act-292",
+    "timestamp": "2026-08-26T01:35:00.000Z",
+    "category": "bug-fix",
+    "title": "Perbaikan Error Penyimpanan Pengaturan Klinik & Sinkronisasi Backend Production Plesk Hosting",
+    "description": "Mengatasi kendala gagal menyimpan data pengaturan klinik (S&K, Surat Perjanjian, Profil Umum) pada production Plesk hosting yang memunculkan pop-up toast 'Gagal menyimpan pengaturan S&K ke database / Terjadi kesalahan pada server': 1) Memperbaiki deklarasi namespace dan use statements pada ClinicSettingAdminController.php dan ClinicSettingPublicController.php yang sebelumnya terformat tanpa backslash sehingga gagal di-autoload oleh Laravel container, 2) Menambahkan dukungan method PUT & POST pada routing /api/admin/clinic-settings/{key}, /api/admin/home, /api/admin/about, dan /api/admin/legal/{type} agar kebal terhadap restriksi HTTP PUT di server hosting, 3) Memperbarui tipe kolom `value` tabel `clinic_settings` menjadi `LONGTEXT` (via migrasi) agar mampu menampung string base64 logo kop surat dan payload JSON berukuran besar tanpa terkena pemotongan atau error MySQL data too long, 4) Memvalidasi 259 berkas PHP dengan 0 error sintaksis, dan 5) Mengompilasi ulang bundle frontend ke direktori public/.",
+    "details": [
+      "Backend Namespace Fix: Mengembalikan namespace App\\Http\\Controllers\\Api\\Admin\\Settings dan App\\Http\\Controllers\\Api\\Guest\\Settings beserta use statements yang valid pada kedua controller pengaturan klinik.",
+      "Dual HTTP Method Support: Menggunakan Route::match(['put', 'post']) untuk seluruh endpoint pembaruan admin guna mencegah 405 Method Not Allowed pada web server.",
+      "Database Schema Upgrade: Mengubah tipe kolom clinic_settings.value menjadi LONGTEXT agar penyimpanan kop surat base64 dan pengaturan teks PDF berjalan aman.",
+      "Full Codebase Verification: Menjalankan linting sintaksis PHP 8.3 pada 259 berkas backend (0 error) dan build frontend web ke /public (berhasil 100%)."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-25T12:32:00.425Z",
     "category": "feature-update",
     "title": "Standardisasi Pengurutan Data Terbaru & Perbaikan Redireksi Alur Booking Pasien",

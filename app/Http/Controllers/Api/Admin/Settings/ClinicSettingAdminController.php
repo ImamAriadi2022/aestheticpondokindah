@@ -1,11 +1,11 @@
 <?php
 
-namespace AppHttpControllersApiAdminSettings;
+namespace App\Http\Controllers\Api\Admin\Settings;
 
-use AppHttpControllersController;
-use AppModelsAdminSettingsClinicSetting;
-use IlluminateHttpJsonResponse;
-use IlluminateHttpRequest;
+use App\Http\Controllers\Controller;
+use App\Models\Admin\Settings\ClinicSetting;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ClinicSettingAdminController extends Controller
 {
