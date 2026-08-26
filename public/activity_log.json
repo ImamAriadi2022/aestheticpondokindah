@@ -1,6 +1,19 @@
 [
   {
-    "id": "act-296",
+    "id": "act-297",
+    "timestamp": "2026-08-26T02:40:00.000Z",
+    "category": "feature-implementation",
+    "title": "Pembuatan Modal Detail Pengguna & Pasien Klinik (UserDetailModal) di Admin Dashboard",
+    "description": "Mengembangkan dan mengintegrasikan komponen dialog modal detail pengguna (`UserDetailModal.tsx`) di panel Admin Klinik pada tab Kelola Pengguna (`#/dashboard/clinic?tab=users`): 1) Memperbaiki tombol 'Detail' pada tabel pengguna agar memicu modal dialog interaktif, 2) Menampilkan informasi profil lengkap pasien (Nama, ID, Email, WhatsApp, Role, Membership Tier & Poin Reward, Status Akun, Biodata, dan Alamat Domisili), 3) Menyediakan fitur Reset Password pengguna langsung dari modal dengan konfirmasi aman, dan 4) Melakukan sinkronisasi data instan (`onRefresh`/`fetchUsers`) setelah perubahan data.",
+    "details": [
+      "UserDetailModal Component: Dibuat di features/admin/users/components/UserDetailModal.tsx dengan desain kartu mewah gold-charcoal.",
+      "Detail Action Trigger: Tombol Detail pada tabel kini memicu modal detail lengkap.",
+      "Profile & Security Tools: Tersedia rincian kontak, biodata pasien, membership level, dan tombol reset password.",
+      "Production Bundle Synced: Frontend React telah di-compile ulang (npm run build) ke folder public/."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T02:08:00.000Z",
     "category": "infrastructure-update",
     "title": "Perbaikan .gitignore & Penyesuaian Pelacakan Berkas Storage untuk Deployment Production",

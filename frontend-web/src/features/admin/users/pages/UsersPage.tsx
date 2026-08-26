@@ -1,12 +1,14 @@
 import { useState } from "react";
 import UserTable from "../components/UserTable";
+import UserDetailModal from "../components/UserDetailModal";
 
 type Props = {
   users: any[];
   onSelectUser?: (user: any) => void;
+  onRefresh?: () => void;
 };
 
-export default function UsersPage({ users, onSelectUser }: Props) {
+export default function UsersPage({ users, onSelectUser, onRefresh }: Props) {
   const [selected, setSelected] = useState<any | null>(null);
 
   const handleSelect = (user: any) => {
@@ -22,6 +24,15 @@ export default function UsersPage({ users, onSelectUser }: Props) {
       </div>
 
       <UserTable users={users} onSelect={handleSelect} />
+
+      <UserDetailModal
+        isOpen={!!selected}
+        onClose={() => setSelected(null)}
+        user={selected}
+        onUpdated={() => {
+          if (onRefresh) onRefresh();
+        }}
+      />
     </div>
   );
 }

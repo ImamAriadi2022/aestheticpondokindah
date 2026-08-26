@@ -347,7 +347,7 @@ export default function ClinicDashboardPage() {
         );
 
       case "users":
-        return <UsersPage users={users} />;
+        return <UsersPage users={users} onRefresh={fetchUsers} />;
 
       case "branches":
         return <BranchesPage branches={branches} />;
