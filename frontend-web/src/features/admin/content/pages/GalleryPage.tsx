@@ -24,19 +24,6 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
     fetchApiGallery();
   }, []);
 
-  if (contentView === "editor") {
-    const current = editorId ? apiGalleryItems.find((g) => String(g.id) === editorId) : undefined;
-    return (
-      <GalleryEditor
-        current={current}
-        editorId={editorId}
-        token={token}
-        fetchApiGallery={fetchApiGallery}
-        setSearchParams={setSearchParams}
-      />
-    );
-  }
-
   const categories = useMemo(() => {
     const set = new Set<string>();
     apiGalleryItems.forEach((g) => {
@@ -59,15 +46,19 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
       });
   }, [apiGalleryItems, activeCategory, search]);
 
+  const currentGalleryItem = useMemo(() => {
+    return editorId ? apiGalleryItems.find((g) => String(g.id) === editorId) : undefined;
+  }, [editorId, apiGalleryItems]);
+
   const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
     try {
-      const res = await fetch(`${API_BASE}/admin/gallery-items/${id}`, {
+      const res = await fetch(`${API_BASE}/admin/gallery/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        toast({ title: "Berhasil", message: "Foto galeri dihapus", variant: "success" });
+        toast({ title: "Berhasil", message: "Foto galeri berhasil dihapus", variant: "success" });
         await fetchApiGallery();
       }
     } catch (e) {
@@ -75,13 +66,26 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
     }
   };
 
+  // Safe conditional render AFTER all hooks execute!
+  if (contentView === "editor") {
+    return (
+      <GalleryEditor
+        current={currentGalleryItem}
+        editorId={editorId}
+        token={token}
+        fetchApiGallery={fetchApiGallery}
+        setSearchParams={setSearchParams}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#4A3F35]">Galeri Fasilitas & Suasana Klinik</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">Kelola portofolio foto suasana klinik, peralatan dental modern, dan aktivitas perawatan.</p>
+          <h2 className="text-xl font-bold text-[#4A3F35]">Galeri Klinik & Fasilitas</h2>
+          <p className="text-sm text-[#8A7B6B] mt-1">Kelola dokumentasi visual ruangan, fasilitas medis canggih, dan suasana klinik.</p>
         </div>
         <Button
           className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
@@ -96,60 +100,70 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
           }}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Tambah Foto Galeri
+          Tambah Foto Baru
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <Camera className="w-5 h-5" />
             </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Total Koleksi Foto</p>
+            <p className="text-xs font-semibold text-[#8A7B6B]">Total Foto</p>
           </div>
           <p className="text-2xl font-bold text-[#4A3F35]">{apiGalleryItems.length}</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Tag className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Kategori Galeri</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{Math.max(0, categories.length - 1)}</p>
+          <p className="text-2xl font-bold text-[#4A3F35]">{categories.length - 1}</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
+              <ImageIcon className="w-5 h-5" />
+            </div>
+            <p className="text-xs font-semibold text-[#8A7B6B]">Kategori Aktif</p>
+          </div>
+          <p className="text-sm font-bold text-[#4A3F35] mt-1">{activeCategory}</p>
         </div>
       </div>
 
-      {/* Filter & Search */}
+      {/* Filters & Search */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
-          {categories.map((cat) => (
+          {categories.map((c) => (
             <button
-              key={cat}
+              key={c}
               type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                activeCategory === cat
+              onClick={() => setActiveCategory(c)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                activeCategory === c
                   ? "bg-[#C9A24A] text-white shadow-xs"
                   : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
               }`}
             >
-              {cat}
+              {c}
             </button>
           ))}
         </div>
 
         <div className="relative w-full md:w-64 shrink-0">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A89F91]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari foto galeri..."
-            className="w-full h-8.5 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-8.5 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
           />
         </div>
       </div>
@@ -160,16 +174,17 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">
               <TableHead className="w-16">Foto</TableHead>
-              <TableHead>Judul & Deskripsi</TableHead>
+              <TableHead>Judul</TableHead>
               <TableHead>Kategori</TableHead>
+              <TableHead>Deskripsi</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-xs text-[#8A7B6B]">
-                  Belum ada foto di galeri. Klik "Tambah Foto Galeri" di atas.
+                <TableCell colSpan={5} className="text-center py-8 text-xs text-[#8A7B6B]">
+                  Tidak ada foto galeri ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
@@ -180,7 +195,7 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
                       <img
                         src={getStorageUrl(item.image_url || item.image_path) || item.image_url}
                         alt=""
-                        className="w-12 h-12 rounded-xl object-cover border border-[#F0E6D3]"
+                        className="w-12 h-12 rounded-xl object-cover border border-[#F0E6D3] shadow-2xs"
                         onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp"; }}
                       />
                     ) : (
@@ -191,12 +206,14 @@ export default function GalleryPage({ searchParams, setSearchParams, apiGalleryI
                   </TableCell>
                   <TableCell>
                     <p className="text-xs font-bold text-[#4A3F35]">{item.title}</p>
-                    {item.description && <p className="text-[10px] text-[#8A7B6B] line-clamp-1 mt-0.5">{item.description}</p>}
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FDF8F0] text-[#B8943F] border border-[#F5E6C8]">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF8F5] text-[#4A3F35] border border-[#F0E6D3]">
                       {item.category || "Fasilitas"}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-xs text-[#8A7B6B] line-clamp-1 max-w-md">{item.description || "-"}</p>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button

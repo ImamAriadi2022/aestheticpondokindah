@@ -1,6 +1,20 @@
 [
   {
-    "id": "act-318",
+    "id": "act-319",
+    "timestamp": "2026-08-26T11:46:00.000Z",
+    "category": "content-management-fix",
+    "title": "Perbaikan Modul Kelola Konten: Eliminasi Error React Hooks, Status Draf Blog, Modal Pop-up Promo, & Standardisasi Searchbar",
+    "description": "Menyelesaikan serangkaian perbaikan menyeluruh pada modul Kelola Konten Admin (`BlogPage.tsx`, `BlogEditorPanel.tsx`, `PromoPage.tsx`, `PromoEditorModal.tsx`, `TestimonialsPage.tsx`, `GalleryPage.tsx`, `DownloadAppPage.tsx`, `PopupPage.tsx`): 1) Mengeliminasi pelanggaran Rules of Hooks (React Error #300 & #310) dengan memastikan seluruh hooks dieksekusi tanpa early return sebelum view editor, 2) Menambahkan fitur status Draf dan Publikasi pada Blog dengan tombol aksi terpisah ('Simpan sebagai Draf' dan 'Publikasikan Artikel'), 3) Mengubah formulir Promo menjadi Dialog Pop-up fixed yang konsisten dengan DoctorEditorModal dengan opsi target segmentasi (Publik/Guest, Semua Member, Khusus Gold, Khusus Platinum VIP), 4) Memperbaiki seluruh searchbar konten dengan padding pl-10 h-9 sehingga ikon pencarian tidak lagi menabrak teks placeholder.",
+    "details": [
+      "Zero React Hooks Error: Transisi halaman dan aksi edit pada Blog, Testimoni, Galeri, dan Download App kini 100% stabil tanpa error #300/#310.",
+      "Blog Draft Lifecycle: Admin dapat menyimpan draf artikel maupun menerbitkan artikel dengan status badge yang jelas di tabel.",
+      "Dedicated Promo Pop-up Modal: Modal promo berdimensi lega (max-w-3xl) dengan fixed header/footer dan scrollable body, mendukung target publik hingga membership tier.",
+      "Refined Content Searchbars: Seluruh input pencarian konten memiliki padding teks lega dan ikon presisi.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah diperbarui."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
     "timestamp": "2026-08-26T08:59:00.000Z",
     "category": "data-filtering",
     "title": "Penyaringan Daftar Member Admin: Khusus Pengguna Berperan Pasien (Role 'patient')",

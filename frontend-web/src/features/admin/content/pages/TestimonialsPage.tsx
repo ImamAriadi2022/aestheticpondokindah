@@ -24,19 +24,6 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
     fetchApiTestimonials();
   }, []);
 
-  if (contentView === "editor") {
-    const current = editorId ? apiTestimonials.find((t) => String(t.id) === editorId) : undefined;
-    return (
-      <TestimonialEditor
-        current={current}
-        editorId={editorId}
-        token={token}
-        fetchApiTestimonials={fetchApiTestimonials}
-        setSearchParams={setSearchParams}
-      />
-    );
-  }
-
   const filtered = useMemo(() => {
     return apiTestimonials
       .filter((t) => (filterRating === "All" ? true : Number(t.rating) === filterRating))
@@ -57,6 +44,10 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
     return (sum / apiTestimonials.length).toFixed(1);
   }, [apiTestimonials]);
 
+  const currentTestimonial = useMemo(() => {
+    return editorId ? apiTestimonials.find((t) => String(t.id) === editorId) : undefined;
+  }, [editorId, apiTestimonials]);
+
   const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus testimoni ini?")) return;
     try {
@@ -73,8 +64,21 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
     }
   };
 
+  // Safe conditional render AFTER all hooks execute!
+  if (contentView === "editor") {
+    return (
+      <TestimonialEditor
+        current={currentTestimonial}
+        editorId={editorId}
+        token={token}
+        fetchApiTestimonials={fetchApiTestimonials}
+        setSearchParams={setSearchParams}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -99,7 +103,7 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
@@ -112,42 +116,57 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
 
         <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
-              <Star className="w-5 h-5 fill-amber-400" />
+            <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-[#B8943F]">
+              <Star className="w-5 h-5 fill-[#B8943F]" />
             </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Rata-Rata Kepuasan</p>
+            <p className="text-xs font-semibold text-[#8A7B6B]">Rating Rata-rata</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">⭐ {avgRating} / 5.0</p>
+          <div className="flex items-baseline gap-1.5">
+            <p className="text-2xl font-bold text-[#4A3F35]">{avgRating}</p>
+            <span className="text-xs text-[#8A7B6B]">/ 5.0</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <Quote className="w-5 h-5" />
+            </div>
+            <p className="text-xs font-semibold text-[#8A7B6B]">Bintang 5</p>
+          </div>
+          <p className="text-2xl font-bold text-emerald-600">
+            {apiTestimonials.filter((t) => Number(t.rating) === 5).length}
+          </p>
         </div>
       </div>
 
-      {/* Filter & Search */}
+      {/* Filter and Search */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
           {(["All", 5, 4, 3] as const).map((r) => (
             <button
               key={String(r)}
               type="button"
-              onClick={() => setFilterRating(r as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+              onClick={() => setFilterRating(r)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 filterRating === r
                   ? "bg-[#C9A24A] text-white shadow-xs"
                   : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
               }`}
             >
-              {r === "All" ? "Semua Rating" : `⭐ ${r} Bintang`}
+              {r === "All" ? "Semua Rating" : `★ ${r}`}
             </button>
           ))}
         </div>
 
         <div className="relative w-full md:w-64 shrink-0">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A89F91]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari nama pasien / ulasan..."
-            className="w-full h-8.5 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-8.5 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
           />
         </div>
       </div>
@@ -159,8 +178,8 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
             <TableRow className="bg-[#FAF8F5]">
               <TableHead className="w-16">Foto</TableHead>
               <TableHead>Nama Pasien</TableHead>
-              <TableHead>Kutipan Testimoni</TableHead>
               <TableHead>Rating</TableHead>
+              <TableHead>Kutipan Ulasan</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -168,39 +187,42 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-xs text-[#8A7B6B]">
-                  Belum ada testimoni ditemukan. Klik "Tambah Testimoni Baru" di atas.
+                  Tidak ada testimoni ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((item) => (
                 <TableRow key={item.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                   <TableCell>
-                    {item.photo_url || item.photo_path ? (
+                    {item.photo_url ? (
                       <img
-                        src={getStorageUrl(item.photo_url || item.photo_path) || item.photo_url}
+                        src={getStorageUrl(item.photo_url) || item.photo_url}
                         alt=""
                         className="w-10 h-10 rounded-full object-cover border border-[#F0E6D3]"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/dashboard/placeholder.webp"; }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp"; }}
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-[#FDF8F0] flex items-center justify-center text-[#B8943F] font-bold text-xs border border-[#F0E6D3]">
-                        {item.name ? item.name.slice(0, 2).toUpperCase() : <Quote className="w-4 h-4" />}
+                      <div className="w-10 h-10 rounded-full bg-[#FAF5EA] flex items-center justify-center font-bold text-[#8C6B1C] text-xs border border-[#F0E6D3]">
+                        {(item.name || "P").charAt(0).toUpperCase()}
                       </div>
                     )}
                   </TableCell>
                   <TableCell>
                     <p className="text-xs font-bold text-[#4A3F35]">{item.name}</p>
-                    {item.source && <p className="text-[10px] text-[#8A7B6B]">{item.source}</p>}
+                    <p className="text-[10px] text-[#8A7B6B]">{item.treatment || item.source || "Pasien Klinik"}</p>
                   </TableCell>
                   <TableCell>
-                    <p className="text-xs text-[#4A3F35] line-clamp-2 leading-relaxed italic">"{item.quote}"</p>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: item.rating || 5 }).map((_, i) => (
-                        <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    <div className="flex items-center gap-0.5 text-[#B8943F]">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < (Number(item.rating) || 5) ? "fill-[#B8943F] text-[#B8943F]" : "text-gray-300"}`}
+                        />
                       ))}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-xs text-[#5C5546] line-clamp-2 max-w-md italic">"{item.quote || item.content || item.comment}"</p>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button

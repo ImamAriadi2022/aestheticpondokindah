@@ -26,37 +26,6 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
     fetchApiPosts();
   }, []);
 
-  if (contentView === "editor") {
-    const currentPost = editorId ? apiPosts.find((p) => String(p.id) === editorId) : undefined;
-    return (
-      <BlogEditorPanel
-        editorId={editorId}
-        apiPost={currentPost}
-        sessionName={sessionName}
-        token={token}
-        onBack={() =>
-          setSearchParams((prev: any) => {
-            const next = new URLSearchParams(prev);
-            next.set("tab", "content-blog");
-            next.set("view", "posts");
-            next.delete("id");
-            return next;
-          })
-        }
-        onSaved={() => {
-          fetchApiPosts();
-          setSearchParams((prev: any) => {
-            const next = new URLSearchParams(prev);
-            next.set("tab", "content-blog");
-            next.set("view", "posts");
-            next.delete("id");
-            return next;
-          });
-        }}
-      />
-    );
-  }
-
   const isPublishedPost = (status?: string) => (!status ? true : status.toLowerCase() === "published");
 
   const categories = useMemo(() => {
@@ -86,9 +55,13 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
       });
   }, [apiPosts, filterStatus, filterCategory, search]);
 
-  const publishedCount = apiPosts.filter((p) => isPublishedPost(p.status)).length;
-  const draftCount = apiPosts.filter((p) => !isPublishedPost(p.status)).length;
-  const categoriesUsed = new Set(apiPosts.map((p) => p.category).filter(Boolean)).size;
+  const publishedCount = useMemo(() => apiPosts.filter((p) => isPublishedPost(p.status)).length, [apiPosts]);
+  const draftCount = useMemo(() => apiPosts.filter((p) => !isPublishedPost(p.status)).length, [apiPosts]);
+  const categoriesUsed = useMemo(() => new Set(apiPosts.map((p) => p.category).filter(Boolean)).size, [apiPosts]);
+
+  const currentPost = useMemo(() => {
+    return editorId ? apiPosts.find((p) => String(p.id) === editorId) : undefined;
+  }, [editorId, apiPosts]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus artikel ini?")) return;
@@ -106,13 +79,44 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
     }
   };
 
+  // Safe Conditional Render AFTER all Hooks have executed!
+  if (contentView === "editor") {
+    return (
+      <BlogEditorPanel
+        editorId={editorId}
+        apiPost={currentPost}
+        sessionName={sessionName}
+        token={token}
+        onBack={() =>
+          setSearchParams((prev: any) => {
+            const next = new URLSearchParams(prev);
+            next.set("tab", "content-blog");
+            next.set("view", "posts");
+            next.delete("id");
+            return next;
+          })
+        }
+        onSaved={() => {
+          fetchApiPosts();
+          setSearchParams((prev: any) => {
+            const next = new URLSearchParams(prev);
+            next.set("tab", "content-blog");
+            next.set("view", "posts");
+            next.delete("id");
+            return next;
+          });
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Artikel Blog</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">Kelola publikasi edukasi kesehatan gigi dan konten informasi klinik.</p>
+          <p className="text-sm text-[#8A7B6B] mt-1">Kelola publikasi edukasi kesehatan gigi, tips medis, dan draf artikel klinik.</p>
         </div>
         <Button
           className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
@@ -152,7 +156,7 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
           </div>
           <div className="flex items-baseline gap-2">
             <p className="text-2xl font-bold text-[#4A3F35]">{publishedCount}</p>
-            {draftCount > 0 && <span className="text-xs text-[#8A7B6B]">({draftCount} draft)</span>}
+            {draftCount > 0 && <span className="text-xs font-semibold text-amber-700">({draftCount} draf)</span>}
           </div>
         </div>
 
@@ -181,14 +185,14 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
                   : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
               }`}
             >
-              {st === "All" ? "Semua Status" : st === "Published" ? "Dipublikasikan" : "Draft"}
+              {st === "All" ? "Semua Status" : st === "Published" ? "Dipublikasikan" : "Draf"}
             </button>
           ))}
           {categories.length > 2 && (
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="h-8 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] px-2.5 text-xs text-[#4A3F35] font-semibold"
+              className="h-8 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] px-2.5 text-xs text-[#4A3F35] font-semibold outline-hidden cursor-pointer"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -198,13 +202,13 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
         </div>
 
         <div className="relative w-full md:w-64 shrink-0">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#A89F91]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari artikel..."
-            className="w-full h-8.5 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-8.5 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
           />
         </div>
       </div>
@@ -255,8 +259,12 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${isPublishedPost(item.status) ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-700"}`}>
-                      {isPublishedPost(item.status) ? "Dipublikasikan" : "Draft"}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      isPublishedPost(item.status)
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                        : "bg-amber-100 text-amber-900 border border-amber-200"
+                    }`}>
+                      {isPublishedPost(item.status) ? "🟢 Dipublikasikan" : "🟡 Draf"}
                     </span>
                   </TableCell>
                   <TableCell className="text-right space-x-1">
