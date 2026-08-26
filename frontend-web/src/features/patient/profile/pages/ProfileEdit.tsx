@@ -89,29 +89,29 @@ export default function ProfileEditPage() {
   const [districts, setDistricts] = useState<WilayahItem[]>([]);
 
   const [profile, setProfile] = useState({
-    name: session?.name || "Pengguna",
-    email: session?.email || "user@aestheticpondokindah.local",
-    phone: (session as any)?.whatsapp || session?.phone || "+62887437525305",
+    name: session?.name || "",
+    email: session?.email || "",
+    phone: (session as any)?.whatsapp || session?.phone || "",
     avatar: (session as any)?.avatar || "",
-    gender: normalizeGenderValue((session as any)?.gender),
-    birthDate: (session as any)?.birthDate || (session as any)?.birth_date || "2004-11-21",
-    bloodType: (session as any)?.blood_type || (session as any)?.bloodType || "O",
-    job: (session as any)?.job || "Karyawan Swasta",
-    address: (session as any)?.address_line || (session as any)?.address || "rt 2, rw 1, dusun 1, srisawahan, punggur, lampung tengah, lampung",
-    province: (session as any)?.province || "Lampung",
-    provinceId: (session as any)?.provinceId || "18",
-    city: (session as any)?.city || "Lampung Tengah",
-    cityId: (session as any)?.cityId || "18.02",
-    district: (session as any)?.district || "Punggur",
-    districtId: (session as any)?.districtId || "Punggur",
-    postalCode: (session as any)?.postalCode || "34152",
-    insuranceProvider: (session as any)?.insuranceProvider || "Mandiri Inhealth",
-    isCoffeeDrinker: (session as any)?.isCoffeeDrinker ?? true,
+    gender: normalizeGenderValue((session as any)?.gender) || "",
+    birthDate: (session as any)?.birthDate || (session as any)?.birth_date || "",
+    bloodType: (session as any)?.blood_type || (session as any)?.bloodType || "",
+    job: (session as any)?.job || "",
+    address: (session as any)?.address_line || (session as any)?.address || "",
+    province: (session as any)?.province || "",
+    provinceId: (session as any)?.provinceId || "",
+    city: (session as any)?.city || "",
+    cityId: (session as any)?.cityId || "",
+    district: (session as any)?.district || "",
+    districtId: (session as any)?.districtId || "",
+    postalCode: (session as any)?.postalCode || (session as any)?.postal_code || "",
+    insuranceProvider: (session as any)?.insuranceProvider || (session as any)?.insurance_provider || "",
+    isCoffeeDrinker: (session as any)?.isCoffeeDrinker ?? false,
     isSmoker: (session as any)?.isSmoker ?? false,
-    lastDentalVisit: (session as any)?.lastDentalVisit || "< 6 Bulan Lalu",
-    dentalComplaints: (session as any)?.dentalComplaints || ["Gigi Sensitif", "Gigi Berlubang"],
-    desiredServices: (session as any)?.desiredServices || ["Pembersihan Karang Gigi (Scaling)", "Pemutihan Gigi (Bleaching)"],
-    treatmentGoals: (session as any)?.treatmentGoals || ["Senyum Lebih Estetik & Putih", "Kesehatan Gigi Jangka Panjang"],
+    lastDentalVisit: (session as any)?.lastDentalVisit || "",
+    dentalComplaints: (session as any)?.dentalComplaints || [],
+    desiredServices: (session as any)?.desiredServices || [],
+    treatmentGoals: (session as any)?.treatmentGoals || [],
   });
 
   useEffect(() => {
@@ -136,33 +136,37 @@ export default function ProfileEditPage() {
       .then(async (data) => {
         if (!data || !mounted) return;
 
-        const normGender = normalizeGenderValue(data.gender);
-        const normBlood = data.bloodType || data.blood_type || "O";
-        const normJob = data.job || "Karyawan Swasta";
-        const provName = data.province || "Lampung";
-        const cityName = data.city || "Lampung Tengah";
-        const distName = data.district || "Punggur";
+        const normGender = normalizeGenderValue(data.gender) || "";
+        const normBlood = data.bloodType || data.blood_type || "";
+        const normJob = data.job || "";
+        const provName = data.province || "";
+        const cityName = data.city || "";
+        const distName = data.district || "";
 
         // Match province, regency, district IDs from wilayah API
         const provList = await getProvinces();
         if (mounted) setProvinces(provList || []);
 
-        const foundProv = provList.find(
-          (p) =>
-            p.id === data.provinceId ||
-            p.name.toLowerCase().trim() === provName.toLowerCase().trim()
-        );
+        const foundProv = provName
+          ? provList.find(
+              (p) =>
+                p.id === data.provinceId ||
+                p.name.toLowerCase().trim() === provName.toLowerCase().trim()
+            )
+          : undefined;
 
         let regList: WilayahItem[] = [];
         let foundReg: WilayahItem | undefined;
         if (foundProv) {
           regList = await getRegencies(foundProv.id);
           if (mounted) setRegencies(regList);
-          foundReg = regList.find(
-            (r) =>
-              r.id === data.cityId ||
-              r.name.toLowerCase().trim() === cityName.toLowerCase().trim()
-          );
+          foundReg = cityName
+            ? regList.find(
+                (r) =>
+                  r.id === data.cityId ||
+                  r.name.toLowerCase().trim() === cityName.toLowerCase().trim()
+              )
+            : undefined;
         }
 
         let distList: WilayahItem[] = [];
@@ -170,38 +174,40 @@ export default function ProfileEditPage() {
         if (foundReg) {
           distList = await getDistricts(foundReg.id);
           if (mounted) setDistricts(distList);
-          foundDist = distList.find(
-            (d) =>
-              d.id === data.districtId ||
-              d.name.toLowerCase().trim() === distName.toLowerCase().trim()
-          );
+          foundDist = distName
+            ? distList.find(
+                (d) =>
+                  d.id === data.districtId ||
+                  d.name.toLowerCase().trim() === distName.toLowerCase().trim()
+              )
+            : undefined;
         }
 
         setProfile((prev) => ({
           ...prev,
-          name: data.name || prev.name,
-          email: data.email || prev.email,
+          name: data.name ?? prev.name,
+          email: data.email ?? prev.email,
           phone: data.phone || data.whatsapp || prev.phone,
           avatar: data.avatar || prev.avatar,
           gender: normGender,
-          birthDate: data.birthDate || prev.birthDate,
+          birthDate: data.birthDate || data.birth_date || "",
           bloodType: normBlood,
           job: normJob,
-          address: data.address || data.address_line || prev.address,
+          address: data.address || data.address_line || "",
           province: provName,
-          provinceId: foundProv?.id || prev.provinceId || "18",
+          provinceId: foundProv?.id || data.provinceId || "",
           city: cityName,
-          cityId: foundReg?.id || prev.cityId || "18.02",
+          cityId: foundReg?.id || data.cityId || "",
           district: distName,
-          districtId: foundDist?.id || prev.districtId || "Punggur",
-          postalCode: data.postalCode || prev.postalCode,
-          insuranceProvider: data.insuranceProvider || prev.insuranceProvider,
-          isCoffeeDrinker: data.isCoffeeDrinker ?? prev.isCoffeeDrinker,
-          isSmoker: data.isSmoker ?? prev.isSmoker,
-          lastDentalVisit: data.lastDentalVisit || prev.lastDentalVisit,
-          dentalComplaints: data.dentalComplaints || prev.dentalComplaints,
-          desiredServices: data.desiredServices || prev.desiredServices,
-          treatmentGoals: data.treatmentGoals || prev.treatmentGoals,
+          districtId: foundDist?.id || data.districtId || "",
+          postalCode: data.postalCode || data.postal_code || "",
+          insuranceProvider: data.insuranceProvider || data.insurance_provider || "",
+          isCoffeeDrinker: data.isCoffeeDrinker ?? false,
+          isSmoker: data.isSmoker ?? false,
+          lastDentalVisit: data.lastDentalVisit || "",
+          dentalComplaints: data.dentalComplaints || [],
+          desiredServices: data.desiredServices || [],
+          treatmentGoals: data.treatmentGoals || [],
         }));
       })
       .catch((err) => logger.error("Failed to load user profile from API:", err));

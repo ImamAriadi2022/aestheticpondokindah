@@ -34,6 +34,15 @@ class MembershipController extends Controller
         $progress = $user->getProgressToNextLevel();
         $benefits = $this->membershipService->getMembershipBenefits($user->membership_level);
 
+        $isProfileComplete = (bool) (
+            $user->membership_profile_completed
+            || ($user->membershipProfile?->isComplete() ?? false)
+            || ($user->name && $user->email && $user->city && $user->gender && $user->birth_date)
+        );
+
+        $goldPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('gold_point_threshold', 1000);
+        $platinumPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('platinum_point_threshold', 3000);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -48,10 +57,14 @@ class MembershipController extends Controller
                     'status' => $user->membership_level === 'bronze' ? 'active' : ($user->membership_status ?? 'active'),
                     'started_at' => $user->membership_started_at,
                     'expires_at' => $user->membership_expires_at,
-                    'points' => $user->membership_points,
-                    'total_transactions' => $user->total_transactions,
-                    'completed_treatments' => $user->completed_treatments,
-                    'profile_completed' => $user->membership_profile_completed,
+                    'points' => $user->membership_points ?? 0,
+                    'total_transactions' => $user->total_transactions ?? 0,
+                    'completed_treatments' => $user->completed_treatments ?? 0,
+                    'profile_completed' => $isProfileComplete,
+                    'point_thresholds' => [
+                        'gold' => $goldPointThreshold,
+                        'platinum' => $platinumPointThreshold,
+                    ],
                 ],
                 'progress' => $progress,
                 'benefits' => $benefits,

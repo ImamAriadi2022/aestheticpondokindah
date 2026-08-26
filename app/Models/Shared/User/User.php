@@ -192,17 +192,30 @@ class User extends Authenticatable
 
     public function getProgressToNextLevel(): array
     {
+        $currentPoints = (int) ($this->membership_points ?? 0);
         $totalTransactions = (float) ($this->total_transactions ?? 0);
         $nextLevel = $this->getNextMembershipLevel();
         if (!$nextLevel) {
             return [
                 'next_level' => null,
+                'current_points' => $currentPoints,
+                'required_points' => 0,
                 'current_amount' => $totalTransactions,
                 'required_amount' => 0,
                 'percentage' => 100,
                 'remaining' => 0,
+                'remaining_points' => 0,
             ];
         }
+
+        $goldPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('gold_point_threshold', 1000);
+        $platinumPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('platinum_point_threshold', 3000);
+
+        $requiredPoints = match($nextLevel) {
+            'gold' => $goldPointThreshold,
+            'platinum' => $platinumPointThreshold,
+            default => 1000,
+        };
 
         $requiredAmount = match($nextLevel) {
             'gold' => 5000000,
@@ -210,15 +223,19 @@ class User extends Authenticatable
             default => 0,
         };
 
-        $percentage = $requiredAmount > 0 ? min(100, ($totalTransactions / $requiredAmount) * 100) : 100;
-        $remaining = max(0, $requiredAmount - $totalTransactions);
+        $percentage = $requiredPoints > 0 ? min(100, ($currentPoints / $requiredPoints) * 100) : 100;
+        $remainingPoints = max(0, $requiredPoints - $currentPoints);
+        $remainingAmount = max(0, $requiredAmount - $totalTransactions);
 
         return [
             'next_level' => $nextLevel,
+            'current_points' => $currentPoints,
+            'required_points' => $requiredPoints,
             'current_amount' => $totalTransactions,
             'required_amount' => $requiredAmount,
             'percentage' => round($percentage, 1),
-            'remaining' => $remaining,
+            'remaining' => $remainingAmount,
+            'remaining_points' => $remainingPoints,
         ];
     }
 

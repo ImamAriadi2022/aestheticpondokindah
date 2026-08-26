@@ -15,11 +15,6 @@ import {
   Sparkles,
   TrendingUp,
   Percent,
-  Bell,
-  Heart,
-  FolderOpen,
-  ChevronRight,
-  Calendar,
   Award,
   Coins,
   ArrowRight,
@@ -27,7 +22,7 @@ import {
   Clock,
   Copy,
   CheckCircle2,
-  Tag,
+  Lock,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { toast } from "@/shared/ui/toast";
@@ -194,7 +189,6 @@ export default function MembershipPage() {
       setPointsLoading(true);
       let payload: any = null;
 
-      // 1. Try membershipApi
       try {
         const res1 = await membershipApi.getPoints();
         payload = (res1 as any)?.data || res1;
@@ -202,7 +196,6 @@ export default function MembershipPage() {
         logger.warn("membershipApi.getPoints failed, trying apiClient fallback:", e1);
       }
 
-      // 2. Try apiClient fallback
       if (!payload || !payload.history) {
         try {
           const res2 = await apiClient.get<any>("/membership/points", { skipToast: true });
@@ -212,7 +205,6 @@ export default function MembershipPage() {
         }
       }
 
-      // 3. Parse data
       const currentBalance = Number(payload?.current_balance ?? (session as any)?.membership_points ?? 0);
       let totalEarned = Number(payload?.total_earned ?? 0);
       const totalRedeemed = Number(payload?.total_redeemed ?? 0);
@@ -227,7 +219,6 @@ export default function MembershipPage() {
         historyList = raw;
       }
 
-      // If history list is empty but user has points
       if (historyList.length === 0 && currentBalance > 0) {
         historyList = generateFallbackHistory(session, currentBalance);
         if (totalEarned === 0) totalEarned = currentBalance;
@@ -269,6 +260,32 @@ export default function MembershipPage() {
 
     fetchPoints();
   }, []);
+
+  // Profile completion calculation & lock status
+  const calculateProfileProgress = () => {
+    if (!session) return 0;
+    const fields = ["name", "email", "phone", "gender", "birthDate", "bloodType", "job", "address", "city"];
+    const filledFields = fields.filter((field) => {
+      const val = (session as any)[field] || 
+                  (session as any)[field.replace(/([A-Z])/g, "_$1").toLowerCase()] ||
+                  (session as any)[field === 'phone' ? 'whatsapp' : field] ||
+                  (session as any)[field === 'bloodType' ? 'blood_type' : field] ||
+                  (session as any)[field === 'birthDate' ? 'birth_date' : field] ||
+                  (session as any)[field === 'address' ? 'address_line' : field];
+      return !!val && String(val).trim() !== "" && !String(val).startsWith("Pasien ");
+    });
+    return Math.round((filledFields.length / fields.length) * 100);
+  };
+
+  const isProfileCompleted = useMemo(() => {
+    if (apiMembership?.membership?.profile_completed !== undefined) {
+      return Boolean(apiMembership.membership.profile_completed);
+    }
+    if ((session as any)?.membership_profile_completed !== undefined) {
+      return Boolean((session as any).membership_profile_completed);
+    }
+    return calculateProfileProgress() >= 100;
+  }, [apiMembership, session]);
 
   const tierConfig = {
     bronze: {
@@ -337,33 +354,48 @@ export default function MembershipPage() {
   const currentCardBg = getTierCardBg(normalizedTier);
   const currentRibbon = getTierRibbon(normalizedTier);
 
-  const nextTierInfo = useMemo(() => {
+  // Target points threshold for level up
+  const goldThreshold = Number((apiMembership?.membership as any)?.point_thresholds?.gold || 1000);
+  const platinumThreshold = Number((apiMembership?.membership as any)?.point_thresholds?.platinum || 3000);
+
+  const targetLevelInfo = useMemo(() => {
     if (normalizedTier === 'bronze') {
       return {
-        targetLevel: 'Gold Member',
-        headerTitle: 'Progress Menuju Gold',
+        targetPoints: goldThreshold,
+        targetName: 'Gold Member',
+        headerTitle: 'Progress Menuju Gold Member',
         title: 'Naik Level ke Gold Member',
-        description: 'Nikmati prioritas booking, benefit eksklusif, dan poin reward lebih banyak dengan upgrade ke Gold Member.',
+        description: 'Nikmati prioritas booking, diskon khusus 5%, konsultasi gratis dokter gigi, dan 1.5x multiplier poin reward.',
         showUpgradeButton: true,
       };
     }
     if (normalizedTier === 'gold') {
       return {
-        targetLevel: 'Platinum Member',
-        headerTitle: 'Progress Menuju Platinum',
+        targetPoints: platinumThreshold,
+        targetName: 'Platinum Member',
+        headerTitle: 'Progress Menuju Platinum Member',
         title: 'Naik Level ke Platinum Member',
-        description: 'Dapatkan fasilitas VIP eksklusif, free scaling tahunan, dan prioritas layanan tertinggi sebagai Platinum Member.',
+        description: 'Dapatkan fasilitas VIP eksklusif, free scaling tahunan, diskon layanan 10%, dan 2.0x multiplier poin reward.',
         showUpgradeButton: true,
       };
     }
     return {
-      targetLevel: 'Priority VIP (Tier Tertinggi)',
+      targetPoints: 0,
+      targetName: 'Priority VIP',
       headerTitle: 'Status Membership VIP',
-      title: 'Anda Berada di Tier Tertinggi',
-      description: 'Selamat! Anda telah menikmati seluruh benefit VIP eksklusif, prioritas booking utama, dan poin reward maksimal.',
+      title: 'Anda Berada di Tier Tertinggi (Platinum VIP)',
+      description: 'Selamat! Anda telah menikmati seluruh benefit VIP eksklusif, free scaling tahunan, dan multiplier poin reward maksimal.',
       showUpgradeButton: false,
     };
-  }, [normalizedTier]);
+  }, [normalizedTier, goldThreshold, platinumThreshold]);
+
+  const targetLevelPoints = targetLevelInfo.targetPoints;
+  const targetLevelName = targetLevelInfo.targetName;
+
+  const pointProgressPercentage = useMemo(() => {
+    if (targetLevelPoints <= 0) return 100;
+    return Math.min(100, Math.round((userPoints / targetLevelPoints) * 100));
+  }, [userPoints, targetLevelPoints]);
 
   const generateMemberId = (userId: string | number) => {
     const id = String(userId).toUpperCase();
@@ -398,7 +430,7 @@ export default function MembershipPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <p className="text-gray-500 mb-4 text-sm">Silakan login terlebih dahulu</p>
-          <Button onClick={() => navigate("/login")} className="bg-[#c9a24a] text-white">Login</Button>
+          <Button onClick={() => navigate("/login")} className="bg-[#c9a24a] text-white cursor-pointer">Login</Button>
         </div>
       </div>
     );
@@ -409,42 +441,234 @@ export default function MembershipPage() {
     ? "w-full mx-auto px-4 py-5 space-y-6"
     : "w-full max-w-[1400px] mx-auto px-2 sm:px-4 py-6 space-y-6";
 
+  // LOCKED STATE: Profile Not Completed
+  if (!isProfileCompleted) {
+    return (
+      <Layout role="user">
+        <div className={containerClasses}>
+          <div className="min-h-[520px] flex flex-col items-center justify-center p-6 sm:p-12 bg-white rounded-3xl border border-[#E8DFC8] shadow-xs text-center relative overflow-hidden">
+            {/* Ambient Gold Glow */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-100/50 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 max-w-lg mx-auto flex flex-col items-center">
+              {/* Padlock Icon */}
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-[#FAF5EA] to-[#F3E8CF] border-2 border-[#EADBBD] flex items-center justify-center shadow-lg shadow-[#C9A24A]/15 mb-6">
+                <Lock className="w-10 h-10 sm:w-12 sm:h-12 text-[#8C6B1C]" />
+              </div>
+
+              {/* Status Pill */}
+              <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD] mb-4 uppercase tracking-wider">
+                <Lock className="w-3.5 h-3.5" /> Fitur Membership Terkunci
+              </span>
+
+              {/* Exact User Prompt Heading */}
+              <h2 className="text-xl sm:text-2xl font-black text-[#2C2416] leading-tight mb-3">
+                silahkan lengkapi profil pengguna untuk membuka fitur membership
+              </h2>
+
+              <p className="text-sm text-[#7A6E60] leading-relaxed mb-8">
+                Kartu loyalty member digital, akumulasi poin reward per tindakan, diskon khusus tier loyalty, dan voucher promo eksklusif akan otomatis terbuka setelah data profil akun Anda dilengkapi.
+              </p>
+
+              {/* Action Button */}
+              <Button
+                onClick={() => navigate("/dashboard/user/profile")}
+                className="w-full sm:w-auto h-12 px-8 bg-gradient-gold hover:opacity-90 text-white font-bold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer flex items-center justify-center gap-2 text-sm"
+              >
+                <span>Lengkapi Profil Pengguna</span>
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+
+              {/* Feature Preview Pills */}
+              <div className="grid grid-cols-3 gap-3 w-full mt-10 pt-8 border-t border-[#E8DFC8]/60 text-center">
+                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#EADBBD]/50">
+                  <Star className="w-4 h-4 text-[#8C6B1C] mx-auto mb-1 opacity-70" />
+                  <span className="text-[11px] font-bold text-[#5C5245]">Kartu Loyalty ID</span>
+                </div>
+                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#EADBBD]/50">
+                  <Coins className="w-4 h-4 text-[#8C6B1C] mx-auto mb-1 opacity-70" />
+                  <span className="text-[11px] font-bold text-[#5C5245]">Poin Reward</span>
+                </div>
+                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#EADBBD]/50">
+                  <Crown className="w-4 h-4 text-[#8C6B1C] mx-auto mb-1 opacity-70" />
+                  <span className="text-[11px] font-bold text-[#5C5245]">Promo Khusus</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // UNLOCKED STATE: Profile Is Complete
   return (
     <Layout role="user">
       <div className={containerClasses}>
         
         {/* Middle Row: Membership Card (left) & Progress (right) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Progress / Upgrade Banner (Right - 2/3) */}
-          <Card className="order-2 lg:col-span-2 lg:order-2 rounded-2xl border-0 shadow-sm bg-white overflow-hidden relative">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-[#C9A24A]" />
-                  <h3 className="font-bold text-gray-900">{nextTierInfo.headerTitle}</h3>
+          
+          {/* Left Column (1/3): Digital Card & Summary */}
+          <div className="order-1 lg:col-span-1 space-y-4">
+            <div className="bg-[#1C1814] rounded-3xl p-5 sm:p-6 text-white shadow-xl relative overflow-hidden border border-[#3A3228]">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-bold text-white tracking-wide">Kartu Membership</h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#3A3228] text-[#E8C547] border border-[#5C4F3B]">
+                  {config.badge}
+                </span>
+              </div>
+
+              {/* Visual Card Component */}
+              <div
+                id="membership-card-download"
+                className="w-full aspect-[1.586/1] rounded-2xl relative p-5 flex flex-col justify-between shadow-2xl overflow-hidden border border-[#D4AF37]/30 select-none group"
+                style={{
+                  backgroundImage: `url(${currentCardBg})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className="flex items-start justify-between relative z-10">
+                  <div>
+                    <span className="text-[9px] font-bold tracking-[0.2em] text-white/70 block uppercase">AESPI DIGITAL</span>
+                    <span className="text-[11px] font-extrabold tracking-wider text-white drop-shadow">MEMBERSHIP CARD</span>
+                  </div>
+                  <img src="/logo/logo.webp" alt="Aesthetic" className="h-6 w-auto object-contain brightness-0 invert opacity-90" />
+                </div>
+
+                <div className="relative z-10 my-auto">
+                  <span className="text-[9px] font-bold text-[#EADBBD] tracking-wider block uppercase">
+                    {config.badge} MEMBER
+                  </span>
+                  <h4 className="text-lg sm:text-xl font-black text-white tracking-wide uppercase drop-shadow truncate">
+                    {session?.name || "PASIEN MEMBER"}
+                  </h4>
+                </div>
+
+                <div className="flex items-end justify-between relative z-10">
+                  <div>
+                    <span className="text-[8px] font-bold text-white/60 tracking-wider block">MEMBER ID</span>
+                    <span className="text-xs font-mono font-bold text-[#FAF5EA] tracking-wider">{membershipId}</span>
+                  </div>
+                  <img src={currentRibbon} alt="Ribbon" className="w-10 h-10 object-contain drop-shadow" />
                 </div>
               </div>
 
-              <div className="relative mb-8">
-                {/* Upgrade Banner */}
-                <div className="relative overflow-hidden rounded-2xl bg-amber-50 p-5 sm:p-6 border border-amber-100">
+              {/* Card Meta Infos */}
+              <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-[#3A3228]">
+                <div className="p-2.5 bg-[#26211B] rounded-xl border border-[#3A3228]">
+                  <span className="text-[10px] text-gray-400 font-medium block">BERLAKU HINGGA</span>
+                  <span className="text-xs font-bold text-white mt-0.5 block">{membershipExpiry}</span>
+                </div>
+                <div className="p-2.5 bg-[#26211B] rounded-xl border border-[#3A3228]">
+                  <span className="text-[10px] text-gray-400 font-medium block">POIN SAAT INI</span>
+                  <span className="text-xs font-bold text-[#E8C547] mt-0.5 block">{new Intl.NumberFormat("id-ID").format(userPoints)} Pts</span>
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setShowMembershipModal(true)}
+                variant="outline"
+                className="w-full mt-4 h-11 rounded-xl border-[#3A3228] bg-[#26211B] hover:bg-[#332C24] text-white text-xs font-bold cursor-pointer"
+              >
+                Lihat Detail Membership <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Column (2/3): Point Progress Bar & Upgrade & Benefits */}
+          <div className="order-2 lg:col-span-2 space-y-6">
+            <Card className="rounded-3xl border-0 shadow-sm bg-white overflow-hidden relative">
+              <CardContent className="p-5 sm:p-7">
+                
+                {/* 1. BAR INFORMASI POIN & BATAS MINIMAL UNTUK NAIK LEVEL */}
+                <div className="mb-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#FAF8F5] via-[#FFFDF9] to-[#FAF5EA] border border-[#E8DFC8] shadow-xs relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] shadow-xs shrink-0">
+                        <Coins className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C8272]">Poin Loyalty Anda</span>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-2xl sm:text-3xl font-black text-[#8C6B1C]">
+                            {new Intl.NumberFormat("id-ID").format(userPoints)}
+                          </span>
+                          <span className="text-xs font-bold text-[#A8843A]">Pts</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="sm:text-right bg-white sm:bg-transparent p-3 sm:p-0 rounded-xl border sm:border-0 border-[#EADBBD]/50">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#8C8272]">Batas Minimal Naik Level</span>
+                      <div className="flex sm:justify-end items-center gap-1.5 mt-0.5">
+                        <Crown className="w-4 h-4 text-[#C9A24A]" />
+                        <span className="text-sm sm:text-base font-black text-[#2C2416]">
+                          {targetLevelPoints > 0 ? `${new Intl.NumberFormat("id-ID").format(targetLevelPoints)} Pts` : "Tier Maksimal"}
+                        </span>
+                        {targetLevelName && (
+                          <span className="text-xs font-bold text-[#8C6B1C]">({targetLevelName})</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar Track */}
+                  <div className="space-y-2 pt-2 border-t border-[#E8DFC8]/60">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#5C5245] flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-[#8C6B1C]" />
+                        Progress Akumulasi Poin Menuju {targetLevelName || "VIP"}
+                      </span>
+                      <span className="text-[#8C6B1C] font-black text-sm">{pointProgressPercentage}%</span>
+                    </div>
+                    
+                    <div className="w-full h-4 bg-[#EFE9DA] rounded-full overflow-hidden p-0.5 border border-[#E2D8C0]">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#C9A24A] via-[#E8C547] to-[#8C6B1C] rounded-full transition-all duration-700 shadow-xs"
+                        style={{ width: `${Math.max(4, pointProgressPercentage)}%` }}
+                      />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[11px] pt-1">
+                      <p className="text-[#6B5E4F]">
+                        {targetLevelPoints > userPoints
+                          ? <>Kumpulkan <strong className="text-[#8C6B1C] font-bold">{new Intl.NumberFormat("id-ID").format(targetLevelPoints - userPoints)} Pts</strong> lagi dari tindakan medis untuk otomatis naik ke <strong>{targetLevelName}</strong>.</>
+                          : <span className="text-emerald-700 font-bold">🎉 Poin Anda telah memenuhi syarat tingkatan tier loyalty!</span>
+                        }
+                      </p>
+                      <span className="text-[10px] text-[#A8843A] font-semibold">
+                        Otomatis via Poin atau Upgrade Instan
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. UPGRADE BANNER (NAIK LEVEL) */}
+                <div className="relative overflow-hidden rounded-2xl bg-amber-50 p-5 sm:p-6 border border-amber-100 mb-6">
                   <div className="absolute -left-10 top-1/2 -translate-y-1/2 w-40 h-40 bg-amber-200/40 rounded-full blur-2xl" />
                   <div className="flex items-start gap-5 relative z-10">
-                    <div className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center shadow">
+                    <div className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl flex items-center justify-center shadow-xs">
                       <Award className="w-8 h-8 sm:w-10 sm:h-10 text-[#C9A24A]" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1">{nextTierInfo.title}</h3>
-                      <p className="text-sm text-gray-600 mb-4">{nextTierInfo.description}</p>
-                      {nextTierInfo.showUpgradeButton && (
-                        <Button onClick={() => navigate('/membership/upgrade')} className="bg-[#C9A24A] text-white font-bold px-5 h-10 hover:opacity-90 cursor-pointer">Upgrade Sekarang</Button>
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1">{targetLevelInfo.title}</h3>
+                      <p className="text-sm text-gray-600 mb-4">{targetLevelInfo.description}</p>
+                      {targetLevelInfo.showUpgradeButton && (
+                        <Button
+                          onClick={() => navigate('/membership/upgrade')}
+                          className="bg-[#C9A24A] hover:bg-[#B38D39] text-white font-bold px-6 h-10 rounded-xl hover:opacity-90 cursor-pointer shadow-md shadow-[#C9A24A]/20"
+                        >
+                          Upgrade Sekarang
+                        </Button>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Interactive Benefits: Promo Khusus & Riwayat Poin */}
-                <div className="mt-6">
+                {/* 3. INTERACTIVE BENEFITS: PROMO KHUSUS & RIWAYAT POIN */}
+                <div>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Crown className="w-4 h-4 text-[#C9A24A]" />
@@ -454,7 +678,7 @@ export default function MembershipPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {/* 1. Promo Khusus Member Pop-up */}
+                    {/* Promo Khusus Member Pop-up */}
                     <div
                       onClick={() => {
                         setShowPromoModal(true);
@@ -482,13 +706,13 @@ export default function MembershipPage() {
                         </p>
                       </div>
 
-                      <div className="relative z-10 flex items-center text-xs font-bold text-[#C9A24A] group-hover:text-[#A8843A] transition-colors">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-[#8C6B1C] group-hover:translate-x-1 transition-transform">
                         <span>Buka Promo Eksklusif</span>
-                        <ArrowRight className="w-3.5 h-3.5 ml-1.5 transform group-hover:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </div>
                     </div>
 
-                    {/* 2. Riwayat & Mutasi Poin Pop-up */}
+                    {/* Riwayat & Mutasi Poin Pop-up */}
                     <div
                       onClick={() => {
                         setShowPointHistoryModal(true);
@@ -503,8 +727,8 @@ export default function MembershipPage() {
                           <div className="w-10 h-10 rounded-xl bg-[#FDF0D5] border border-[#EADBBD] flex items-center justify-center text-[#9A7B2C] shadow-2xs group-hover:scale-105 transition-transform">
                             <Coins className="w-5 h-5 text-[#C9A24A]" />
                           </div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200">
-                            {userPoints} Pts
+                          <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100/80 text-amber-800 border border-amber-200">
+                            {new Intl.NumberFormat("id-ID").format(userPoints)} Pts
                           </span>
                         </div>
                         
@@ -516,459 +740,159 @@ export default function MembershipPage() {
                         </p>
                       </div>
 
-                      <div className="relative z-10 flex items-center text-xs font-bold text-[#C9A24A] group-hover:text-[#A8843A] transition-colors">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-[#8C6B1C] group-hover:translate-x-1 transition-transform">
                         <span>Buka Rincian Mutasi Poin</span>
-                        <ChevronRight className="w-3.5 h-3.5 ml-1.5 transform group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 3. Privilese Tier & Pemotongan Biaya Layanan */}
-                  <div className="mt-4 p-4 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] text-left">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="w-4 h-4 text-[#8C6B1C]" />
-                      <h5 className="text-xs font-bold text-[#2C2416] uppercase tracking-wider">
-                        Hak Istimewa (Privilege) Tier {config.badge}
-                      </h5>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-[#5C5546] mb-3">
-                      <div className="bg-white/80 p-2.5 rounded-xl border border-[#E6DECB]">
-                        <p className="text-[10px] font-bold text-[#8C6B1C] uppercase">Pengali Poin</p>
-                        <p className="font-extrabold text-[#2C2416] text-sm">
-                          {normalizedTier === 'platinum' ? '2.0x (2x Lipat)' : normalizedTier === 'gold' ? '1.5x Lebih Cepat' : '1.0x (Standar)'}
-                        </p>
-                      </div>
-                      <div className="bg-white/80 p-2.5 rounded-xl border border-[#E6DECB]">
-                        <p className="text-[10px] font-bold text-[#8C6B1C] uppercase">Diskon Perawatan</p>
-                        <p className="font-extrabold text-[#2C2416] text-sm">
-                          {normalizedTier === 'platinum' ? '10% Khusus' : normalizedTier === 'gold' ? '5% Khusus' : 'Standar Promo'}
-                        </p>
-                      </div>
-                      <div className="bg-white/80 p-2.5 rounded-xl border border-[#E6DECB]">
-                        <p className="text-[10px] font-bold text-[#8C6B1C] uppercase">Akses & Prioritas</p>
-                        <p className="font-extrabold text-[#2C2416] text-sm">
-                          {normalizedTier === 'platinum' ? 'VIP Fast-Track & Free Scaling' : normalizedTier === 'gold' ? 'Prioritas Antrean Booking' : 'Rekam Medis Digital'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2 text-[11px] text-[#8C6B1C] bg-white/60 p-2.5 rounded-xl border border-[#EADBBD]">
-                      <Coins className="w-4 h-4 text-[#C9A24A] shrink-0 mt-0.5" />
-                      <p className="leading-relaxed">
-                        <strong>Kabar Gembira:</strong> Poin reward Anda kini dapat langsung digunakan untuk <strong>memotong biaya reservasi layanan klinik</strong> saat melakukan konfirmasi booking janji temu!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Membership Card */}
-          <Card className="order-1 lg:col-span-1 lg:order-1 rounded-2xl border-0 shadow-sm bg-[#1a1612] overflow-hidden group">
-            <CardContent className="p-0 flex flex-col h-full">
-              <div className="p-6">
-                {!isMobile && (
-                  <h3 className="text-lg font-bold text-white mb-6">Kartu Membership</h3>
-                )}
-                
-                {/* Digital Card Preview with Dynamic Background & Ribbon */}
-                <div className="relative aspect-[1.58/1] w-full rounded-2xl p-5 overflow-hidden border border-[#C9A24A]/25 shadow-2xl mb-6 bg-[#1a1612]">
-                  <img
-                    src={currentCardBg}
-                    alt={`${config.badge} Card Background`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = "/dashboard/cardbronze.webp";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/20" />
-                  
-                  <div className="relative h-full flex flex-col justify-between z-10">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-[7px] text-[#F5E6C8]/80 uppercase tracking-[0.2em] mb-0.5 font-medium">AESPI DIGITAL</p>
-                        <p className="text-[7px] text-[#F5E6C8]/80 uppercase tracking-[0.2em] font-medium">MEMBERSHIP CARD</p>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <img
-                          src="/logo/logo.webp"
-                          alt="Aesthetic Pondok Indah"
-                          className="h-6 sm:h-7 w-auto object-contain brightness-0 invert sepia-[.3] hue-rotate-[-10deg] saturate-[3]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-2">
-                      <p className="text-[8px] text-[#C9A24A] font-bold tracking-widest mb-0.5 uppercase">{config.badge} MEMBER</p>
-                      <h4 className="text-base sm:text-lg font-black text-[#F5E6C8] tracking-wider uppercase truncate">
-                        {(session as any)?.name || 'PASIEN KLINIK'}
-                      </h4>
-                    </div>
-
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[7px] text-[#F5E6C8]/80 uppercase tracking-[0.2em] mb-0.5 font-medium">MEMBER ID</p>
-                        <p className="text-[10px] font-mono text-[#D4C5B0] tracking-wider uppercase">{membershipId}</p>
-                      </div>
-                      <div className="w-12 h-12 relative shrink-0">
-                        <img
-                          src={currentRibbon}
-                          alt={`${config.badge} Ribbon`}
-                          className="w-full h-full object-contain drop-shadow-xl"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = "/dashboard/bronze.webp";
-                          }}
-                        />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Quick Info Grid */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="w-3.5 h-3.5 text-[#C9A24A]" />
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wider">Berlaku hingga</p>
-                    </div>
-                    <p className="text-xs font-bold text-white">{membershipExpiry}</p>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-3 border border-white/5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Star className="w-3.5 h-3.5 text-[#C9A24A]" />
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wider">Poin Saat Ini</p>
-                    </div>
-                    <p className="text-xs font-bold text-white">{userPoints} Pts</p>
-                  </div>
-                  <div className="col-span-2 bg-white/5 rounded-xl p-3 border border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Crown className="w-3.5 h-3.5 text-[#C9A24A]" />
-                      <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider leading-tight">Level Berikutnya</p>
-                        <p className="text-xs font-bold text-white leading-tight">{nextTierInfo.targetLevel}</p>
-                      </div>
-                    </div>
-                    {nextTierInfo.showUpgradeButton && (
-                      <button onClick={() => navigate('/membership/upgrade')} className="text-[10px] text-[#C9A24A] font-bold hover:underline cursor-pointer">
-                        Upgrade
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => setShowMembershipModal(true)}
-                  className="w-full py-3 rounded-xl border border-[#C9A24A]/30 text-[#C9A24A] text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#C9A24A] hover:text-[#1a1612] transition-all cursor-pointer"
-                >
-                  Lihat Detail Membership <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* MODAL 1: PROMO KHUSUS MEMBER POP-UP */}
-        <Dialog open={showPromoModal} onOpenChange={setShowPromoModal}>
-          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-6 rounded-3xl bg-white border border-[#E8DFC8] shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#F0E6D3] pb-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#FDF0D5] border border-[#EADBBD] flex items-center justify-center text-[#9A7B2C] shadow-2xs">
-                  <Percent className="w-5 h-5 text-[#C9A24A]" />
+        {/* Modal: Detail Membership Card */}
+        <Dialog open={showMembershipModal} onOpenChange={setShowMembershipModal}>
+          <DialogContent className="max-w-md p-6 rounded-3xl bg-white border border-[#E8DFC8]">
+            <div className="text-center space-y-4">
+              <div className="w-14 h-14 bg-[#FAF5EA] border border-[#EADBBD] rounded-2xl flex items-center justify-center text-[#8C6B1C] mx-auto shadow-xs">
+                <Crown className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-extrabold text-[#2C2416]">Kartu Digital Loyalty</h3>
+                <p className="text-xs text-[#7A6E60] mt-1">Simpan kartu membership digital ke perangkat Anda</p>
+              </div>
+
+              <div
+                className="w-full aspect-[1.586/1] rounded-2xl p-5 flex flex-col justify-between text-white shadow-xl text-left border border-[#D4AF37]/30"
+                style={{
+                  backgroundImage: `url(${currentCardBg})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[8px] font-bold tracking-[0.2em] text-white/70 block uppercase">AESPI DIGITAL</span>
+                    <span className="text-[10px] font-extrabold tracking-wider text-white">MEMBERSHIP CARD</span>
+                  </div>
+                  <img src="/logo/logo.webp" alt="Logo" className="h-5 w-auto brightness-0 invert opacity-90" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Promo Khusus {config.label}</h3>
-                  <p className="text-xs text-gray-500">Voucher & potongan harga spesial untuk akun tier {config.badge}</p>
+                  <span className="text-[8px] font-bold text-[#EADBBD] uppercase">{config.badge} MEMBER</span>
+                  <h4 className="text-base font-black text-white uppercase truncate">{session?.name || "PASIEN MEMBER"}</h4>
+                </div>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <span className="text-[7px] font-bold text-white/60">MEMBER ID</span>
+                    <span className="text-[11px] font-mono font-bold text-[#FAF5EA]">{membershipId}</span>
+                  </div>
+                  <img src={currentRibbon} alt="Ribbon" className="w-8 h-8 object-contain" />
                 </div>
               </div>
+
+              <Button
+                onClick={downloadCard}
+                disabled={isDownloading}
+                className="w-full h-11 bg-gradient-gold hover:opacity-90 text-white font-bold rounded-xl cursor-pointer shadow-md shadow-[#C9A24A]/20"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {isDownloading ? "Mengunduh Kartu..." : "Unduh Gambar Kartu"}
+              </Button>
             </div>
+          </DialogContent>
+        </Dialog>
 
-            <div className="space-y-3.5">
-              {promosLoading ? (
-                <div className="py-12 text-center text-gray-400">
-                  <Clock className="w-6 h-6 animate-spin mx-auto text-[#C9A24A] mb-2" />
-                  <p className="text-xs font-medium">Memuat promo eksklusif...</p>
+        {/* Modal: Promo Khusus Member */}
+        <Dialog open={showPromoModal} onOpenChange={setShowPromoModal}>
+          <DialogContent className="max-w-2xl p-6 rounded-3xl bg-white border border-[#E8DFC8] max-h-[85vh] overflow-y-auto">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E8DFC8]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C]">
+                    <Percent className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#2C2416]">Promo Khusus Member {config.badge}</h3>
+                    <p className="text-xs text-[#7A6E60]">Voucher potongan eksklusif untuk perawatan gigi Anda</p>
+                  </div>
                 </div>
-              ) : (
-                promos.map((promo, idx) => (
-                  <div
-                    key={promo.id || idx}
-                    className="p-4 rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50/40 via-white to-amber-50/20 hover:border-[#C9A24A] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                  >
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md bg-[#C9A24A]/15 text-[#8C6B1C] text-[10px] font-bold uppercase tracking-wider">
-                          {promo.discount || promo.discount_text || "Promo Member"}
-                        </span>
-                        {promo.category && (
-                          <span className="text-[10px] text-gray-400 font-medium">{promo.category}</span>
-                        )}
-                      </div>
-                      <h4 className="text-sm font-bold text-gray-900 truncate">{promo.title}</h4>
-                      <p className="text-xs text-gray-600 line-clamp-2">{promo.description || promo.excerpt || "Gunakan saat reservasi untuk menikmati potongan harga eksklusif."}</p>
-                    </div>
+              </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleCopyCode(promo.code || "AESPIVIP")}
-                        className="px-3.5 py-2 rounded-xl border border-[#C9A24A]/40 bg-white hover:bg-[#FAF4E8] text-[#8C6B1C] text-xs font-bold font-mono flex items-center gap-1.5 transition-colors cursor-pointer"
-                        title="Salin Kode Promo"
-                      >
-                        {copiedCode === (promo.code || "AESPIVIP") ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span className="text-emerald-700">Tersalin</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5 text-[#C9A24A]" />
-                            <span>{promo.code || "AESPIVIP"}</span>
-                          </>
-                        )}
-                      </button>
+              <div className="space-y-3 pt-2">
+                {promos.map((p) => (
+                  <div key={p.id} className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#E8DFC8] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-[#8C6B1C] uppercase tracking-wider">{p.category || "Promo Khusus"}</span>
+                      <h4 className="text-sm font-bold text-[#2C2416]">{p.title}</h4>
+                      <p className="text-xs text-[#7A6E60] leading-relaxed">{p.description}</p>
+                    </div>
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+                      <span className="text-sm font-black text-[#8C6B1C]">{p.discount}</span>
                       <Button
-                        onClick={() => {
-                          setShowPromoModal(false);
-                          navigate("/dashboard/user?tab=reservasi");
-                        }}
-                        className="bg-[#C9A24A] text-white text-xs font-bold px-3.5 py-2 h-auto rounded-xl hover:opacity-90 cursor-pointer"
+                        size="sm"
+                        onClick={() => handleCopyCode(p.code)}
+                        className="bg-[#FAF5EA] hover:bg-[#F3E8CF] text-[#8C6B1C] border border-[#EADBBD] font-bold text-xs h-8 px-3 rounded-lg cursor-pointer flex items-center gap-1.5"
                       >
-                        Pakai
+                        {copiedCode === p.code ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedCode === p.code ? "Tersalin!" : p.code}</span>
                       </Button>
                     </div>
                   </div>
-                ))
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal: Riwayat & Mutasi Poin */}
+        <Dialog open={showPointHistoryModal} onOpenChange={setShowPointHistoryModal}>
+          <DialogContent className="max-w-2xl p-6 rounded-3xl bg-white border border-[#E8DFC8] max-h-[85vh] overflow-y-auto">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-[#E8DFC8]">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C]">
+                    <Coins className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-[#2C2416]">Buku Besar Mutasi Poin</h3>
+                    <p className="text-xs text-[#7A6E60]">Saldo Poin Aktif: <strong className="text-[#8C6B1C]">{new Intl.NumberFormat("id-ID").format(userPoints)} Pts</strong></p>
+                  </div>
+                </div>
+              </div>
+
+              {pointsLoading ? (
+                <div className="py-12 text-center text-xs text-gray-500">Memuat riwayat poin...</div>
+              ) : pointsData.history.length === 0 ? (
+                <div className="py-12 text-center text-xs text-gray-500">Belum ada riwayat perolehan poin</div>
+              ) : (
+                <div className="space-y-2.5 pt-2">
+                  {pointsData.history.map((h, i) => (
+                    <div key={h.id || i} className="p-3.5 rounded-xl bg-[#FAF8F5] border border-[#E8DFC8] flex items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${h.type === 'earned' || Number(h.points) > 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
+                            {h.type === 'earned' || Number(h.points) > 0 ? '+ Masuk' : '- Terpakai'}
+                          </span>
+                          <span className="text-[11px] text-gray-400 font-mono">
+                            {new Date(h.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-[#2C2416]">{h.description || "Perolehan reward tindakan medis"}</p>
+                      </div>
+                      <span className={`text-sm font-black whitespace-nowrap ${Number(h.points) > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {Number(h.points) > 0 ? `+${h.points}` : h.points} Pts
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-
-            <div className="mt-5 pt-3 border-t border-gray-100 flex justify-end">
-              <Button
-                onClick={() => setShowPromoModal(false)}
-                variant="outline"
-                className="text-xs font-semibold rounded-xl cursor-pointer"
-              >
-                Tutup
-              </Button>
-            </div>
           </DialogContent>
         </Dialog>
 
-        {/* MODAL 2: RIWAYAT & MUTASI POIN MEMBER POP-UP */}
-        <Dialog open={showPointHistoryModal} onOpenChange={setShowPointHistoryModal}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-6 rounded-3xl bg-white border border-[#E8DFC8] shadow-2xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#F0E6D3] pb-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#FDF0D5] border border-[#EADBBD] flex items-center justify-center text-[#9A7B2C] shadow-2xs">
-                  <Coins className="w-5 h-5 text-[#C9A24A]" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">Buku Besar & Riwayat Mutasi Poin</h3>
-                  <p className="text-xs text-gray-500">Catatan perolehan poin dari transaksi perawatan dan reward loyalty Anda</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="px-3.5 py-1.5 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] text-xs font-bold text-[#8C6B1C] flex items-center gap-1.5 shadow-2xs">
-                  <Sparkles className="w-4 h-4 text-[#C9A24A]" />
-                  <span>Saldo: {userPoints} Poin</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Point Summary Bar */}
-            <div className="grid grid-cols-3 gap-3 mb-4 text-center">
-              <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-100">
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Saldo Poin</p>
-                <p className="text-base font-black text-[#8C6B1C]">{userPoints} Pts</p>
-              </div>
-              <div className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100">
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total Didapat</p>
-                <p className="text-base font-black text-emerald-700">+{pointsData.total_earned} Pts</p>
-              </div>
-              <div className="p-3 rounded-2xl bg-rose-50/60 border border-rose-100">
-                <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total Digunakan</p>
-                <p className="text-base font-black text-rose-700">-{pointsData.total_redeemed} Pts</p>
-              </div>
-            </div>
-
-            {/* Table of Point Mutations */}
-            <div className="overflow-x-auto rounded-2xl border border-gray-100">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAF8F5] border-b border-[#E8DFC8] text-[10px] uppercase font-bold text-[#8C8272] tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3">Tanggal</th>
-                    <th className="px-4 py-3">Sumber Perawatan / Tindakan</th>
-                    <th className="px-4 py-3">Tipe Mutasi</th>
-                    <th className="px-4 py-3">Perolehan Poin</th>
-                    <th className="px-4 py-3">Saldo Berjalan</th>
-                    <th className="px-4 py-3">Keterangan</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#F5EFE6]">
-                  {pointsLoading ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-[#8C8272]">
-                        <Clock className="w-5 h-5 animate-spin mx-auto text-[#C9A24A] mb-1" />
-                        Memuat riwayat mutasi poin...
-                      </td>
-                    </tr>
-                  ) : pointsData.history.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-10 text-center text-[#8C8272]">
-                        <Receipt className="w-8 h-8 text-[#C9A24A]/40 mx-auto mb-2" />
-                        <p className="font-bold text-[#2C2416]">Belum Ada Mutasi Poin</p>
-                        <p className="text-[11px] mt-0.5">
-                          Lakukan reservasi janji temu dan selesaikan perawatan gigi Anda untuk mulai mengumpulkan poin reward!
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    pointsData.history.map((item) => {
-                      const isPositive = Number(item.points) > 0 || item.type === "earned";
-                      return (
-                        <tr key={item.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
-                          <td className="px-4 py-3 whitespace-nowrap text-[#8C8272] font-mono text-[11px]">
-                            {item.created_at
-                              ? new Date(item.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-                              : "-"}
-                          </td>
-                          <td className="px-4 py-3 font-semibold text-[#2C2416]">
-                            {item.reference_type === "reservation" ? (
-                              <span className="text-[#8C6B1C] font-mono font-bold inline-flex items-center gap-1">
-                                <Receipt className="w-3.5 h-3.5 text-[#C9A24A]" />
-                                Reservasi #{item.reference_id}
-                              </span>
-                            ) : item.reference_type === "membership_upgrade" ? (
-                              <span className="text-purple-700 font-bold inline-flex items-center gap-1">
-                                <Crown className="w-3.5 h-3.5 text-purple-600" />
-                                Upgrade Membership
-                              </span>
-                            ) : (
-                              <span>{item.reference_type || "Sistem Reward"}</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-block rounded-full px-2.5 py-0.5 font-bold text-[9px] uppercase border ${
-                                item.type === "earned"
-                                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                  : item.type === "adjusted"
-                                  ? "bg-amber-50 text-amber-800 border-amber-200"
-                                  : "bg-rose-50 text-rose-800 border-rose-200"
-                              }`}
-                            >
-                              {item.type}
-                            </span>
-                          </td>
-                          <td className={`px-4 py-3 font-black text-xs ${isPositive ? "text-emerald-600" : "text-rose-600"}`}>
-                            {isPositive ? `+${item.points}` : item.points} Pts
-                          </td>
-                          <td className="px-4 py-3 font-mono text-[11px]">
-                            {item.balance_before !== undefined && item.balance_after !== undefined ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2 py-0.5 rounded-lg border border-[#EADBBD]">
-                                <span>{item.balance_before}</span>
-                                <ArrowRight className="w-2.5 h-2.5 text-gray-400" />
-                                <span className="text-[#2C2416]">{item.balance_after}</span>
-                              </span>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-[#5C5546] max-w-xs text-[11px] truncate" title={item.description || ""}>
-                            {item.description || "-"}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-gray-100 flex justify-end">
-              <Button
-                onClick={() => setShowPointHistoryModal(false)}
-                variant="outline"
-                className="text-xs font-semibold rounded-xl cursor-pointer"
-              >
-                Tutup
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Digital Membership Modal */}
-        <Dialog open={showMembershipModal} onOpenChange={setShowMembershipModal}>
-          <DialogContent className="max-w-[95vw] sm:max-w-2xl p-0 !bg-transparent !border-0 !shadow-none">
-            <div className="flex flex-col items-center">
-              <div id="membership-card-modal" className="w-full aspect-[1.58/1] rounded-[1.5rem] relative overflow-hidden shadow-2xl bg-[#1a1612]">
-                <img
-                  src={currentCardBg}
-                  alt={`${config.badge} Card Background`}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = "/dashboard/cardbronze.webp";
-                  }}
-                />
-
-                <div className="relative h-full flex flex-col justify-between p-6 sm:p-8 z-10">
-                  <div className="flex justify-between items-start">
-                    <div className="flex flex-col">
-                      <h3 className="text-[#F5E6C8] text-3xl sm:text-4xl font-extralight tracking-[0.1em] leading-none">aesthetic</h3>
-                      <p className="text-[#D4A84B] text-xs sm:text-sm tracking-[0.3em] lowercase mt-1">pondok indah</p>
-                      <p className="text-[#B8943F] text-[9px] sm:text-[10px] tracking-[0.4em] mt-2 font-medium uppercase">{config.badge} MEMBERSHIP</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <img
-                        src="/logo/logo.webp"
-                        alt="Aesthetic Pondok Indah"
-                        className="h-10 sm:h-12 w-auto object-contain brightness-0 invert sepia-[.3] hue-rotate-[-10deg] saturate-[3]"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-auto mb-1">
-                    <p className="text-[#C9A24A]/80 text-[9px] sm:text-[10px] tracking-[0.3em] mb-1.5 font-medium uppercase">Nama Pemilik</p>
-                    <h4 className="text-[#F5E6C8] text-xl sm:text-2xl font-bold tracking-[0.15em] truncate uppercase">
-                      {(session as any)?.name?.toUpperCase() || 'PASIEN KLINIK'}
-                    </h4>
-                    <p className="text-[#E8D5B5] text-lg sm:text-xl font-mono tracking-[0.2em] mt-2 uppercase" style={{fontFamily: "'Courier New', Courier, monospace"}}>
-                      {membershipId}
-                    </p>
-                  </div>
-
-                  <div className="flex justify-between items-end">
-                    <div className="flex items-center gap-3">
-                      <p className="text-[#C9A24A]/80 text-[8px] sm:text-[9px] tracking-[0.2em] font-medium uppercase">Valid Thru</p>
-                      <p className="text-[#F5E6C8] text-sm sm:text-base font-bold tracking-wide" style={{fontFamily: "'Courier New', Courier, monospace"}}>
-                        {membershipExpiry}
-                      </p>
-                    </div>
-                    <div className="w-12 sm:w-14 h-12 sm:h-14 relative shrink-0">
-                      <img
-                        src={currentRibbon}
-                        alt={`${config.badge} Ribbon`}
-                        className="w-full h-full object-contain drop-shadow-2xl"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/dashboard/bronze.webp";
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-4 mt-6">
-                <Button onClick={downloadCard} disabled={isDownloading} className="bg-[#c9a24a] text-white px-6 py-4 h-auto font-bold rounded-xl shadow-xl flex items-center gap-2 transition-all active:scale-95 text-sm cursor-pointer">
-                  {isDownloading ? "Mengunduh..." : <><Download className="w-4 h-4" /> Download PNG</>}
-                </Button>
-                <Button onClick={() => setShowMembershipModal(false)} className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/10 hover:bg-white/20 transition-colors cursor-pointer">
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </Layout>
   );

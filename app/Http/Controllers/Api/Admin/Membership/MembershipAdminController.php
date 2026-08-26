@@ -649,6 +649,8 @@ class MembershipAdminController extends Controller
         $conversionRate = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('point_conversion_rate', 1000);
         $minRedeemPoints = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('min_redeem_points', 10);
         $maxDiscountPercentage = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('max_discount_percentage', 100);
+        $goldPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('gold_point_threshold', 1000);
+        $platinumPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('platinum_point_threshold', 3000);
         $tierMultipliers = \App\Models\Admin\Settings\ClinicSetting::getValue('tier_multipliers', [
             'bronze' => 1.0,
             'gold' => 1.5,
@@ -661,6 +663,8 @@ class MembershipAdminController extends Controller
                 'conversion_rate' => $conversionRate,
                 'min_redeem_points' => $minRedeemPoints,
                 'max_discount_percentage' => $maxDiscountPercentage,
+                'gold_point_threshold' => $goldPointThreshold,
+                'platinum_point_threshold' => $platinumPointThreshold,
                 'tier_multipliers' => $tierMultipliers,
                 'rate_formatted' => '1 Poin = Rp ' . number_format($conversionRate, 0, ',', '.'),
             ],
@@ -676,6 +680,8 @@ class MembershipAdminController extends Controller
             'conversion_rate' => ['required', 'integer', 'min:1', 'max:1000000'],
             'min_redeem_points' => ['required', 'integer', 'min:1', 'max:10000'],
             'max_discount_percentage' => ['required', 'integer', 'min:1', 'max:100'],
+            'gold_point_threshold' => ['nullable', 'integer', 'min:1', 'max:1000000'],
+            'platinum_point_threshold' => ['nullable', 'integer', 'min:1', 'max:1000000'],
             'tier_multipliers' => ['nullable', 'array'],
             'tier_multipliers.bronze' => ['nullable', 'numeric', 'min:0.1', 'max:10'],
             'tier_multipliers.gold' => ['nullable', 'numeric', 'min:0.1', 'max:10'],
@@ -686,17 +692,29 @@ class MembershipAdminController extends Controller
         \App\Models\Admin\Settings\ClinicSetting::setValue('min_redeem_points', $validated['min_redeem_points']);
         \App\Models\Admin\Settings\ClinicSetting::setValue('max_discount_percentage', $validated['max_discount_percentage']);
 
+        if (isset($validated['gold_point_threshold'])) {
+            \App\Models\Admin\Settings\ClinicSetting::setValue('gold_point_threshold', (int) $validated['gold_point_threshold']);
+        }
+        if (isset($validated['platinum_point_threshold'])) {
+            \App\Models\Admin\Settings\ClinicSetting::setValue('platinum_point_threshold', (int) $validated['platinum_point_threshold']);
+        }
+
         if (!empty($validated['tier_multipliers'])) {
             \App\Models\Admin\Settings\ClinicSetting::setValue('tier_multipliers', $validated['tier_multipliers']);
         }
 
+        $goldPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('gold_point_threshold', 1000);
+        $platinumPointThreshold = (int) \App\Models\Admin\Settings\ClinicSetting::getValue('platinum_point_threshold', 3000);
+
         return response()->json([
             'success' => true,
-            'message' => 'Pengaturan nilai konversi poin berhasil diperbarui.',
+            'message' => 'Pengaturan nilai konversi poin dan syarat poin naik level berhasil diperbarui.',
             'data' => [
                 'conversion_rate' => $validated['conversion_rate'],
                 'min_redeem_points' => $validated['min_redeem_points'],
                 'max_discount_percentage' => $validated['max_discount_percentage'],
+                'gold_point_threshold' => $goldPointThreshold,
+                'platinum_point_threshold' => $platinumPointThreshold,
                 'tier_multipliers' => $validated['tier_multipliers'] ?? null,
                 'rate_formatted' => '1 Poin = Rp ' . number_format($validated['conversion_rate'], 0, ',', '.'),
             ],

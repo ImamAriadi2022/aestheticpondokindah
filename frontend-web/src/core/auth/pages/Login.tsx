@@ -1,7 +1,6 @@
 import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import {
@@ -10,12 +9,10 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/shared/ui/input-group";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { getDefaultDashboardPath } from "@/core/auth/services/session";
-import { GENDER_OPTIONS, BLOOD_TYPE_OPTIONS, JOB_OPTIONS } from "@/core/constants/regionData";
-import { getDistricts, getProvinces, getRegencies, type WilayahItem } from "@/core/api/wilayahApi";
 import { touchSessionLastActive } from "@/core/auth/services/sessionTtl";
 import { API_BASE } from "@/core/api/apiConfig";
 
@@ -42,48 +39,15 @@ export default function LoginPage() {
 
   const [userMode, setUserMode] = useState<UserMode>("login");
   const [registerForm, setRegisterForm] = useState({
-    name: "",
-    email: "",
     phone: "",
     password: "",
-    gender: "",
-    bloodType: "",
-    job: "",
-    provinceId: "",
-    province: "",
-    cityId: "",
-    city: "",
-    districtId: "",
-    district: "",
+    passwordConfirmation: "",
   });
-
-  const [provinceOptions, setProvinceOptions] = useState<WilayahItem[]>([]);
-  const [regencyOptions, setRegencyOptions] = useState<WilayahItem[]>([]);
-  const [districtOptions, setDistrictOptions] = useState<WilayahItem[]>([]);
-
-  useEffect(() => {
-    getProvinces().then((data) => setProvinceOptions(data));
-  }, []);
-
-  useEffect(() => {
-    if (registerForm.provinceId) {
-      getRegencies(registerForm.provinceId).then((data) => setRegencyOptions(data));
-    } else {
-      setRegencyOptions([]);
-    }
-  }, [registerForm.provinceId]);
-
-  useEffect(() => {
-    if (registerForm.cityId) {
-      getDistricts(registerForm.cityId).then((data) => setDistrictOptions(data));
-    } else {
-      setDistrictOptions([]);
-    }
-  }, [registerForm.cityId]);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-
   const [error, setError] = useState<string | null>(null);
 
   const normalizePhoneInput = (val: string) => {
@@ -108,8 +72,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     const { identifier, password } = form[role];
-    const isPhoneLogin = role === "user" || role === "clinic" || role === "doctor";
-    const finalIdentifier = isPhoneLogin ? getFullPhone(identifier) : identifier;
+    const finalIdentifier = getFullPhone(identifier);
 
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
@@ -129,7 +92,7 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "WhatsApp atau password salah.");
+        throw new Error(data.message || "Nomor WhatsApp atau password salah.");
       }
 
       // Berhasil login
@@ -155,6 +118,23 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+
+    const phoneDigits = normalizePhoneInput(registerForm.phone);
+    if (!phoneDigits) {
+      setError("Nomor WhatsApp / telepon wajib diisi.");
+      return;
+    }
+
+    if (registerForm.password.length < 6) {
+      setError("Password minimal harus 6 karakter.");
+      return;
+    }
+
+    if (registerForm.password !== registerForm.passwordConfirmation) {
+      setError("Konfirmasi password tidak cocok dengan password.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -165,16 +145,9 @@ export default function LoginPage() {
           "Accept": "application/json",
         },
         body: JSON.stringify({
-          name: registerForm.name,
-          email: registerForm.email || null,
           whatsapp: getFullPhone(registerForm.phone),
           password: registerForm.password,
-          gender: registerForm.gender || null,
-          blood_type: registerForm.bloodType || null,
-          job: registerForm.job || null,
-          province: registerForm.province || null,
-          city: registerForm.city || null,
-          district: registerForm.district || null,
+          password_confirmation: registerForm.passwordConfirmation,
         }),
       });
 
@@ -207,10 +180,6 @@ export default function LoginPage() {
   };
 
   const renderLoginForm = (role: LoginRole) => {
-    const isUser = role === "user";
-    const isClinic = role === "clinic";
-    const isDoctor = role === "doctor";
-    
     return (
       <form className="mt-7 space-y-4" onSubmit={onSubmit(role)}>
         <div className="space-y-2">
@@ -276,7 +245,11 @@ export default function LoginPage() {
             <button
               type="button"
               className="text-brand-gold hover:opacity-80 underline underline-offset-4"
-              onClick={() => setUserMode("register")}
+              onClick={() => {
+                setError(null);
+                setSuccess(null);
+                setUserMode("register");
+              }}
             >
               Daftar
             </button>
@@ -289,40 +262,26 @@ export default function LoginPage() {
   const renderRegisterForm = () => {
     return (
       <form className="mt-7 space-y-4" onSubmit={onRegister}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mb-2">
           <Button
             type="button"
             variant="ghost"
-            className="rounded-xl px-2"
-            onClick={() => setUserMode("login")}
+            className="rounded-xl px-2 text-[#7A6E60] hover:text-[#2C2416]"
+            onClick={() => {
+              setError(null);
+              setSuccess(null);
+              setUserMode("login");
+            }}
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Kembali
           </Button>
-          <div className="text-sm font-medium text-brand-charcoal">Daftar akun pengguna</div>
+          <div className="text-sm font-bold text-brand-charcoal">Daftar Akun Baru</div>
         </div>
 
+        {/* Nomor WhatsApp / Telepon */}
         <div className="space-y-2">
-          <Label htmlFor="register-name">Nama Pengguna</Label>
-          <Input
-            id="register-name"
-            value={registerForm.name}
-            onChange={(e) => setRegisterForm((p) => ({ ...p, name: e.target.value }))}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="register-email">Email (opsional)</Label>
-          <Input
-            id="register-email"
-            type="email"
-            placeholder="Email (opsional)"
-            value={registerForm.email}
-            onChange={(e) => setRegisterForm((p) => ({ ...p, email: e.target.value }))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="register-phone">Nomor WhatsApp</Label>
+          <Label htmlFor="register-phone">Nomor Telepon / WhatsApp</Label>
           <div className="relative flex items-center w-full rounded-xl border border-[#E8DFC8] bg-white focus-within:border-[#C9A24A] focus-within:ring-2 focus-within:ring-[#C9A24A]/20 transition-all overflow-hidden h-12 shadow-xs">
             <div className="flex items-center gap-1.5 px-3.5 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
               <span className="text-base leading-none">🇮🇩</span>
@@ -344,151 +303,14 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Jenis Kelamin</Label>
-            <select
-              className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body"
-              value={registerForm.gender}
-              onChange={(e) => setRegisterForm((p) => ({ ...p, gender: e.target.value }))}
-            >
-              <option value="" disabled>Pilih jenis kelamin</option>
-              {GENDER_OPTIONS.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label>Golongan Darah</Label>
-            <select
-              className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body"
-              value={registerForm.bloodType}
-              onChange={(e) => setRegisterForm((p) => ({ ...p, bloodType: e.target.value }))}
-            >
-              <option value="" disabled>Pilih golongan darah</option>
-              {BLOOD_TYPE_OPTIONS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Pekerjaan</Label>
-          <select
-            className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body"
-            value={registerForm.job}
-            onChange={(e) => setRegisterForm((p) => ({ ...p, job: e.target.value }))}
-          >
-            <option value="" disabled>Pilih pekerjaan</option>
-            {JOB_OPTIONS.map((j) => (
-              <option key={j} value={j}>
-                {j}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Provinsi</Label>
-            <select
-              className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body"
-              value={registerForm.provinceId}
-              onChange={(e) => {
-                const value = e.target.value;
-                const selected = provinceOptions.find((x) => x.id === value);
-                setRegisterForm((p) => ({
-                  ...p,
-                  provinceId: value,
-                  province: selected?.name ?? "",
-                  cityId: "",
-                  city: "",
-                  districtId: "",
-                  district: "",
-                }));
-              }}
-            >
-              <option value="" disabled>Pilih Provinsi</option>
-              {provinceOptions.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label>Kabupaten / Kota</Label>
-            <select
-              className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body"
-              value={registerForm.cityId}
-              onChange={(e) => {
-                const value = e.target.value;
-                const selected = regencyOptions.find((x) => x.id === value);
-                setRegisterForm((p) => ({
-                  ...p,
-                  cityId: value,
-                  city: selected?.name ?? "",
-                  districtId: "",
-                  district: "",
-                }));
-              }}
-              disabled={!registerForm.provinceId}
-            >
-              <option value="" disabled>
-                {!registerForm.provinceId
-                  ? "Pilih Kabupaten/Kota"
-                  : "Pilih Kabupaten/Kota"}
-              </option>
-              {regencyOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Kecamatan</Label>
-          <select
-            className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-body"
-            value={registerForm.districtId}
-            onChange={(e) => {
-              const value = e.target.value;
-              const selected = districtOptions.find((x) => x.id === value);
-              setRegisterForm((p) => ({
-                ...p,
-                districtId: value,
-                district: selected?.name ?? "",
-              }));
-            }}
-            disabled={!registerForm.cityId}
-          >
-            <option value="" disabled>
-              {!registerForm.cityId
-                ? "Pilih Kecamatan"
-                : "Pilih Kecamatan"}
-            </option>
-            {districtOptions.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
+        {/* Password */}
         <div className="space-y-2">
           <Label htmlFor="register-password">Password</Label>
           <InputGroup>
             <InputGroupInput
               id="register-password"
-              type={showPassword.user ? "text" : "password"}
-              placeholder="Password"
+              type={showRegisterPassword ? "text" : "password"}
+              placeholder="Minimal 6 karakter"
               value={registerForm.password}
               onChange={(e) => setRegisterForm((p) => ({ ...p, password: e.target.value }))}
               required
@@ -496,10 +318,34 @@ export default function LoginPage() {
             <InputGroupAddon align="inline-end">
               <InputGroupButton
                 size="icon-sm"
-                aria-label={showPassword.user ? "Sembunyikan password" : "Lihat password"}
-                onClick={() => setShowPassword((prev) => ({ ...prev, user: !prev.user }))}
+                aria-label={showRegisterPassword ? "Sembunyikan password" : "Lihat password"}
+                onClick={() => setShowRegisterPassword((prev) => !prev)}
               >
-                {showPassword.user ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </InputGroupButton>
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
+
+        {/* Konfirmasi Password */}
+        <div className="space-y-2">
+          <Label htmlFor="register-password-confirmation">Konfirmasi Password</Label>
+          <InputGroup>
+            <InputGroupInput
+              id="register-password-confirmation"
+              type={showRegisterConfirmPassword ? "text" : "password"}
+              placeholder="Ulangi kata sandi"
+              value={registerForm.passwordConfirmation}
+              onChange={(e) => setRegisterForm((p) => ({ ...p, passwordConfirmation: e.target.value }))}
+              required
+            />
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                size="icon-sm"
+                aria-label={showRegisterConfirmPassword ? "Sembunyikan konfirmasi password" : "Lihat konfirmasi password"}
+                onClick={() => setShowRegisterConfirmPassword((prev) => !prev)}
+              >
+                {showRegisterConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
@@ -508,13 +354,19 @@ export default function LoginPage() {
         <Button 
           type="submit" 
           disabled={isSubmitting}
-          className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white font-semibold rounded-xl font-body"
+          className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white font-semibold rounded-xl font-body mt-2 cursor-pointer shadow-md shadow-[#C9A24A]/20"
         >
           {isSubmitting ? "Mendaftar..." : "Daftar"}
         </Button>
+
         {error && (
-          <div className="text-xs text-red-600 font-body" role="alert">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-body" role="alert">
             {error}
+          </div>
+        )}
+        {success && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 font-body" role="status">
+            {success}
           </div>
         )}
       </form>

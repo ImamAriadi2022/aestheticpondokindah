@@ -26,11 +26,17 @@ class RegistrationController extends Controller
             $request->merge(['whatsapp' => $normalizedWa]);
         }
 
+        $name = trim((string) $request->input('name', ''));
+        if (empty($name)) {
+            $name = 'Pasien ' . substr($digits, -4);
+        }
+
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255|unique:users,email',
             'whatsapp' => 'required|string|max:20|unique:users,whatsapp',
             'password' => 'required|string|min:6',
+            'password_confirmation' => 'nullable|string|same:password',
             'city' => 'nullable|string|max:255',
             'province' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
@@ -46,6 +52,10 @@ class RegistrationController extends Controller
             'isSmoker' => 'nullable|boolean',
             'sourceInfo' => 'nullable|string|max:255',
             'insuranceProvider' => 'nullable|string|max:255',
+        ], [
+            'whatsapp.unique' => 'Nomor WhatsApp ini sudah terdaftar. Silakan login.',
+            'password.min' => 'Password minimal harus 6 karakter.',
+            'password_confirmation.same' => 'Konfirmasi password tidak cocok dengan password.',
         ]);
 
         if ($validator->fails()) {
@@ -53,8 +63,8 @@ class RegistrationController extends Controller
         }
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
+            'name' => $name,
+            'email' => $request->email ?: null,
             'whatsapp' => $request->whatsapp,
             'password' => Hash::make($request->password),
             'role' => 'patient',

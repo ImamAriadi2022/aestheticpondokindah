@@ -113,7 +113,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
 
   const isHelpSectionActive = helpSubMenus.some((sub) => isActive(sub.href));
   const userDisplayName = userName || session?.name || "Pengguna";
-  const userDisplayEmail = session?.email || "user@aestheticpondokindah.local";
+  const userDisplayEmail = session?.email || (session as any)?.whatsapp || "Pasien Member";
 
   return (
     <div className="sticky top-4 left-0 h-[calc(100vh-32px)] self-start z-[100] pointer-events-auto ml-2 mr-2 flex-shrink-0">
@@ -281,9 +281,9 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
               </div>
 
               {expanded && (
-                <ChevronDown
+                <ChevronRight
                   className={`w-4 h-4 text-[#A89F91] transition-transform duration-300 shrink-0 ${
-                    helpDropdownOpen ? "rotate-180 text-[#E8C547]" : ""
+                    helpDropdownOpen ? "rotate-90 text-[#E8C547]" : "group-hover:translate-x-0.5 group-hover:text-[#E8C547]"
                   }`}
                 />
               )}
@@ -310,11 +310,11 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
               )}
             </button>
 
-            {/* Anchored Flyout for Collapsed Sidebar */}
-            {!expanded && helpDropdownOpen && (
+            {/* Floating Dropdown Outside Sidebar (Rendered on the right of the sidebar) */}
+            {helpDropdownOpen && (
               <div
                 className="
-                  absolute left-full top-0 ml-3.5 z-50 min-w-[220px] w-max max-w-[260px]
+                  absolute left-full top-0 ml-3.5 z-50 min-w-[230px] w-max max-w-[270px]
                   bg-[#1a1612] backdrop-blur-md
                   border-2 border-[#C9A24A]/50 rounded-2xl
                   shadow-[0_12px_40px_rgba(0,0,0,0.6)]
@@ -322,8 +322,10 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                   animate-in fade-in zoom-in-95 duration-150
                 "
               >
+                {/* Pointer Arrow */}
                 <div className="absolute -left-[7px] top-6 -translate-y-1/2 w-3.5 h-3.5 bg-[#1a1612] border-l-2 border-b-2 border-[#C9A24A]/50 rotate-45 pointer-events-none" />
 
+                {/* Header */}
                 <div className="px-3 py-1.5 border-b border-[#C9A24A]/20 flex items-center justify-between gap-3 mb-1">
                   <span className="text-[11px] font-bold text-[#E8C547] uppercase tracking-wider whitespace-nowrap">
                     Bantuan & Pengaduan
@@ -333,6 +335,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                   </span>
                 </div>
 
+                {/* Submenu Items */}
                 {helpSubMenus.map((sub) => {
                   const subActive = isActive(sub.href);
                   const SubIcon = sub.icon;
@@ -342,7 +345,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                       to={sub.href}
                       onClick={handleMenuClick}
                       className={`
-                        flex items-center gap-2.5 py-2 px-3 rounded-xl text-xs font-semibold
+                        flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-xs font-semibold
                         transition-all duration-200
                         ${subActive
                           ? "bg-gradient-to-r from-[#C9A24A]/30 to-[#B8943F]/30 text-[#E8C547] font-bold border border-[#C9A24A]/40 shadow-inner"
@@ -350,34 +353,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                         }
                       `}
                     >
-                      <SubIcon className={`w-3.5 h-3.5 ${subActive ? "text-[#E8C547]" : "text-[#A89F91]"}`} />
-                      <span className="truncate">{sub.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Sub-menu Items Accordion for Expanded Sidebar */}
-            {expanded && (helpDropdownOpen || isHelpSectionActive) && (
-              <div className="ml-4 mt-1 pl-3 border-l-2 border-[#C9A24A]/30 space-y-1 py-1 animate-in fade-in slide-in-from-top-1 duration-200">
-                {helpSubMenus.map((sub) => {
-                  const subActive = isActive(sub.href);
-                  const SubIcon = sub.icon;
-                  return (
-                    <Link
-                      key={sub.label}
-                      to={sub.href}
-                      onClick={handleMenuClick}
-                      className={`
-                        flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all
-                        ${subActive
-                          ? "bg-[#C9A24A]/30 text-[#E8C547] border border-[#C9A24A]/40 font-bold"
-                          : "text-[#A89F91] hover:text-[#E8C547] hover:bg-[#2a2319]"
-                        }
-                      `}
-                    >
-                      <SubIcon className={`w-3.5 h-3.5 ${subActive ? "text-[#E8C547]" : "text-[#A89F91]"}`} />
+                      <SubIcon className={`w-4 h-4 shrink-0 ${subActive ? "text-[#E8C547]" : "text-[#A89F91]"}`} />
                       <span className="truncate">{sub.label}</span>
                     </Link>
                   );

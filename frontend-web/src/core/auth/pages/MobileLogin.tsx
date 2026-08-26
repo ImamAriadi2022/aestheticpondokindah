@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Eye, EyeOff, ArrowLeft, ChevronRight, Heart, Lock, Mail, Phone, Chrome } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, ChevronRight, Heart, Lock, Phone } from "lucide-react";
 import { getDefaultDashboardPath, getSession } from "@/core/auth/services/session";
 import { API_BASE } from "@/core/api/apiConfig";
 import { touchSessionLastActive } from "@/core/auth/services/sessionTtl";
@@ -24,13 +24,14 @@ export default function MobileLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
 
-  // Register form
+  // Register form (streamlined: phone, password, passwordConfirmation)
   const [registerForm, setRegisterForm] = useState({
-    name: "",
-    email: "",
     whatsapp: "",
     password: "",
+    passwordConfirmation: "",
   });
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
   const [registerError, setRegisterError] = useState("");
 
   useEffect(() => {
@@ -65,10 +66,16 @@ export default function MobileLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
+
+    const phoneDigits = normalizePhoneInput(loginForm.whatsapp);
+    if (!phoneDigits) {
+      setLoginError("Nomor WhatsApp / telepon wajib diisi.");
+      return;
+    }
+
     setIsLoading(true);
 
-    const isEmail = loginForm.whatsapp.includes("@");
-    const finalIdentifier = isEmail ? loginForm.whatsapp.trim() : getFullPhone(loginForm.whatsapp);
+    const finalIdentifier = getFullPhone(loginForm.whatsapp);
 
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
@@ -110,6 +117,23 @@ export default function MobileLoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegisterError("");
+
+    const phoneDigits = normalizePhoneInput(registerForm.whatsapp);
+    if (!phoneDigits) {
+      setRegisterError("Nomor WhatsApp / telepon wajib diisi.");
+      return;
+    }
+
+    if (registerForm.password.length < 6) {
+      setRegisterError("Password minimal harus 6 karakter.");
+      return;
+    }
+
+    if (registerForm.password !== registerForm.passwordConfirmation) {
+      setRegisterError("Konfirmasi password tidak cocok.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -120,10 +144,9 @@ export default function MobileLoginPage() {
           "Accept": "application/json",
         },
         body: JSON.stringify({
-          name: registerForm.name,
-          email: registerForm.email || null,
           whatsapp: getFullPhone(registerForm.whatsapp),
           password: registerForm.password,
+          password_confirmation: registerForm.passwordConfirmation,
         }),
       });
 
@@ -177,40 +200,17 @@ export default function MobileLoginPage() {
           {/* Login Options */}
           <div className="space-y-3">
             <Button
-              onClick={() => setMode("login")}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all"
+              onClick={() => {
+                setLoginError("");
+                setMode("login");
+              }}
+              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all cursor-pointer"
             >
               <Phone className="w-5 h-5 mr-2" />
               Masuk dengan WhatsApp
               <ChevronRight className="w-5 h-5 ml-auto" />
             </Button>
-
-            <Button
-              variant="outline"
-              onClick={() => {}}
-              className="w-full h-14 border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50"
-            >
-              <Chrome className="w-5 h-5 mr-2 text-red-500" />
-              Masuk dengan Google
-            </Button>
           </div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 my-8">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">atau masuk dengan</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
-
-          {/* Email Option */}
-          <Button
-            variant="outline"
-            onClick={() => setMode("login")}
-            className="w-full h-14 border-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-50"
-          >
-            <Mail className="w-5 h-5 mr-2 text-gray-500" />
-            Masuk dengan Email
-          </Button>
         </div>
 
         {/* Footer */}
@@ -218,8 +218,11 @@ export default function MobileLoginPage() {
           <p className="text-center text-sm text-gray-500">
             Belum punya akun?{" "}
             <button
-              onClick={() => setMode("register")}
-              className="text-[#c9a24a] font-semibold hover:underline"
+              onClick={() => {
+                setRegisterError("");
+                setMode("register");
+              }}
+              className="text-[#c9a24a] font-semibold hover:underline cursor-pointer"
             >
               Daftar
             </button>
@@ -237,7 +240,7 @@ export default function MobileLoginPage() {
         <div className="flex items-center gap-3 px-6 pt-12 pb-6">
           <button
             onClick={() => setMode("welcome")}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
@@ -253,7 +256,7 @@ export default function MobileLoginPage() {
             {/* WhatsApp Input */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">
-                No. WhatsApp / Email
+                Nomor WhatsApp
               </label>
               <div className="flex items-center w-full h-14 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#c9a24a]/30 focus-within:border-[#c9a24a] transition-all">
                 <div className="flex items-center gap-1 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
@@ -261,12 +264,12 @@ export default function MobileLoginPage() {
                   <span>+62</span>
                 </div>
                 <input
-                  type="text"
-                  placeholder="857xxxxxxxx atau email"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="857xxxxxxxx"
                   value={loginForm.whatsapp}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    const clean = val.includes("@") ? val : normalizePhoneInput(val);
+                    const clean = normalizePhoneInput(e.target.value);
                     setLoginForm({ ...loginForm, whatsapp: clean });
                   }}
                   className="w-full h-full px-3.5 text-base font-semibold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal"
@@ -291,27 +294,16 @@ export default function MobileLoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            {/* Forgot Password */}
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => setMode("forgot")}
-                className="text-sm text-[#c9a24a] font-medium hover:underline"
-              >
-                Lupa kata sandi?
-              </button>
-            </div>
-
             {/* Error Message */}
             {loginError && (
-              <div className="p-3 bg-red-50 rounded-xl">
+              <div className="p-3 bg-red-50 rounded-xl border border-red-200">
                 <p className="text-sm text-red-600">{loginError}</p>
               </div>
             )}
@@ -320,7 +312,7 @@ export default function MobileLoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all"
+              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all cursor-pointer"
             >
               {isLoading ? "Memuat..." : "Masuk"}
             </Button>
@@ -332,8 +324,11 @@ export default function MobileLoginPage() {
           <p className="text-center text-sm text-gray-500">
             Belum punya akun?{" "}
             <button
-              onClick={() => setMode("register")}
-              className="text-[#c9a24a] font-semibold hover:underline"
+              onClick={() => {
+                setRegisterError("");
+                setMode("register");
+              }}
+              className="text-[#c9a24a] font-semibold hover:underline cursor-pointer"
             >
               Daftar
             </button>
@@ -351,7 +346,7 @@ export default function MobileLoginPage() {
         <div className="flex items-center gap-3 px-6 pt-12 pb-6">
           <button
             onClick={() => setMode("welcome")}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
@@ -364,37 +359,9 @@ export default function MobileLoginPage() {
         {/* Form */}
         <div className="flex-1 px-6 overflow-y-auto">
           <form onSubmit={handleRegister} className="space-y-4 pb-8">
-            {/* Name */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Nama Lengkap</label>
-              <Input
-                type="text"
-                placeholder="Masukkan nama lengkap"
-                value={registerForm.name}
-                onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                className="w-full h-14 px-4 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
-                required
-              />
-            </div>
-
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Email (Opsional)</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  type="email"
-                  placeholder="email@contoh.com"
-                  value={registerForm.email}
-                  onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                  className="w-full h-14 pl-12 pr-4 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
-                />
-              </div>
-            </div>
-
             {/* WhatsApp */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">No. WhatsApp</label>
+              <label className="text-sm font-medium text-gray-700">Nomor Telepon / WhatsApp</label>
               <div className="flex items-center w-full h-14 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#c9a24a]/30 focus-within:border-[#c9a24a] transition-all">
                 <div className="flex items-center gap-1 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
                   <span className="text-base leading-none">🇮🇩</span>
@@ -414,12 +381,12 @@ export default function MobileLoginPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Kata Sandi</label>
+              <label className="text-sm font-medium text-gray-700">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Buat kata sandi"
+                  type={showRegisterPassword ? "text" : "password"}
+                  placeholder="Minimal 6 karakter"
                   value={registerForm.password}
                   onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                   className="w-full h-14 pl-12 pr-12 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
@@ -428,18 +395,41 @@ export default function MobileLoginPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showRegisterPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-400">Minimal 6 karakter</p>
+            </div>
+
+            {/* Password Confirmation */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Konfirmasi Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  type={showRegisterConfirmPassword ? "text" : "password"}
+                  placeholder="Ulangi kata sandi"
+                  value={registerForm.passwordConfirmation}
+                  onChange={(e) => setRegisterForm({ ...registerForm, passwordConfirmation: e.target.value })}
+                  className="w-full h-14 pl-12 pr-12 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                >
+                  {showRegisterConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             {/* Error Message */}
             {registerError && (
-              <div className="p-3 bg-red-50 rounded-xl">
+              <div className="p-3 bg-red-50 rounded-xl border border-red-200">
                 <p className="text-sm text-red-600">{registerError}</p>
               </div>
             )}
@@ -448,28 +438,23 @@ export default function MobileLoginPage() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all"
+              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all cursor-pointer"
             >
-              {isLoading ? "Mendaftar..." : "Daftar"}
+              {isLoading ? "Memproses..." : "Daftar Sekarang"}
             </Button>
-
-            {/* Terms */}
-            <p className="text-xs text-center text-gray-400">
-              Dengan mendaftar, Anda menyetujui{" "}
-              <Link to="/terms-of-service" className="text-[#c9a24a]">Syarat</Link>
-              {" "}&{" "}
-              <Link to="/privacy-policy" className="text-[#c9a24a]">Ketentuan</Link>
-            </p>
           </form>
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-8 pt-4 bg-white border-t border-gray-100">
+        <div className="px-6 pb-8 pt-4">
           <p className="text-center text-sm text-gray-500">
             Sudah punya akun?{" "}
             <button
-              onClick={() => setMode("login")}
-              className="text-[#c9a24a] font-semibold hover:underline"
+              onClick={() => {
+                setLoginError("");
+                setMode("login");
+              }}
+              className="text-[#c9a24a] font-semibold hover:underline cursor-pointer"
             >
               Masuk
             </button>
@@ -479,48 +464,5 @@ export default function MobileLoginPage() {
     );
   }
 
-  // Forgot Password
-  return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex items-center gap-3 px-6 pt-12 pb-6">
-        <button
-          onClick={() => setMode("login")}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
-        </button>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Lupa Password</h1>
-          <p className="text-sm text-gray-500">Reset kata sandi Anda</p>
-        </div>
-      </div>
-
-      <div className="flex-1 px-6">
-        <p className="text-gray-600 text-sm mb-6">
-          Masukkan email atau nomor WhatsApp Anda. Kami akan mengirimkan instruksi reset password.
-        </p>
-
-        <form className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Email atau No. WhatsApp</label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Masukkan email atau WhatsApp"
-                className="w-full h-14 pl-12 pr-4 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
-              />
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all"
-          >
-            Kirim Instruksi
-          </Button>
-        </form>
-      </div>
-    </div>
-  );
+  return null;
 }

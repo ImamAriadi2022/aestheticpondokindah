@@ -242,11 +242,11 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
             id: String(item.id),
             title: item.title || "🔔 Notifikasi Klinik",
             message: item.body || item.message || "",
-            sender: item.type === "appointment" ? "Sistem Reservasi" : "Aesthetic Pondok Indah",
+            sender: item.type === "appointment" ? "Sistem Reservasi" : item.type === "complaint" ? "Pengaduan Pasien" : item.type === "consultation" ? "Konsultasi Pasien" : "Aesthetic Pondok Indah",
             role: role === "clinic" ? "admin" : role === "doctor" ? "doctor" : "patient",
             type: item.type || "general",
             bookingCode: item.data?.code || item.data?.bookingCode,
-            url: item.data?.url || (role === "clinic" ? "/dashboard/clinic?tab=reservasi" : "/dashboard/user?tab=reservasi"),
+            url: item.data?.url || item.deep_link || (item.type === "complaint" ? (role === "clinic" ? "/dashboard/clinic?tab=pengaduan" : "/dashboard/user?tab=pengaduan") : item.type === "consultation" ? (role === "clinic" ? "/dashboard/clinic?tab=konsultasi" : "/dashboard/user?tab=konsultasi") : (role === "clinic" ? "/dashboard/clinic?tab=reservasi" : "/dashboard/user?tab=reservasi")),
             receivedAt: timeStamp,
             createdAt: timeStamp,
             isRead: isRead,
@@ -265,6 +265,9 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         if (unreadItems.length > 0) {
           setUnreadCount(unreadItems.length);
           localStorage.setItem("apig_push_unread_count", String(unreadItems.length));
+        } else {
+          setUnreadCount(0);
+          localStorage.setItem("apig_push_unread_count", "0");
         }
       }
     } catch {}
@@ -272,6 +275,10 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
   useEffect(() => {
     fetchDatabaseNotifications();
+
+    const interval = setInterval(() => {
+      fetchDatabaseNotifications();
+    }, 10000);
 
     const unsubscribe = subscribeToPushNotifications((payload: PushNotificationPayload) => {
       const timeStamp = payload.receivedAt || payload.createdAt || new Date().toISOString();
@@ -300,6 +307,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     });
 
     return () => {
+      clearInterval(interval);
       unsubscribe();
     };
   }, [role]);
@@ -382,6 +390,10 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       item.onClick();
     } else if (item.url) {
       navigate(item.url.replace(/^#/, ""));
+    } else if (item.type === "complaint") {
+      navigate(role === "clinic" ? "/dashboard/clinic?tab=pengaduan" : "/dashboard/user?tab=pengaduan");
+    } else if (item.type === "consultation") {
+      navigate(role === "clinic" ? "/dashboard/clinic?tab=konsultasi" : "/dashboard/user?tab=konsultasi");
     } else if (role === "clinic") {
       navigate("/dashboard/clinic?tab=reservasi");
     } else if (role === "doctor") {
@@ -497,8 +509,8 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                 </button>
               </div>
 
-              {/* Notification List */}
-              <div className="max-h-84 overflow-y-auto divide-y divide-[#F0EAE1]">
+              {/* Notification List (Dibatasi tampil 3 notifikasi dengan scroll vertikal) */}
+              <div className="max-h-[270px] overflow-y-auto divide-y divide-[#F0EAE1]">
                 {displayedNotifications.length === 0 ? (
                   <div className="py-8 text-center px-4 space-y-1">
                     <CheckCircle2 className="w-7 h-7 text-emerald-500 mx-auto stroke-1" />

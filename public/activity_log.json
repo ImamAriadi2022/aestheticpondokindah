@@ -1,5 +1,93 @@
 [
   {
+    "id": "act-337",
+    "timestamp": "2026-08-26T14:08:00.000Z",
+    "category": "fix-profile-edit-dummy-defaults",
+    "title": "Pembersihan Data Dummy Hardcoded pada Halaman Edit & Detail Profil Pasien",
+    "description": "Menghapus nilai default/dummy yang sebelumnya tertanam di state frontend ([`ProfileEdit.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/profile/pages/ProfileEdit.tsx), [`ProfileDetail.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/profile/pages/ProfileDetail.tsx), [`AccountSidebar.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/layouts/AccountSidebar.tsx)): 1) Menghapus data bawaan seperti email dummy, tanggal lahir, jenis kelamin, alamat Lampung Tengah, kode pos, dan kuesioner medis sehingga form murni kosong jika belum diisi user, 2) Menampilkan data secara akurat sesuai apa yang diinputkan user di database atau membiarkan field kosong jika belum dilengkapi.",
+    "details": [
+      "No More Phantom Data: Form profil pasien kini murni menampilkan data autentik dari akun pengguna.",
+      "Clean Fallbacks: Field yang belum diisi tidak lagi terisi otomatis dengan alamat atau biodata contoh.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-336",
+    "timestamp": "2026-08-26T14:03:00.000Z",
+    "category": "notification-complaint-dispatch-fix",
+    "title": "Integrasi Notifikasi Pengaduan Pasien Masuk ke Admin & Feedback Status ke Pasien",
+    "description": "Menyempurnakan alur notifikasi sistem pengaduan & masukan ([`ComplaintController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Patient/Complaint/ComplaintController.php), [`ComplaintAdminController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Admin/Complaint/ComplaintAdminController.php), [`DashboardTopBar.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/layouts/DashboardTopBar.tsx)): 1) Menambahkan dispatch notifikasi database dan Web Push ke admin klinik saat pasien mengirimkan pengaduan baru, 2) Menambahkan notifikasi balik ke akun pasien saat admin menindaklanjuti/merespons pengaduan, 3) Menambahkan interval sinkronisasi real-time 10 detik pada topbar admin serta routing otomatis klik notifikasi langsung membuka tab Pengaduan Pasien.",
+    "details": [
+      "Real-time Admin Complaint Notification: Admin menerima notifikasi '📢 Pengaduan & Masukan Pasien Baru' secara instan saat pasien submit formulir.",
+      "Direct Tab Navigation: Mengklik notifikasi pengaduan langsung membawa admin ke halaman tab pengaduan pasien (/dashboard/clinic?tab=pengaduan).",
+      "Patient Feedback Notification: Pasien menerima notifikasi status pengaduan ketika ditanggapi tim klinik.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-335",
+    "timestamp": "2026-08-26T13:58:00.000Z",
+    "category": "ui-admin-notification-popover-height",
+    "title": "Optimasi Tinggi Popover Notifikasi Admin (Maksimal 3 Item Terlihat & Dapat Di-scroll)",
+    "description": "Menyesuaikan tinggi container popover daftar notifikasi masuk pada topbar admin ([`DashboardTopBar.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/layouts/DashboardTopBar.tsx)): Mengubah batasan tinggi menjadi max-h-[270px] sehingga pas menampilkan 3 item notifikasi sekaligus, sedangkan notifikasi lainnya dapat digulir (scroll) secara mulus tanpa memanjang sampai ke bawah layar.",
+    "details": [
+      "Compact Popover Height: Daftar notifikasi dibatasi maksimal tinggi 270px (~3 notifikasi terlihat) dan dilengkapi scroll vertikal mulus.",
+      "Preserved All Features: Seluruh fungsi klik, filter tab semua/belum dibaca, penanda waktu, dan aksi hapus/tandai dibaca tetap berjalan 100% normal.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-334",
+    "timestamp": "2026-08-26T13:56:00.000Z",
+    "category": "ui-user-sidebar-dropdown-style",
+    "title": "Standardisasi Dropdown Menu Sidebar User ke Floating Flyout Panel Luar Sidebar",
+    "description": "Menstandarkan tampilan submenu Bantuan & Pengaduan pada Sidebar User/Pasien ([`AccountSidebar.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/layouts/AccountSidebar.tsx)): Mengubah perilaku menu dropdown agar tidak lagi membuka accordion di dalam sidebar, melainkan membuka dropdown melayang (floating flyout panel) di sebelah kanan luar sidebar dengan border emas elegan, arrow pointer, header counter menu, dan tombol interaktif yang seragam dengan style dropdown admin.",
+    "details": [
+      "Floating Flyout Dropdown: Menu Bantuan & Pengaduan kini membuka panel popup melayang di sebelah kanan luar sidebar, baik saat sidebar diperluas maupun saat diminimalkan.",
+      "Accordion Removed: Menghilangkan pembukaan accordion di dalam sidebar agar tampilan sidebar tetap ramping dan rapi.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-333",
+    "timestamp": "2026-08-26T13:53:00.000Z",
+    "category": "membership-points-lock-enhancement",
+    "title": "Implementasi Gembok Profil Membership, Bar Progres Poin Naik Level, & Syarat Poin Admin",
+    "description": "Menyempurnakan alur status keanggotaan loyalty membership ([`Membership.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/patient/membership/pages/Membership.tsx), [`AdminMembership.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/admin/membership/pages/AdminMembership.tsx), [`MembershipAdminController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Admin/Membership/MembershipAdminController.php), [`MembershipController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Patient/Membership/MembershipController.php), [`User.php`](file:///c:/programming/aestheticpondokindah/app/Models/Shared/User/User.php)): 1) Menambahkan fitur Gembok (Locked Screen) jika profil pengguna belum lengkap dengan tulisan 'silahkan lengkapi profil pengguna untuk membuka fitur membership' dan tombol 'Lengkapi Profil Pengguna', 2) Memastikan akun baru terdaftar berstatus awal Bronze Member, 3) Menambahkan Bar Informasi Poin Loyalty dan batas minimal poin untuk naik level (Bronze -> Gold -> Platinum) tanpa harus upgrade berbayar, 4) Menambahkan pengaturan syarat batas minimal poin naik level pada menu Kelola Poin di dashboard Admin Klinik.",
+    "details": [
+      "Membership Lock Screen: Halaman membership terkunci otomatis jika profil belum lengkap dengan tombol CTA langsung ke edit profil.",
+      "Bronze Tier Default: Akun baru otomatis berlevel Bronze Member dan dapat mengumpulkan poin reward dari setiap reservasi/tindakan.",
+      "Point Level-up Progress Bar: Visual bar yang menampilkan perolehan poin saat ini, target minimal poin ke Gold/Platinum, dan sisa poin yang dibutuhkan.",
+      "Admin Point Level-Up Thresholds: Pengaturan fleksibel syarat poin naik level ke Gold dan Platinum di tab Kelola Poin Admin.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-332",
+    "timestamp": "2026-08-26T13:42:00.000Z",
+    "category": "ui-streamline-register",
+    "title": "Penyederhanaan Form Registrasi (Hanya Telepon/WhatsApp, Password, & Konfirmasi Password)",
+    "description": "Menyederhanakan formulir pendaftaran pengguna baru di web dan mobile ([`Login.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/auth/pages/Login.tsx), [`MobileLogin.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/core/auth/pages/MobileLogin.tsx), [`RegistrationController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Shared/Auth/RegistrationController.php)): 1) Menghapus isian biodata/wilayah yang panjang pada saat register sehingga hanya membutuhkan 3 input utama (Nomor Telepon/WhatsApp ber-prefix statis +62, Kata Sandi, dan Konfirmasi Kata Sandi), 2) Menambahkan validasi kecocokan konfirmasi password di frontend dan backend, 3) Memberikan default nama otomatis pada backend jika nama belum diisi ('Pasien XXXX') yang nantinya dapat dilengkapi pasien di profil.",
+    "details": [
+      "Streamlined 3-Field Register: Form registrasi kini sangat ringkas dan cepat (Telepon +62, Password, Konfirmasi Password).",
+      "Password Confirmation Validation: Dilengkapi toggle show/hide eye icon dan validasi kesamaan sandi.",
+      "Backend Auto-Naming: RegistrationController memberikan fallback nama pengguna 'Pasien XXXX' dan menyimpan akun aktif secara instan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-331",
     "timestamp": "2026-08-26T13:29:00.000Z",
     "category": "ui-auth-enhancement",

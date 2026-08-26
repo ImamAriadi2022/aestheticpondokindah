@@ -74,6 +74,32 @@ class ComplaintAdminController extends Controller
         $complaint->update($validated);
         Cache::forget('admin_complaints_list');
 
+        // Dispatch Notification to Patient
+        try {
+            if ($complaint->user_id) {
+                $statusLabel = match($complaint->status) {
+                    'resolved' => 'Selesai Ditindaklanjuti',
+                    'processing' => 'Sedang Diproses',
+                    'rejected' => 'Ditolak',
+                    default => 'Diperbarui',
+                };
+                \App\Services\Shared\Notification\NotificationService::send(
+                    (int) $complaint->user_id,
+                    '💬 Pengaduan Anda ' . $statusLabel,
+                    'Pengaduan [' . $complaint->category . ']: "' . $complaint->title . '" telah ditanggapi oleh Tim Klinik.',
+                    'complaint',
+                    '/#/dashboard/user?tab=pengaduan',
+                    [
+                        'complaint_id' => $complaint->id,
+                        'status' => $complaint->status,
+                        'url' => '/dashboard/user?tab=pengaduan',
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            // Non-blocking
+        }
+
         return response()->json($this->transform($complaint));
     }
 

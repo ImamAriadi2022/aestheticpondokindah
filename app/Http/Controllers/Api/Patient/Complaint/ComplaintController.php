@@ -40,8 +40,9 @@ class ComplaintController extends Controller
             } catch (\Throwable $e) {}
         }
 
+        $user = $request->user();
         $complaint = Complaint::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user->id,
             'category' => $validated['category'],
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -50,6 +51,25 @@ class ComplaintController extends Controller
         ]);
 
         \Illuminate\Support\Facades\Cache::forget('admin_complaints_list');
+
+        // Dispatch Backend & Web Push Notification to Admins
+        try {
+            $senderName = $user->name ?? 'Pasien';
+            \App\Services\Shared\Notification\NotificationService::sendToAdmins(
+                '📢 Pengaduan & Masukan Pasien Baru',
+                'Pasien ' . $senderName . ' menyampaikan pengaduan [' . $validated['category'] . ']: ' . $validated['title'],
+                'complaint',
+                '/#/dashboard/clinic?tab=pengaduan',
+                [
+                    'complaint_id' => $complaint->id,
+                    'category' => $validated['category'],
+                    'title' => $validated['title'],
+                    'url' => '/dashboard/clinic?tab=pengaduan',
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking notification dispatch
+        }
 
         return response()->json($this->transform($complaint), 201);
     }

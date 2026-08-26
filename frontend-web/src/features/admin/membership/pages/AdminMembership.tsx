@@ -195,6 +195,8 @@ export default function AdminMembershipPage() {
     conversion_rate: number | string;
     min_redeem_points: number | string;
     max_discount_percentage: number | string;
+    gold_point_threshold: number | string;
+    platinum_point_threshold: number | string;
     tier_multipliers: {
       bronze: number;
       gold: number;
@@ -204,6 +206,8 @@ export default function AdminMembershipPage() {
     conversion_rate: 1000,
     min_redeem_points: 100,
     max_discount_percentage: 100,
+    gold_point_threshold: 1000,
+    platinum_point_threshold: 3000,
     tier_multipliers: {
       bronze: 1.0,
       gold: 1.5,
@@ -241,6 +245,8 @@ export default function AdminMembershipPage() {
           conversion_rate: Number(psData.conversion_rate ?? 1000),
           min_redeem_points: Number(psData.min_redeem_points ?? 100),
           max_discount_percentage: Number(psData.max_discount_percentage ?? 100),
+          gold_point_threshold: Number(psData.gold_point_threshold ?? 1000),
+          platinum_point_threshold: Number(psData.platinum_point_threshold ?? 3000),
           tier_multipliers: psData.tier_multipliers || {
             bronze: 1.0,
             gold: 1.5,
@@ -290,10 +296,12 @@ export default function AdminMembershipPage() {
         conversion_rate: Number(pointSettings.conversion_rate) || 1000,
         min_redeem_points: Number(pointSettings.min_redeem_points) || 10,
         max_discount_percentage: Math.min(100, Math.max(1, Number(pointSettings.max_discount_percentage) || 100)),
+        gold_point_threshold: Number(pointSettings.gold_point_threshold) || 1000,
+        platinum_point_threshold: Number(pointSettings.platinum_point_threshold) || 3000,
         tier_multipliers: pointSettings.tier_multipliers,
       };
       await apiClient.put("/admin/membership/point-settings", payload);
-      toast.success("Pengaturan nilai konversi poin dan privilese tier berhasil disimpan!");
+      toast.success("Pengaturan nilai konversi poin dan syarat naik level berhasil disimpan!");
     } catch (err: any) {
       toast.error(err.message || "Gagal menyimpan pengaturan nilai poin.");
     } finally {
@@ -745,7 +753,7 @@ export default function AdminMembershipPage() {
               </div>
 
               <div className="p-5 space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Konversi 1 Poin */}
                   <div className="p-4 rounded-xl bg-[#FAF8F5] border border-[#E8DFC8] space-y-1.5">
                     <label className="text-xs font-bold text-[#2C2416]">
@@ -813,7 +821,57 @@ export default function AdminMembershipPage() {
                       <span className="absolute right-3 top-2.5 text-xs font-bold text-[#8C6B1C]">%</span>
                     </div>
                     <p className="text-[10px] text-[#8C8272]">
-                      Maksimal potongan dari total estimasi biaya (100% = bisa gratis jika poin cukup)
+                      Maksimal potongan dari total estimasi biaya
+                    </p>
+                  </div>
+
+                  {/* Syarat Poin Naik ke Gold Member */}
+                  <div className="p-4 rounded-xl bg-[#FFF9EB] border border-[#F0DFB6] space-y-1.5">
+                    <label className="text-xs font-bold text-[#8C6B1C] flex items-center gap-1.5">
+                      <Crown className="w-3.5 h-3.5 text-[#A8843A]" />
+                      Syarat Poin Naik ke Gold Member (Pts) *
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="1"
+                        step="100"
+                        value={pointSettings.gold_point_threshold}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPointSettings(prev => ({ ...prev, gold_point_threshold: val }));
+                        }}
+                        className="h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-bold text-[#8C6B1C]">Pts</span>
+                    </div>
+                    <p className="text-[10px] text-[#8C8272]">
+                      Member Bronze otomatis naik level ke <strong>Gold</strong> saat poin mencapai batas ini.
+                    </p>
+                  </div>
+
+                  {/* Syarat Poin Naik ke Platinum Member */}
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                    <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      Syarat Poin Naik ke Platinum Member (Pts) *
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="1"
+                        step="100"
+                        value={pointSettings.platinum_point_threshold}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPointSettings(prev => ({ ...prev, platinum_point_threshold: val }));
+                        }}
+                        className="h-9 rounded-xl bg-white border-[#D9D0BC] text-xs font-bold text-[#2C2416]"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-bold text-slate-700">Pts</span>
+                    </div>
+                    <p className="text-[10px] text-[#8C8272]">
+                      Member Gold otomatis naik level ke <strong>Platinum</strong> saat poin mencapai batas ini.
                     </p>
                   </div>
                 </div>
