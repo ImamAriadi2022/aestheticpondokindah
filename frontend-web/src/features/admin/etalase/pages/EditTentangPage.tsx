@@ -184,7 +184,7 @@ export default function EditTentangPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="edit-about-page space-y-6 pb-12">
       {/* Top Header Card */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#1E1B18] via-[#2A241C] to-[#1E1B18] border border-[#C9A24A]/30 p-6 md:p-8 text-white shadow-xl shadow-black/10">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-[#C9A24A]/10 rounded-full blur-2xl pointer-events-none" />
@@ -203,7 +203,7 @@ export default function EditTentangPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="edit-about-actions flex flex-wrap items-center gap-2">
             <a
               href="/#/about"
               target="_blank"
@@ -398,7 +398,7 @@ export default function EditTentangPage() {
 
             {/* Section 3: Statistik Pencapaian */}
             <Card className="border border-[#C9A24A]/20 shadow-sm rounded-2xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-amber-50/50 to-transparent border-b border-amber-100/60 pb-4 flex flex-row items-center justify-between">
+              <CardHeader className="about-statistics-header bg-gradient-to-r from-amber-50/50 to-transparent border-b border-amber-100/60 pb-4 flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-[#C9A24A]" />

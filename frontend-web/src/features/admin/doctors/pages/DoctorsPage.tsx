@@ -341,7 +341,7 @@ export default function DoctorsPage({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="doctors-page-actions flex items-center gap-2">
           <Button
             type="button"
             variant="outline"

@@ -32,7 +32,6 @@ import {
   Download,
   Building2,
   Layers,
-  Mail,
   Info,
   LayoutDashboard,
   MessageSquare,
@@ -155,7 +154,6 @@ export default function NewMobileDashboardLayout({
       items: [
         { label: "Layanan", icon: Layers, href: "/dashboard/clinic?tab=public-services" },
         { label: "FAQ", icon: HelpCircle, href: "/dashboard/clinic?tab=public-faqs" },
-        { label: "Pesan Kontak", icon: Mail, href: "/dashboard/clinic?tab=public-contact-messages" },
         { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan" },
         { label: "Kebijakan", icon: Shield, href: "/dashboard/clinic?tab=public-legal" },
       ],

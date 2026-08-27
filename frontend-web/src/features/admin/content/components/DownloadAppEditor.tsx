@@ -106,8 +106,8 @@ export default function DownloadAppEditor({ current, editorId, token, fetchApiDo
   const saved = editor;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+    <div className="download-app-editor space-y-4">
+      <div className="download-app-editor-actions flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Button
             variant="outline"

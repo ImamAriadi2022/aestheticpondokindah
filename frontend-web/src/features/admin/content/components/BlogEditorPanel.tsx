@@ -144,7 +144,7 @@ export default function BlogEditorPanel({ editorId, apiPost, sessionName, token,
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-150">
+    <div className="blog-editor-panel space-y-4 animate-in fade-in duration-150">
       {/* Top Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
         <div className="flex items-center gap-3">
@@ -159,7 +159,7 @@ export default function BlogEditorPanel({ editorId, apiPost, sessionName, token,
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="blog-editor-actions flex items-center gap-2">
           {/* Button Simpan Draf */}
           <Button
             type="button"

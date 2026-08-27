@@ -24,6 +24,7 @@ export default function GalleryPage({
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("Semua");
   const [deletingId, setDeletingId] = useState<string | number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Array<string | number>>([]);
 
   useEffect(() => {
     fetchApiGallery();
@@ -61,8 +62,8 @@ export default function GalleryPage({
       });
   }, [apiGalleryItems, activeCategory, search]);
 
-  const handleDelete = async (id: string | number) => {
-    if (!confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
+  const handleDelete = async (id: string | number, skipConfirmation = false) => {
+    if (!skipConfirmation && !confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
 
     setDeletingId(id);
     try {
@@ -112,6 +113,23 @@ export default function GalleryPage({
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const toggleSelection = (id: string | number) => {
+    setSelectedIds((current) => current.includes(id) ? current.filter((selectedId) => selectedId !== id) : [...current, id]);
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds(selectedIds.length === filtered.length ? [] : filtered.map((item) => item.id));
+  };
+
+  const handleBulkDelete = async () => {
+    if (!selectedIds.length) return;
+    if (!confirm(`Hapus ${selectedIds.length} foto galeri yang dipilih?`)) return;
+
+    await Promise.all(selectedIds.map((id) => handleDelete(id, true)));
+    setSelectedIds([]);
+    await fetchApiGallery();
   };
 
   return (
@@ -199,9 +217,26 @@ export default function GalleryPage({
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+        {selectedIds.length > 0 && (
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#F0E6D3] bg-rose-50/70">
+            <span className="text-xs font-semibold text-rose-700">{selectedIds.length} foto dipilih</span>
+            <Button size="sm" onClick={handleBulkDelete} className="h-8 px-3 text-xs bg-rose-600 hover:bg-rose-700 text-white">
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> Hapus Terpilih
+            </Button>
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">
+              <TableHead className="w-10 px-3">
+                <input
+                  type="checkbox"
+                  checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                  onChange={toggleSelectAll}
+                  aria-label="Pilih semua foto galeri"
+                  className="h-4 w-4 accent-[#C9A24A] cursor-pointer"
+                />
+              </TableHead>
               <TableHead className="w-16 font-bold text-[#4A3F35]">Foto</TableHead>
               <TableHead className="font-bold text-[#4A3F35]">Judul</TableHead>
               <TableHead className="font-bold text-[#4A3F35]">Kategori</TableHead>
@@ -212,13 +247,22 @@ export default function GalleryPage({
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-xs text-[#8A7B6B]">
+                <TableCell colSpan={6} className="text-center py-10 text-xs text-[#8A7B6B]">
                   Tidak ada foto galeri ditemukan.
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((item) => (
                 <TableRow key={item.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
+                  <TableCell className="px-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(item.id)}
+                      onChange={() => toggleSelection(item.id)}
+                      aria-label={`Pilih ${item.title || "foto galeri"}`}
+                      className="h-4 w-4 accent-[#C9A24A] cursor-pointer"
+                    />
+                  </TableCell>
                   <TableCell>
                     {item.image_url || item.image_path ? (
                       <img

@@ -960,7 +960,7 @@ export default function AdminMembershipPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="membership-rules-table w-full text-left text-xs">
                   <thead className="bg-[#FAF8F5]/50 border-b border-[#E8DFC8] text-[10px] uppercase font-bold text-[#8C8272] tracking-wider">
                     <tr>
                       <th className="px-5 py-3.5">Layanan / Sumber Transaksi</th>

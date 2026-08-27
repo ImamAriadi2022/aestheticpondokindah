@@ -28,7 +28,6 @@ import MessagesPage from "@/features/admin/messages/pages/MessagesPage";
 import SettingsPage from "@/features/admin/settings/pages/SettingsPage";
 import ServicesManagePage from "@/features/admin/public_info/pages/ServicesManagePage";
 import FaqsManagePage from "@/features/admin/public_info/pages/FaqsManagePage";
-import ContactMessagesPage from "@/features/admin/public_info/pages/ContactMessagesPage";
 import AboutManagePage from "@/features/admin/public_info/pages/AboutManagePage";
 import LegalManagePage from "@/features/admin/public_info/pages/LegalManagePage";
 import EditBerandaPage from "@/features/admin/etalase/pages/EditBerandaPage";
@@ -396,9 +395,6 @@ export default function ClinicDashboardPage() {
 
       case "public-faqs":
         return <FaqsManagePage />;
-
-      case "public-contact-messages":
-        return <ContactMessagesPage />;
 
       case "public-about":
         return <AboutManagePage />;

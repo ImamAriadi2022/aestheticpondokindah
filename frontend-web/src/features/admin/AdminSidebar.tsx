@@ -18,7 +18,6 @@ import {
   Download,
   Image,
   Quote,
-  Mail,
   Info,
   Shield,
   Layers,
@@ -38,7 +37,6 @@ export default function AdminSidebar({ activeTab }: Props) {
   const publicInfoTabs = [
     "public-services",
     "public-faqs",
-    "public-contact-messages",
     "public-about",
     "public-legal",
   ];
@@ -199,12 +197,6 @@ export default function AdminSidebar({ activeTab }: Props) {
       label: "Pusat Bantuan (FAQ)",
       icon: HelpCircle,
       href: "/dashboard/clinic?tab=public-faqs",
-    },
-    {
-      id: "public-contact-messages",
-      label: "Pesan Kontak Masuk",
-      icon: Mail,
-      href: "/dashboard/clinic?tab=public-contact-messages",
     },
     {
       id: "public-about",

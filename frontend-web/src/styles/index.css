@@ -328,6 +328,82 @@
   .clinic-settings-page .flex {
     min-width: 0;
   }
+
+  .doctors-page-actions,
+  .blog-editor-actions,
+  .download-app-editor-actions {
+    flex-wrap: wrap;
+  }
+
+  .doctors-page-actions > button,
+  .blog-editor-actions > button,
+  .download-app-editor-actions > button {
+    min-width: 0;
+    max-width: 100%;
+    padding-inline: 0.75rem;
+    font-size: 0.6875rem;
+  }
+
+  .doctors-page-actions > button {
+    flex: 1 1 8rem;
+  }
+
+  .membership-rules-table :where(th, td) {
+    padding-inline: 0.625rem;
+    font-size: 0.625rem;
+  }
+
+  .membership-rules-table :where(th:nth-child(2), th:nth-child(3), td:nth-child(2), td:nth-child(3)) {
+    white-space: nowrap;
+    font-size: 0.5625rem;
+  }
+
+  .edit-about-page {
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  .edit-about-actions > :where(a, button),
+  .about-statistics-header > button {
+    max-width: 100%;
+    min-width: 0;
+    padding-inline: 0.75rem;
+    font-size: 0.6875rem;
+  }
+
+  .about-statistics-header {
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .about-statistics-header > div {
+    min-width: 0;
+  }
+
+  .blog-editor-actions > button,
+  .download-app-editor-actions > button {
+    flex: 1 1 8rem;
+  }
+
+  .treatment-editor-modal {
+    width: calc(100vw - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+    border-radius: 1.25rem;
+  }
+
+  .treatment-editor-modal > form {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .treatment-editor-modal :where(label, input, select, textarea, p, span) {
+    font-size: 0.6875rem;
+  }
+
+  .treatment-editor-modal .sticky {
+    padding-inline: 1rem;
+    padding-block: 0.75rem;
+  }
 }
 
 /* TipTap / WpEditor content styles (Tailwind preflight removes list styles) */

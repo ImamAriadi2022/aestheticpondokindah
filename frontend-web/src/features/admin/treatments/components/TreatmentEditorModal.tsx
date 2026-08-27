@@ -264,7 +264,7 @@ export default function TreatmentEditorModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[92vw] max-w-4xl lg:max-w-4xl xl:max-w-5xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl text-left">
+      <DialogContent className="treatment-editor-modal w-[92vw] max-w-4xl lg:max-w-4xl xl:max-w-5xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl text-left">
         {/* Header */}
         <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8]">
           <div className="flex items-center gap-3">
@@ -568,4 +568,3 @@ export default function TreatmentEditorModal({
     </Dialog>
   );
 }
-
