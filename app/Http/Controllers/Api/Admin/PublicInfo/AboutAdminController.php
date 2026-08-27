@@ -64,18 +64,22 @@ class AboutAdminController extends Controller
             'story_image' => ['nullable', 'string'],
             'badge_title' => ['nullable', 'string', 'max:100'],
             'badge_subtitle' => ['nullable', 'string', 'max:255'],
-            'story_paragraphs' => ['required', 'array'],
+            'story_paragraphs' => ['nullable', 'array'],
             'story_paragraphs.*' => ['string'],
-            'stats' => ['required', 'array'],
+            'stats' => ['nullable', 'array'],
             'stats.*.value' => ['required', 'string', 'max:50'],
             'stats.*.label' => ['required', 'string', 'max:100'],
             'stats.*.sublabel' => ['nullable', 'string', 'max:255'],
-            'values' => ['required', 'array'],
+            'values' => ['nullable', 'array'],
             'values.*.title' => ['required', 'string', 'max:150'],
             'values.*.description' => ['required', 'string'],
             'cta_whatsapp_text' => ['nullable', 'string', 'max:255'],
             'cta_whatsapp_url' => ['nullable', 'string', 'max:500'],
         ]);
+
+        $validated['stats'] = $validated['stats'] ?? [];
+        $validated['values'] = $validated['values'] ?? [];
+        $validated['story_paragraphs'] = $validated['story_paragraphs'] ?? [];
 
         // Process story image if base64 DataURL
         if (!empty($validated['story_image']) && str_starts_with($validated['story_image'], 'data:image')) {

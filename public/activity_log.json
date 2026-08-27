@@ -1,5 +1,20 @@
 [
   {
+    "id": "act-350",
+    "timestamp": "2026-08-27T01:24:00.000Z",
+    "category": "about-page-empty-cards-handling",
+    "title": "Fleksibilitas Hapus Semua Kartu Statistik & Nilai Inti dengan Auto-Hide Section Landing",
+    "description": "Menghapus batasan minimal 1 kartu pada CMS Edit Tentang Kami ([`EditTentangPage.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/admin/etalase/pages/EditTentangPage.tsx), [`AboutAdminController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Admin/PublicInfo/AboutAdminController.php)) dan menerapkan auto-hide seksi tanpa fallback teks kosong pada halaman landing ([`About.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/guest/about/pages/About.tsx)): 1) Admin diizinkan menghapus seluruh kartu statistik maupun nilai inti tanpa terhalang peringatan validasi, 2) Menambahkan empty state yang informatif pada form CMS jika kartu kosong, 3) Pada halaman publik Tentang Kami, seksi statistik & nilai inti otomatis dihilangkan seluruhnya jika kartu berjumlah 0 (tanpa fallback teks 'kartu tidak tersedia' dan tanpa menyisakan ruang kosong).",
+    "details": [
+      "No Deletion Restrictions: Peringatan 'Minimal harus ada 1 kartu statistik / nilai inti' dihapus dari EditTentangPage dan AboutAdminController.",
+      "Informative Admin Empty State: Ketika kartu kosong, admin melihat pesan informatif beserta tombol tambah cepat di form CMS.",
+      "Clean Landing Auto-Hide: Seksi statistik dan nilai inti di About.tsx hanya dirender jika terdapat minimal 1 item; jika 0, seksi tersebut tidak dirender sama sekali.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-349",
     "timestamp": "2026-08-27T00:59:00.000Z",
     "category": "home-about-us-cms-management",

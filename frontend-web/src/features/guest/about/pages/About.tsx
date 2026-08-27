@@ -96,65 +96,69 @@ export default function AboutPage() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-14 sm:py-20 bg-brand-cream/30 border-y border-brand-gold/10">
-          <div className="container mx-auto px-4">
-            <div className={`grid gap-8 ${
-              (about.stats || []).length <= 2
-                ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
-                : (about.stats || []).length === 3
-                ? "grid-cols-1 sm:grid-cols-3 max-w-4xl mx-auto"
-                : "grid-cols-2 lg:grid-cols-4"
-            }`}>
-              {(about.stats || []).map((stat, idx) => (
-                <div key={idx} className="text-center space-y-2">
-                  <p className="text-4xl sm:text-5xl font-bold text-gradient-gold font-heading">{stat.value}</p>
-                  <p className="text-lg font-semibold text-brand-charcoal font-heading">{stat.label}</p>
-                  {stat.sublabel && <p className="text-sm text-brand-warm-gray font-body">{stat.sublabel}</p>}
-                </div>
-              ))}
+        {about.stats && about.stats.length > 0 && (
+          <section className="py-14 sm:py-20 bg-brand-cream/30 border-y border-brand-gold/10">
+            <div className="container mx-auto px-4">
+              <div className={`grid gap-8 ${
+                about.stats.length <= 2
+                  ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
+                  : about.stats.length === 3
+                  ? "grid-cols-1 sm:grid-cols-3 max-w-4xl mx-auto"
+                  : "grid-cols-2 lg:grid-cols-4"
+              }`}>
+                {about.stats.map((stat, idx) => (
+                  <div key={idx} className="text-center space-y-2">
+                    <p className="text-4xl sm:text-5xl font-bold text-gradient-gold font-heading">{stat.value}</p>
+                    <p className="text-lg font-semibold text-brand-charcoal font-heading">{stat.label}</p>
+                    {stat.sublabel && <p className="text-sm text-brand-warm-gray font-body">{stat.sublabel}</p>}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Values Section */}
-        <section className="py-14 sm:py-20 bg-background">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-gold-light rounded-full mb-4">
-                <span className="text-sm font-semibold text-brand-gold font-body">Nilai Kami</span>
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-brand-charcoal mb-4">
-                Standar Pelayanan Terbaik
-              </h2>
-              <p className="text-base text-brand-warm-gray font-body">
-                Prinsip yang memandu kami dalam memberikan perawatan gigi berkualitas kepada setiap pasien.
-              </p>
-            </div>
-
-            <div className={`grid gap-8 ${
-              (about.values || []).length <= 2
-                ? "grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto"
-                : (about.values || []).length === 4
-                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
-                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-            }`}>
-              {(about.values || []).map((val, idx) => (
-                <div
-                  key={idx}
-                  className="bg-card p-8 rounded-3xl border border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 space-y-4"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                    {idx % 3 === 0 ? <Users className="w-6 h-6" /> : idx % 3 === 1 ? <Target className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
-                  </div>
-                  <h3 className="text-xl font-bold text-brand-charcoal">{val.title}</h3>
-                  <p className="text-sm text-brand-warm-gray font-body leading-relaxed">
-                    {val.description}
-                  </p>
+        {about.values && about.values.length > 0 && (
+          <section className="py-14 sm:py-20 bg-background">
+            <div className="container mx-auto px-4">
+              <div className="max-w-3xl mx-auto text-center mb-16">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-gold-light rounded-full mb-4">
+                  <span className="text-sm font-semibold text-brand-gold font-body">Nilai Kami</span>
                 </div>
-              ))}
+                <h2 className="text-3xl sm:text-4xl font-bold text-brand-charcoal mb-4">
+                  Standar Pelayanan Terbaik
+                </h2>
+                <p className="text-base text-brand-warm-gray font-body">
+                  Prinsip yang memandu kami dalam memberikan perawatan gigi berkualitas kepada setiap pasien.
+                </p>
+              </div>
+
+              <div className={`grid gap-8 ${
+                about.values.length <= 2
+                  ? "grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto"
+                  : about.values.length === 4
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+                  : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+              }`}>
+                {about.values.map((val, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-card p-8 rounded-3xl border border-border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 space-y-4"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                      {idx % 3 === 0 ? <Users className="w-6 h-6" /> : idx % 3 === 1 ? <Target className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
+                    </div>
+                    <h3 className="text-xl font-bold text-brand-charcoal">{val.title}</h3>
+                    <p className="text-sm text-brand-warm-gray font-body leading-relaxed">
+                      {val.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
       <Footer />
     </div>

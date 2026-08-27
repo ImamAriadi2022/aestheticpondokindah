@@ -113,17 +113,9 @@ export default function EditTentangPage() {
   };
 
   const handleRemoveStat = (index: number) => {
-    if (formData.stats.length <= 1) {
-      toast({
-        title: "Peringatan",
-        message: "Minimal harus ada 1 kartu statistik.",
-        variant: "warning",
-      });
-      return;
-    }
     setFormData((prev) => ({
       ...prev,
-      stats: prev.stats.filter((_, i) => i !== index),
+      stats: (prev.stats || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -140,17 +132,9 @@ export default function EditTentangPage() {
   };
 
   const handleRemoveValue = (index: number) => {
-    if (formData.values.length <= 1) {
-      toast({
-        title: "Peringatan",
-        message: "Minimal harus ada 1 nilai inti.",
-        variant: "warning",
-      });
-      return;
-    }
     setFormData((prev) => ({
       ...prev,
-      values: prev.values.filter((_, i) => i !== index),
+      values: (prev.values || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -437,64 +421,78 @@ export default function EditTentangPage() {
                 </Button>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(formData.stats || []).map((stat, idx) => (
-                    <div key={idx} className="p-4 rounded-2xl bg-amber-50/40 border border-amber-200/60 space-y-2 relative group">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-[#C9A24A]">Kartu Statistik #{idx + 1}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveStat(idx)}
-                          className="p-1 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                          title="Hapus Kartu Statistik"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[10px] font-semibold text-gray-600">Angka/Nilai</label>
-                          <Input
-                            value={stat.value}
-                            onChange={(e) => {
-                              const updated = [...formData.stats];
-                              updated[idx] = { ...updated[idx], value: e.target.value };
-                              setFormData({ ...formData, stats: updated });
-                            }}
-                            placeholder="15+"
-                            className="h-8 text-xs font-bold text-[#C9A24A] bg-white rounded-lg"
-                          />
+                {(!formData.stats || formData.stats.length === 0) ? (
+                  <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-amber-200/80 bg-amber-50/20">
+                    <p className="text-xs text-gray-500 mb-3">Tidak ada kartu statistik. Bagian statistik akan otomatis disembunyikan sepenuhnya pada website publik tanpa meninggalkan area kosong.</p>
+                    <Button
+                      type="button"
+                      onClick={handleAddStat}
+                      className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl text-xs px-4 py-2 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      Tambah Kartu Statistik
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(formData.stats || []).map((stat, idx) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-amber-50/40 border border-amber-200/60 space-y-2 relative group">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-[#C9A24A]">Kartu Statistik #{idx + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveStat(idx)}
+                            className="p-1 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                            title="Hapus Kartu Statistik"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] font-semibold text-gray-600">Angka/Nilai</label>
+                            <Input
+                              value={stat.value}
+                              onChange={(e) => {
+                                const updated = [...formData.stats];
+                                updated[idx] = { ...updated[idx], value: e.target.value };
+                                setFormData({ ...formData, stats: updated });
+                              }}
+                              placeholder="15+"
+                              className="h-8 text-xs font-bold text-[#C9A24A] bg-white rounded-lg"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-semibold text-gray-600">Label Utama</label>
+                            <Input
+                              value={stat.label}
+                              onChange={(e) => {
+                                const updated = [...formData.stats];
+                                updated[idx] = { ...updated[idx], label: e.target.value };
+                                setFormData({ ...formData, stats: updated });
+                              }}
+                              placeholder="Tahun Pengalaman"
+                              className="h-8 text-xs font-semibold text-gray-800 bg-white rounded-lg"
+                            />
+                          </div>
                         </div>
                         <div>
-                          <label className="text-[10px] font-semibold text-gray-600">Label Utama</label>
+                          <label className="text-[10px] font-semibold text-gray-600">Keterangan Subtitle</label>
                           <Input
-                            value={stat.label}
+                            value={stat.sublabel || ""}
                             onChange={(e) => {
                               const updated = [...formData.stats];
-                              updated[idx] = { ...updated[idx], label: e.target.value };
+                              updated[idx] = { ...updated[idx], sublabel: e.target.value };
                               setFormData({ ...formData, stats: updated });
                             }}
-                            placeholder="Tahun Pengalaman"
-                            className="h-8 text-xs font-semibold text-gray-800 bg-white rounded-lg"
+                            placeholder="Melayani dengan standar terbaik"
+                            className="h-8 text-xs text-gray-600 bg-white rounded-lg"
                           />
                         </div>
                       </div>
-                      <div>
-                        <label className="text-[10px] font-semibold text-gray-600">Keterangan Subtitle</label>
-                        <Input
-                          value={stat.sublabel || ""}
-                          onChange={(e) => {
-                            const updated = [...formData.stats];
-                            updated[idx] = { ...updated[idx], sublabel: e.target.value };
-                            setFormData({ ...formData, stats: updated });
-                          }}
-                          placeholder="Melayani dengan standar terbaik"
-                          className="h-8 text-xs text-gray-600 bg-white rounded-lg"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -516,49 +514,63 @@ export default function EditTentangPage() {
                 <Button
                   type="button"
                   onClick={handleAddValue}
-                  className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl text-xs px-3.5 py-2 flex items-center gap-1.5 shadow-sm"
+                  className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl text-xs px-3.5 py-2 flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Tambah Nilai
                 </Button>
               </CardHeader>
               <CardContent className="p-6 space-y-3">
-                {(formData.values || []).map((val, idx) => (
-                  <div key={idx} className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 space-y-2 relative group">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-700">Nilai Inti #{idx + 1}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveValue(idx)}
-                        className="p-1 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        title="Hapus Nilai Inti"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <Input
-                      value={val.title}
-                      onChange={(e) => {
-                        const updated = [...formData.values];
-                        updated[idx] = { ...updated[idx], title: e.target.value };
-                        setFormData({ ...formData, values: updated });
-                      }}
-                      placeholder="Judul Nilai"
-                      className="h-8 text-xs font-bold text-gray-900 bg-white rounded-lg"
-                    />
-                    <Textarea
-                      value={val.description}
-                      onChange={(e) => {
-                        const updated = [...formData.values];
-                        updated[idx] = { ...updated[idx], description: e.target.value };
-                        setFormData({ ...formData, values: updated });
-                      }}
-                      placeholder="Deskripsi nilai..."
-                      rows={2}
-                      className="text-xs bg-white rounded-lg resize-none"
-                    />
+                {(!formData.values || formData.values.length === 0) ? (
+                  <div className="text-center py-8 px-4 rounded-2xl border-2 border-dashed border-amber-200/80 bg-amber-50/20">
+                    <p className="text-xs text-gray-500 mb-3">Tidak ada nilai inti. Bagian nilai inti akan otomatis disembunyikan sepenuhnya pada website publik tanpa meninggalkan area kosong.</p>
+                    <Button
+                      type="button"
+                      onClick={handleAddValue}
+                      className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl text-xs px-4 py-2 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1" />
+                      Tambah Nilai Inti
+                    </Button>
                   </div>
-                ))}
+                ) : (
+                  (formData.values || []).map((val, idx) => (
+                    <div key={idx} className="p-3.5 rounded-xl bg-gray-50 border border-gray-200 space-y-2 relative group">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-700">Nilai Inti #{idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveValue(idx)}
+                          className="p-1 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Hapus Nilai Inti"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <Input
+                        value={val.title}
+                        onChange={(e) => {
+                          const updated = [...formData.values];
+                          updated[idx] = { ...updated[idx], title: e.target.value };
+                          setFormData({ ...formData, values: updated });
+                        }}
+                        placeholder="Judul Nilai"
+                        className="h-8 text-xs font-bold text-gray-900 bg-white rounded-lg"
+                      />
+                      <Textarea
+                        value={val.description}
+                        onChange={(e) => {
+                          const updated = [...formData.values];
+                          updated[idx] = { ...updated[idx], description: e.target.value };
+                          setFormData({ ...formData, values: updated });
+                        }}
+                        placeholder="Deskripsi nilai..."
+                        rows={2}
+                        className="text-xs bg-white rounded-lg resize-none"
+                      />
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </div>
@@ -602,39 +614,52 @@ export default function EditTentangPage() {
                     />
                   </label>
                 </div>
+                <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
+                  <span>Format: PNG/JPG/WebP</span>
+                  <span>Maks: 1920x1920</span>
+                </div>
+              </CardContent>
+            </Card>
 
-                <div className="pt-2 border-t border-gray-100 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-bold text-gray-800">
-                    <Award className="w-4 h-4 text-[#C9A24A]" />
-                    Badge Penghargaan Melayang
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-semibold text-gray-600">Gelar/Badge</label>
-                      <Input
-                        value={formData.badge_title}
-                        onChange={(e) => setFormData({ ...formData, badge_title: e.target.value })}
-                        placeholder="Top"
-                        className="h-8 text-xs font-bold rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-gray-600">Keterangan</label>
-                      <Input
-                        value={formData.badge_subtitle}
-                        onChange={(e) => setFormData({ ...formData, badge_subtitle: e.target.value })}
-                        placeholder="Dental Clinic in Jakarta"
-                        className="h-8 text-xs rounded-lg"
-                      />
-                    </div>
-                  </div>
+            <Card className="border border-[#C9A24A]/20 shadow-sm rounded-2xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-amber-50/50 to-transparent border-b border-amber-100/60 pb-4">
+                <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-[#C9A24A]" />
+                  Badge Penghargaan
+                </CardTitle>
+                <CardDescription className="text-xs text-gray-500">
+                  Badge akreditasi/penghargaan di atas foto klinik.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Judul Badge
+                  </label>
+                  <Input
+                    value={formData.badge_title}
+                    onChange={(e) => setFormData({ ...formData, badge_title: e.target.value })}
+                    placeholder="Top"
+                    className="rounded-xl font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Keterangan Badge
+                  </label>
+                  <Input
+                    value={formData.badge_subtitle}
+                    onChange={(e) => setFormData({ ...formData, badge_subtitle: e.target.value })}
+                    placeholder="Dental Clinic in Jakarta"
+                    className="rounded-xl"
+                  />
                 </div>
 
                 <div className="pt-2">
                   <Button
                     type="submit"
                     disabled={saving}
-                    className="w-full bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:opacity-90 text-white font-semibold rounded-xl py-3 shadow-lg shadow-[#C9A24A]/20 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:opacity-90 text-white font-semibold rounded-xl py-3 shadow-lg shadow-[#C9A24A]/20 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Save className="w-4 h-4" />
                     {saving ? "Menyimpan Perubahan..." : "Simpan Halaman Tentang"}
@@ -694,15 +719,37 @@ export default function EditTentangPage() {
           </div>
 
           {/* Stats Preview */}
-          <div className="bg-amber-50/40 rounded-3xl p-8 border border-amber-200/50 max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            {(formData.stats || []).map((s, idx) => (
-              <div key={idx} className="space-y-1">
-                <p className="text-3xl sm:text-4xl font-bold text-[#C9A24A]">{s.value}</p>
-                <p className="text-sm font-bold text-[#2C2416]">{s.label}</p>
-                <p className="text-xs text-[#5C5546]">{s.sublabel}</p>
+          {formData.stats && formData.stats.length > 0 && (
+            <div className="bg-amber-50/40 rounded-3xl p-8 border border-amber-200/50 max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+              {(formData.stats || []).map((s, idx) => (
+                <div key={idx} className="space-y-1">
+                  <p className="text-3xl sm:text-4xl font-bold text-[#C9A24A]">{s.value}</p>
+                  <p className="text-sm font-bold text-[#2C2416]">{s.label}</p>
+                  <p className="text-xs text-[#5C5546]">{s.sublabel}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Values Preview */}
+          {formData.values && formData.values.length > 0 && (
+            <div className="max-w-5xl mx-auto space-y-6">
+              <div className="text-center">
+                <div className="inline-block px-3 py-1 rounded-full bg-amber-100 text-[#C9A24A] text-xs font-bold mb-2">
+                  Nilai Kami
+                </div>
+                <h3 className="text-xl font-bold text-[#2C2416]">Standar Pelayanan Terbaik</h3>
               </div>
-            ))}
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(formData.values || []).map((v, idx) => (
+                  <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-2">
+                    <h4 className="text-sm font-bold text-[#2C2416]">{v.title}</h4>
+                    <p className="text-xs text-[#5C5546] leading-relaxed">{v.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
