@@ -200,7 +200,7 @@ export default function ClinicDoctorFormPage() {
 
   return (
     <DashboardLayout role="clinic">
-      <div>
+      <div className="doctor-form-page">
         <Button
           variant="ghost"
           onClick={() => navigate("/dashboard/clinic?tab=doctors")}
@@ -349,7 +349,7 @@ export default function ClinicDoctorFormPage() {
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4 flex gap-3">
+              <div className="doctor-form-actions pt-4 flex gap-3">
                 <Button
                   type="button"
                   variant="outline"

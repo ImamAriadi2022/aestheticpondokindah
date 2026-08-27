@@ -169,7 +169,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="!p-0 overflow-hidden w-[calc(100vw-32px)] max-w-4xl max-h-[92vh] flex flex-col rounded-[28px] border border-[#E8DFC8] bg-white shadow-2xl"
+        className="doctor-editor-modal !p-0 overflow-hidden w-[calc(100vw-32px)] max-w-4xl max-h-[92vh] flex flex-col rounded-[28px] border border-[#E8DFC8] bg-white shadow-2xl"
       >
         {/* Top Header Card */}
         <div className="p-6 sm:p-7 pb-4 bg-white border-b border-[#F0E6D3] flex items-start justify-between gap-4 shrink-0">
@@ -472,7 +472,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
           </div>
 
           {/* Action Footer Bar */}
-          <div className="p-4 sm:px-7 py-3.5 bg-white border-t border-[#F0E6D3] flex items-center justify-end gap-3 shrink-0">
+          <div className="doctor-editor-actions p-4 sm:px-7 py-3.5 bg-white border-t border-[#F0E6D3] flex items-center justify-end gap-3 shrink-0">
             <Button
               type="button"
               variant="outline"

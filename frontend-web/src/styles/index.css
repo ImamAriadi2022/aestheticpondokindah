@@ -404,6 +404,36 @@
     padding-inline: 1rem;
     padding-block: 0.75rem;
   }
+
+  .profile-edit-page {
+    padding-inline: 0;
+  }
+
+  .profile-edit-actions,
+  .doctor-form-actions,
+  .doctor-editor-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .profile-edit-actions > button,
+  .doctor-form-actions > button,
+  .doctor-editor-actions > button {
+    flex: 1 1 8rem;
+    min-width: 0;
+    padding-inline: 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .doctor-editor-modal {
+    width: calc(100vw - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+    border-radius: 1.25rem;
+  }
+
+  .doctor-editor-actions {
+    padding: 0.875rem 1rem;
+  }
 }
 
 /* TipTap / WpEditor content styles (Tailwind preflight removes list styles) */

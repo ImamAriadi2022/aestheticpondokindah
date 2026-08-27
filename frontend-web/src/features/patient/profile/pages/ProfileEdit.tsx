@@ -370,10 +370,10 @@ export default function ProfileEditPage() {
 
   return (
     <DashboardLayout role={sessionRole}>
-      <div className="w-full max-w-5xl mx-auto px-4 py-6 space-y-6">
+      <div className="profile-edit-page w-full max-w-5xl mx-auto px-4 py-6 space-y-6">
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3">
+          <div className="profile-edit-actions flex items-center gap-3">
             <Button
               variant="outline"
               size="icon"
@@ -889,7 +889,7 @@ export default function ProfileEditPage() {
     )}
 
         {/* Bottom Save Action */}
-        <div className="flex items-center justify-end gap-3 pt-4">
+        <div className="profile-edit-actions flex items-center justify-end gap-3 pt-4">
           <Button
             variant="outline"
             onClick={() => navigate("/profile")}
