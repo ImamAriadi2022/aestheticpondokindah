@@ -600,7 +600,7 @@ export default function AdminMembershipPage() {
 
   return (
     <DashboardLayout role="clinic">
-      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 pb-10 sm:px-6 lg:px-8 animate-in fade-in duration-150">
+      <div className="admin-membership-page mx-auto w-full max-w-7xl space-y-6 px-4 pb-10 sm:px-6 lg:px-8 animate-in fade-in duration-150">
         {/* Page Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white p-5 sm:p-6 rounded-2xl border border-[#E8DFC8] shadow-xs">
           <div>
@@ -685,8 +685,8 @@ export default function AdminMembershipPage() {
           <div className="space-y-6 animate-in fade-in duration-150">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-              <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
-                <div>
+              <div className="membership-stat-card p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
+                <div className="min-w-0">
                   <span className="text-[11px] font-bold text-[#8C8272]">Total Saldo Poin Beredar</span>
                   <p className="text-2xl font-black text-[#8C6B1C] mt-0.5 whitespace-nowrap">{new Intl.NumberFormat("id-ID").format(metrics.totalPoints)} Poin</p>
                 </div>
@@ -695,8 +695,8 @@ export default function AdminMembershipPage() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
-                <div>
+              <div className="membership-stat-card p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
+                <div className="min-w-0">
                   <span className="text-[11px] font-bold text-emerald-700">Aturan Poin Aktif</span>
                   <p className="text-2xl font-black text-emerald-600 mt-0.5">
                     {metrics.activeRulesCount} dari {metrics.totalRules} Aturan
@@ -707,8 +707,8 @@ export default function AdminMembershipPage() {
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
-                <div>
+              <div className="membership-stat-card p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
+                <div className="min-w-0">
                   <span className="text-[11px] font-bold text-[#8C8272]">Mekanisme Perolehan</span>
                   <p className="text-sm font-bold text-[#2C2416] mt-1">Otomatis saat Selesai Tindakan</p>
                   <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">

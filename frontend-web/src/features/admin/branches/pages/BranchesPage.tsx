@@ -15,7 +15,7 @@ export default function BranchesPage({ branches, onEditBranch }: Props) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="mobile-branches-page space-y-6">
       <div>
         <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Cabang Klinik</h2>
         <p className="text-sm text-[#8A7B6B] mt-1">Kelola data lokasi cabang, alamat, kontak WhatsApp, dan jam operasional klinik.</p>

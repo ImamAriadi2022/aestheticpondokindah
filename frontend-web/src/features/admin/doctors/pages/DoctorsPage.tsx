@@ -328,7 +328,7 @@ export default function DoctorsPage({
   const totalSchedulesCount = localSchedules.length > 0 ? localSchedules.length : 12;
 
   return (
-    <div className="space-y-6">
+    <div className="doctors-page space-y-6">
       {/* Header & Stats Cards */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -366,33 +366,33 @@ export default function DoctorsPage({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="doctor-summary-card bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
             <Users className="w-6 h-6" />
           </div>
-          <div>
-            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Dokter Terdaftar</p>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Dokter</p>
             <p className="text-xl font-bold text-[#4A3F35] mt-0.5">{totalDoctors} Spesialis</p>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
+        <div className="doctor-summary-card bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
             <CheckCircle2 className="w-6 h-6" />
           </div>
-          <div>
-            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Dokter Aktif Praktik</p>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Dokter Aktif</p>
             <p className="text-xl font-bold text-emerald-700 mt-0.5">{activeDoctors} Berpraktik</p>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
+        <div className="doctor-summary-card bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
             <Calendar className="w-6 h-6" />
           </div>
-          <div>
-            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Sesi Jadwal (Database)</p>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Sesi Jadwal</p>
             <p className="text-xl font-bold text-[#4A3F35] mt-0.5">{totalSchedulesCount} Sesi Terdaftar</p>
           </div>
         </div>

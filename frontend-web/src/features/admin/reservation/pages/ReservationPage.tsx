@@ -131,10 +131,10 @@ export default function ReservationPage({
         </div>
 
         {/* Sub-Tabs Selector */}
-        <div className="flex items-center gap-2 pt-2 border-t border-[#F5ECE0]">
+        <div className="flex items-center gap-2 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveSubTab("reservations")}
-            className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeSubTab === "reservations"
                 ? "bg-[#8C6B1C] text-white shadow-md"
                 : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
@@ -155,16 +155,16 @@ export default function ReservationPage({
 
           <button
             onClick={() => setActiveSubTab("treatments")}
-            className={`px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeSubTab === "treatments"
                 ? "bg-[#8C6B1C] text-white shadow-md"
                 : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
             }`}
           >
             <Sparkles className="w-4 h-4" />
-            <span>Layanan Klinik (Treatments)</span>
+            <span className="whitespace-nowrap">Layanan Klinik (Treatments)</span>
             <span
-              className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+              className={`shrink-0 whitespace-nowrap text-[11px] px-2 py-0.5 rounded-full font-bold ${
                 activeSubTab === "treatments"
                   ? "bg-white/20 text-white"
                   : "bg-emerald-100 text-emerald-800"
@@ -286,15 +286,15 @@ export default function ReservationPage({
             </div>
 
             {/* Status Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-[#F5ECE0]">
-              <span className="text-xs font-semibold text-[#8A7B6B] flex items-center gap-1 mr-1">
+            <div className="flex flex-nowrap items-center gap-1.5 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
+              <span className="shrink-0 text-xs font-semibold text-[#8A7B6B] flex items-center gap-1 mr-1">
                 <Filter className="w-3 h-3 text-[#B8943F]" /> Status:
               </span>
               {["Semua", "Baru", "Dikonfirmasi", "Selesai", "Dibatalkan"].map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     statusFilter === st
                       ? "bg-[#C9A24A] text-white shadow-xs"
                       : "bg-[#FAF8F5] hover:bg-[#F5ECE0] text-[#7A6E60] border border-[#E8DFC8]"

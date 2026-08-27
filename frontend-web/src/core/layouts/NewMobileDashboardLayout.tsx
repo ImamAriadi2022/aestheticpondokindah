@@ -16,7 +16,6 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  CreditCard,
   Shield,
   HelpCircle,
   Stethoscope,
@@ -295,46 +294,22 @@ export default function NewMobileDashboardLayout({
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                   className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a24a] to-[#a8843a] flex items-center justify-center text-white font-bold text-xs"
                 >
-                  {(session?.name || "U")[0].toUpperCase()}
+                  <UserCircle className="w-5 h-5" aria-hidden="true" />
                 </button>
 
                 {profileMenuOpen && (
                   <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl py-3 z-50 border border-gray-100">
                     <div className="px-4 py-3 border-b border-gray-100 mb-1">
                       <p className="text-sm font-semibold text-gray-900">{session?.name || "User"}</p>
-                      <p className="text-xs text-gray-500">{(session as any)?.membership_level === 'gold' ? "Gold Member" : (session as any)?.membership_level === 'platinum' ? "Platinum Member" : "Bronze Member"}</p>
+                      <p className="text-xs text-gray-500">{role === "clinic" ? "Admin Klinik" : role === "doctor" ? "Dokter" : (session as any)?.membership_level === 'gold' ? "Gold Member" : (session as any)?.membership_level === 'platinum' ? "Platinum Member" : "Bronze Member"}</p>
                     </div>
                     <Link
-                      to="/dashboard/user?tab=akun"
+                      to={role === "user" ? "/dashboard/user?tab=akun" : "/profile"}
                       onClick={() => setProfileMenuOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
                     >
-                      <Settings className="w-4 h-4 text-gray-500" />
+                      <UserCircle className="w-4 h-4 text-gray-500" />
                       Profil
-                    </Link>
-                    <Link
-                      to="/membership"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
-                    >
-                      <CreditCard className="w-4 h-4 text-gray-500" />
-                      Membership
-                    </Link>
-                    <Link
-                      to="/security"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
-                    >
-                      <Shield className="w-4 h-4 text-gray-500" />
-                      Keamanan
-                    </Link>
-                    <Link
-                      to="/help"
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
-                    >
-                      <HelpCircle className="w-4 h-4 text-gray-500" />
-                      Bantuan
                     </Link>
                     <div className="border-t border-gray-100 my-2 mx-3"></div>
                     <button

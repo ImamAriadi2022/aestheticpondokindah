@@ -277,6 +277,57 @@
   .mobile-dashboard-nav {
     box-shadow: 0 -8px 24px rgba(39, 33, 24, 0.07);
   }
+
+  /* Keep the mobile-only clinic navigation focused on available workflows. */
+  .mobile-dashboard-shell a[href*="tab=branches"],
+  .mobile-branches-page {
+    display: none;
+  }
+
+  .doctor-summary-card {
+    min-width: 0;
+    padding: 1rem;
+  }
+
+  .doctor-summary-card p {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-membership-page {
+    padding-inline: 0;
+  }
+
+  .membership-stat-card {
+    gap: 0.75rem;
+  }
+
+  .membership-stat-card > div:first-child {
+    min-width: 0;
+  }
+
+  .membership-stat-card p {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .clinic-settings-page {
+    min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 1.5rem;
+  }
+
+  .clinic-settings-page :where(input, select, textarea) {
+    min-width: 0 !important;
+    max-width: 100%;
+  }
+
+  .clinic-settings-page :where(h2, h3, h4, p, span, label, button) {
+    overflow-wrap: anywhere;
+  }
+
+  .clinic-settings-page .flex {
+    min-width: 0;
+  }
 }
 
 /* TipTap / WpEditor content styles (Tailwind preflight removes list styles) */

@@ -371,7 +371,7 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
   }
 
   return (
-    <div className="space-y-6 text-left max-w-6xl mx-auto pb-12 animate-in fade-in duration-150">
+    <div className="clinic-settings-page space-y-6 text-left max-w-6xl mx-auto pb-12 animate-in fade-in duration-150">
       {/* Header Halaman */}
       <div>
         <h2 className="text-xl sm:text-2xl font-bold text-[#2C2416] flex items-center gap-2">
