@@ -52,16 +52,16 @@ export default function BlogPage() {
         </section>
 
         {/* Filter Section */}
-        <section className="py-8 bg-background border-b border-border">
+        <section className="py-5 sm:py-8 bg-background border-b border-border">
           <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-nowrap items-center justify-start sm:justify-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar scroll-smooth py-1 px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => setActiveCategory(category)}
-                  className={`px-5 py-2.5 rounded-xl font-medium text-sm transition-all font-body ${
+                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-medium text-xs sm:text-sm transition-all font-body shrink-0 whitespace-nowrap cursor-pointer ${
                     activeCategory === category
-                      ? "bg-gradient-gold text-white shadow-lg shadow-brand-gold/25"
+                      ? "bg-gradient-gold text-white shadow-md sm:shadow-lg shadow-brand-gold/25"
                       : "bg-brand-cream text-brand-charcoal hover:bg-brand-gold-light"
                   }`}
                 >

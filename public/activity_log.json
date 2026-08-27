@@ -1,5 +1,20 @@
 [
   {
+    "id": "act-347",
+    "timestamp": "2026-08-27T00:33:00.000Z",
+    "category": "mobile-blog-category-horizontal-scroll",
+    "title": "Optimalisasi Tampilan Mobile: Kategori Artikel Blog Horizontal Scrollable",
+    "description": "Menyempurnakan tata letak kategori artikel blog ([`Blog.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/guest/articles/pages/Blog.tsx), [`index.css`](file:///c:/programming/aestheticpondokindah/frontend-web/src/styles/index.css)): 1) Mengubah susunan pil kategori artikel di perangkat mobile menjadi satu baris horizontal scrollable yang halus (touch-swipe) tanpa scrollbar mengganggu (no-scrollbar), 2) Menjaga tampilan desktop tetap terpusat dan rapi sesuai desain awal (100% responsive tanpa mengubah data atau tampilan desktop).",
+    "details": [
+      "Mobile Horizontal Scroll: Filter kategori (Semua, Estetika, Tips, Ortodonti, Anak, Restoratif, Informasi) kini tersusun menyamping rapi dan dapat digeser (swipe) secara mulus.",
+      "Clean UI & No Scrollbar: Scrollbar bawaan browser disembunyikan menggunakan utility class no-scrollbar untuk estetika modern.",
+      "Desktop Integrity: Layout layar lebar (desktop) tetap rapi dan terpusat tanpa ada perubahan struktur data.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-346",
     "timestamp": "2026-08-26T16:06:00.000Z",
     "category": "doctor-browser-notification-toggle",
