@@ -1,5 +1,35 @@
 [
   {
+    "id": "act-349",
+    "timestamp": "2026-08-27T00:59:00.000Z",
+    "category": "home-about-us-cms-management",
+    "title": "Integrasi CMS Edit Beranda untuk Bagian 'About Us' (15 Years of Expertise)",
+    "description": "Menghubungkan bagian 'About Us' (15 Years of Expertise in Dental Care) pada halaman beranda utama ([`FeaturesSection.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/guest/home/components/FeaturesSection.tsx), [`EditBerandaPage.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/admin/etalase/pages/EditBerandaPage.tsx), [`HomeAdminController.php`](file:///c:/programming/aestheticpondokindah/app/Http/Controllers/Api/Admin/PublicInfo/HomeAdminController.php), [`etalaseService.ts`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/admin/etalase/services/etalaseService.ts)) ke CMS Edit Beranda Admin: 1) Admin dapat mengedit Tag/Badge, Headline Baris 1 & 2, Deskripsi, Poin-poin Keunggulan (Checklist), serta Teks dan Link tombol aksi (CTA), 2) Menyediakan form upload dan konversi WebP otomatis untuk 2 foto fasilitas & dokter di bagian About Us, 3) Menampilkan Live Preview real-time pada halaman CMS admin.",
+    "details": [
+      "Dynamic Content Rendering: FeaturesSection di landing page beranda kini membaca data dinamis (about_tag, about_title_line1, about_title_line2, about_description, about_points, about_cta_text, about_cta_link, about_image1, about_image2) secara real-time.",
+      "Admin CMS Integration: EditBerandaPage dilengkapi Bagian 4 (Tentang Kami Beranda) dan upload foto fasilitas klinik dengan konversi instan WebP.",
+      "Live Preview Synchronization: Tab Live Preview pada panel Admin menampilkan preview visual bagian Tentang Kami secara simultan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-348",
+    "timestamp": "2026-08-27T00:37:00.000Z",
+    "category": "dynamic-terms-of-service-sync",
+    "title": "Integrasi Dinamis Surat Syarat & Ketentuan Footer dari Pengaturan Klinik Admin",
+    "description": "Menghubungkan halaman Syarat & Ketentuan ([`TermsOfService.tsx`](file:///c:/programming/aestheticpondokindah/frontend-web/src/features/guest/legal/pages/TermsOfService.tsx), [`index.css`](file:///c:/programming/aestheticpondokindah/frontend-web/src/styles/index.css)) dengan Surat Syarat & Ketentuan resmi yang dikelola admin di Pengaturan Klinik: 1) Mengambil live data template (Kop Surat, Judul, Versi Dokumen, Isi Syarat & Ketentuan bodyHtml/sections, dan Catatan Persetujuan footerNote), 2) Menampilkan surat resmi berformat elegan dengan kop resmi klinik dan tombol cetak PDF, 3) Sinkronisasi nomor WhatsApp dan kontak resmi klinik secara dinamis.",
+    "details": [
+      "Dynamic Content Sync: Konten S&K kini langsung membaca surat template resmi (pdf_terms_and_conditions & clinic_general_info) yang diinputkan oleh Admin.",
+      "Official Letterhead & Styling: Dilengkapi kop surat resmi, nomor arsip, stempel legal elektronik, dan box pernyataan persetujuan pasien.",
+      "Print & Save PDF Ready: Pengunjung dapat langsung mencetak atau menyimpan dokumen resmi berformat A4 rapi melalui tombol 'Cetak / Simpan PDF'.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-347",
     "timestamp": "2026-08-27T00:33:00.000Z",
     "category": "mobile-blog-category-horizontal-scroll",

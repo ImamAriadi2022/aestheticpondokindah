@@ -33,6 +33,21 @@ class HomeAdminController extends Controller
             'cta_whatsapp_text' => 'Konsultasi WhatsApp',
             'cta_whatsapp_url' => 'https://wa.me/6281990114949',
             'booking_button_text' => 'Jadwalkan Janji Temu',
+
+            // About Us Section in Homepage
+            'about_tag' => 'ABOUT US',
+            'about_title_line1' => '15 Years of Expertise',
+            'about_title_line2' => 'in Dental Care',
+            'about_description' => 'Kami menghadirkan pengalaman perawatan gigi yang nyaman, modern, dan aman dengan tim dokter profesional.',
+            'about_points' => [
+                'Modern Dental Service You Can Trust',
+                'Award-winning Dental Care',
+                'Affordable Dental Care for Everyone',
+            ],
+            'about_cta_text' => 'Learn More',
+            'about_cta_link' => '/about',
+            'about_image1' => '/about/tentang1.webp',
+            'about_image2' => '/about/tentang2.webp',
         ];
     }
 
@@ -66,6 +81,18 @@ class HomeAdminController extends Controller
             'cta_whatsapp_text' => ['nullable', 'string', 'max:255'],
             'cta_whatsapp_url' => ['nullable', 'string', 'max:500'],
             'booking_button_text' => ['nullable', 'string', 'max:255'],
+
+            // About Us Section
+            'about_tag' => ['nullable', 'string', 'max:255'],
+            'about_title_line1' => ['nullable', 'string', 'max:255'],
+            'about_title_line2' => ['nullable', 'string', 'max:255'],
+            'about_description' => ['nullable', 'string', 'max:1000'],
+            'about_points' => ['nullable', 'array'],
+            'about_points.*' => ['string', 'max:255'],
+            'about_cta_text' => ['nullable', 'string', 'max:255'],
+            'about_cta_link' => ['nullable', 'string', 'max:500'],
+            'about_image1' => ['nullable', 'string'],
+            'about_image2' => ['nullable', 'string'],
         ]);
 
         // Process hero image if base64 DataURL was uploaded
@@ -76,6 +103,21 @@ class HomeAdminController extends Controller
             } catch (\Throwable $e) {
                 // keep fallback
             }
+        }
+
+        // Process about images if base64 DataURL was uploaded
+        if (!empty($validated['about_image1']) && str_starts_with($validated['about_image1'], 'data:image')) {
+            try {
+                $stored = ImageOptimizationService::optimizeAndStore($validated['about_image1'], 'about_home', 1920, 1920, 82);
+                $validated['about_image1'] = asset('storage/' . $stored);
+            } catch (\Throwable $e) {}
+        }
+
+        if (!empty($validated['about_image2']) && str_starts_with($validated['about_image2'], 'data:image')) {
+            try {
+                $stored = ImageOptimizationService::optimizeAndStore($validated['about_image2'], 'about_home', 1920, 1920, 82);
+                $validated['about_image2'] = asset('storage/' . $stored);
+            } catch (\Throwable $e) {}
         }
 
         $setting = ClinicSetting::updateOrCreate(

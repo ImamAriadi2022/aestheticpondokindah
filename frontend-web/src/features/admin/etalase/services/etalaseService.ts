@@ -15,6 +15,17 @@ export interface HomeContentData {
   cta_whatsapp_text: string;
   cta_whatsapp_url: string;
   booking_button_text: string;
+
+  // About Us / Features Section on Homepage
+  about_tag?: string;
+  about_title_line1?: string;
+  about_title_line2?: string;
+  about_description?: string;
+  about_points?: string[];
+  about_cta_text?: string;
+  about_cta_link?: string;
+  about_image1?: string;
+  about_image2?: string;
 }
 
 export interface ClinicStatistic {
@@ -62,6 +73,22 @@ export const DEFAULT_HOME_CONTENT: HomeContentData = {
   cta_whatsapp_text: "Konsultasi WhatsApp",
   cta_whatsapp_url: "https://wa.me/6281990114949",
   booking_button_text: "Jadwalkan Janji Temu",
+
+  // About Us Section Defaults
+  about_tag: "ABOUT US",
+  about_title_line1: "15 Years of Expertise",
+  about_title_line2: "in Dental Care",
+  about_description:
+    "Kami menghadirkan pengalaman perawatan gigi yang nyaman, modern, dan aman dengan tim dokter profesional.",
+  about_points: [
+    "Modern Dental Service You Can Trust",
+    "Award-winning Dental Care",
+    "Affordable Dental Care for Everyone",
+  ],
+  about_cta_text: "Learn More",
+  about_cta_link: "/about",
+  about_image1: "/about/tentang1.webp",
+  about_image2: "/about/tentang2.webp",
 };
 
 export const DEFAULT_ABOUT_CONTENT: AboutContentData = {
