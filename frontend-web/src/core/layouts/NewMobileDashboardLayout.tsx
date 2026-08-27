@@ -24,6 +24,19 @@ import {
   SlidersHorizontal,
   Calendar,
   Users,
+  MoreHorizontal,
+  X,
+  AlertCircle,
+  FileText,
+  Image,
+  Sparkles,
+  Download,
+  Building2,
+  Layers,
+  Mail,
+  Info,
+  LayoutDashboard,
+  MessageSquare,
 } from "lucide-react";
 
 interface NewMobileDashboardLayoutProps {
@@ -51,6 +64,7 @@ export default function NewMobileDashboardLayout({
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -99,9 +113,7 @@ export default function NewMobileDashboardLayout({
         return [
           { label: "Beranda", icon: Home, href: "/dashboard/clinic" },
           { label: "Reservasi", icon: CalendarDays, href: "/dashboard/clinic?tab=reservasi" },
-          { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
-          { label: "Pengaturan Klinik", icon: Settings, href: "/dashboard/clinic?tab=settings" },
-          { label: "Preferensi", icon: UserCircle, href: "/settings" },
+          { label: "Konsultasi", icon: MessageSquare, href: "/dashboard/clinic?tab=konsultasi" },
         ];
       case "doctor":
         return [
@@ -114,6 +126,49 @@ export default function NewMobileDashboardLayout({
         return [];
     }
   };
+
+  // Admin "More" menu groups — all features not in the main bottom nav
+  const clinicMoreGroups = [
+    {
+      title: "Kelola",
+      items: [
+        { label: "Dokter", icon: Stethoscope, href: "/dashboard/clinic?tab=doctors" },
+        { label: "Pengguna", icon: Users, href: "/dashboard/clinic?tab=users" },
+        { label: "Cabang", icon: Building2, href: "/dashboard/clinic?tab=branches" },
+        { label: "Membership", icon: Sparkles, href: "/dashboard/clinic/membership" },
+      ],
+    },
+    {
+      title: "Konten & CMS",
+      items: [
+        { label: "Edit Beranda", icon: LayoutDashboard, href: "/dashboard/clinic?tab=etalase-beranda" },
+        { label: "Edit Tentang", icon: Info, href: "/dashboard/clinic?tab=etalase-tentang" },
+        { label: "Pop Up Promo", icon: Sparkles, href: "/dashboard/clinic?tab=content-popup" },
+        { label: "Promo", icon: FileText, href: "/dashboard/clinic?tab=content-promo" },
+        { label: "Blog", icon: FileText, href: "/dashboard/clinic?tab=content-blog" },
+        { label: "Galeri", icon: Image, href: "/dashboard/clinic?tab=content-gallery" },
+        { label: "Testimoni", icon: MessageSquareText, href: "/dashboard/clinic?tab=content-testimonials" },
+        { label: "Download App", icon: Download, href: "/dashboard/clinic?tab=content-download" },
+      ],
+    },
+    {
+      title: "Informasi Publik",
+      items: [
+        { label: "Layanan", icon: Layers, href: "/dashboard/clinic?tab=public-services" },
+        { label: "FAQ", icon: HelpCircle, href: "/dashboard/clinic?tab=public-faqs" },
+        { label: "Pesan Kontak", icon: Mail, href: "/dashboard/clinic?tab=public-contact-messages" },
+        { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan" },
+        { label: "Kebijakan", icon: Shield, href: "/dashboard/clinic?tab=public-legal" },
+      ],
+    },
+    {
+      title: "Pengaturan",
+      items: [
+        { label: "Pengaturan Klinik", icon: Settings, href: "/dashboard/clinic?tab=settings" },
+        { label: "Preferensi", icon: UserCircle, href: "/settings" },
+      ],
+    },
+  ];
 
   const navItems = getNavItems();
 
@@ -305,10 +360,10 @@ export default function NewMobileDashboardLayout({
         {children}
       </main>
 
-      {/* Bottom Navigation - Modern Style from UI */}
+      {/* Bottom Navigation */}
       {!hideBottomNav && (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 max-w-lg mx-auto bg-white border-t border-gray-100 px-2 pt-2 pb-safe">
-          <div className="flex items-center justify-around">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 max-w-lg mx-auto bg-white border-t border-gray-100 px-2 pt-2 pb-2" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
+          <div className={`flex items-center ${role === 'clinic' ? 'justify-around' : 'justify-around'}`}>
             {navItems.map((item) => {
               const active = isActive(item.href);
               
@@ -316,7 +371,8 @@ export default function NewMobileDashboardLayout({
                 <Link
                   key={item.label}
                   to={item.href}
-                  className={`relative flex flex-col items-center py-2 px-3 min-w-[56px] transition-all duration-200 ${
+                  onClick={() => setMoreMenuOpen(false)}
+                  className={`relative flex flex-col items-center py-2 px-3 min-w-[60px] transition-all duration-200 ${
                     active ? "text-[#c9a24a]" : "text-gray-400"
                   }`}
                 >
@@ -343,10 +399,108 @@ export default function NewMobileDashboardLayout({
                 </Link>
               );
             })}
+
+            {/* "Lainnya" button — only for clinic admin */}
+            {role === 'clinic' && (
+              <button
+                type="button"
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                className={`relative flex flex-col items-center py-2 px-3 min-w-[60px] transition-all duration-200 ${
+                  moreMenuOpen ? "text-[#c9a24a]" : "text-gray-400"
+                }`}
+              >
+                <MoreHorizontal
+                  className={`w-6 h-6 transition-all duration-200 ${
+                    moreMenuOpen ? "stroke-[2.5px]" : "stroke-[1.5px]"
+                  }`}
+                />
+                <span className={`text-[10px] mt-1 font-medium ${
+                  moreMenuOpen ? "text-[#c9a24a]" : "text-gray-400"
+                }`}>
+                  Lainnya
+                </span>
+              </button>
+            )}
           </div>
-          {/* Safe area padding for iOS */}
-          <div className="h-[env(safe-area-inset-bottom)]" />
         </nav>
+      )}
+
+      {/* Admin "Lainnya" bottom sheet */}
+      {role === 'clinic' && moreMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
+            onClick={() => setMoreMenuOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 max-w-lg mx-auto bg-white rounded-t-3xl shadow-2xl overflow-y-auto max-h-[80vh]" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 bg-gray-300 rounded-full" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pb-3 border-b border-gray-100">
+              <h2 className="text-base font-semibold text-gray-900">Menu Admin</h2>
+              <button
+                onClick={() => setMoreMenuOpen(false)}
+                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Feature Groups */}
+            <div className="px-4 pt-4 pb-6 space-y-5">
+              {clinicMoreGroups.map((group) => (
+                <div key={group.title}>
+                  <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest mb-2.5 px-1">
+                    {group.title}
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {group.items.map((item) => {
+                      const currentTab = new URLSearchParams(location.search).get("tab");
+                      const [, hrefQuery] = item.href.split("?");
+                      const hrefTab = hrefQuery ? new URLSearchParams(hrefQuery).get("tab") : null;
+                      const isItemActive = location.pathname === "/dashboard/clinic" && hrefTab === currentTab;
+
+                      return (
+                        <Link
+                          key={item.label}
+                          to={item.href}
+                          onClick={() => setMoreMenuOpen(false)}
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition-all duration-150 ${
+                            isItemActive
+                              ? "bg-[#c9a24a]/15 text-[#c9a24a]"
+                              : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          <item.icon className={`w-5 h-5 ${isItemActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
+                          <span className="text-[9px] font-medium text-center leading-tight">{item.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Logout */}
+              <div className="pt-1 border-t border-gray-100">
+                <button
+                  onClick={() => {
+                    setMoreMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-sm font-medium">Keluar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Notification Center Modal */}
