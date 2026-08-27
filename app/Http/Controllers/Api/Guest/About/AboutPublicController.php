@@ -16,10 +16,20 @@ class AboutPublicController extends Controller
         $setting = ClinicSetting::where('key', self::KEY)->first();
         $default = AboutAdminController::getDefaultData();
 
-        $merged = $setting && is_array($setting->value)
-            ? array_merge($default, $setting->value)
-            : $default;
+        if ($setting && is_array($setting->value)) {
+            $saved = $setting->value;
+            $merged = array_merge($default, $saved);
 
-        return response()->json($merged);
+            // Explicitly preserve empty arrays from saved data
+            foreach (['stats', 'values', 'story_paragraphs'] as $arrayKey) {
+                if (array_key_exists($arrayKey, $saved)) {
+                    $merged[$arrayKey] = is_array($saved[$arrayKey]) ? $saved[$arrayKey] : [];
+                }
+            }
+
+            return response()->json($merged);
+        }
+
+        return response()->json($default);
     }
 }

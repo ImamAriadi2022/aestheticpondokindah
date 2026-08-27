@@ -145,7 +145,15 @@ export async function updateAdminHome(payload: Partial<HomeContentData>): Promis
 export async function fetchAdminAbout(): Promise<AboutContentData> {
   try {
     const data = await apiClient.get<AboutContentData>("/admin/about");
-    return data && data.hero_title ? { ...DEFAULT_ABOUT_CONTENT, ...data } : DEFAULT_ABOUT_CONTENT;
+    if (data && data.hero_title) {
+      // Use spread but explicitly preserve empty arrays — don't let DEFAULT override []
+      const result: AboutContentData = { ...DEFAULT_ABOUT_CONTENT, ...data };
+      if (Array.isArray(data.stats)) result.stats = data.stats;
+      if (Array.isArray(data.values)) result.values = data.values;
+      if (Array.isArray(data.story_paragraphs)) result.story_paragraphs = data.story_paragraphs;
+      return result;
+    }
+    return DEFAULT_ABOUT_CONTENT;
   } catch {
     return DEFAULT_ABOUT_CONTENT;
   }
@@ -168,7 +176,15 @@ export async function fetchPublicHome(): Promise<HomeContentData> {
 export async function fetchPublicAbout(): Promise<AboutContentData> {
   try {
     const data = await apiClient.get<AboutContentData>("/public/about");
-    return data && data.hero_title ? { ...DEFAULT_ABOUT_CONTENT, ...data } : DEFAULT_ABOUT_CONTENT;
+    if (data && data.hero_title) {
+      // Use spread but explicitly preserve empty arrays — don't let DEFAULT override []
+      const result: AboutContentData = { ...DEFAULT_ABOUT_CONTENT, ...data };
+      if (Array.isArray(data.stats)) result.stats = data.stats;
+      if (Array.isArray(data.values)) result.values = data.values;
+      if (Array.isArray(data.story_paragraphs)) result.story_paragraphs = data.story_paragraphs;
+      return result;
+    }
+    return DEFAULT_ABOUT_CONTENT;
   } catch {
     return DEFAULT_ABOUT_CONTENT;
   }

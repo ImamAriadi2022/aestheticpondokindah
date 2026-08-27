@@ -47,11 +47,23 @@ class AboutAdminController extends Controller
         $setting = ClinicSetting::where('key', self::KEY)->first();
         $default = self::getDefaultData();
 
-        $merged = $setting && is_array($setting->value)
-            ? array_merge($default, $setting->value)
-            : $default;
+        if ($setting && is_array($setting->value)) {
+            $saved = $setting->value;
+            $merged = array_merge($default, $saved);
 
-        return response()->json($merged);
+            // Explicitly preserve empty arrays — array_merge cannot distinguish
+            // between "key missing" and "key present but empty array []".
+            // We must check if the key exists in the saved value and override.
+            foreach (['stats', 'values', 'story_paragraphs'] as $arrayKey) {
+                if (array_key_exists($arrayKey, $saved)) {
+                    $merged[$arrayKey] = is_array($saved[$arrayKey]) ? $saved[$arrayKey] : [];
+                }
+            }
+
+            return response()->json($merged);
+        }
+
+        return response()->json($default);
     }
 
     public function update(Request $request): JsonResponse
@@ -77,9 +89,10 @@ class AboutAdminController extends Controller
             'cta_whatsapp_url' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $validated['stats'] = $validated['stats'] ?? [];
-        $validated['values'] = $validated['values'] ?? [];
-        $validated['story_paragraphs'] = $validated['story_paragraphs'] ?? [];
+        // Always ensure these keys exist even if sent as null / missing
+        $validated['stats'] = $request->has('stats') ? ($validated['stats'] ?? []) : [];
+        $validated['values'] = $request->has('values') ? ($validated['values'] ?? []) : [];
+        $validated['story_paragraphs'] = $request->has('story_paragraphs') ? ($validated['story_paragraphs'] ?? []) : [];
 
         // Process story image if base64 DataURL
         if (!empty($validated['story_image']) && str_starts_with($validated['story_image'], 'data:image')) {
@@ -93,12 +106,21 @@ class AboutAdminController extends Controller
 
         $setting = ClinicSetting::updateOrCreate(
             ['key' => self::KEY],
-            ['value' => $validated]
+            ['value' => $validated, 'type' => 'json']
         );
+
+        // Return the saved data merged with defaults so the response is always complete
+        $saved = is_array($setting->value) ? $setting->value : [];
+        $responseData = array_merge(self::getDefaultData(), $saved);
+        foreach (['stats', 'values', 'story_paragraphs'] as $arrayKey) {
+            if (array_key_exists($arrayKey, $saved)) {
+                $responseData[$arrayKey] = is_array($saved[$arrayKey]) ? $saved[$arrayKey] : [];
+            }
+        }
 
         return response()->json([
             'message' => 'Profil dan halaman tentang kami berhasil diperbarui.',
-            'about' => $setting->value,
+            'about' => $responseData,
         ]);
     }
 }

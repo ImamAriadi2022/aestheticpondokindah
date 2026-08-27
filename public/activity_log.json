@@ -1,5 +1,21 @@
 [
   {
+    "id": "act-351",
+    "timestamp": "2026-08-27T01:35:00.000Z",
+    "category": "about-page-db-persistence-fix",
+    "title": "Fix Persistensi Database: Data Kartu Statistik & Nilai Kosong Tidak Hilang Saat Refresh",
+    "description": "Memperbaiki bug di mana penghapusan semua kartu statistik/nilai inti tersimpan di browser tapi muncul kembali setelah refresh, karena array kosong ([]) ditimpa oleh data default saat data dibaca kembali dari database. Fix dilakukan di 4 lapisan: 1) `AboutAdminController.php` show() kini secara eksplisit mempertahankan empty array dengan `array_key_exists` alih-alih hanya `array_merge`; 2) update() kini menyimpan `type: 'json'` secara eksplisit dan mengembalikan response yang sudah di-merge dengan default; 3) `AboutPublicController.php` mendapat perbaikan serupa; 4) Frontend `etalaseService.ts` di `fetchAdminAbout()` dan `fetchPublicAbout()` kini memeriksa `Array.isArray(data.stats)` sebelum menimpa dengan DEFAULT, sehingga `[]` dari server dipertahankan.",
+    "details": [
+      "Backend Empty Array Preservation: show() di AboutAdminController dan AboutPublicController menggunakan array_key_exists untuk membedakan 'key tidak ada' vs 'key ada tapi nilainya []', memastikan stats/values/story_paragraphs kosong dipertahankan saat merge.",
+      "Explicit JSON Type: update() kini menyimpan 'type' => 'json' secara eksplisit agar ClinicSetting model selalu decode value sebagai JSON.",
+      "Complete Response After Save: update() mengembalikan data yang sudah di-merge dengan getDefaultData() sehingga frontend menerima response yang lengkap dan konsisten.",
+      "Frontend Explicit Array Check: fetchAdminAbout() dan fetchPublicAbout() mengecek Array.isArray(data.stats/values/story_paragraphs) sehingga empty array [] dari server tidak ditimpa oleh DEFAULT_ABOUT_CONTENT.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-350",
     "timestamp": "2026-08-27T01:24:00.000Z",
     "category": "about-page-empty-cards-handling",
