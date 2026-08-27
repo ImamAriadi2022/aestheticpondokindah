@@ -3,6 +3,7 @@ import { Smartphone, Download } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getDoctorDownloadApps, type DownloadAppItem } from "../services/doctorDownloadService";
 import DoctorDownloadAppCard from "../components/DoctorDownloadAppCard";
+import { PwaInstallButton } from "@/core/components/PwaInstallButton";
 
 export default function DoctorDownloadPage() {
   const [apps, setApps] = useState<DownloadAppItem[]>([]);
@@ -28,6 +29,7 @@ export default function DoctorDownloadPage() {
               <p className="text-sm text-gray-500">Dapatkan akses mudah ke aplikasi mobile klinik</p>
             </div>
           </div>
+          <PwaInstallButton className="bg-gradient-gold text-white rounded-xl text-xs" />
         </div>
 
         {loading ? (

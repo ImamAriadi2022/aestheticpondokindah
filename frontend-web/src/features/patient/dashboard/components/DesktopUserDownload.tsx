@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Laptop,
 } from "lucide-react";
+import { PwaInstallButton } from "@/core/components/PwaInstallButton";
 
 export default function DesktopUserDownload() {
   const [apps, setApps] = useState<any[]>([]);
@@ -73,6 +74,7 @@ export default function DesktopUserDownload() {
               <Download className="w-9 h-9" />
             </div>
           </div>
+          <PwaInstallButton className="bg-[#e8c547] hover:bg-[#d4b33f] text-[#2c2416] rounded-xl text-xs font-bold" />
         </div>
       </div>
 

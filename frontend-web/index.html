@@ -18,12 +18,35 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="shortcut icon" href="/logo/logo.webp" type="image/webp" />
+    <link rel="shortcut icon" href="/logo/pwa-icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href="/logo/logo.webp" type="image/webp" />
     <title>Aesthetic Pondok Indah Dental Clinic</title>
   </head>
   <body>
+    <div id="pwa-splash" aria-label="Memuat Aesthetic Pondok Indah">
+      <div class="pwa-splash__glow"></div>
+      <div class="pwa-splash__content">
+        <img class="pwa-splash__mark" src="/logo/pwa-icon.svg" alt="Aesthetic Pondok Indah" />
+        <p class="pwa-splash__eyebrow">AESTHETIC PONDOK INDAH</p>
+        <p class="pwa-splash__label">Dental Care, Thoughtfully Designed</p>
+        <span class="pwa-splash__loader" aria-hidden="true"></span>
+      </div>
+    </div>
     <div id="root"></div>
+    <style>
+      #pwa-splash { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 38%, #fffdf8 0, #f7f2e9 45%, #eee2ca 100%); color: #2c2416; transition: opacity .34s ease, visibility .34s ease; }
+      #pwa-splash.is-ready { opacity: 0; visibility: hidden; pointer-events: none; }
+      .pwa-splash__glow { position: absolute; width: min(82vw, 440px); aspect-ratio: 1; border-radius: 50%; background: rgba(197, 158, 63, .14); filter: blur(48px); transform: translateY(-16%); }
+      .pwa-splash__content { position: relative; display: flex; flex-direction: column; align-items: center; padding: 32px; text-align: center; animation: pwa-splash-enter .5s ease-out both; }
+      .pwa-splash__mark { width: 108px; height: 108px; margin-bottom: 26px; filter: drop-shadow(0 14px 22px rgba(73, 52, 15, .15)); }
+      .pwa-splash__eyebrow { margin: 0; color: #8e691d; font: 700 11px/1.2 Inter, system-ui, sans-serif; letter-spacing: .18em; }
+      .pwa-splash__label { margin: 9px 0 28px; color: #5c5546; font: 500 13px/1.4 Inter, system-ui, sans-serif; }
+      .pwa-splash__loader { width: 32px; height: 3px; overflow: hidden; border-radius: 999px; background: rgba(197, 158, 63, .2); }
+      .pwa-splash__loader::after { content: ''; display: block; width: 46%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #a37e28, #dfc267); animation: pwa-splash-load 1s ease-in-out infinite; }
+      @keyframes pwa-splash-enter { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+      @keyframes pwa-splash-load { from { transform: translateX(-110%); } to { transform: translateX(240%); } }
+      @media (prefers-reduced-motion: reduce) { .pwa-splash__content, .pwa-splash__loader::after { animation: none; } }
+    </style>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -8,3 +8,8 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </StrictMode>
 );
+
+window.setTimeout(() => {
+  const splash = document.getElementById("pwa-splash");
+  splash?.classList.add("is-ready");
+}, 180);

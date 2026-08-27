@@ -7,6 +7,13 @@ export const PwaManager: React.FC = () => {
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
+    const handleBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      window.__pwaInstallPrompt = event as any;
+      window.dispatchEvent(new Event("pwa-install-available"));
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     // 1. Online / Offline Event Listeners
     const handleOnline = () => {
       setIsOffline(false);
@@ -51,6 +58,7 @@ export const PwaManager: React.FC = () => {
     }
 
     return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };

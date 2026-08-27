@@ -4,6 +4,7 @@ import { Smartphone, Download, Globe, AlertTriangle, HardDrive } from "lucide-re
 import { useEffect, useState } from "react";
 import { getDownloadApps, type DownloadAppItem } from "@/features/guest/download/services/downloadApi";
 import { Button } from "@/shared/ui/button";
+import { PwaInstallButton } from "@/core/components/PwaInstallButton";
 
 export default function DownloadPage() {
   const [apps, setApps] = useState<DownloadAppItem[]>([]);
@@ -31,6 +32,7 @@ export default function DownloadPage() {
               <p className="text-lg text-brand-warm-gray max-w-xl mx-auto">
                 Dapatkan akses mudah ke layanan klinik kami melalui aplikasi mobile Aesthetic Pondok Indah.
               </p>
+              <PwaInstallButton className="mt-6 bg-gradient-gold text-white rounded-xl shadow-lg shadow-brand-gold/20" />
             </div>
 
             {loading ? (

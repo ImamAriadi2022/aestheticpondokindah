@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import DownloadAppEditor from "../components/DownloadAppEditor";
+import { PwaInstallButton } from "@/core/components/PwaInstallButton";
 import { Button } from "@/shared/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Plus, Edit2, Trash2, Download, Smartphone, Apple, Search, Check, X, HardDrive } from "lucide-react";
@@ -113,9 +114,11 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
           <h2 className="text-xl font-bold text-[#4A3F35]">Download & Rilis Aplikasi Mobile Pasien</h2>
           <p className="text-sm text-[#8A7B6B] mt-1">Kelola file installer APK Android, link App Store iOS, dan riwayat changelog versi.</p>
         </div>
-        <Button
-          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
-          onClick={() => {
+        <div className="flex flex-wrap items-center gap-2">
+          <PwaInstallButton className="rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white text-xs" />
+          <Button
+            className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+            onClick={() => {
             setSearchParams((prev: any) => {
               const next = new URLSearchParams(prev);
               next.set("tab", "content-download");
@@ -123,11 +126,12 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
               next.delete("id");
               return next;
             });
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Rilis Versi Baru
-        </Button>
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Rilis Versi Baru
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
