@@ -366,7 +366,7 @@ export default function DoctorsPage({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
             <Users className="w-6 h-6" />

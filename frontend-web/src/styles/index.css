@@ -232,6 +232,53 @@
   display: none;
 }
 
+/*
+ * Mobile dashboard frame
+ *
+ * Dashboard pages share this frame only below the desktop breakpoint.  It gives
+ * independently-built admin and patient pages a consistent touch-friendly
+ * gutter, vertical rhythm, and safe space above the fixed navigation without
+ * changing their desktop layout.
+ */
+@media (max-width: 767px) {
+  .mobile-dashboard-shell {
+    width: 100%;
+    overflow-x: clip;
+    background: #f7f7f5;
+  }
+
+  .mobile-dashboard-header {
+    padding-top: env(safe-area-inset-top);
+    border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+    box-shadow: 0 1px 10px rgba(39, 33, 24, 0.035);
+  }
+
+  .mobile-dashboard-main {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-dashboard-content {
+    width: 100%;
+    max-width: 42rem;
+    min-width: 0;
+    margin-inline: auto;
+    padding: 1.25rem 1rem 2rem;
+  }
+
+  .mobile-dashboard-content > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mobile-dashboard-content :where(input, select, textarea, button) {
+    max-width: 100%;
+  }
+
+  .mobile-dashboard-nav {
+    box-shadow: 0 -8px 24px rgba(39, 33, 24, 0.07);
+  }
+}
+
 /* TipTap / WpEditor content styles (Tailwind preflight removes list styles) */
 .wp-editor-content .ProseMirror ul {
   list-style-type: disc;

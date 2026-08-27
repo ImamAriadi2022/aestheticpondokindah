@@ -243,11 +243,11 @@ export default function NewMobileDashboardLayout({
   const showBackButton = !isRootPage();
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col max-w-lg mx-auto relative shadow-2xl">
+    <div className="mobile-dashboard-shell min-h-[100dvh] bg-[#FAFAFA] flex flex-col max-w-lg mx-auto relative shadow-2xl">
       {/* Header */}
       {!hideHeader && (
-        <header className="sticky top-0 z-30 bg-white">
-          <div className="flex items-center justify-between px-4 py-3">
+        <header className="mobile-dashboard-header sticky top-0 z-30 bg-white">
+          <div className="flex items-center justify-between px-5 py-3">
             {/* Left: Back or Location */}
             {showBackButton ? (
               <button
@@ -356,13 +356,15 @@ export default function NewMobileDashboardLayout({
       )}
 
       {/* Main Content */}
-      <main className={`flex-1 overflow-y-auto scrollbar-hide ${hideBottomNav ? '' : 'pb-24'}`}>
-        {children}
+      <main className={`mobile-dashboard-main flex-1 min-w-0 overflow-y-auto scrollbar-hide ${hideBottomNav ? '' : 'pb-24'}`}>
+        <div className="mobile-dashboard-content">
+          {children}
+        </div>
       </main>
 
       {/* Bottom Navigation */}
       {!hideBottomNav && (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 max-w-lg mx-auto bg-white border-t border-gray-100 px-2 pt-2 pb-2" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
+        <nav className="mobile-dashboard-nav fixed bottom-0 left-0 right-0 z-40 max-w-lg mx-auto bg-white border-t border-gray-100 px-2 pt-2 pb-2" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
           <div className={`flex items-center ${role === 'clinic' ? 'justify-around' : 'justify-around'}`}>
             {navItems.map((item) => {
               const active = isActive(item.href);

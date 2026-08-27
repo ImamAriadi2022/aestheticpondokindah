@@ -189,7 +189,7 @@ export default function UserDashboardPage() {
   if (isMobile) {
     return (
       <NewMobileDashboardLayout role="user">
-        <div className="px-4 py-4">{renderContent()}</div>
+        {renderContent()}
       </NewMobileDashboardLayout>
     );
   }
