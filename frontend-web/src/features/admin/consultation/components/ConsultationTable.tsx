@@ -9,7 +9,7 @@ type Props = {
 
 export default function ConsultationTable({ consultations, onSelect }: Props) {
   return (
-    <div className="bg-white rounded-2xl border border-[#E8DFC8] overflow-hidden shadow-xs">
+    <div className="bg-white rounded-2xl border border-[#E8DFC8] overflow-x-auto shadow-xs">
       <Table>
         <TableHeader>
           <TableRow className="bg-[#FAF8F5] border-b border-[#E8DFC8]">

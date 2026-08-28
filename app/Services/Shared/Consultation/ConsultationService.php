@@ -55,13 +55,17 @@ class ConsultationService
             $this->seedGreeting($consultation, $guestIdentity['name'] ?? 'Bapak/Ibu');
         }
 
-        NotificationService::sendToAdmins(
-            'Konsultasi Baru Menunggu',
-            $consultation->participant_name . ' mengirim konsultasi instan: ' . ($consultation->topic ?? 'Keluhan gigi'),
-            'consultation',
-            '/dashboard/clinic?tab=konsultasi',
-            ['consultation_id' => (string) $consultation->id]
-        );
+        try {
+            NotificationService::sendToAdmins(
+                'Konsultasi Baru Menunggu',
+                $consultation->participant_name . ' mengirim konsultasi instan: ' . ($consultation->topic ?? 'Keluhan gigi'),
+                'consultation',
+                '/dashboard/clinic?tab=konsultasi',
+                ['consultation_id' => (string) $consultation->id]
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking
+        }
 
         return $consultation;
     }

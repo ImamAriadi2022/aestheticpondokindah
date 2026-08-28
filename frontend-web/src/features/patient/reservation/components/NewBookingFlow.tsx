@@ -38,6 +38,8 @@ import { useRef } from "react";
 import DigitalSignaturePad from "./DigitalSignaturePad";
 import DigitalSignatureModal from "./DigitalSignatureModal";
 import TermsPdfModal from "./TermsPdfModal";
+import { scrollPageToTop } from "@/core/router/ScrollToTop";
+import { PageTransition } from "@/core/router/RouteTransition";
 import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 import BookingSuccessModal from "./BookingSuccessModal";
 import ETicketModal from "./ETicketModal";
@@ -308,8 +310,8 @@ export interface DoctorItem {
   photo: string;
 }
 
-// Helper to parse backend time_range string (e.g. "09:00 - 12:00" or "15.00-17.00") into 20-minute slots
-export function parseTimeRangeToSlots(timeRange: string, intervalMinutes: number = 20): string[] {
+// Helper to parse backend time_range string (e.g. "09:00 - 12:00" or "10.00-14.00") into 10-minute slots
+export function parseTimeRangeToSlots(timeRange: string, intervalMinutes: number = 10): string[] {
   if (!timeRange) return [];
   const ranges = timeRange.split(/[,;/]/).map((r) => r.trim()).filter(Boolean);
   const allSlots: string[] = [];
@@ -338,11 +340,11 @@ export function parseTimeRangeToSlots(timeRange: string, intervalMinutes: number
   return allSlots.sort();
 }
 
-// Fallback dynamic time slots
-export function generateDefaultTimeSlots(startH = 9, endH = 18): string[] {
+// Fallback dynamic time slots with 10-minute intervals (e.g. 10:00, 10:10, 10:20, ...)
+export function generateDefaultTimeSlots(startH = 10, endH = 20): string[] {
   const slots: string[] = [];
   for (let h = startH; h < endH; h++) {
-    for (let m = 0; m < 60; m += 20) {
+    for (let m = 0; m < 60; m += 10) {
       const hh = String(h).padStart(2, "0");
       const mm = String(m).padStart(2, "0");
       slots.push(`${hh}:${mm}`);
@@ -438,6 +440,7 @@ export default function NewBookingFlow({
 
   // Step 4 Form Inputs
   const [notes, setNotes] = useState("");
+  const [showNotes, setShowNotes] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [patientName, setPatientName] = useState(
     (session as any)?.name || (session as any)?.user?.name || ""
@@ -488,6 +491,11 @@ export default function NewBookingFlow({
   });
   const hasCachedBookings = bookingsHistory.length > 0;
   const [historyLoading, setHistoryLoading] = useState<boolean>(!hasCachedBookings);
+
+  // Automatically scroll to the very top whenever stepper step or viewMode changes
+  useEffect(() => {
+    scrollPageToTop();
+  }, [currentStep, viewMode]);
 
   // 1. Fetch Services from Backend
   const fetchServices = async () => {
@@ -822,7 +830,7 @@ export default function NewBookingFlow({
     const slots: string[] = [];
     currentDaySchedules.forEach((s) => {
       if (s.timeRange) {
-        const generated = parseTimeRangeToSlots(s.timeRange, 20);
+        const generated = parseTimeRangeToSlots(s.timeRange, 10);
         generated.forEach((slot) => {
           if (!slots.includes(slot)) slots.push(slot);
         });
@@ -936,13 +944,46 @@ export default function NewBookingFlow({
         timeStr: selectedTimeSlot,
         isGuest: false,
       });
-      setBookingsHistory((prev) => [newTicket, ...prev]);
-      setCurrentStep(1);
+
+      // Update history so newest booking is at the top (index 0)
+      setBookingsHistory((prev) => [newTicket, ...prev.filter((b) => b.id !== newTicket.id && b.code !== newTicket.code)]);
+
+      // Otomatis arahkan ke WhatsApp Admin Klinik dengan data valid dan template rapi
+      const waMessage = [
+        "*KONFIRMASI RESERVASI JANJI TEMU DOKTER GIGI*",
+        "*Aesthetic Pondok Indah Dental Clinic*",
+        "━━━━━━━━━━━━━━━━━━━━━━━",
+        "",
+        "Halo Admin Aesthetic Pondok Indah, saya telah mengajukan reservasi janji temu melalui website dengan rincian sebagai berikut:",
+        "",
+        `📋 *Kode Reservasi:* ${ticketCode}`,
+        `👤 *Nama Pasien:* ${patientName}`,
+        `📱 *No. WhatsApp:* ${patientPhone}`,
+        "",
+        `👨‍⚕️ *Dokter Spesialis:* ${selectedDoctor.name} (${selectedDoctor.specialization || "Spesialis Gigi"})`,
+        `🏥 *Layanan Perawatan:* ${selectedService.name}`,
+        `📅 *Tanggal Janji Temu:* ${selectedDateObj?.display || selectedDate}`,
+        `⏰ *Waktu / Jam:* ${selectedTimeSlot} WIB`,
+        `📍 *Lokasi:* Aesthetic Pondok Indah, Jakarta Selatan`,
+        notes ? `📝 *Catatan Keluhan:* ${notes}` : "",
+        "",
+        "Mohon verifikasi dan konfirmasi ketersediaan jadwal tersebut. Terima kasih! 🙏",
+      ].filter(Boolean).join("\n");
+
+      const adminPhone = "6281990114949";
+      const waUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(waMessage)}`;
+
+      // Buka WhatsApp di tab baru secara otomatis
+      try {
+        window.open(waUrl, "_blank");
+      } catch {}
+
       setShowSuccessModal(true);
     } catch (err: any) {
+      const fallbackCode = `#RSV-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`;
       const fallbackTicket = {
         id: Date.now(),
-        code: `#RSV-${new Date().getFullYear()}0001`,
+        code: fallbackCode,
         doctorName: selectedDoctor.name,
         specialization: selectedDoctor.specialization,
         serviceName: selectedService.name,
@@ -956,9 +997,38 @@ export default function NewBookingFlow({
         patientName: patientName,
         phone: patientPhone,
       };
+
       setActiveTicket(fallbackTicket);
-      setBookingsHistory((prev) => [fallbackTicket, ...prev]);
-      setCurrentStep(1);
+      setBookingsHistory((prev) => [fallbackTicket, ...prev.filter((b) => b.id !== fallbackTicket.id)]);
+
+      const waMessage = [
+        "*KONFIRMASI RESERVASI JANJI TEMU DOKTER GIGI*",
+        "*Aesthetic Pondok Indah Dental Clinic*",
+        "━━━━━━━━━━━━━━━━━━━━━━━",
+        "",
+        "Halo Admin Aesthetic Pondok Indah, saya telah mengajukan reservasi janji temu melalui website dengan rincian sebagai berikut:",
+        "",
+        `📋 *Kode Reservasi:* ${fallbackCode}`,
+        `👤 *Nama Pasien:* ${patientName}`,
+        `📱 *No. WhatsApp:* ${patientPhone}`,
+        "",
+        `👨‍⚕️ *Dokter Spesialis:* ${selectedDoctor.name} (${selectedDoctor.specialization || "Spesialis Gigi"})`,
+        `🏥 *Layanan Perawatan:* ${selectedService.name}`,
+        `📅 *Tanggal Janji Temu:* ${selectedDateObj?.display || selectedDate}`,
+        `⏰ *Waktu / Jam:* ${selectedTimeSlot} WIB`,
+        `📍 *Lokasi:* Aesthetic Pondok Indah, Jakarta Selatan`,
+        notes ? `📝 *Catatan Keluhan:* ${notes}` : "",
+        "",
+        "Mohon verifikasi dan konfirmasi ketersediaan jadwal tersebut. Terima kasih! 🙏",
+      ].filter(Boolean).join("\n");
+
+      const adminPhone = "6281990114949";
+      const waUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(waMessage)}`;
+
+      try {
+        window.open(waUrl, "_blank");
+      } catch {}
+
       setShowSuccessModal(true);
     } finally {
       setIsSubmitting(false);
@@ -975,9 +1045,10 @@ export default function NewBookingFlow({
 
   return (
     <div className="w-full min-h-screen bg-[#FAF8F5] text-[#2C2416] pb-24 sm:pb-12">
-      {/* View Mode History */}
-      {viewMode === "history" ? (
-        <div className="max-w-4xl mx-auto px-4 py-6">
+      <PageTransition transitionKey={`${viewMode}_${currentStep}`}>
+        {/* View Mode History */}
+        {viewMode === "history" ? (
+          <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="mb-4">
             <button
               type="button"
@@ -1042,19 +1113,9 @@ export default function NewBookingFlow({
                   ? "Pilih Dokter"
                   : currentStep === 3
                   ? "Pilih Jadwal"
-                  : "Konfirmasi Booking"}
+                  : "Konfirmasi"}
               </h1>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setViewMode("history")}
-              className="text-xs sm:text-sm font-semibold text-[#8C6B1C] hover:text-[#735614] bg-[#FAF5EA] px-3.5 py-2 rounded-xl border border-[#EADBBD] flex items-center gap-1.5 transition-all shadow-xs"
-            >
-              <CalendarDays className="w-4 h-4" />
-              <span className="hidden sm:inline">Riwayat Booking</span>
-              <span className="sm:hidden">Riwayat</span>
-            </button>
           </div>
 
           {/* Stepper Progress Bar matching screenshot */}
@@ -1143,8 +1204,8 @@ export default function NewBookingFlow({
                     </div>
                   </div>
 
-                  {/* Services Card List with Instant Next Step on Click */}
-                  <div className="space-y-3 pt-1">
+                  {/* Services Card Grid - Clean layout with Service Name only (no icon) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
                     {filteredServices.map((svc) => {
                       const isSelected = selectedService?.id === svc.id;
 
@@ -1155,53 +1216,22 @@ export default function NewBookingFlow({
                             setSelectedService(svc);
                             setCurrentStep(2);
                           }}
-                          className={`group p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer flex items-center gap-4 relative hover:border-[#8C6B1C] hover:shadow-md hover:-translate-y-0.5 ${
+                          className={`group p-4 sm:p-4.5 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 relative hover:border-[#8C6B1C] hover:shadow-md hover:-translate-y-0.5 ${
                             isSelected
-                              ? "bg-white border-2 border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/10"
-                              : "bg-white border-[#E6DECB] shadow-xs"
+                              ? "bg-[#FAF5EA] border-2 border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/15"
+                              : "bg-white border-[#E6DECB] shadow-2xs hover:bg-[#FAF8F5]/80"
                           }`}
                         >
-                          {/* Image Thumbnail */}
-                          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#FAF8F5] overflow-hidden shrink-0 border border-[#EDE5D6] group-hover:scale-105 transition-transform">
-                            <img
-                              src={svc.image}
-                              alt={svc.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+                          <h3 className="text-sm sm:text-base font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-colors truncate text-left min-w-0 flex-1">
+                            {svc.name}
+                          </h3>
 
-                          {/* Info */}
-                          <div className="flex-1 min-w-0 text-left space-y-1.5">
-                            <div className="flex items-center justify-between gap-2">
-                              <h3 className="text-base sm:text-lg font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-colors truncate">
-                                {svc.name}
-                              </h3>
-                              <span className="text-xs sm:text-sm font-bold text-[#8C6B1C] px-3 py-1 bg-[#FAF5EA] border border-[#EADBBD] rounded-xl shrink-0">
-                                {svc.priceFormatted}
-                              </span>
-                            </div>
-
-                            {/* Badge */}
-                            <span className="inline-block px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-[#EFE9DC] text-[#7C7365] tracking-wider uppercase">
-                              {svc.categoryBadge}
+                          <div className="shrink-0 flex items-center">
+                            <span className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                              isSelected ? "bg-[#8C6B1C] text-white" : "text-[#A89F91] group-hover:text-[#8C6B1C] group-hover:bg-[#FAF5EA]"
+                            }`}>
+                              <ChevronRight className="w-4 h-4" />
                             </span>
-
-                            {/* Description */}
-                            <p className="text-xs text-[#7C7365] line-clamp-2 leading-relaxed">
-                              {svc.description}
-                            </p>
-
-                            {/* Duration & Prompt */}
-                            <div className="flex items-center justify-between pt-1">
-                              <div className="flex items-center gap-1.5 text-xs text-[#8C8272]">
-                                <Clock className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                                <span>Durasi: {svc.duration}</span>
-                              </div>
-                              <span className="text-[11px] font-semibold text-[#8C6B1C] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span>Pilih Layanan</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
-                              </span>
-                            </div>
                           </div>
                         </div>
                       );
@@ -1251,17 +1281,17 @@ export default function NewBookingFlow({
                     />
                   </div>
 
-                  {/* Doctor Cards List with Instant Next Step on Click */}
-                  <div className="space-y-3 pt-1">
+                  {/* Doctor Cards Grid - Showing Doctor Name and Specialization only */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 pt-1">
                     {doctorsLoading ? (
-                      <div className="py-12 flex flex-col items-center justify-center gap-3 bg-white rounded-3xl border border-[#E6DECB]">
+                      <div className="col-span-full py-12 flex flex-col items-center justify-center gap-3 bg-white rounded-3xl border border-[#E6DECB]">
                         <Loader2 className="w-8 h-8 text-[#8C6B1C] animate-spin" />
                         <p className="text-xs font-semibold text-[#8C8272]">
                           Memuat data dokter dari database klinik...
                         </p>
                       </div>
                     ) : filteredDoctors.length === 0 ? (
-                      <div className="py-12 flex flex-col items-center justify-center gap-2 bg-white rounded-3xl border border-[#E6DECB] text-center px-4">
+                      <div className="col-span-full py-12 flex flex-col items-center justify-center gap-2 bg-white rounded-3xl border border-[#E6DECB] text-center px-4">
                         <AlertCircle className="w-8 h-8 text-[#8C8272]" />
                         <p className="text-sm font-bold text-[#2C2416]">Tidak Ada Dokter Ditemukan</p>
                         <p className="text-xs text-[#8C8272]">
@@ -1271,13 +1301,6 @@ export default function NewBookingFlow({
                     ) : (
                       filteredDoctors.map((doc) => {
                         const isSelected = selectedDoctor?.id === doc.id;
-                        const isServiceSpecialist =
-                          selectedService?.specialistNames &&
-                          selectedService.specialistNames.length > 0 &&
-                          selectedService.specialistNames.some((sn: string) =>
-                            doc.name.toLowerCase().includes(sn.toLowerCase()) ||
-                            sn.toLowerCase().includes(doc.name.toLowerCase())
-                          );
 
                         return (
                           <div
@@ -1286,14 +1309,14 @@ export default function NewBookingFlow({
                               setSelectedDoctor(doc);
                               setCurrentStep(3);
                             }}
-                            className={`group p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-200 cursor-pointer flex items-center gap-4 relative hover:border-[#8C6B1C] hover:shadow-md hover:-translate-y-0.5 ${
+                            className={`group p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex items-center gap-3.5 relative hover:border-[#8C6B1C] hover:shadow-md hover:-translate-y-0.5 ${
                               isSelected
-                                ? "bg-white border-2 border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/10"
-                                : "bg-white border-[#E6DECB] shadow-xs"
+                                ? "bg-[#FAF5EA] border-2 border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/15"
+                                : "bg-white border-[#E6DECB] shadow-2xs hover:bg-[#FAF8F5]/80"
                             }`}
                           >
                             {/* Photo */}
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#EFE9DC] overflow-hidden shrink-0 border border-[#D9D0BC] group-hover:scale-105 transition-transform">
+                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-[#EFE9DC] overflow-hidden shrink-0 border border-[#D9D0BC] group-hover:scale-105 transition-transform">
                               <img
                                 src={doc.photo}
                                 alt={doc.name}
@@ -1301,27 +1324,22 @@ export default function NewBookingFlow({
                               />
                             </div>
 
-                            {/* Details */}
-                            <div className="flex-1 min-w-0 text-left space-y-1 pr-6">
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h3 className="text-base sm:text-lg font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-colors">
-                                    {doc.name}
-                                  </h3>
-                                  {isServiceSpecialist && (
-                                    <span className="px-2 py-0.5 rounded-lg bg-[#FAF5EA] border border-[#EADBBD] text-[10px] font-bold text-[#8C6B1C]">
-                                      Penanggung Jawab
-                                    </span>
-                                  )}
-                                </div>
-                                <span className="text-[11px] font-semibold text-[#8C6B1C] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                  <span>Pilih Dokter</span>
-                                  <ChevronRight className="w-3.5 h-3.5" />
-                                </span>
-                              </div>
-                              <p className="text-xs sm:text-sm font-semibold text-[#8C6B1C]">
+                            {/* Doctor Name & Specialization only */}
+                            <div className="flex-1 min-w-0 text-left space-y-0.5">
+                              <h3 className="text-sm sm:text-base font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-colors truncate">
+                                {doc.name}
+                              </h3>
+                              <p className="text-xs font-semibold text-[#8C6B1C] truncate">
                                 {doc.specialization}
                               </p>
+                            </div>
+
+                            <div className="shrink-0 flex items-center">
+                              <span className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                                isSelected ? "bg-[#8C6B1C] text-white" : "text-[#A89F91] group-hover:text-[#8C6B1C] group-hover:bg-[#FAF5EA]"
+                              }`}>
+                                <ChevronRight className="w-4 h-4" />
+                              </span>
                             </div>
                           </div>
                         );
@@ -1336,7 +1354,7 @@ export default function NewBookingFlow({
               {/* =================================================== */}
               {currentStep === 3 && (
                 <div className="space-y-5 animate-in fade-in duration-200">
-                  {/* Doctor Summary Header Card */}
+                  {/* Doctor Summary Header Card (No Ganti Dokter button) */}
                   {selectedDoctor && (
                     <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-4 shadow-xs">
                       <div className="flex items-center gap-4">
@@ -1356,81 +1374,85 @@ export default function NewBookingFlow({
                           </p>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(2)}
-                        className="text-xs font-semibold text-[#8C6B1C] hover:underline cursor-pointer shrink-0"
-                      >
-                        Ganti Dokter
-                      </button>
                     </div>
                   )}
 
                   {/* Section Pilih Tanggal */}
                   <div className="bg-white border border-[#E6DECB] rounded-3xl p-5 sm:p-6 space-y-4 text-left shadow-xs">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
-                        <h4 className="text-base font-bold text-[#2C2416]">1. Pilih Tanggal Kunjungan</h4>
-                        <p className="text-xs text-[#7C7365]">Tentukan hari perawatan yang Anda inginkan</p>
+                        <h4 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
+                          <CalendarIcon className="w-4.5 h-4.5 text-[#8C6B1C]" />
+                          <span>1. Pilih Tanggal Kunjungan</span>
+                        </h4>
+                        <p className="text-xs text-[#7C7365]">Pilih hari dari kalender mingguan atau klik tombol kalender</p>
                       </div>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF5EA] border border-[#EADBBD] text-xs font-bold text-[#8C6B1C]">
-                        <CalendarIcon className="w-3.5 h-3.5" />
-                        <span>{selectedDateObj?.monthName} {selectedDateObj?.year}</span>
+
+                      {/* Direct Calendar Picker Button */}
+                      <div className="relative inline-flex items-center">
+                        <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#FAF5EA] hover:bg-[#F5ECE0] border border-[#EADBBD] text-xs font-bold text-[#8C6B1C] shadow-2xs transition-all cursor-pointer">
+                          <CalendarIcon className="w-4 h-4 text-[#8C6B1C]" />
+                          <span>{selectedDateObj?.dayName}, {selectedDateObj?.dayNum} {selectedDateObj?.monthName} {selectedDateObj?.year}</span>
+                          <ChevronDown className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                        </div>
+                        <input
+                          type="date"
+                          value={selectedDate}
+                          min={new Date().toISOString().split("T")[0]}
+                          onChange={(e) => {
+                            if (e.target.value) setSelectedDate(e.target.value);
+                          }}
+                          className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                          title="Buka Kalender Pemilihan Tanggal"
+                        />
                       </div>
                     </div>
 
-                    {/* Horizontal Day Cards Slider */}
-                    <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-                      {availableDates.map((dt) => {
-                        const isSel = selectedDate === dt.iso;
-                        const daySchedules = getDoctorSchedulesForDate(dt.iso);
-                        const isAvailable = daySchedules.length > 0;
+                    {/* List Kalender Minggu Berjalan (Day Cards Slider - Soft Gold/White palette without red) */}
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-[11px] font-bold text-[#8C8272] uppercase tracking-wider">Kalender Minggu Berjalan</p>
+                      <div className="flex items-center gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+                        {availableDates.map((dt) => {
+                          const isSel = selectedDate === dt.iso;
+                          const daySchedules = getDoctorSchedulesForDate(dt.iso);
+                          const isAvailable = daySchedules.length > 0;
 
-                        return (
-                          <button
-                            key={dt.iso}
-                            type="button"
-                            onClick={() => setSelectedDate(dt.iso)}
-                            className={`w-20 h-22 rounded-2xl border flex flex-col items-center justify-center shrink-0 transition-all cursor-pointer relative ${
-                              isAvailable
-                                ? isSel
+                          return (
+                            <button
+                              key={dt.iso}
+                              type="button"
+                              onClick={() => setSelectedDate(dt.iso)}
+                              className={`w-20 h-22 rounded-2xl border flex flex-col items-center justify-center shrink-0 transition-all cursor-pointer relative ${
+                                isSel
                                   ? "bg-[#8C6B1C] text-white border-2 border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/20"
                                   : "bg-white border-[#E6DECB] text-[#2C2416] hover:border-[#8C6B1C] hover:bg-[#FAF5EA]"
-                                : isSel
-                                ? "bg-rose-600 text-white border-2 border-rose-600 shadow-md ring-2 ring-rose-300"
-                                : "bg-[#FFF5F5] border-rose-200 text-rose-700 hover:border-rose-400 hover:bg-[#FFEBEB]"
-                            }`}
-                          >
-                            <span
-                              className={`text-[10px] font-semibold uppercase tracking-wider ${
-                                isSel ? "text-white/80" : isAvailable ? "text-[#8C8272]" : "text-rose-500"
                               }`}
                             >
-                              {dt.dayName}
-                            </span>
-                            <span className="text-xl font-bold mt-0.5">{dt.dayNum}</span>
+                              <span
+                                className={`text-[10px] font-semibold uppercase tracking-wider ${
+                                  isSel ? "text-white/80" : "text-[#8C8272]"
+                                }`}
+                              >
+                                {dt.dayName}
+                              </span>
+                              <span className="text-xl font-bold mt-0.5">{dt.dayNum}</span>
 
-                            {/* Availability indicator badge */}
-                            {isAvailable ? (
+                              {/* Availability indicator badge */}
                               <span
                                 className={`text-[9px] font-semibold mt-1 px-1.5 py-0.5 rounded-md ${
-                                  isSel ? "bg-white/20 text-white" : "bg-[#FAF5EA] text-[#8C6B1C]"
+                                  isSel
+                                    ? "bg-white/20 text-white"
+                                    : isAvailable
+                                    ? "bg-[#FAF5EA] text-[#8C6B1C]"
+                                    : "bg-[#F5EFE6] text-[#8C8272]"
                                 }`}
                               >
-                                Praktik
+                                {isAvailable ? "Praktik" : "Libur"}
                               </span>
-                            ) : (
-                              <span
-                                className={`text-[9px] font-bold mt-1 px-1.5 py-0.5 rounded-md ${
-                                  isSel ? "bg-white/20 text-white" : "bg-rose-100 text-rose-600"
-                                }`}
-                              >
-                                Libur
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
 
@@ -1438,22 +1460,17 @@ export default function NewBookingFlow({
                   {isDoctorAvailableOnSelectedDate ? (
                     <div className="bg-white border border-[#E6DECB] rounded-3xl p-5 sm:p-6 space-y-4 text-left shadow-xs animate-in fade-in duration-200">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-[#8C6B1C]" />
-                            <span>2. Pilih Sesi Waktu (Jam Praktik)</span>
-                          </h4>
-                          <p className="text-xs text-[#7C7365]">
-                            Klik salah satu jam praktik untuk langsung melanjutkan ke konfirmasi
-                          </p>
-                        </div>
-                        <span className="text-xs font-semibold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-1 rounded-lg border border-[#EADBBD]">
+                        <h4 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-[#8C6B1C]" />
+                          <span>2. Pilih Jam Kunjungan</span>
+                        </h4>
+                        <span className="text-xs font-semibold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-1 rounded-lg border border-[#EADBBD] shrink-0">
                           {timeSlots.length} Sesi Tersedia
                         </span>
                       </div>
 
-                      {/* 3 or 4-Column Time Slot Grid */}
-                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+                      {/* Time Slot Responsive Grid (Clean time slot numbers only, without WIB) */}
+                      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                         {timeSlots.map((slot) => {
                           const isSel = selectedTimeSlot === slot;
 
@@ -1465,14 +1482,13 @@ export default function NewBookingFlow({
                                 setSelectedTimeSlot(slot);
                                 setCurrentStep(4);
                               }}
-                              className={`h-12 rounded-2xl text-xs sm:text-sm font-bold border transition-all cursor-pointer flex flex-col items-center justify-center hover:scale-105 ${
+                              className={`h-10 rounded-xl text-xs sm:text-sm font-bold border transition-all cursor-pointer flex items-center justify-center hover:scale-105 ${
                                 isSel
                                   ? "bg-[#8C6B1C] text-white border-[#8C6B1C] shadow-md ring-2 ring-[#8C6B1C]/20"
                                   : "bg-[#FAF8F5] border-[#E6DECB] text-[#2C2416] hover:border-[#8C6B1C] hover:bg-white"
                               }`}
                             >
                               <span>{slot}</span>
-                              <span className="text-[9px] opacity-75 font-normal">WIB</span>
                             </button>
                           );
                         })}
@@ -1483,40 +1499,40 @@ export default function NewBookingFlow({
                         <div className="flex items-center gap-2 text-xs text-[#7C7365] pt-2 border-t border-[#EDE5D6]">
                           <Info className="w-3.5 h-3.5 text-[#8C6B1C] shrink-0" />
                           <span>
-                            Jam operasional praktik: {currentDaySchedules.map((s) => s.timeRange).join(", ")} WIB
+                            Jam operasional praktik: {currentDaySchedules.map((s) => s.timeRange).join(", ")}
                             {currentDaySchedules[0]?.location ? ` • ${currentDaySchedules[0].location}` : ""}
                           </span>
                         </div>
                       )}
                     </div>
                   ) : (
-                    /* Alert Box: Dokter Tidak Praktik / Libur di Tanggal Ini */
-                    <div className="bg-[#FFF5F5] border border-rose-200 rounded-3xl p-6 sm:p-7 text-left space-y-4 shadow-xs animate-in fade-in duration-200">
+                    /* Alert Box: Dokter Tidak Praktik / Libur di Tanggal Ini (Soft Gold/Cream palette) */
+                    <div className="bg-[#FAF8F5] border border-[#EADBBD] rounded-3xl p-6 sm:p-7 text-left space-y-4 shadow-xs animate-in fade-in duration-200">
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0 shadow-2xs">
+                        <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] shrink-0 shadow-2xs">
                           <CalendarOff className="w-6 h-6" />
                         </div>
                         <div className="space-y-1.5 flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="text-base sm:text-lg font-bold text-rose-900">
+                            <h4 className="text-base sm:text-lg font-bold text-[#2C2416]">
                               Tidak Ada Jadwal Praktik Dokter
                             </h4>
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-rose-200 text-rose-900 px-2 py-0.5 rounded-md">
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#F5EFE6] text-[#8C8272] px-2 py-0.5 rounded-md">
                               Libur Bertugas
                             </span>
                           </div>
-                          <p className="text-xs sm:text-sm text-rose-800 leading-relaxed">
-                            <span className="font-bold text-rose-950">{selectedDoctor?.name}</span> tidak memiliki jadwal praktik atau sedang libur bertugas pada hari <span className="font-bold text-rose-950">{selectedDateObj?.display}</span>.
+                          <p className="text-xs sm:text-sm text-[#5C5546] leading-relaxed">
+                            <span className="font-bold text-[#2C2416]">{selectedDoctor?.name}</span> tidak memiliki jadwal praktik atau sedang libur bertugas pada hari <span className="font-bold text-[#2C2416]">{selectedDateObj?.display}</span>.
                           </p>
-                          <p className="text-xs text-rose-700">
+                          <p className="text-xs text-[#8C8272]">
                             Silakan pilih tanggal lain yang bertanda <strong>"Praktik"</strong> pada deretan tanggal di atas untuk melihat jam praktik yang tersedia.
                           </p>
                         </div>
                       </div>
 
                       {nextAvailableDate && (
-                        <div className="pt-3.5 border-t border-rose-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <span className="text-xs font-semibold text-rose-800">
+                        <div className="pt-3.5 border-t border-[#EDE5D6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <span className="text-xs font-semibold text-[#5C5546]">
                             Jadwal terdekat dokter ini berikutnya:
                           </span>
                           <Button
@@ -1548,252 +1564,100 @@ export default function NewBookingFlow({
               {/* Left Column: Form Details & Digital Signature */}
               <div className="lg:col-span-7 xl:col-span-8 space-y-6">
                 <div className="space-y-4 animate-in fade-in duration-200 text-left">
-                  {/* Card 1: Detail Jadwal */}
-                  <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-xs">
-                    <div className="flex items-center justify-between border-b border-[#EDE5D6] pb-2.5">
-                      <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
-                        <CalendarDays className="w-4 h-4 text-[#8C6B1C]" />
-                        <span>Detail Jadwal & Perawatan</span>
+                  {/* Card: Catatan Tambahan (Collapsible Dropdown) */}
+                  <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-3 shadow-xs">
+                    <button
+                      type="button"
+                      onClick={() => setShowNotes(!showNotes)}
+                      className="w-full flex items-center justify-between text-left cursor-pointer group"
+                    >
+                      <h3 className="text-sm sm:text-base font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-colors flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-[#8C6B1C]" />
+                        <span>Catatan</span>
                       </h3>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(3)}
-                        className="text-xs font-semibold text-[#8C6B1C] hover:underline cursor-pointer"
-                      >
-                        Ubah Jadwal
-                      </button>
-                    </div>
-
-                    <div className="flex items-start gap-3.5">
-                      <div className="w-14 h-14 rounded-2xl bg-[#EFE9DC] overflow-hidden shrink-0 border border-[#D9D0BC]">
-                        {selectedDoctor && (
-                          <img
-                            src={selectedDoctor.photo}
-                            alt={selectedDoctor.name}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8C6B1C]">
+                        <span>{showNotes ? "Tutup" : "Tulis Catatan"}</span>
+                        <ChevronDown className={`w-4 h-4 text-[#8C6B1C] transition-transform duration-200 ${showNotes ? "rotate-180" : ""}`} />
                       </div>
-                      <div className="space-y-0.5">
-                        <h4 className="text-base font-bold text-[#2C2416]">
-                          {selectedDoctor?.name}
-                        </h4>
-                        <div className="flex items-center gap-1.5 text-xs text-[#7C7365]">
-                          <span className="font-semibold text-[#8C6B1C]">{selectedDoctor?.specialization}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-[#EDE5D6] text-xs sm:text-sm">
-                      <div className="flex items-center gap-2.5 text-[#2C2416]">
-                        <Briefcase className="w-4 h-4 text-[#8C6B1C] shrink-0" />
-                        <span className="font-semibold">{selectedService?.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-[#5C5546]">
-                        <CalendarIcon className="w-4 h-4 text-[#8C6B1C] shrink-0" />
-                        <span>{selectedDateObj?.display}</span>
-                      </div>
-                      <div className="flex items-center gap-2.5 text-[#5C5546]">
-                        <Clock className="w-4 h-4 text-[#8C6B1C] shrink-0" />
-                        <span>{selectedTimeSlot} WIB • Estimasi {selectedService?.duration}</span>
-                      </div>
-                    </div>
+                    </button>
+                    {showNotes && (
+                      <textarea
+                        rows={3}
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Contoh: Saya memiliki riwayat alergi obat tertentu, atau ingin konsultasi terlebih dahulu..."
+                        className="w-full p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#D9D0BC] focus:border-[#8C6B1C] focus:ring-2 focus:ring-[#8C6B1C]/20 text-xs sm:text-sm text-[#2C2416] placeholder:text-[#A0988A] resize-none animate-in fade-in duration-150"
+                      />
+                    )}
                   </div>
 
-                  {/* Card 2: Lokasi Cabang Klinik (Single Official Clinic Location) */}
-                  <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-2.5 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-[#8C6B1C]" />
-                        <span>Lokasi Cabang Klinik</span>
-                      </h3>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-sm font-bold text-[#2C2416]">
-                        Aesthetic Pondok Indah
-                      </p>
-                      <p className="text-xs text-[#7C7365] leading-relaxed">
-                        Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310
-                      </p>
-                      <p className="text-xs text-[#8C6B1C] font-semibold pt-1">
-                        Kontak Klinik: (021) 765-4321
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Card 3: Catatan Tambahan (No parentheses in title) */}
-                  <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-2.5 shadow-xs">
-                    <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-[#8C6B1C]" />
-                      <span>Catatan Tambahan</span>
-                    </h3>
-                    <textarea
-                      rows={3}
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Contoh: Saya memiliki riwayat alergi obat tertentu, atau ingin konsultasi scaling terlebih dahulu..."
-                      className="w-full p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#D9D0BC] focus:border-[#8C6B1C] focus:ring-2 focus:ring-[#8C6B1C]/20 text-xs sm:text-sm text-[#2C2416] placeholder:text-[#A0988A] resize-none"
-                    />
-                  </div>
-
-                  {/* Card 4: 2 Langkah Verifikasi Dokumen & Tanda Tangan Pasien */}
+                  {/* Card: Verifikasi Persetujuan */}
                   <div className="bg-white border border-[#E6DECB] rounded-3xl p-4 sm:p-5 space-y-4 shadow-xs">
                     <div className="flex items-center justify-between">
                       <h3 className="text-base font-bold text-[#2C2416] flex items-center gap-2">
                         <ShieldCheck className="w-5 h-5 text-[#8C6B1C]" />
-                        <span>Verifikasi Persetujuan & Tanda Tangan Digital *</span>
+                        <span>Verifikasi Persetujuan</span>
                       </h3>
-                      <span className="text-[10px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-1 rounded-full border border-[#EADBBD]">
-                        2 Langkah Wajib
-                      </span>
                     </div>
 
-                    {/* Langkah 1: Syarat dan Ketentuan Layanan Pasien (Ceklis) */}
-                    <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-2.5">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>Langkah 1: Syarat & Ketentuan Layanan Pasien</span>
-                        </span>
+                    {/* Dokumen 1: Syarat dan Ketentuan Layanan Pasien */}
+                    <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${agreeTerms ? "bg-emerald-100 text-emerald-700" : "bg-gray-200 text-gray-700"}`}>
+                            {agreeTerms ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : "1"}
+                          </div>
+                          <div>
+                            <p className="text-xs sm:text-sm font-bold text-[#2C2416]">
+                              Syarat & Ketentuan Layanan Pasien
+                            </p>
+                            <p className="text-[11px] text-[#7C7365]">
+                              {agreeTerms ? "✓ Telah disetujui secara digital" : "Wajib dibaca dan disetujui"}
+                            </p>
+                          </div>
+                        </div>
+
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => setShowTermsModal(true)}
-                          className="h-7 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                          className="h-8 px-3.5 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
                         >
                           <FileText className="w-3.5 h-3.5" />
-                          <span>Lihat Dokumen PDF S&K</span>
+                          <span>{agreeTerms ? "Lihat Dokumen S&K" : "Buka & Setujui S&K"}</span>
                         </Button>
                       </div>
-
-                      <label className="flex items-start gap-3 select-none cursor-pointer pt-1">
-                        <input
-                          type="checkbox"
-                          checked={agreeTerms}
-                          onChange={(e) => setAgreeTerms(e.target.checked)}
-                          className="w-5 h-5 rounded-md border-[#D9D0BC] text-[#8C6B1C] focus:ring-[#8C6B1C] shrink-0 mt-0.5 cursor-pointer"
-                        />
-                        <span className="text-xs text-[#5C5546] leading-relaxed">
-                          Saya telah membaca, memahami, dan menyetujui seluruh{" "}
-                          <strong className="text-[#8C6B1C]">Syarat dan Ketentuan Layanan Pasien</strong>{" "}
-                          serta Kebijakan Penjadwalan klinik Aesthetic Pondok Indah. *
-                        </span>
-                      </label>
                     </div>
 
-                    {/* Langkah 2: Surat Pernyataan & Persetujuan Pasien (Tanda Tangan Digital) */}
+                    {/* Dokumen 2: Surat Pernyataan & Persetujuan Pasien (Informed Consent) */}
                     <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
-                          <PenTool className="w-4 h-4 text-[#8C6B1C] shrink-0" />
-                          <span>Langkah 2: Surat Pernyataan & Persetujuan Pasien (Informed Consent)</span>
-                        </span>
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${signatureData ? "bg-emerald-100 text-emerald-700" : "bg-gray-200 text-gray-700"}`}>
+                            {signatureData ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : "2"}
+                          </div>
+                          <div>
+                            <p className="text-xs sm:text-sm font-bold text-[#2C2416]">
+                              Surat Pernyataan & Persetujuan Pasien (Informed Consent)
+                            </p>
+                            <p className="text-[11px] text-[#7C7365]">
+                              {signatureData ? `✓ Ditandatangani oleh ${patientName}` : "Wajib dibubuhkan tanda tangan digital"}
+                            </p>
+                          </div>
+                        </div>
+
                         <Button
                           type="button"
                           onClick={() => setShowConsentPdfModal(true)}
-                          className="h-7 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                          className={`h-8 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer ${
+                            signatureData
+                              ? "bg-white border border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA]"
+                              : "bg-[#8C6B1C] hover:bg-[#735614] text-white"
+                          }`}
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Lihat Dokumen PDF Surat Persetujuan</span>
+                          <PenTool className="w-3.5 h-3.5" />
+                          <span>{signatureData ? "Lihat Surat Persetujuan" : "Buka & Tandatangani"}</span>
                         </Button>
-                      </div>
-
-                      {/* Nama Lengkap Pasien */}
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#5C5546]">
-                          Nama Lengkap Pasien:
-                        </label>
-                        <Input
-                          type="text"
-                          value={patientName}
-                          disabled
-                          readOnly
-                          className="h-9 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-xs text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
-                        />
-                      </div>
-
-                      {/* Nomor Telepon / WhatsApp */}
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-semibold text-[#5C5546]">
-                          Nomor WhatsApp Pasien:
-                        </label>
-                        <Input
-                          type="tel"
-                          value={patientPhone}
-                          disabled
-                          readOnly
-                          className="h-9 rounded-xl bg-[#F4EFE6] border border-[#D9D0BC] text-xs text-[#2C2416] font-semibold cursor-not-allowed select-none opacity-90 shadow-none"
-                        />
-                      </div>
-
-                      {/* Canvas Tanda Tangan */}
-                      <div className="space-y-1.5 pt-1">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-semibold text-[#5C5546]">
-                            Tanda Tangan Digital Pasien *
-                          </label>
-                          {signatureData && (
-                            <span className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
-                              <Check className="w-3 h-3 stroke-[3]" /> Tersimpan
-                            </span>
-                          )}
-                        </div>
-
-                        {signatureData ? (
-                          <div className="bg-white border-2 border-[#8C6B1C] rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
-                            <div className="flex items-center gap-3">
-                              <div className="w-24 h-14 bg-[#FAF8F5] rounded-xl border border-[#D9D0BC] overflow-hidden flex items-center justify-center p-1 shadow-inner">
-                                <img
-                                  src={signatureData}
-                                  alt="Tanda Tangan Pasien"
-                                  className="max-w-full max-h-full object-contain"
-                                />
-                              </div>
-                              <div>
-                                <p className="text-xs font-bold text-[#2C2416]">
-                                  Tanda Tangan Terverifikasi
-                                </p>
-                                <p className="text-[11px] text-[#7C7365]">
-                                  {patientName}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => setShowSignatureModal(true)}
-                                className="px-3 py-1.5 rounded-xl border border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold transition-all shadow-xs cursor-pointer"
-                              >
-                                Ubah
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setSignatureData(null)}
-                                className="px-2.5 py-1.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-all shadow-xs cursor-pointer"
-                              >
-                                Hapus
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setShowSignatureModal(true)}
-                            className="w-full h-28 bg-white border-2 border-dashed border-[#D9D0BC] hover:border-[#8C6B1C] rounded-2xl flex flex-col items-center justify-center text-center p-4 transition-all group hover:bg-[#FAF5EA]/40 cursor-pointer shadow-xs"
-                          >
-                            <div className="w-10 h-10 rounded-full bg-[#EFE9DC] group-hover:bg-[#8C6B1C] text-[#8C6B1C] group-hover:text-white flex items-center justify-center mb-1.5 transition-all shadow-xs">
-                              <PenTool className="w-4 h-4" />
-                            </div>
-                            <p className="text-xs font-bold text-[#2C2416] group-hover:text-[#8C6B1C] transition-all">
-                              Buka Canvas Tanda Tangan Digital *
-                            </p>
-                            <p className="text-[10px] text-[#7C7365] mt-0.5">
-                              Bubuhkan tanda tangan digital Anda sebagai persetujuan medis resmi
-                            </p>
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1817,14 +1681,9 @@ export default function NewBookingFlow({
                     <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8C8272]">
                       Layanan Terpilih
                     </span>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-[#2C2416]">
-                        {selectedService?.name || "Belum ada layanan"}
-                      </p>
-                      <span className="text-xs font-bold text-[#8C6B1C]">
-                        {selectedService?.priceFormatted}
-                      </span>
-                    </div>
+                    <p className="text-sm font-bold text-[#2C2416]">
+                      {selectedService?.name || "Belum ada layanan"}
+                    </p>
                   </div>
 
                   {/* Selected Doctor */}
@@ -1862,106 +1721,17 @@ export default function NewBookingFlow({
                     </span>
                     <div className="flex items-center justify-between text-xs text-[#2C2416] font-medium">
                       <span>{selectedDateObj?.display}</span>
-                      <span className="font-bold text-[#8C6B1C]">{selectedTimeSlot} WIB</span>
-                    </div>
-                  </div>
-
-                  {/* Point Redemption Option */}
-                  {userAvailablePoints > 0 && (
-                    <div className="border-t border-[#EDE5D6] pt-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="flex items-center gap-2 select-none cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={usePoints}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              setUsePoints(checked);
-                              if (checked) {
-                                setPointsToRedeem(maxRedeemablePoints);
-                              } else {
-                                setPointsToRedeem(0);
-                              }
-                            }}
-                            className="w-4 h-4 rounded border-[#D9D0BC] text-[#8C6B1C] focus:ring-[#8C6B1C] cursor-pointer"
-                          />
-                          <span className="text-xs font-bold text-[#2C2416] flex items-center gap-1">
-                            <Coins className="w-3.5 h-3.5 text-[#C9A24A]" />
-                            <span>Gunakan Poin Reward</span>
-                          </span>
-                        </label>
-                        <span className="text-[10px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2 py-0.5 rounded-md border border-[#EADBBD]">
-                          {userAvailablePoints} Pts Tersedia
-                        </span>
-                      </div>
-
-                      {usePoints && (
-                        <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EADBBD] space-y-2 animate-in fade-in duration-150">
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-[#5C5546]">Poin Ditukarkan:</span>
-                            <span className="font-bold text-[#8C6B1C]">{pointsToRedeem} Pts</span>
-                          </div>
-
-                          <input
-                            type="range"
-                            min={minRedeemPoints}
-                            max={Math.max(minRedeemPoints, maxRedeemablePoints)}
-                            step={5}
-                            value={pointsToRedeem}
-                            onChange={(e) => setPointsToRedeem(Number(e.target.value))}
-                            className="w-full h-1.5 bg-[#E8DFC8] rounded-lg appearance-none cursor-pointer accent-[#8C6B1C]"
-                          />
-
-                          <div className="flex items-center justify-between text-[10px]">
-                            <span className="text-[#8C8272]">Min: {minRedeemPoints} Pts</span>
-                            <button
-                              type="button"
-                              onClick={() => setPointsToRedeem(maxRedeemablePoints)}
-                              className="text-[#8C6B1C] font-bold hover:underline cursor-pointer"
-                            >
-                              Gunakan Maksimal ({maxRedeemablePoints} Pts)
-                            </button>
-                          </div>
-
-                          <div className="pt-1.5 border-t border-[#E8DFC8] flex items-center justify-between text-xs">
-                            <span className="text-emerald-700 font-semibold">Potongan Biaya:</span>
-                            <span className="font-black text-emerald-600">
-                              - Rp {new Intl.NumberFormat("id-ID").format(calculatedDiscount)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Total Estimate */}
-                  <div className="border-t-2 border-dashed border-[#EDE5D6] pt-3 space-y-1.5">
-                    {usePoints && calculatedDiscount > 0 && (
-                      <div className="flex items-center justify-between text-xs text-[#7C7365]">
-                        <span>Tarif Layanan Awal:</span>
-                        <span className="line-through">{selectedService?.priceFormatted || "Rp 0"}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm font-semibold text-[#5C5546]">Estimasi Biaya</span>
-                        {usePoints && calculatedDiscount > 0 && (
-                          <p className="text-[10px] text-emerald-600 font-bold">Termasuk Potongan Poin</p>
-                        )}
-                      </div>
-                      <span className="text-lg sm:text-xl font-bold text-[#8C6B1C]">
-                        {finalPrice <= 0 ? "GRATIS (POIN PENUH)" : `Rp ${new Intl.NumberFormat("id-ID").format(finalPrice)}`}
-                      </span>
+                      <span className="font-bold text-[#8C6B1C]">{selectedTimeSlot}</span>
                     </div>
                   </div>
 
                   {/* Desktop Primary Submit Button */}
-                  <div className="pt-2">
+                  <div className="pt-3 border-t border-[#EDE5D6]">
                     <Button
                       type="button"
-                      disabled={!agreeTerms || !patientName.trim() || isSubmitting}
+                      disabled={!agreeTerms || !signatureData || !patientName.trim() || isSubmitting}
                       onClick={handleSubmitBooking}
-                      className="w-full h-12 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white font-bold text-sm shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full h-12 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white font-bold text-sm shadow-md transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                     >
                       {isSubmitting ? (
                         <>
@@ -1969,7 +1739,7 @@ export default function NewBookingFlow({
                           <span>Memproses...</span>
                         </>
                       ) : (
-                        <span>Konfirmasi</span>
+                        <span>Konfirmasi & Buat Janji Temu</span>
                       )}
                     </Button>
                   </div>
@@ -1982,19 +1752,13 @@ export default function NewBookingFlow({
 
       {/* Mobile Sticky Bottom Bar (ONLY SHOWN ON STEP 4) */}
       {viewMode === "booking" && currentStep === 4 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E6DECB] p-3 sm:p-4 shadow-xl">
-          <div className="max-w-md mx-auto space-y-2">
-            <div className="flex items-center justify-between text-xs px-1">
-              <span className="text-[#5C5546]">Estimasi Biaya Akhir:</span>
-              <span className="font-extrabold text-sm text-[#8C6B1C]">
-                {finalPrice <= 0 ? "GRATIS (POIN)" : `Rp ${new Intl.NumberFormat("id-ID").format(finalPrice)}`}
-              </span>
-            </div>
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E6DECB] p-3.5 sm:p-4 shadow-xl">
+          <div className="max-w-md mx-auto">
             <Button
               type="button"
-              disabled={!agreeTerms || !patientName.trim() || isSubmitting}
+              disabled={!agreeTerms || !signatureData || !patientName.trim() || isSubmitting}
               onClick={handleSubmitBooking}
-              className="w-full h-12 rounded-2xl bg-[#8C6B1C] hover:bg-[#735614] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full h-12 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
@@ -2002,19 +1766,21 @@ export default function NewBookingFlow({
                   <span>Memproses...</span>
                 </>
               ) : (
-                <span>Konfirmasi</span>
+                <span>Konfirmasi & Buat Janji Temu</span>
               )}
             </Button>
           </div>
         </div>
       )}
+      </PageTransition>
 
       {/* Success Modal Pop-up (Screenshot 5) */}
       <BookingSuccessModal
         isOpen={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false);
-          navigate("/dashboard/user");
+          setViewMode("history");
+          setCurrentStep(1);
         }}
         onViewETicket={() => {
           setShowSuccessModal(false);
@@ -2022,7 +1788,8 @@ export default function NewBookingFlow({
         }}
         onGoHome={() => {
           setShowSuccessModal(false);
-          navigate("/dashboard/user");
+          setViewMode("history");
+          setCurrentStep(1);
         }}
         bookingData={{
           code: activeTicket?.code,
@@ -2039,7 +1806,8 @@ export default function NewBookingFlow({
         isOpen={showETicketModal}
         onClose={() => {
           setShowETicketModal(false);
-          navigate("/dashboard/user");
+          setViewMode("history");
+          setCurrentStep(1);
         }}
         onBookAgain={() => {
           setShowETicketModal(false);
@@ -2072,7 +1840,7 @@ export default function NewBookingFlow({
           setSignatureData(sig);
           toast({
             title: "Tanda Tangan Disimpan",
-            message: "Tanda tangan digital Anda telah berhasil disimpan dan disematkan.",
+            message: "Tanda tangan digital Anda telah berhasil disimpan.",
           });
         }}
       />
@@ -2084,24 +1852,37 @@ export default function NewBookingFlow({
         bookingCode="DRAFT-RESERVASI"
         patientName={patientName}
         patientPhone={patientPhone}
+        patientEmail={(session as any)?.email || ""}
         isGuest={false}
         serviceName={selectedService?.name || "Layanan Gigi"}
         doctorName={selectedDoctor?.name || "Dokter Gigi"}
         dateStr={selectedDateObj?.display || selectedDate}
-        timeStr={`${selectedTimeSlot} WIB`}
+        timeStr={`${selectedTimeSlot}`}
         signatureData={signatureData}
         acceptedAt={new Date().toISOString()}
+        onSaveSignature={(sig) => {
+          setSignatureData(sig);
+          toast({
+            title: "Tanda Tangan Disimpan",
+            message: "Surat perjanjian telah berhasil ditandatangani secara digital.",
+          });
+        }}
       />
 
       {/* Terms & Conditions Official PDF Document Modal */}
       <TermsPdfModal
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => {
+        initialName={patientName}
+        initialPhone={patientPhone}
+        initialEmail={(session as any)?.email || ""}
+        isAgreed={agreeTerms}
+        onAccept={(name) => {
           setAgreeTerms(true);
+          if (name) setPatientName(name);
           toast({
             title: "Syarat & Ketentuan Disetujui",
-            message: "Persetujuan informed consent & kebijakan klinik telah dikonfirmasi.",
+            message: "Syarat & Ketentuan telah berhasil dikonfirmasi.",
           });
         }}
       />

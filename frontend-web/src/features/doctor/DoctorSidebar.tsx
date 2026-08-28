@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 import { getSession } from "@/core/auth/services/session";
-import { getMenuItems } from "@/core/permissions/index";
+import { getMenuItems, type MenuItem } from "@/core/permissions/index";
 import { ChevronRight, ChevronDown, LogOut, User, Settings, Download } from "lucide-react";
+import { useSubmenuBadges } from "@/core/services/menuBadgeService";
 
 interface DoctorSidebarProps {
   onLogout: () => void;
@@ -19,6 +20,14 @@ export default function DoctorSidebar({ onLogout }: DoctorSidebarProps) {
 
   const location = useLocation();
   const session = getSession();
+  const submenuBadges = useSubmenuBadges("doctor");
+
+  const getItemBadgeCount = (item: MenuItem): number => {
+    const l = item.label.toLowerCase();
+    if (l.includes("pasien") || l.includes("reservasi")) return submenuBadges.booking;
+    if (l.includes("konsultasi")) return submenuBadges.konsultasi;
+    return item.badge || 0;
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -285,18 +294,25 @@ export default function DoctorSidebar({ onLogout }: DoctorSidebarProps) {
                   }
                 `}>
                   <item.icon className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 2} />
-                  {item.badge && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#1a1612]" />
+                  {getItemBadgeCount(item) > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#1a1612] shadow-xs">
+                      {getItemBadgeCount(item) > 99 ? "99+" : getItemBadgeCount(item)}
+                    </span>
                   )}
                 </div>
                 <span className={`
-                  text-sm font-medium tracking-wide
+                  text-sm font-medium tracking-wide truncate
                   transition-all duration-500
                   ${active ? "text-white" : "text-[#D4C5B0] group-hover:text-[#E8C547]"}
                   ${sidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}
                 `}>
                   {item.label}
                 </span>
+                {sidebarExpanded && getItemBadgeCount(item) > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                    {getItemBadgeCount(item) > 99 ? "99+" : getItemBadgeCount(item)}
+                  </span>
+                )}
 
                 {/* Tooltip when collapsed */}
                 {!sidebarExpanded && (
@@ -313,6 +329,7 @@ export default function DoctorSidebar({ onLogout }: DoctorSidebarProps) {
                     z-50
                   ">
                     {item.label}
+                    {getItemBadgeCount(item) > 0 && ` (${getItemBadgeCount(item)})`}
                     <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
                   </div>
                 )}

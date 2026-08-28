@@ -8,6 +8,9 @@ import { getMyComplaints } from "@/features/patient/consultation/services/compla
 import { getPublicDoctorSchedules } from "@/features/guest/doctors/services/publicDoctorScheduleApi";
 import { toast } from "@/shared/ui/toast";
 import { logger } from "@/core/utils/logger";
+import { History, MessageSquare } from "lucide-react";
+import { scrollPageToTop } from "@/core/router/ScrollToTop";
+import { PageTransition } from "@/core/router/RouteTransition";
 import DesktopUserHome from "@/features/patient/dashboard/components/DesktopUserHome";
 import DesktopReservasi from "@/features/patient/reservation/components/DesktopReservasi";
 import DesktopKonsultasi from "@/features/patient/consultation/components/DesktopKonsultasi";
@@ -92,6 +95,11 @@ export default function UserDashboardPage() {
     return () => clearInterval(timer);
   }, [activeTab, fetchUserConsultations]);
 
+  // Ensure every tab / view change immediately resets scroll position to the very top
+  useEffect(() => {
+    scrollPageToTop();
+  }, [activeTab, consultationView]);
+
   useEffect(() => {
     getPublicDoctorSchedules()
       .then((items) => setPublicSchedules(items))
@@ -137,22 +145,43 @@ export default function UserDashboardPage() {
       case "konsultasi":
         return (
           <div className="space-y-6">
-            <div className="flex flex-col gap-3 rounded-2xl border border-[#F0E6D3] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-2xl border border-[#F0E6D3] bg-white p-4 sm:flex-row sm:items-center sm:justify-between shadow-xs">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Konsultasi</h1>
-                <p className="text-sm text-gray-500">Pilih halaman konsultasi yang ingin Anda buka.</p>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {consultationView === "list" ? "Riwayat Konsultasi" : "Konsultasi Dokter Gigi"}
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-500">
+                  {consultationView === "list"
+                    ? "Daftar percakapan konsultasi yang telah selesai dan sedang aktif."
+                    : "Sampaikan keluhan dan langsung terhubung dengan tim dokter gigi kami."}
+                </p>
               </div>
-              <select
-                aria-label="Pilih halaman konsultasi"
-                value={consultationView}
-                onChange={(event) => navigate(`/dashboard/user?tab=konsultasi&view=${event.target.value}`)}
-                className="h-10 w-full rounded-xl border border-[#DCC799] bg-white px-3 text-sm font-semibold text-[#6B521C] outline-none focus:ring-2 focus:ring-[#C9A24A]/30 sm:w-56"
-              >
-                <option value="create">Buat Konsultasi</option>
-                <option value="list">Daftar Konsultasi</option>
-              </select>
+
+              {consultationView === "list" ? (
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard/user?tab=konsultasi&view=create")}
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer shrink-0"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Mulai Konsultasi Baru</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate("/dashboard/user?tab=konsultasi&view=list")}
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-[#DCC799] bg-[#FAF5EA] hover:bg-[#F3EAD5] text-[#8C6B1C] text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer shrink-0"
+                >
+                  <History className="w-4 h-4" />
+                  <span>Riwayat Konsultasi {consultations.length > 0 ? `(${consultations.length})` : ""}</span>
+                </button>
+              )}
             </div>
-            {consultationView === "list" ? <PatientConsultationList consultations={consultations} /> : <DesktopKonsultasi />}
+            {consultationView === "list" ? (
+              <PatientConsultationList consultations={consultations} />
+            ) : (
+              <DesktopKonsultasi />
+            )}
           </div>
         );
       case "pengaduan":
@@ -189,7 +218,9 @@ export default function UserDashboardPage() {
   if (isMobile) {
     return (
       <NewMobileDashboardLayout role="user">
-        {renderContent()}
+        <PageTransition transitionKey={`${activeTab}_${consultationView}`}>
+          {renderContent()}
+        </PageTransition>
       </NewMobileDashboardLayout>
     );
   }
@@ -207,7 +238,9 @@ export default function UserDashboardPage() {
 
         <div className="flex-1 flex min-h-0 bg-gray-50/50">
           <main className="flex-1 min-w-0 pt-4 pb-6 px-4 sm:pt-5 sm:px-5 lg:pt-6 lg:px-6 overflow-y-auto">
-            {renderContent()}
+            <PageTransition transitionKey={`${activeTab}_${consultationView}`}>
+              {renderContent()}
+            </PageTransition>
           </main>
           {/* Right Panel - Hide for certain tabs or adjust based on content */}
           {shouldShowRightPanel && (

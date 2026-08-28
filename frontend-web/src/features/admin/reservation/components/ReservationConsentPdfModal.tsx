@@ -1,16 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   FileText,
   X,
   Printer,
-  ShieldCheck,
-  Building2,
-  Calendar,
-  Clock,
-  User,
-  Stethoscope,
-  Sparkles,
-  CheckCircle2,
+  Check,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
@@ -19,37 +12,65 @@ import { getPublicClinicSettings } from "@/features/guest/reservation/services/c
 interface ReservationConsentPdfModalProps {
   isOpen: boolean;
   onClose: () => void;
-  bookingCode: string;
-  patientName: string;
-  patientPhone: string;
-  isGuest: boolean;
-  serviceName: string;
-  doctorName: string;
-  dateStr: string;
-  timeStr: string;
+  bookingCode?: string;
+  patientName?: string;
+  patientPhone?: string;
+  patientEmail?: string;
+  isGuest?: boolean;
+  serviceName?: string;
+  doctorName?: string;
+  dateStr?: string;
+  timeStr?: string;
   signatureData?: string | null;
   acceptedAt?: string | null;
+  onSaveSignature?: (signatureDataUrl: string) => void;
+  onAccept?: (signatureDataUrl: string) => void;
 }
 
 export default function ReservationConsentPdfModal({
   isOpen,
   onClose,
-  bookingCode,
-  patientName,
-  patientPhone,
-  isGuest,
-  serviceName,
-  doctorName,
-  dateStr,
-  timeStr,
-  signatureData,
+  bookingCode = "API-REG",
+  patientName = "Pasien",
+  patientPhone = "",
+  patientEmail = "",
+  isGuest = false,
+  serviceName = "Pemeriksaan & Konsultasi Gigi",
+  doctorName = "Dokter Spesialis Gigi",
+  dateStr = "Hari Ini",
+  timeStr = "10:00",
+  signatureData: initialSignatureData = null,
   acceptedAt,
+  onSaveSignature,
+  onAccept,
 }: ReservationConsentPdfModalProps) {
-      const [adminTerms, setAdminTerms] = useState<string | null>(null);
+  const [adminTerms, setAdminTerms] = useState<string | null>(null);
   const [customConsent, setCustomConsent] = useState<any>(null);
+
+  // In-modal form state
+  const [fullName, setFullName] = useState(patientName);
+  const [phoneOrEmail, setPhoneOrEmail] = useState(patientPhone || patientEmail);
+  const [agreed, setAgreed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // In-modal canvas state
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasDrawn, setHasDrawn] = useState(Boolean(initialSignatureData));
+  const [currentSignature, setCurrentSignature] = useState<string | null>(initialSignatureData || null);
+
+  useEffect(() => {
+    if (patientName) setFullName(patientName);
+    if (patientPhone || patientEmail) setPhoneOrEmail(patientPhone || patientEmail);
+    if (initialSignatureData) {
+      setCurrentSignature(initialSignatureData);
+      setHasDrawn(true);
+    }
+  }, [patientName, patientPhone, patientEmail, initialSignatureData]);
 
   useEffect(() => {
     if (isOpen) {
+      setErrorMessage(null);
       getPublicClinicSettings()
         .then((settings: any) => {
           if (settings.pdf_informed_consent) {
@@ -60,8 +81,38 @@ export default function ReservationConsentPdfModal({
           }
         })
         .catch(() => {});
+
+      // Initialize canvas if editable
+      const timer = setTimeout(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+
+        ctx.strokeStyle = "#111111";
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        if (initialSignatureData) {
+          const img = new Image();
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, rect.width, rect.height);
+            setHasDrawn(true);
+          };
+          img.src = initialSignatureData;
+        }
+      }, 120);
+
+      return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, initialSignatureData]);
 
   if (!isOpen) return null;
 
@@ -75,7 +126,101 @@ export default function ReservationConsentPdfModal({
       })
     : `${dateStr}, ${timeStr}`;
 
-    const handlePrint = () => {
+  const getCoordinates = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+
+    if ("touches" in e && e.touches.length > 0) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    } else if ("clientX" in e) {
+      return {
+        x: (e as MouseEvent).clientX - rect.left,
+        y: (e as MouseEvent).clientY - rect.top,
+      };
+    }
+    return { x: 0, y: 0 };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.strokeStyle = "#111111";
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    const { x, y } = getCoordinates(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+    setErrorMessage(null);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { x, y } = getCoordinates(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    setHasDrawn(true);
+  };
+
+  const stopDrawing = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+  };
+
+  const handleClearSignature = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    setHasDrawn(false);
+    setCurrentSignature(null);
+  };
+
+  const handleSubmitAgreement = () => {
+    if (!fullName.trim()) {
+      setErrorMessage("Harap lengkapi nama pasien / wali sah.");
+      return;
+    }
+    if (!hasDrawn && !currentSignature) {
+      setErrorMessage("Harap bubuhkan tanda tangan digital Anda pada area tanda tangan.");
+      return;
+    }
+
+    let finalSig: string | undefined;
+    if (canvasRef.current && hasDrawn) {
+      finalSig = canvasRef.current.toDataURL("image/png");
+    } else if (currentSignature) {
+      finalSig = currentSignature;
+    }
+
+    if (onSaveSignature && finalSig) {
+      onSaveSignature(finalSig);
+    }
+    if (onAccept && finalSig) {
+      onAccept(finalSig);
+    }
+    onClose();
+  };
+
+  const handlePrint = () => {
     const printFrame = document.createElement("iframe");
     printFrame.style.position = "fixed";
     printFrame.style.right = "0";
@@ -91,230 +236,95 @@ export default function ReservationConsentPdfModal({
       return;
     }
 
-    const w = customConsent?.kop?.logoWidth || 75;
-    const h = customConsent?.kop?.logoHeight || 75;
-
-    const clausesHtml = customConsent?.bodyHtml || (customConsent?.clausuls && customConsent.clausuls.length > 0
-      ? customConsent.clausuls.map((c: any) => `
-          <div class="section-title">${c.title}</div>
-          <p>${c.content}</p>
-        `).join('')
-      : `
-          <div class="section-title">1. Ketentuan Kedatangan & Registrasi Pasien</div>
-          <p>Pasien diwajibkan hadir di klinik sekurang-kurangnya 15 (lima belas) menit sebelum waktu jadwal reservasi yang telah disepakati untuk keperluan verifikasi identitas, registrasi ulang, dan anamnesis awal.</p>
-
-          <div class="section-title">2. Kebijakan Keterlambatan & Penjadwalan Ulang (Reschedule)</div>
-          <p>Apabila pasien mengalami keterlambatan lebih dari 15 menit tanpa pemberitahuan sebelumnya, pihak klinik berhak mengalihkan antrean demi kelancaran operasional. Penjadwalan ulang dapat dilakukan bebas biaya dengan menghubungi petugas administrasi selambat-lambatnya 1 x 24 jam sebelum jadwal tindakan.</p>
-
-          <div class="section-title">3. Persetujuan Tindakan Medis (Informed Consent)</div>
-          <p>Dengan menyetujui dan menandatangani lembar ini, pasien memberikan persetujuan kepada dokter gigi spesialis Aesthetic Pondok Indah untuk melakukan pemeriksaan klinis, tindakan diagnostik (termasuk foto rontgen gigi bila diperlukan), serta prosedur perawatan yang telah dijelaskan manfaat dan risikonya.</p>
-
-          <div class="section-title">4. Kerahasiaan Rekam Medis & Privasi Pasien</div>
-          <p>Seluruh data rekam medis elektronik (EMR), riwayat kesehatan, dan hasil pemeriksaan gigi pasien dilindungi kerahasiaannya sesuai dengan regulasi perundang-undangan kesehatan Republik Indonesia.</p>
-
-          <div class="section-title">5. Pembayaran & Kebijakan Pembatalan</div>
-          <p>Pembayaran biaya tindakan dapat dilakukan secara tunai, kartu debit/kredit, QRIS, atau transfer bank kasir klinik. Pembatalan sepihak saat hari H tanpa alasan darurat medis dapat memengaruhi kuota prioritas reservasi berikutnya.</p>
-        `);
-
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>${customConsent?.docTitle || "Surat Persetujuan Tindakan Medis"} - ${patientName}</title>
+          <title>Surat Persetujuan Pasien (Informed Consent) - Aesthetic Pondok Indah</title>
           <style>
-            @page {
-              size: A4 portrait;
-              margin: 16mm 14mm;
-            }
-            * {
-              box-sizing: border-box;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            body {
-              font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-              color: #111;
-              line-height: 1.5;
-              margin: 0;
-              padding: 0;
-              font-size: ${customConsent?.baseFontSize || "9.5pt"};
-              background: #fff;
-            }
-            .kop-header {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 16px;
-              padding-bottom: 10px;
-              margin-bottom: 14px;
-              border-bottom: 3px double #111;
-            }
-            .kop-logo { flex-shrink: 0; }
-            .kop-logo img { width: ${w}px; height: ${h}px; object-fit: contain; }
-            .kop-details { text-align: center; flex: 1; }
-            .kop-title { font-size: 13.5pt; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
-            .kop-contact { font-size: 8.5pt; font-weight: 500; color: #222; margin-bottom: 2px; }
-            .kop-contact a { color: #0056b3; text-decoration: underline; }
-            .kop-address { font-size: 8pt; color: #333; line-height: 1.3; }
-
-            .doc-header {
-              text-align: center;
-              margin-bottom: 14px;
-            }
-            .doc-title {
-              font-size: 11pt;
-              font-weight: 800;
-              color: #111;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            .doc-ref {
-              font-size: 8.5pt;
-              color: #555;
-              margin-top: 1px;
-            }
-            .meta-box {
-              background: #faf8f5;
-              border: 1px solid #eadbbd;
-              border-radius: 6px;
-              padding: 8px 12px;
-              margin-bottom: 12px;
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 8px 16px;
-              font-size: 8.5pt;
-            }
-            .meta-item {
-              display: flex;
-              gap: 6px;
-            }
-            .meta-label {
-              font-weight: 600;
-              color: #6b5e4f;
-              min-width: 95px;
-            }
-            .meta-value {
-              font-weight: 700;
-              color: #2c2416;
-            }
-            .section-title {
-              font-size: 9.5pt;
-              font-weight: 700;
-              color: #111;
-              margin: 10px 0 2px 0;
-            }
-            p {
-              margin: 0 0 6px 0;
-              text-align: justify;
-              color: #333;
-              font-size: 8.8pt;
-              line-height: 1.4;
-            }
-            .custom-statement {
-              margin: 14px 0;
-              padding: 8px 12px;
-              background: #fafafa;
-              border-left: 3px solid #111;
-              font-size: 8.5pt;
-              font-style: italic;
-            }
-            .footer-grid {
-              margin-top: 20px;
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-end;
-              padding-top: 10px;
-            }
-            .seal-box {
-              font-size: 8pt;
-              color: #555;
-            }
-            .seal-badge {
-              display: inline-block;
-              padding: 2px 6px;
-              background: #ecfdf5;
-              border: 1px solid #a7f3d0;
-              color: #065f46;
-              border-radius: 4px;
-              font-weight: bold;
-              font-size: 7.5pt;
-              margin-bottom: 4px;
-            }
-            .signature-box {
-              width: 220px;
-              border: 1px solid #e0d7c4;
-              border-radius: 6px;
-              padding: 8px;
-              text-align: center;
-              background: #fff;
-            }
-            .signature-box img {
-              max-height: 55px;
-              max-width: 170px;
-              object-fit: contain;
-              display: block;
-              margin: 4px auto;
-            }
+            @page { size: letter portrait; margin: 15mm 15mm; }
+            * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #111; line-height: 1.5; margin: 0; padding: 0; font-size: 9.5pt; background: #fff; }
+            .kop-header { display: flex; align-items: center; justify-content: center; gap: 14px; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 3px double #000; text-align: center; }
+            .kop-logo { width: 50px; height: 50px; object-fit: contain; flex-shrink: 0; }
+            .kop-details { text-align: center; }
+            .kop-title { font-size: 12.5pt; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
+            .kop-sub { font-size: 8.5pt; font-weight: 700; color: #222; margin: 2px 0 0 0; }
+            .kop-address { font-size: 7.5pt; color: #333; margin-top: 3px; line-height: 1.3; }
+            .doc-header { text-align: center; margin-bottom: 16px; }
+            .doc-title { font-size: 12pt; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+            .doc-sub { font-size: 8.5pt; color: #555; margin-top: 4px; }
+            .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 8.5pt; border: 1px solid #333; }
+            .meta-table td { padding: 5px 8px; border: 1px solid #333; }
+            .clause { margin-bottom: 11px; }
+            .clause-title { font-size: 9.5pt; font-weight: 700; color: #000; margin-bottom: 3px; }
+            .clause-text { font-size: 9pt; color: #222; line-height: 1.45; text-align: justify; margin: 0; }
+            .signature-section { margin-top: 24px; padding-top: 14px; border-top: 1px solid #ccc; }
+            .sig-row { display: flex; justify-content: space-between; align-items: flex-end; }
+            .sig-box { text-align: center; width: 220px; }
+            .sig-img { max-height: 60px; max-width: 180px; object-fit: contain; margin: 6px auto; display: block; }
+            .sig-name { font-weight: 700; text-decoration: underline; margin-top: 6px; font-size: 9pt; }
           </style>
         </head>
         <body>
           <div class="kop-header">
-            ${customConsent?.kop?.logoUrl ? `<div class="kop-logo"><img src="${customConsent.kop.logoUrl}" alt="Logo" /></div>` : ''}
             <div class="kop-details">
-              <div class="kop-title">${customConsent?.kop?.clinicName || 'PT NAVENA INTERNATIONAL GROUP'}</div>
-              <div class="kop-contact">Phone: ${customConsent?.kop?.phone || '+62 21 555 1900'} &nbsp; E-mail: <a>${customConsent?.kop?.email || 'navenainternationalgroup@gmail.com'}</a></div>
-              <div class="kop-address">${customConsent?.kop?.address || 'Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan'}</div>
-            </div>
-          </div>
-
-          <div class="doc-header">
-            <div class="doc-title">${customConsent?.docTitle || "SURAT PERSETUJUAN TINDAKAN KEDOKTERAN GIGI (INFORMED CONSENT)"}</div>
-            <div class="doc-ref">Nomor Dokumen: SK-CONSENT-${bookingCode} • Lembar Informed Consent Resmi</div>
-          </div>
-
-          <div class="meta-box">
-            <div>
-              <div class="meta-item"><span class="meta-label">Nama Pasien:</span> <span class="meta-value">${patientName}</span> (${isGuest ? "Guest" : "Member"})</div>
-              <div class="meta-item"><span class="meta-label">No. Telepon/WA:</span> <span class="meta-value">${patientPhone || "-"}</span></div>
-              <div class="meta-item"><span class="meta-label">Layanan Tindakan:</span> <span class="meta-value">${serviceName}</span></div>
-            </div>
-            <div>
-              <div class="meta-item"><span class="meta-label">Dokter Bertugas:</span> <span class="meta-value">${doctorName}</span></div>
-              <div class="meta-item"><span class="meta-label">Jadwal Praktik:</span> <span class="meta-value">${dateStr} • ${timeStr}</span></div>
-              <div class="meta-item"><span class="meta-label">Waktu Disetujui:</span> <span class="meta-value">${formattedDate}</span></div>
-            </div>
-          </div>
-
-          ${clausesHtml}
-
-          <div class="custom-statement">${customConsent?.closingStatement || "Demikian surat persetujuan tindakan medis ini dibuat dengan sebenar-benarnya untuk dipergunakan sebagaimana mestinya."}</div>
-
-          <div class="footer-grid">
-            <div class="seal-box">
-              <span class="seal-badge">✓ Dokumen Digital Tersertifikasi & Sah Secara Medikolegal</span><br/>
-              Klinik Utama Aesthetic Pondok Indah — Jakarta Selatan<br/>
-              <span style="font-size: 7.5pt; color: #888;">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })} WIB</span>
-            </div>
-
-            <div class="signature-box">
-              <div style="font-size: 7.5pt; font-weight: 700; color: #8C6B1C; margin-bottom: 2px; text-transform: uppercase;">
-                Tanda Tangan Pasien / Wali
+              <div class="kop-title">Aesthetic Pondok Indah Dental Clinic</div>
+              <div class="kop-sub">PT NAVENA INTERNATIONAL GROUP</div>
+              <div class="kop-address">
+                Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br/>
+                Telepon: (021) 765-4321 | WhatsApp: 0812-3456-7890
               </div>
-              ${signatureData ? `
-                <img src="${signatureData}" alt="Tanda Tangan ${patientName}" />
-              ` : `
-                <div style="font-size: 8pt; font-weight: 700; color: #047857; padding: 10px 0;">✓ Disetujui Secara Digital</div>
-              `}
-              <div style="font-size: 8.5pt; font-weight: 700; text-decoration: underline; margin-top: 2px;">${patientName}</div>
-              <div style="font-size: 7.5pt; color: #666;">${isGuest ? "Guest User" : "Pasien Terdaftar"}</div>
+            </div>
+          </div>
+          <div class="doc-header">
+            <h1 class="doc-title">Surat Pernyataan & Persetujuan Pasien (Informed Consent)</h1>
+            <div class="doc-sub">No. Registrasi: API-CONSENT-${bookingCode}</div>
+          </div>
+          <table class="meta-table">
+            <tr>
+              <td style="width: 20%; font-weight: bold; background: #f8f8f8;">Nama Pasien</td>
+              <td style="width: 30%;">${patientName}</td>
+              <td style="width: 20%; font-weight: bold; background: #f8f8f8;">Layanan</td>
+              <td style="width: 30%;">${serviceName}</td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; background: #f8f8f8;">No. WhatsApp</td>
+              <td>${patientPhone || "-"}</td>
+              <td style="font-weight: bold; background: #f8f8f8;">Dokter</td>
+              <td>${doctorName}</td>
+            </tr>
+          </table>
+          <div class="clause">
+            <div class="clause-title">1. Persetujuan Pemeriksaan & Tindakan Medis Gigi</div>
+            <p class="clause-text">Saya memberikan persetujuan penuh kepada dokter gigi spesialis Aesthetic Pondok Indah untuk melakukan pemeriksaan fisik rongga mulut, diagnostik klinis, serta tindakan perawatan gigi sesuai prosedur medis.</p>
+          </div>
+          <div class="clause">
+            <div class="clause-title">2. Keterbukaan Riwayat Kesehatan & Anamnesis</div>
+            <p class="clause-text">Saya menyatakan telah memberikan informasi riwayat kesehatan, penyakit bawaan, alergi obat, atau kondisi kesehatan yang sebenarnya.</p>
+          </div>
+          <div class="clause">
+            <div class="clause-title">3. Kerahasiaan Data & Rekam Medis Elektronik</div>
+            <p class="clause-text">Seluruh data rekam medis, dokumentasi intraoral, dan hasil rontgen dilindungi kerahasiaannya sesuai peraturan perundang-undangan kesehatan RI.</p>
+          </div>
+          <div class="signature-section">
+            <div class="sig-row">
+              <div style="font-size: 8.5pt; color: #444;">
+                Status: <strong>✓ Disetujui Secara Digital</strong><br/>
+                Waktu: ${formattedDate}
+              </div>
+              <div class="sig-box">
+                <div style="font-size: 8pt; font-weight: bold; color: #222;">Tanda Tangan Pasien:</div>
+                ${hasDrawn ? `<img src="${canvasRef.current?.toDataURL("image/png")}" class="sig-img" alt="Tanda Tangan" />` : (initialSignatureData ? `<img src="${initialSignatureData}" class="sig-img" alt="Tanda Tangan" />` : '<div style="height: 45px;"></div>')}
+                <div class="sig-name">${fullName || patientName}</div>
+              </div>
             </div>
           </div>
         </body>
       </html>
     `;
 
-    frameDoc.open();
     frameDoc.write(printContent);
     frameDoc.close();
 
@@ -326,272 +336,159 @@ export default function ReservationConsentPdfModal({
           document.body.removeChild(printFrame);
         }
       }, 1500);
-    }, 300);
+    }, 350);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        showCloseButton={false}
-        className="w-[95vw] max-w-4xl lg:max-w-5xl max-h-[92vh] flex flex-col p-0 rounded-3xl bg-white border border-[#EADBBD] shadow-2xl overflow-hidden"
-      >
-        {/* Modal Top Bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EDE5D6] bg-[#FAF8F5] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center border border-[#EADBBD] shadow-xs">
-              <FileText className="w-5 h-5 text-[#8C6B1C]" />
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[94vh] flex flex-col p-0 rounded-3xl bg-[#F5F5F5] border border-[#D9D0BC] shadow-2xl text-left">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 bg-white border-b border-gray-200 rounded-t-3xl shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-800 flex items-center justify-center border border-gray-200">
+              <FileText className="w-4 h-4" />
             </div>
             <div>
-              <DialogTitle className="text-base sm:text-lg font-bold font-display text-[#2C2416]">
-                Dokumen Persetujuan & Kebijakan Reservasi
+              <DialogTitle className="text-base sm:text-lg font-bold text-black leading-tight">
+                Surat Persetujuan Pasien (Informed Consent)
               </DialogTitle>
-              <DialogDescription className="text-xs text-[#7C7365] mt-0.5">
-                Surat Informed Consent Resmi Pasien #{bookingCode}
-              </DialogDescription>
             </div>
           </div>
-
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              onClick={handlePrint}
-              variant="outline"
-              className="h-9 px-3.5 rounded-xl bg-white border-[#D9D0BC] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
-              title="Cetak Dokumen Resmi"
-            >
+            <Button type="button" variant="outline" size="icon" onClick={handlePrint} className="h-9 w-9 rounded-xl bg-white border-gray-300 text-gray-800 hover:bg-gray-100">
               <Printer className="w-4 h-4" />
-              <span>Cetak / Simpan PDF</span>
             </Button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-9 h-9 rounded-full bg-white border border-[#D9D0BC] flex items-center justify-center text-[#7C7365] hover:text-[#2C2416] hover:bg-[#EFE9DC] transition-all shadow-xs cursor-pointer"
-              title="Tutup"
-            >
+            <button type="button" onClick={onClose} className="w-9 h-9 rounded-xl bg-white border border-gray-300 flex items-center justify-center text-gray-700 hover:text-black hover:bg-gray-100">
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Scrollable Formal PDF Document View */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 bg-[#FAF8F5]">
-          <div className="bg-white border border-[#E6DECB] rounded-2xl p-6 sm:p-10 shadow-xs space-y-6 text-[#2C2416]">
-                        {/* Dynamic Formal Kop Surat */}
-            <div className="flex items-center justify-center gap-4 pb-3 text-center border-b-2" style={{ borderBottom: "3px double #111" }}>
-              {customConsent?.kop?.logoUrl ? (
-                <div
-                  className="flex-shrink-0 flex items-center justify-center border border-gray-200 rounded-lg p-1 bg-white shadow-2xs overflow-hidden"
-                  style={{
-                    width: `${customConsent.kop.logoWidth || 75}px`,
-                    height: `${customConsent.kop.logoHeight || 75}px`,
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#ECEAE5]">
+          <div className="max-w-[680px] mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-md border border-gray-300 text-black space-y-6 font-sans">
+            <div className="border-b-2 border-black pb-4 text-center space-y-1" style={{ borderBottom: "3px double #000" }}>
+              <div className="flex items-center justify-center gap-3">
+                <img
+                  src="/logo/logo.webp"
+                  alt="Aesthetic Pondok Indah"
+                  className="h-12 w-auto object-contain shrink-0"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
                   }}
-                >
-                  <img src={customConsent.kop.logoUrl} alt="Logo" className="w-full h-full object-contain" />
-                </div>
-              ) : null}
-              <div className="flex-1 text-center">
-                <h2 className="text-sm sm:text-base font-black text-black tracking-wide uppercase">
-                  {customConsent?.kop?.clinicName || "PT NAVENA INTERNATIONAL GROUP"}
-                </h2>
-                <p className="text-[10px] sm:text-xs text-gray-800 font-medium mt-0.5">
-                  Phone: {customConsent?.kop?.phone || "+62 21 555 1900"} &nbsp; E-mail: <span className="text-blue-600 underline">{customConsent?.kop?.email || "navenainternationalgroup@gmail.com"}</span>
-                </p>
-                <p className="text-[9px] sm:text-[10px] text-gray-600 mt-0.5 leading-tight">
-                  {customConsent?.kop?.address || "Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan, Provinsi DKI Jakarta, 12310"}
-                </p>
-              </div>
-            </div>
-
-            {/* Document Sub-Header */}
-            <div className="text-center space-y-1">
-              <h3 className="text-base sm:text-lg font-bold font-display tracking-tight text-[#2C2416]">
-                SURAT PERSETUJUAN & KEBIJAKAN RESERVASI KLINIK
-              </h3>
-              <div className="text-[11px] text-[#8C8272] pt-0.5 flex items-center justify-center gap-3">
-                <span>Ref. Dokumen: <strong className="font-mono font-semibold">SK-CONSENT-{bookingCode}</strong></span>
-                <span>•</span>
-                <span>Status: <strong className="text-emerald-700">Tersertifikasi Digital</strong></span>
-              </div>
-            </div>
-
-            {/* Reservation & Patient Profile Meta Box */}
-            <div className="bg-[#FAF8F5] border border-[#EADBBD] rounded-xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2 text-[#6B5E4F]">
-                  <User className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                  <span>Nama Pasien:</span>
-                  <strong className="text-[#2C2416]">{patientName}</strong>
-                  <span className="text-[10px] px-1.5 py-0.5 bg-white rounded border border-[#D9D0BC] text-[#8C6B1C] font-semibold">
-                    {isGuest ? "Guest User" : "Pasien Terdaftar"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-[#6B5E4F]">
-                  <span>No. Telepon / WhatsApp:</span>
-                  <strong className="text-[#2C2416]">{patientPhone || "-"}</strong>
-                </div>
-                <div className="flex items-center gap-2 text-[#6B5E4F]">
-                  <Sparkles className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                  <span>Layanan yang Dipilih:</span>
-                  <strong className="text-[#2C2416]">{serviceName}</strong>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2 text-[#6B5E4F]">
-                  <Stethoscope className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                  <span>Dokter Spesialis:</span>
-                  <strong className="text-[#2C2416]">{doctorName}</strong>
-                </div>
-                <div className="flex items-center gap-2 text-[#6B5E4F]">
-                  <Calendar className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                  <span>Tanggal & Jam Praktik:</span>
-                  <strong className="text-[#2C2416]">{dateStr} • {timeStr}</strong>
-                </div>
-                <div className="flex items-center gap-2 text-[#6B5E4F]">
-                  <Clock className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                  <span>Waktu Persetujuan:</span>
-                  <span className="text-[#2C2416]">{formattedDate}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Admin Terms if Present */}
-            {adminTerms && (
-              <div className="space-y-2 text-xs sm:text-sm text-[#443E33] leading-relaxed whitespace-pre-line border-b border-[#EDE5D6] pb-4">
-                <div className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wider">
-                  Ketentuan Khusus Operasional:
-                </div>
-                <div className="bg-[#FAF9F6] p-3 rounded-lg border border-[#EDE5D6]">{adminTerms}</div>
-              </div>
-            )}
-
-            {/* Standard / Rich Legal Clauses */}
-            {customConsent?.bodyHtml ? (
-              <div
-                className="wp-editor-content prose max-w-none text-xs sm:text-sm text-[#443E33] leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: customConsent.bodyHtml }}
-              />
-            ) : (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm text-[#443E33] leading-relaxed">
-                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                    <h4 className="font-bold text-[#2C2416]">
-                      1. Ketentuan Kedatangan & Registrasi Pasien
-                    </h4>
-                    <p className="text-xs text-[#555]">
-                      Pasien diwajibkan hadir di klinik sekurang-kurangnya <strong>15 (lima belas) menit</strong> sebelum waktu jadwal reservasi yang telah disepakati untuk keperluan verifikasi identitas, registrasi ulang, dan anamnesis awal.
-                    </p>
-                  </div>
-
-                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                    <h4 className="font-bold text-[#2C2416]">
-                      2. Kebijakan Keterlambatan & Penjadwalan Ulang
-                    </h4>
-                    <p className="text-xs text-[#555]">
-                      Apabila pasien mengalami keterlambatan lebih dari 15 menit dari jadwal tanpa pemberitahuan, antrean dialihkan. Penjadwalan ulang (reschedule) bebas biaya dilakukan selambatnya <strong>1 x 24 jam</strong> sebelum jadwal.
-                    </p>
-                  </div>
-
-                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                    <h4 className="font-bold text-[#2C2416]">
-                      3. Persetujuan Tindakan Medis (Informed Consent)
-                    </h4>
-                    <p className="text-xs text-[#555]">
-                      Dengan membubuhkan tanda tangan digital pada lembar ini, pasien memberikan persetujuan kepada dokter gigi spesialis untuk pemeriksaan klinis, diagnostik rontgen bila diperlukan, dan perawatan yang disepakati.
-                    </p>
-                  </div>
-
-                  <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6]">
-                    <h4 className="font-bold text-[#2C2416]">
-                      4. Kerahasiaan Rekam Medis & Privasi Pasien
-                    </h4>
-                    <p className="text-xs text-[#555]">
-                      Seluruh data rekam medis elektronik (EMR), riwayat kesehatan, dan hasil pemeriksaan gigi pasien dilindungi kerahasiaannya sesuai regulasi hukum kesehatan Republik Indonesia.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Pasal 5 */}
-                <div className="space-y-1 bg-[#FAF8F5]/60 p-4 rounded-xl border border-[#EDE5D6] text-xs sm:text-sm text-[#443E33]">
-                  <h4 className="font-bold text-[#2C2416]">
-                    5. Pembayaran & Kebijakan Pembatalan
-                  </h4>
-                  <p className="text-xs text-[#555]">
-                    Pembayaran biaya tindakan dapat dilakukan secara tunai, kartu debit/kredit, QRIS, atau transfer kasir klinik. Pembatalan sepihak hari H tanpa alasan medis darurat dapat memengaruhi kuota prioritas booking berikutnya.
+                />
+                <div className="text-left">
+                  <h1 className="text-base sm:text-lg font-black text-black tracking-wider uppercase leading-tight">
+                    AESTHETIC PONDOK INDAH DENTAL CLINIC
+                  </h1>
+                  <p className="text-[11px] font-bold text-gray-800">
+                    PT NAVENA INTERNATIONAL GROUP
                   </p>
                 </div>
               </div>
-            )}
+              <p className="text-[10px] text-gray-700 leading-snug pt-1">
+                Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br />
+                Telepon: (021) 765-4321 | WhatsApp: 0812-3456-7890 | Email: info@aestheticpondokindah.id
+              </p>
+            </div>
 
-            {/* Official Digital Signature & Validation Block */}
-            <div className="pt-4 border-t-2 border-[#2C2416] grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
-              <div className="space-y-2 text-xs text-[#6B5E4F]">
-                <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Lembar Persetujuan Sah Secara Medikolegal</span>
+            <div className="text-center space-y-0.5 pt-1">
+              <h2 className="text-lg font-bold text-black uppercase">Surat Pernyataan & Persetujuan Pasien (Informed Consent)</h2>
+            </div>
+
+            <div className="border border-gray-300 rounded-lg overflow-hidden text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-300">
+                <div className="p-3 space-y-1 bg-gray-50/50">
+                  <p><strong className="text-black">Nama:</strong> {patientName}</p>
+                  <p><strong className="text-black">No. WA:</strong> {patientPhone || "-"}</p>
                 </div>
-                <p className="text-[11px] text-[#7C7365] leading-relaxed">
-                  Tanda tangan digital ini terekam melalui kanvas biometrik terenkripsi dan disimpan permanen pada sistem basis data rekam medis klinik.
-                </p>
-                <div className="text-[10px] text-[#8C8272] pt-1">
-                  Dicetak pada: {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })} WIB
+                <div className="p-3 space-y-1 bg-gray-50/50">
+                  <p><strong className="text-black">Layanan:</strong> {serviceName}</p>
+                  <p><strong className="text-black">Dokter:</strong> {doctorName}</p>
                 </div>
               </div>
+            </div>
 
-              {/* Signature Card */}
-              <div className="border border-[#D9D0BC] rounded-2xl p-4 bg-[#FAF8F5] text-center space-y-2">
-                <p className="text-[11px] font-semibold text-[#8C6B1C] uppercase tracking-wider">
-                  Tanda Tangan Pasien / Wali Sah
-                </p>
+            <div className="space-y-4 text-xs sm:text-sm text-gray-900 leading-relaxed text-left">
+              {[
+                { title: "1. Persetujuan Pemeriksaan & Tindakan Medis Gigi", text: "Saya memberikan persetujuan penuh kepada dokter gigi spesialis Aesthetic Pondok Indah untuk melakukan pemeriksaan fisik rongga mulut, diagnostik klinis, serta tindakan perawatan gigi sesuai prosedur medis yang disepakati." },
+                { title: "2. Keterbukaan Riwayat Kesehatan & Anamnesis", text: "Saya menyatakan telah memberikan informasi riwayat kesehatan, penyakit bawaan, alergi obat, atau kondisi kesehatan yang sebenarnya." },
+                { title: "3. Ketentuan Penjadwalan & Waktu Kedatangan", text: "Saya memahami kewajiban hadir di klinik minimal 15 (lima belas) menit sebelum waktu reservasi. Keterlambatan lebih dari 15 menit dapat mengakibatkan penyesuaian durasi atau penjadwalan ulang." },
+                { title: "4. Kerahasiaan Data & Rekam Medis Elektronik", text: "Seluruh data rekam medis dan hasil rontgen dilindungi kerahasiaannya sesuai peraturan perundang-undangan kesehatan RI." },
+                { title: "5. Kebijakan Pembayaran & Pembatalan", text: "Saya bersedia menyelesaikan kewajiban pembayaran tindakan sesuai tarif resmi yang disetujui sebelum tindakan dilakukan." }
+              ].map((c, i) => (
+                <div key={i} className="space-y-1">
+                  <h3 className="font-bold text-black text-xs sm:text-sm">{c.title}</h3>
+                  <p className="text-xs sm:text-[13px] text-gray-800 text-justify">{c.text}</p>
+                </div>
+              ))}
+            </div>
 
-                <div className="w-full h-24 bg-white border border-[#D9D0BC] rounded-xl flex items-center justify-center p-2 shadow-inner overflow-hidden">
-                  {signatureData && signatureData.trim().length > 10 ? (
-                    <img
-                      src={signatureData}
-                      alt={`Tanda Tangan ${patientName}`}
-                      className="max-h-full max-w-full object-contain filter contrast-125"
-                    />
-                  ) : (
-                    <span className="text-xs text-emerald-700 font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Disetujui Secara Digital
-                    </span>
+            <div className="pt-6 border-t-2 border-gray-300 space-y-4">
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  Nama Pasien / Wali Sah <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Masukkan nama lengkap pasien / wali sah"
+                  className="w-full h-10 px-3.5 rounded-lg border border-gray-300 bg-white text-xs sm:text-sm text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-gray-800">
+                    Tanda Tangan Digital Pasien <span className="text-red-500">*</span>
+                  </label>
+                  {(hasDrawn || currentSignature) && (
+                    <button
+                      type="button"
+                      onClick={handleClearSignature}
+                      className="text-[11px] font-semibold text-gray-500 hover:text-red-600 underline cursor-pointer"
+                    >
+                      Clear / Ganti Tanda Tangan
+                    </button>
                   )}
                 </div>
-
-                <div>
-                  <p className="text-xs font-bold text-[#2C2416] underline underline-offset-4">
-                    {patientName}
-                  </p>
-                  <p className="text-[10px] text-[#7C7365] mt-0.5">
-                    {isGuest ? "Pengunjung / Pasien Guest" : "Member Terdaftar"}
-                  </p>
+                <div className="relative border border-gray-300 rounded-xl bg-white overflow-hidden shadow-2xs">
+                  {!hasDrawn && !isDrawing && !currentSignature && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-400 text-xs">
+                      <span>Sign Here (Goreskan tanda tangan Anda di sini)</span>
+                    </div>
+                  )}
+                  <canvas
+                    ref={canvasRef}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                    className="w-full h-32 cursor-crosshair touch-none"
+                  />
                 </div>
               </div>
+
+              {errorMessage && (
+                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                  {errorMessage}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                onClick={handleSubmitAgreement}
+                className="w-full h-11 rounded-xl bg-[#00A859] hover:bg-[#00914c] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>Kirim & Simpan Tanda Tangan</span>
+              </Button>
             </div>
           </div>
-        </div>
-
-        {/* Modal Bottom Close */}
-        <div className="p-4 sm:px-6 border-t border-[#EDE5D6] bg-white flex items-center justify-end gap-3 shrink-0">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            className="h-10 px-5 rounded-xl border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] text-xs font-semibold cursor-pointer"
-          >
-            Tutup
-          </Button>
-          <Button
-            type="button"
-            onClick={handlePrint}
-            className="h-10 px-5 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-md flex items-center gap-1.5 cursor-pointer"
-          >
-            <Printer className="w-4 h-4" />
-            <span>Cetak / Unduh PDF</span>
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-

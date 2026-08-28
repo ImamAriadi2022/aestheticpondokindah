@@ -59,19 +59,67 @@ export const showLocalNotification = (title: string, body: string, deepLink?: st
   }
 };
 
-export const handleDeepLink = (type: string, idUrl?: string): string => {
-  switch (type) {
-    case "appointment":
-      return idUrl || "/#/booking";
-    case "membership":
-      return idUrl || "/#/membership";
-    case "promo":
-      return idUrl || "/#/promo";
-    case "article":
-      return idUrl || "/#/blog";
-    case "profile":
-      return "/#/settings";
-    default:
-      return "/#/";
+export const handleDeepLink = (type: string, idUrl?: string, role?: string): string => {
+  if (idUrl && (idUrl.startsWith("/") || idUrl.startsWith("#") || idUrl.startsWith("http"))) {
+    return idUrl.startsWith("#") ? idUrl : `/#${idUrl.startsWith("/") ? "" : "/"}${idUrl}`;
   }
+
+  const normalizedType = (type || "").toLowerCase();
+
+  if (
+    normalizedType === "appointment" ||
+    normalizedType === "booking" ||
+    normalizedType === "reservation" ||
+    normalizedType === "reservation_new" ||
+    normalizedType === "reservation_confirmed" ||
+    normalizedType === "reservation_cancelled" ||
+    normalizedType === "doctor_assigned"
+  ) {
+    if (role === "clinic") return "/#/dashboard/clinic?tab=reservasi";
+    if (role === "doctor") return "/#/dashboard/doctor?tab=reservasi";
+    return "/#/dashboard/user?tab=riwayat";
+  }
+
+  if (
+    normalizedType === "consultation" ||
+    normalizedType === "chat" ||
+    normalizedType === "konsultasi" ||
+    normalizedType === "consultation_message"
+  ) {
+    if (role === "clinic") return "/#/dashboard/clinic?tab=konsultasi";
+    if (role === "doctor") return "/#/dashboard/doctor?tab=konsultasi";
+    return "/#/dashboard/user?tab=konsultasi&view=list";
+  }
+
+  if (
+    normalizedType === "complaint" ||
+    normalizedType === "pengaduan" ||
+    normalizedType === "complaint_response"
+  ) {
+    if (role === "clinic") return "/#/dashboard/clinic?tab=pengaduan";
+    return "/#/dashboard/user?tab=pengaduan";
+  }
+
+  if (normalizedType === "membership") {
+    if (role === "clinic") return "/#/dashboard/clinic/membership";
+    return "/#/dashboard/user?tab=membership";
+  }
+
+  if (normalizedType === "promo") {
+    return "/#/promo";
+  }
+
+  if (normalizedType === "article" || normalizedType === "blog") {
+    return "/#/blog";
+  }
+
+  if (normalizedType === "profile") {
+    return "/#/settings";
+  }
+
+  return role === "clinic"
+    ? "/#/dashboard/clinic"
+    : role === "doctor"
+    ? "/#/dashboard/doctor"
+    : "/#/dashboard/user";
 };

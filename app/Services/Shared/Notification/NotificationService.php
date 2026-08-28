@@ -58,14 +58,29 @@ class NotificationService
         array $data = [],
         ?int $exceptUserId = null
     ): void {
-        User::query()
+        $adminIds = User::query()
             ->whereIn('role', ['admin', 'clinic_admin', 'clinic'])
             ->where('status', 'active')
             ->when($exceptUserId, fn ($q) => $q->where('id', '!=', $exceptUserId))
-            ->pluck('id')
-            ->each(fn (int $adminId) => self::send($adminId, $title, $body, $type, $deepLink, $data));
+            ->pluck('id');
 
-        // Also dispatch to any admin device subscription (including unlinked role-based sessions)
+        // Create in-app notifications in database for all admins
+        foreach ($adminIds as $adminId) {
+            try {
+                Notification::create([
+                    'user_id' => $adminId,
+                    'title' => $title,
+                    'body' => $body,
+                    'type' => $type,
+                    'deep_link' => $deepLink,
+                    'data' => $data,
+                ]);
+            } catch (\Throwable $e) {
+                // Non-blocking
+            }
+        }
+
+        // Single batch dispatch to all admin WebPush subscriptions
         try {
             WebPushNotificationService::sendToAdmins(
                 $title,

@@ -341,13 +341,13 @@ export default function DoctorsPage({
           </p>
         </div>
 
-        <div className="doctors-page-actions flex items-center gap-2">
+        <div className="doctors-page-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <Button
             type="button"
             variant="outline"
             onClick={loadDoctorsFromBackend}
             disabled={loading}
-            className="rounded-xl border-[#E8DFC8] h-10 px-3.5 text-xs text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer shadow-2xs"
+            className="rounded-xl border-[#E8DFC8] h-10 px-3.5 text-xs text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer shadow-2xs justify-center"
             title="Refresh Data Dokter"
           >
             <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin text-[#C9A24A]" : ""}`} />
@@ -357,7 +357,7 @@ export default function DoctorsPage({
           <Button
             type="button"
             onClick={handleCreateNew}
-            className="bg-[#B8943F] hover:bg-[#A38032] text-white font-bold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer transition"
+            className="bg-[#B8943F] hover:bg-[#A38032] text-white font-bold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer transition justify-center"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Tambah Dokter Spesialis
@@ -366,34 +366,34 @@ export default function DoctorsPage({
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="doctor-summary-card bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
-            <Users className="w-6 h-6" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="doctor-summary-card bg-white p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Dokter</p>
-            <p className="text-xl font-bold text-[#4A3F35] mt-0.5">{totalDoctors} Spesialis</p>
+            <p className="text-[10px] sm:text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider truncate">Total Dokter</p>
+            <p className="text-base sm:text-xl font-bold text-[#4A3F35] mt-0.5">{totalDoctors} <span className="text-xs sm:text-sm font-normal text-[#8A7B6B]">Spesialis</span></p>
           </div>
         </div>
 
-        <div className="doctor-summary-card bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
-            <CheckCircle2 className="w-6 h-6" />
+        <div className="doctor-summary-card bg-white p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
+            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Dokter Aktif</p>
-            <p className="text-xl font-bold text-emerald-700 mt-0.5">{activeDoctors} Berpraktik</p>
+            <p className="text-[10px] sm:text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider truncate">Dokter Aktif</p>
+            <p className="text-base sm:text-xl font-bold text-emerald-700 mt-0.5">{activeDoctors} <span className="text-xs sm:text-sm font-normal text-emerald-600">Praktik</span></p>
           </div>
         </div>
 
-        <div className="doctor-summary-card bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
-            <Calendar className="w-6 h-6" />
+        <div className="doctor-summary-card col-span-2 sm:col-span-1 bg-white p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
+            <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider">Total Sesi Jadwal</p>
-            <p className="text-xl font-bold text-[#4A3F35] mt-0.5">{totalSchedulesCount} Sesi Terdaftar</p>
+            <p className="text-[10px] sm:text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider truncate">Total Sesi Jadwal</p>
+            <p className="text-base sm:text-xl font-bold text-[#4A3F35] mt-0.5">{totalSchedulesCount} <span className="text-xs sm:text-sm font-normal text-[#8A7B6B]">Sesi</span></p>
           </div>
         </div>
       </div>

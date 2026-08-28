@@ -111,13 +111,14 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#4A3F35]">Download & Rilis Aplikasi Mobile Pasien</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">Kelola file installer APK Android, link App Store iOS, dan riwayat changelog versi.</p>
+          <h2 className="text-xl font-bold text-[#4A3F35]">Distribusi & Download Aplikasi Pasien</h2>
+          <p className="text-sm text-[#8A7B6B] mt-1">
+            Kelola rilis APK Android langsung, link Google Play Store, dan link Apple App Store untuk pasien klinik.
+          </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <PwaInstallButton className="rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white text-xs" />
+        <div className="download-app-page-actions flex items-center gap-2">
           <Button
-            className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+            className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
             onClick={() => {
             setSearchParams((prev: any) => {
               const next = new URLSearchParams(prev);
@@ -135,35 +136,35 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <HardDrive className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Total Versi Rilis</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{apiDownloadApps.length}</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{apiDownloadApps.length}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Check className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Rilis Aktif</p>
           </div>
-          <p className="text-2xl font-bold text-emerald-600">{activeCount}</p>
+          <p className="text-xl sm:text-2xl font-bold text-emerald-600">{activeCount}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <Smartphone className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Distribusi Platform</p>
           </div>
-          <p className="text-sm font-bold text-[#4A3F35] mt-1">
+          <p className="text-xs sm:text-sm font-bold text-[#4A3F35] mt-1">
             {androidCount} Android • {iosCount} iOS
           </p>
         </div>
@@ -177,7 +178,7 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
               key={p}
               type="button"
               onClick={() => setFilterPlatform(p)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                 filterPlatform === p
                   ? "bg-[#C9A24A] text-white shadow-xs"
                   : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
@@ -200,8 +201,8 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+      {/* Table with horizontal scroll */}
+      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">

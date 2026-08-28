@@ -159,12 +159,12 @@ export default function AdminTreatmentManagement() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <Button
             onClick={loadTreatments}
             variant="outline"
             size="sm"
-            className="h-9 px-3 rounded-xl border-[#E8DFC8] text-[#8A6B2B] hover:bg-[#FAF6EE] text-xs font-semibold"
+            className="h-10 sm:h-9 px-3 rounded-xl border-[#E8DFC8] text-[#8A6B2B] hover:bg-[#FAF6EE] text-xs font-semibold justify-center"
           >
             <RefreshCw className="w-3.5 h-3.5 mr-1" /> Muat Ulang
           </Button>
@@ -174,7 +174,7 @@ export default function AdminTreatmentManagement() {
               setSelectedTreatment(null);
               setEditorOpen(true);
             }}
-            className="h-9 px-4 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-md flex items-center gap-1.5"
+            className="h-10 sm:h-9 px-4 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Layanan Baru</span>

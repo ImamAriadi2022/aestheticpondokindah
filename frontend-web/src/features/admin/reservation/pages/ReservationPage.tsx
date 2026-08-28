@@ -16,6 +16,8 @@ import ReservationTable from "../components/ReservationTable";
 import ReservationDetailModal from "../components/ReservationDetailModal";
 import AdminTreatmentManagement from "@/features/admin/treatments/pages/AdminTreatmentManagement";
 import type { ReservationItem } from "../services/reservationService";
+import { scrollPageToTop } from "@/core/router/ScrollToTop";
+import { PageTransition } from "@/core/router/RouteTransition";
 
 type Props = {
   reservations: ReservationItem[];
@@ -42,12 +44,14 @@ export default function ReservationPage({
   const handleSelect = (item: ReservationItem) => {
     setSelected(item);
     setIsModalOpen(true);
+    scrollPageToTop();
     if (onSelectReservation) onSelectReservation(item);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelected(null);
+    scrollPageToTop();
   };
 
   const handleModalUpdated = () => {
@@ -178,152 +182,156 @@ export default function ReservationPage({
 
       {/* TAB 1: RESERVASI JANJI TEMU PASIEN */}
       {activeSubTab === "reservations" && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          {/* 4 Summary Stat Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-[#8A7B6B]">Total Reservasi</span>
-                <div className="w-8 h-8 rounded-xl bg-[#F5E6C8] flex items-center justify-center text-[#B8943F]">
-                  <Users className="w-4 h-4" />
+        <PageTransition transitionKey={selected ? `detail_${selected.id}` : "list"}>
+          {selected ? (
+            /* In-Page Booking Detail View (No Modal Dialog) */
+            <ReservationDetailModal
+              isOpen={true}
+              onClose={handleCloseModal}
+              reservation={selected}
+              doctors={doctors}
+              token={token}
+              onUpdated={handleModalUpdated}
+            />
+          ) : (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* 4 Summary Stat Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#8A7B6B]">Total Reservasi</span>
+                    <div className="w-8 h-8 rounded-xl bg-[#F5E6C8] flex items-center justify-center text-[#B8943F]">
+                      <Users className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-[#3D332A] mt-2">{totalCount}</p>
+                  <p className="text-[10px] text-[#A89F91] mt-0.5">Semua entri database</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-amber-700">Perlu Konfirmasi</span>
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-amber-700 mt-2">{newCount}</p>
+                  <p className="text-[10px] text-amber-600 mt-0.5">Menunggu respon admin</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-emerald-700">Dikonfirmasi</span>
+                    <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-emerald-700 mt-2">{confirmedCount}</p>
+                  <p className="text-[10px] text-emerald-600 mt-0.5">Jadwal telah terkunci</p>
+                </div>
+
+                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-purple-700">Selesai Dirawat</span>
+                    <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
+                      <FileCheck className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-700 mt-2">{completedCount}</p>
+                  <p className="text-[10px] text-purple-600 mt-0.5">Kunjungan tuntas</p>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-[#3D332A] mt-2">{totalCount}</p>
-              <p className="text-[10px] text-[#A89F91] mt-0.5">Semua entri database</p>
-            </div>
 
-            <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-amber-700">Perlu Konfirmasi</span>
-                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
-                  <Clock className="w-4 h-4" />
+              {/* Filter & Search Bar */}
+              <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs space-y-3">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                  {/* Search Input */}
+                  <div className="relative w-full md:w-80">
+                    <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cari kode, nama pasien, layanan..."
+                      className="w-full h-10 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-8 text-xs font-medium text-[#3D332A] placeholder:text-[#A89F91] focus:outline-hidden focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all shadow-xs"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A89F91] hover:text-[#3D332A] p-0.5 rounded-full"
+                      >
+                        <span className="text-xs font-bold leading-none">✕</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Asal Booking Tabs (Guest vs Member) */}
+                  <div className="flex items-center gap-1 bg-[#FAF8F5] p-1 rounded-xl border border-[#E8DFC8] w-full md:w-auto">
+                    <button
+                      onClick={() => setSourceFilter("Semua")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        sourceFilter === "Semua"
+                          ? "bg-white text-[#8A6B2B] shadow-xs"
+                          : "text-[#8A7B6B] hover:text-[#3D332A]"
+                      }`}
+                    >
+                      Semua Asal
+                    </button>
+                    <button
+                      onClick={() => setSourceFilter("guest")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        sourceFilter === "guest"
+                          ? "bg-blue-600 text-white shadow-xs"
+                          : "text-[#8A7B6B] hover:text-blue-700"
+                      }`}
+                    >
+                      Guest
+                    </button>
+                    <button
+                      onClick={() => setSourceFilter("member")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        sourceFilter === "member"
+                          ? "bg-emerald-600 text-white shadow-xs"
+                          : "text-[#8A7B6B] hover:text-emerald-700"
+                      }`}
+                    >
+                      Member
+                    </button>
+                  </div>
+                </div>
+
+                {/* Status Tabs */}
+                <div className="flex flex-nowrap items-center gap-1.5 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
+                  <span className="shrink-0 text-xs font-semibold text-[#8A7B6B] flex items-center gap-1 mr-1">
+                    <Filter className="w-3 h-3 text-[#B8943F]" /> Status:
+                  </span>
+                  {["Semua", "Baru", "Dikonfirmasi", "Selesai", "Dibatalkan"].map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setStatusFilter(st)}
+                      className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                        statusFilter === st
+                          ? "bg-[#C9A24A] text-white shadow-xs"
+                          : "bg-[#FAF8F5] hover:bg-[#F5ECE0] text-[#7A6E60] border border-[#E8DFC8]"
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <p className="text-2xl font-bold text-amber-700 mt-2">{newCount}</p>
-              <p className="text-[10px] text-amber-600 mt-0.5">Menunggu respon admin</p>
+
+              {/* Main Reservation Table */}
+              <ReservationTable
+                reservations={filteredReservations}
+                onSelect={handleSelect}
+                token={token}
+                onRefresh={onRefresh}
+              />
             </div>
-
-            <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-emerald-700">Dikonfirmasi</span>
-                <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-emerald-700 mt-2">{confirmedCount}</p>
-              <p className="text-[10px] text-emerald-600 mt-0.5">Jadwal telah terkunci</p>
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-purple-700">Selesai Dirawat</span>
-                <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
-                  <FileCheck className="w-4 h-4" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold text-purple-700 mt-2">{completedCount}</p>
-              <p className="text-[10px] text-purple-600 mt-0.5">Kunjungan tuntas</p>
-            </div>
-          </div>
-
-          {/* Filter & Search Bar */}
-          <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs space-y-3">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-              {/* Search Input */}
-              <div className="relative w-full md:w-80">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari kode, nama pasien, layanan..."
-                  className="w-full h-10 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-8 text-xs font-medium text-[#3D332A] placeholder:text-[#A89F91] focus:outline-hidden focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all shadow-xs"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A89F91] hover:text-[#3D332A] p-0.5 rounded-full"
-                  >
-                    <span className="text-xs font-bold leading-none">✕</span>
-                  </button>
-                )}
-              </div>
-
-              {/* Asal Booking Tabs (Guest vs Member) */}
-              <div className="flex items-center gap-1 bg-[#FAF8F5] p-1 rounded-xl border border-[#E8DFC8] w-full md:w-auto">
-                <button
-                  onClick={() => setSourceFilter("Semua")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    sourceFilter === "Semua"
-                      ? "bg-white text-[#8A6B2B] shadow-xs"
-                      : "text-[#8A7B6B] hover:text-[#3D332A]"
-                  }`}
-                >
-                  Semua Asal
-                </button>
-                <button
-                  onClick={() => setSourceFilter("guest")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    sourceFilter === "guest"
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "text-[#8A7B6B] hover:text-blue-700"
-                  }`}
-                >
-                  Guest
-                </button>
-                <button
-                  onClick={() => setSourceFilter("member")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    sourceFilter === "member"
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "text-[#8A7B6B] hover:text-emerald-700"
-                  }`}
-                >
-                  Member
-                </button>
-              </div>
-            </div>
-
-            {/* Status Tabs */}
-            <div className="flex flex-nowrap items-center gap-1.5 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
-              <span className="shrink-0 text-xs font-semibold text-[#8A7B6B] flex items-center gap-1 mr-1">
-                <Filter className="w-3 h-3 text-[#B8943F]" /> Status:
-              </span>
-              {["Semua", "Baru", "Dikonfirmasi", "Selesai", "Dibatalkan"].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                    statusFilter === st
-                      ? "bg-[#C9A24A] text-white shadow-xs"
-                      : "bg-[#FAF8F5] hover:bg-[#F5ECE0] text-[#7A6E60] border border-[#E8DFC8]"
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Reservation Table */}
-          <ReservationTable
-            reservations={filteredReservations}
-            onSelect={handleSelect}
-            token={token}
-            onRefresh={onRefresh}
-          />
-
-          {/* Interactive Detail Modal Popup */}
-          <ReservationDetailModal
-            isOpen={isModalOpen}
-            onClose={handleCloseModal}
-            reservation={selected}
-            doctors={doctors}
-            token={token}
-            onUpdated={handleModalUpdated}
-          />
-        </div>
+          )}
+        </PageTransition>
       )}
 
       {/* TAB 2: LAYANAN KLINIK (TREATMENTS) */}

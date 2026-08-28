@@ -122,8 +122,8 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
         </div>
       </div>
 
-      {/* Table Content */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+      {/* Table Content with horizontal scroll */}
+      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">

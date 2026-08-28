@@ -197,7 +197,14 @@ export default function App() {
       <SessionManager />
       <VisitTracker />
       <ScrollToTop />
-      <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-gray-500">Loading...</div>}>
+      <Suspense
+        fallback={
+          <div className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-3 animate-fade-in">
+            <div className="w-8 h-8 rounded-full border-2 border-[#C9A24A]/30 border-t-[#C9A24A] animate-spin" />
+            <span className="text-xs font-semibold text-[#8C6B1C] tracking-wide">Memuat Halaman...</span>
+          </div>
+        }
+      >
         <ErrorBoundary>
           <RouteTransition>
             <Routes>

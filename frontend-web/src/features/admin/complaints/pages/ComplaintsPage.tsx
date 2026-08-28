@@ -103,13 +103,13 @@ export default function ComplaintsPage({ complaints: propsComplaints = [] }: Pro
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           <Button
             type="button"
             variant="outline"
             onClick={() => loadComplaints(true)}
             disabled={loading}
-            className="rounded-xl border-[#E8DFC8] bg-white h-10 px-4 text-xs font-semibold text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer shadow-2xs"
+            className="rounded-xl border-[#E8DFC8] bg-white h-10 px-4 text-xs font-semibold text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer shadow-2xs justify-center"
             title="Muat Ulang Pengaduan"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-[#C9A24A]" : "text-[#8C6B1C]"}`} />
@@ -119,7 +119,7 @@ export default function ComplaintsPage({ complaints: propsComplaints = [] }: Pro
           <Button
             type="button"
             onClick={() => setPdfModalOpen(true)}
-            className="bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] hover:from-[#B8943F] hover:to-[#735514] text-white font-bold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+            className="bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] hover:from-[#B8943F] hover:to-[#735514] text-white font-bold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
           >
             <FileText className="w-4 h-4 mr-1.5" />
             Rekap Laporan PDF
@@ -128,15 +128,15 @@ export default function ComplaintsPage({ complaints: propsComplaints = [] }: Pro
       </div>
 
       {/* Summary Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Card 1: Total */}
-        <div className="bg-white p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD] shadow-2xs">
-            <Inbox className="w-6 h-6" />
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] shadow-xs flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD] shadow-2xs">
+            <Inbox className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-[11px] font-bold text-[#8A7B6B] uppercase tracking-wider">Total Masukan</p>
-            <p className="text-2xl font-black text-[#4A3F35] mt-0.5">{total} <span className="text-xs font-medium text-[#8A7B6B]">Kasus</span></p>
+            <p className="text-[10px] sm:text-[11px] font-bold text-[#8A7B6B] uppercase tracking-wider">Total Masukan</p>
+            <p className="text-xl sm:text-2xl font-black text-[#4A3F35] mt-0.5">{total} <span className="text-xs font-medium text-[#8A7B6B]">Kasus</span></p>
           </div>
         </div>
 

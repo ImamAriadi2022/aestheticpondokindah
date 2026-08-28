@@ -203,12 +203,12 @@ export default function EditTentangPage() {
             </p>
           </div>
 
-          <div className="edit-about-actions flex flex-wrap items-center gap-2">
+          <div className="edit-about-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
             <a
               href="/#/about"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all border border-white/10"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all border border-white/10"
             >
               <ExternalLink className="w-4 h-4" />
               Buka Halaman Tentang
@@ -217,7 +217,7 @@ export default function EditTentangPage() {
               type="button"
               variant="outline"
               onClick={handleResetToDefault}
-              className="bg-transparent border-red-400/40 text-red-300 hover:bg-red-950/40 hover:text-red-200 text-xs rounded-xl px-4 py-2.5 flex items-center gap-1.5"
+              className="bg-transparent border-red-400/40 text-red-300 hover:bg-red-950/40 hover:text-red-200 text-xs rounded-xl px-4 py-2.5 flex items-center justify-center gap-1.5"
             >
               <RotateCcw className="w-4 h-4" />
               Reset Default
@@ -226,7 +226,7 @@ export default function EditTentangPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:opacity-90 text-white font-semibold text-xs rounded-xl px-5 py-2.5 shadow-lg shadow-[#C9A24A]/20 flex items-center gap-1.5"
+              className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:opacity-90 text-white font-semibold text-xs rounded-xl px-5 py-2.5 shadow-lg shadow-[#C9A24A]/20 flex items-center justify-center gap-1.5"
             >
               <Save className="w-4 h-4" />
               {saving ? "Menyimpan..." : "Simpan Perubahan"}
@@ -236,7 +236,7 @@ export default function EditTentangPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setActiveTab("content")}

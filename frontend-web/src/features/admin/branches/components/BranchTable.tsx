@@ -9,7 +9,7 @@ type Props = {
 
 export default function BranchTable({ branches, onEdit }: Props) {
   return (
-    <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+    <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">
       <Table>
         <TableHeader>
           <TableRow className="bg-[#FAF8F5]">

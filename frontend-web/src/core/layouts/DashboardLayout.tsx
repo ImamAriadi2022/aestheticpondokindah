@@ -9,6 +9,9 @@ import DashboardTopBar from "@/core/layouts/DashboardTopBar";
 import DoctorSidebar from "@/features/doctor/DoctorSidebar";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
 import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut, FileText } from "lucide-react";
+import { scrollPageToTop } from "@/core/router/ScrollToTop";
+import { PageTransition } from "@/core/router/RouteTransition";
+import { useSubmenuBadges } from "@/core/services/menuBadgeService";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -44,6 +47,33 @@ export default function DashboardLayout({
   const sidebarRef = useRef<HTMLElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const avatarBtnRef = useRef<HTMLDivElement>(null);
+  const submenuBadges = useSubmenuBadges(role);
+
+  const getSubmenuBadgeCount = (subLabel: string, subHref: string): number => {
+    const l = subLabel.toLowerCase();
+    const h = subHref.toLowerCase();
+    if (l.includes("booking") || l.includes("reservasi") || h.includes("reservasi") || h.includes("booking")) {
+      return submenuBadges.booking;
+    }
+    if (l.includes("konsultasi") || h.includes("konsultasi")) {
+      return submenuBadges.konsultasi;
+    }
+    if (l.includes("pengaduan") || h.includes("pengaduan")) {
+      return submenuBadges.pengaduan;
+    }
+    return 0;
+  };
+
+  const getItemBadgeCount = (item: MenuItem): number => {
+    const l = item.label.toLowerCase();
+    if (l.includes("sistem booking") || l.includes("booking")) {
+      return submenuBadges.booking + submenuBadges.konsultasi + submenuBadges.pengaduan;
+    }
+    if (l.includes("konsultasi")) return submenuBadges.konsultasi;
+    if (l.includes("pengaduan")) return submenuBadges.pengaduan;
+    if (l.includes("daftar pasien") || l.includes("reservasi")) return submenuBadges.booking;
+    return item.badge || 0;
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -70,6 +100,11 @@ export default function DashboardLayout({
   };
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Reset scroll position to the very top whenever route or search parameters change
+  useEffect(() => {
+    scrollPageToTop();
+  }, [location.pathname, location.search]);
   
   // Ambil session dari backend asli
   const session = getSession();
@@ -236,6 +271,7 @@ export default function DashboardLayout({
               {menuItems.map((item) => {
                 const active = isActive(item.href);
                 const isSubmenu = role === "clinic" && Boolean(item.submenu?.length);
+                const itemBadgeCount = getItemBadgeCount(item);
 
                 // Submenu items anchored directly to the sidebar button
                 if (isSubmenu) {
@@ -266,25 +302,35 @@ export default function DashboardLayout({
                         )}
                         <div className={`
                           flex items-center justify-center w-9 h-9 rounded-xl
-                          transition-all duration-300
+                          transition-all duration-300 relative
                           ${contentActive
                             ? "bg-[#E8C547]/20 text-[#FFF8E1] shadow-inner"
                             : "bg-[#2a2319] text-[#A89F91] group-hover:bg-[#3a3126] group-hover:text-[#E8C547]"
                           }
                         `}>
                           <item.icon className="w-[18px] h-[18px]" strokeWidth={contentActive ? 2.5 : 2} />
+                          {!sidebarExpanded && itemBadgeCount > 0 && (
+                            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#1a1612] shadow-xs animate-in zoom-in-50">
+                              {itemBadgeCount > 99 ? "99+" : itemBadgeCount}
+                            </span>
+                          )}
                         </div>
                         {sidebarExpanded && (
                           <>
                             <span className={`
-                              flex-1 text-sm font-medium tracking-wide text-left
+                              flex-1 text-sm font-medium tracking-wide text-left truncate
                               transition-all duration-300
                               ${contentActive ? "text-white" : "text-[#D4C5B0] group-hover:text-[#E8C547]"}
                             `}>
                               {item.label}
                             </span>
+                            {itemBadgeCount > 0 && (
+                              <span className="mr-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                                {itemBadgeCount > 99 ? "99+" : itemBadgeCount}
+                              </span>
+                            )}
                             <ChevronDown className={`
-                              w-4 h-4 transition-transform duration-300
+                              w-4 h-4 transition-transform duration-300 shrink-0
                               ${contentActive ? "text-white" : "text-[#A89F91]"}
                               ${isMenuOpen ? "rotate-180" : ""}
                             `} />
@@ -306,6 +352,7 @@ export default function DashboardLayout({
                             z-50
                           ">
                             {item.label}
+                            {itemBadgeCount > 0 && ` (${itemBadgeCount})`}
                             <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
                           </div>
                         )}
@@ -339,6 +386,7 @@ export default function DashboardLayout({
                           {/* Submenu links */}
                           {item.submenu?.map((sub) => {
                             const subActive = isActive(sub.href);
+                            const subBadge = getSubmenuBadgeCount(sub.label, sub.href);
                             return (
                               <Link
                                 key={sub.label}
@@ -348,7 +396,7 @@ export default function DashboardLayout({
                                   handleMenuClick();
                                 }}
                                 className={`
-                                  flex items-center py-2 px-3 rounded-xl text-xs font-semibold
+                                  flex items-center justify-between py-2 px-3 rounded-xl text-xs font-semibold
                                   transition-all duration-200
                                   ${subActive
                                     ? "bg-gradient-to-r from-[#C9A24A]/30 to-[#B8943F]/30 text-[#E8C547] font-bold border border-[#C9A24A]/40 shadow-inner"
@@ -356,8 +404,15 @@ export default function DashboardLayout({
                                   }
                                 `}
                               >
-                                <span className={`w-1.5 h-1.5 rounded-full mr-2.5 ${subActive ? "bg-[#E8C547]" : "bg-[#A89F91]"}`} />
-                                {sub.label}
+                                <div className="flex items-center min-w-0">
+                                  <span className={`w-1.5 h-1.5 rounded-full mr-2.5 shrink-0 ${subActive ? "bg-[#E8C547]" : "bg-[#A89F91]"}`} />
+                                  <span className="truncate">{sub.label}</span>
+                                </div>
+                                {subBadge > 0 && (
+                                  <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                                    {subBadge > 99 ? "99+" : subBadge}
+                                  </span>
+                                )}
                               </Link>
                             );
                           })}
@@ -369,6 +424,7 @@ export default function DashboardLayout({
                         <div className="pl-3 pr-1 py-1 space-y-1 border-l-2 border-[#C9A24A]/40 ml-6 mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
                           {item.submenu?.map((sub) => {
                             const subActive = isActive(sub.href);
+                            const subBadge = getSubmenuBadgeCount(sub.label, sub.href);
                             return (
                               <Link
                                 key={sub.label}
@@ -378,7 +434,7 @@ export default function DashboardLayout({
                                   handleMenuClick();
                                 }}
                                 className={`
-                                  flex items-center py-2 px-2.5 rounded-xl text-xs font-semibold
+                                  flex items-center justify-between py-2 px-2.5 rounded-xl text-xs font-semibold
                                   transition-all duration-200
                                   ${subActive
                                     ? "bg-[#C9A24A]/30 text-[#E8C547] font-bold"
@@ -386,8 +442,15 @@ export default function DashboardLayout({
                                   }
                                 `}
                               >
-                                <span className={`w-1.5 h-1.5 rounded-full mr-2 ${subActive ? "bg-[#E8C547]" : "bg-[#A89F91]"}`} />
-                                {sub.label}
+                                <div className="flex items-center min-w-0">
+                                  <span className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${subActive ? "bg-[#E8C547]" : "bg-[#A89F91]"}`} />
+                                  <span className="truncate">{sub.label}</span>
+                                </div>
+                                {subBadge > 0 && (
+                                  <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                                    {subBadge > 99 ? "99+" : subBadge}
+                                  </span>
+                                )}
                               </Link>
                             );
                           })}
@@ -426,18 +489,25 @@ export default function DashboardLayout({
                       }
                     `}>
                       <item.icon className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 2} />
-                      {item.badge && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-[#1a1612]" />
+                      {itemBadgeCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#1a1612] shadow-xs">
+                          {itemBadgeCount > 99 ? "99+" : itemBadgeCount}
+                        </span>
                       )}
                     </div>
                     <span className={`
-                      text-sm font-medium tracking-wide
+                      text-sm font-medium tracking-wide truncate
                       transition-all duration-500
                       ${active ? "text-white" : "text-[#D4C5B0] group-hover:text-[#E8C547]"}
                       ${sidebarExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}
                     `}>
                       {item.label}
                     </span>
+                    {sidebarExpanded && itemBadgeCount > 0 && (
+                      <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                        {itemBadgeCount > 99 ? "99+" : itemBadgeCount}
+                      </span>
+                    )}
 
                     {/* Tooltip when collapsed */}
                     {!sidebarExpanded && (
@@ -454,6 +524,7 @@ export default function DashboardLayout({
                         z-50
                       ">
                         {item.label}
+                        {itemBadgeCount > 0 && ` (${itemBadgeCount})`}
                         <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
                       </div>
                     )}
@@ -657,7 +728,9 @@ export default function DashboardLayout({
         {/* Content + Right Panel */}
         <div className="flex-1 flex min-h-0 bg-gray-50/50">
           <main className={`flex-1 min-w-0 pt-4 pb-6 px-4 sm:pt-5 sm:px-5 lg:pt-6 lg:px-6 overflow-y-auto transition-all duration-300`}>
-            {children}
+            <PageTransition transitionKey={location.pathname + location.search}>
+              {children}
+            </PageTransition>
           </main>
           {!shouldHideRightPanel && (
             <DashboardRightPanel 

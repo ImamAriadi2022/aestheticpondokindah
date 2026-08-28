@@ -684,13 +684,13 @@ export default function AdminMembershipPage() {
         {activeTab === "poin" && (
           <div className="space-y-6 animate-in fade-in duration-150">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-3.5">
               <div className="membership-stat-card p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
                 <div className="min-w-0">
-                  <span className="text-[11px] font-bold text-[#8C8272]">Total Saldo Poin Beredar</span>
-                  <p className="text-2xl font-black text-[#8C6B1C] mt-0.5 whitespace-nowrap">{new Intl.NumberFormat("id-ID").format(metrics.totalPoints)} Poin</p>
+                  <span className="text-[11px] font-bold text-[#8C8272]">Total Saldo Poin</span>
+                  <p className="text-xl sm:text-2xl font-black text-[#8C6B1C] mt-0.5 whitespace-nowrap truncate">{new Intl.NumberFormat("id-ID").format(metrics.totalPoints)} <span className="text-xs font-semibold text-[#8C8272]">Pts</span></p>
                 </div>
-                <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C]">
+                <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] shrink-0">
                   <Coins className="w-5 h-5" />
                 </div>
               </div>
@@ -698,24 +698,24 @@ export default function AdminMembershipPage() {
               <div className="membership-stat-card p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
                 <div className="min-w-0">
                   <span className="text-[11px] font-bold text-emerald-700">Aturan Poin Aktif</span>
-                  <p className="text-2xl font-black text-emerald-600 mt-0.5">
-                    {metrics.activeRulesCount} dari {metrics.totalRules} Aturan
+                  <p className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">
+                    {metrics.activeRulesCount} <span className="text-xs font-semibold text-emerald-700">/ {metrics.totalRules}</span>
                   </p>
                 </div>
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
                   <Sliders className="w-5 h-5" />
                 </div>
               </div>
 
-              <div className="membership-stat-card p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
+              <div className="membership-stat-card col-span-2 sm:col-span-1 p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
                 <div className="min-w-0">
                   <span className="text-[11px] font-bold text-[#8C8272]">Mekanisme Perolehan</span>
-                  <p className="text-sm font-bold text-[#2C2416] mt-1">Otomatis saat Selesai Tindakan</p>
+                  <p className="text-xs sm:text-sm font-bold text-[#2C2416] mt-0.5">Otomatis saat Selesai Tindakan</p>
                   <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
                     <CheckCircle2 className="w-3 h-3" /> Anti-Double Point Aktif
                   </span>
                 </div>
-                <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700">
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-700 shrink-0">
                   <ShieldCheck className="w-5 h-5 text-emerald-600" />
                 </div>
               </div>

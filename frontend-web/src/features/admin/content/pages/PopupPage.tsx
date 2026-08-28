@@ -224,7 +224,7 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
         </div>
         <Button
           onClick={openCreateModal}
-          className="bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] hover:from-[#B8943F] hover:to-[#735514] text-white font-bold rounded-xl shadow-2xs h-9 px-4 text-xs cursor-pointer"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] hover:from-[#B8943F] hover:to-[#735514] text-white font-bold rounded-xl shadow-2xs h-10 sm:h-9 px-4 text-xs cursor-pointer justify-center"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           Tambah Pop Up Baru
@@ -232,13 +232,13 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-3.5">
         <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
           <div>
             <span className="text-[11px] font-bold text-[#8C8272]">Total Pop Up</span>
-            <p className="text-2xl font-black text-[#2C2416] mt-0.5">{counts.total}</p>
+            <p className="text-xl sm:text-2xl font-black text-[#2C2416] mt-0.5">{counts.total}</p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C]">
+          <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] shrink-0">
             <Layers className="w-5 h-5" />
           </div>
         </div>
@@ -246,19 +246,19 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
         <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
           <div>
             <span className="text-[11px] font-bold text-emerald-700">Pop Up Aktif</span>
-            <p className="text-2xl font-black text-emerald-600 mt-0.5">{counts.active}</p>
+            <p className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">{counts.active}</p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
             <Sparkles className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
+        <div className="col-span-2 sm:col-span-1 p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
           <div>
             <span className="text-[11px] font-bold text-rose-700">Pop Up Non-Aktif</span>
-            <p className="text-2xl font-black text-rose-600 mt-0.5">{counts.inactive}</p>
+            <p className="text-xl sm:text-2xl font-black text-rose-600 mt-0.5">{counts.inactive}</p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+          <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
             <X className="w-5 h-5" />
           </div>
         </div>
@@ -266,7 +266,7 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E8DFC8]">
-        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
           {(["Semua", "Aktif", "Non-Aktif"] as const).map((tab) => (
             <button
               key={tab}

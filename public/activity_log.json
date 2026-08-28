@@ -1,5 +1,249 @@
 [
   {
+    "id": "act-365",
+    "timestamp": "2026-08-28T01:41:00.000Z",
+    "category": "notification-icon-only-and-submenu-badges",
+    "title": "Penonaktifan Pop-Up Notifikasi Dalam Web, Deep-Linking Langsung Ke Detail, & Badge Counter Sub-Menu",
+    "description": "Menyempurnakan sistem notifikasi dan navigasi menu klinik: 1) Menghilangkan banner pop-up / toast visual yang muncul di tengah layar website ketika notifikasi baru masuk, sehingga notifikasi kini murni dan tenang hanya muncul di ikon lonceng notifikasi (Notification Center & badge angka lonceng), 2) Mengarahkan setiap klik notifikasi secara langsung ke detail item yang bersangkutan (notifikasi booking langsung membuka detail reservasi, notifikasi konsultasi langsung ke live chat, notifikasi pengaduan langsung ke tiket keluhan), 3) Menambahkan badge angka notifikasi (1, 2, dst) secara real-time pada sub-menu Booking, Konsultasi, dan Pengaduan serta parent menu di Sidebar Desktop, Sidebar Pasien/Dokter, dan Bottom Navigation Mobile.",
+    "details": [
+      "No In-App Toast Popup: Notifikasi masuk tidak lagi memunculkan pop-up banner di layar, menjaga fokus kerja tanpa distraksi.",
+      "Direct Deep-Linking: Mengklik notifikasi langsung mengarahkan pengguna ke halaman detail reservasi, konsultasi chat, atau pengaduan spesifik.",
+      "Real-time Submenu Badges: Indikator badge angka (1, 2, dst) otomatis muncul di sub-menu Booking, Konsultasi, dan Pengaduan jika ada data baru/belum diproses.",
+      "Multi-Role & Mobile Synchronized: Tersinkronisasi pada DashboardLayout (Admin), AccountSidebar (Pasien), DoctorSidebar (Dokter), dan NewMobileDashboardLayout (Mobile).",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-364",
+    "timestamp": "2026-08-27T18:13:00.000Z",
+    "category": "in-page-booking-detail-view",
+    "title": "Peralihan Detail Reservasi Menjadi Tampilan In-Page Penuh (Bebas Kotak Modal Dialog)",
+    "description": "Mengubah mekanisme tampilan detail booking / reservasi di Dashboard Admin Klinik dan Dashboard Dokter: 1) Menghilangkan kotak modal pop-up (Dialog overlay) yang menutupi layar saat memilih reservasi, 2) Menggantikannya dengan tampilan in-page (halaman detail terintegrasi) yang bersih, luas, responsif, dan elegan, 3) Dilengkapi tombol '← Kembali ke Daftar Reservasi' di bagian atas dan bawah dengan auto-scroll ke posisi paling atas secara mulus (scrollPageToTop), 4) Mempertahankan 100% kelengkapan fitur (identitas pasien, penugasan dokter & sinkronisasi jadwal, kasir pembayaran & poin, berkas PDF surat persetujuan dan tanda tangan digital, alur ubah status, serta notifikasi WhatsApp).",
+    "details": [
+      "No Modal Dialog: Detail reservasi kini merender secara in-page di dalam kontainer utama halaman.",
+      "Navigasi Kembali Terpadu: Tombol 'Kembali ke Daftar' di header dan footer dengan transisi PageTransition yang mulus.",
+      "Auto-Scroll to Top: Secara otomatis mereset viewport ke paling atas saat membuka detail maupun kembali ke daftar.",
+      "Sinkronisasi Admin & Dokter: Diterapkan pada ReservationPage (Admin Klinik) dan DoctorReservationList (Dokter Spesialis).",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-363",
+    "timestamp": "2026-08-27T17:59:00.000Z",
+    "category": "dynamic-lightweight-transitions-and-scroll-to-top",
+    "title": "Penerapan Transisi Halaman Dinamis Ringan & Auto-Scroll Ke Paling Atas Setiap Navigasi/Tab/Step",
+    "description": "Menyempurnakan pengalaman navigasi dan transisi UI di seluruh aplikasi web: 1) Setiap pergantian rute, tab dashboard (Beranda, Reservasi, Konsultasi, Pengaduan, Promo, Blog, Akun), dan langkah stepper booking (Layanan, Dokter, Jadwal, Konfirmasi, Riwayat) kini secara otomatis mereset posisi scroll viewport & container ke paling atas (top: 0) tanpa loncat atau menampilkan konten secara acak di tengah/bawah, 2) Menerapkan transisi halaman dinamis, ultra-ringan, dan akselerasi GPU (hardware-accelerated opacity & subtle translateY) melalui PageTransition & RouteTransition, 3) Memperbarui fallback loading Suspense dengan spinner emas klinik yang elegan dan bebas layout shift.",
+    "details": [
+      "Universal Auto-Scroll: scrollPageToTop terintegrasi pada App router, dashboard layouts, dan stepper booking.",
+      "Scroll Container Reset: Mereset posisi scroll pada window, document, main, dan .overflow-y-auto secara konsisten.",
+      "Transisi Dinamis & Ringan: Menggunakan PageTransition dengan akselerasi GPU (200ms ease-out) untuk transisi antar-tab dan step yang mulus.",
+      "Luxury Suspense Spinner: Loading fallback klinik Aesthetic Pondok Indah yang bersih dan elegan.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-362",
+    "timestamp": "2026-08-27T17:49:00.000Z",
+    "category": "consultation-header-redesign-and-backend-performance-fix",
+    "title": "Penyederhanaan Header Konsultasi Menjadi 1 Tombol Riwayat & Optimasi Backend Anti-Timeout Live Chat",
+    "description": "Menyempurnakan antarmuka konsultasi dan performa backend: 1) Dropdown di header konsultasi diganti menjadi 1 tombol elegan 'Riwayat Konsultasi' yang membuka halaman riwayat percakapan yang rapi dan menampilkan status konsultasi yang sudah selesai maupun aktif, 2) Menghilangkan bug loading lama dan timeout pada backend Laravel saat membuat konsultasi / mengirim pesan dengan mengoptimalkan WebPush notification timeout (2 detik, non-blocking), batching admin DB notifications, dan peredam latensi, 3) Memastikan seluruh data dikirim secara riil (tanpa dummy/hardcode) dan menginjeksi pre-cache instant 0ms saat beralih ke halaman Live Chat.",
+    "details": [
+      "Header Konsultasi 1 Tombol: Dropdown digantikan dengan tombol tunggal 'Riwayat Konsultasi' / 'Mulai Konsultasi Baru'.",
+      "Tampilan Riwayat Percakapan Selesai: Tampilan kartu riwayat konsultasi yang kaya informasi, filter status 'Sudah Selesai' dan 'Sedang Berjalan', pencarian, dan tautan langsung ke isi percakapan.",
+      "Optimasi Backend Anti-Timeout: Memperbaiki WebPushNotificationService dan ConsultationService sehingga pembuatan konsultasi berlangsung instan (< 50ms) tanpa blocking timeout.",
+      "Integrasi Live Chat 0ms: State management client-side diperkaya dengan pre-cache sehingga saat formulir dikirim, halaman Live Chat langsung terbuka mulus tanpa loading lama.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-361",
+    "timestamp": "2026-08-27T17:40:00.000Z",
+    "category": "booking-confirmation-whatsapp-and-history-flow",
+    "title": "Integrasi Otomatis WhatsApp Konfirmasi Reservasi & Alur Navigasi ke Riwayat Teratas",
+    "description": "Menyempurnakan alur konfirmasi reservasi (Patient & Guest Flow): 1) Ketika tombol konfirmasi janji temu ditekan, sistem secara otomatis membuka WhatsApp Admin Klinik dengan format pesan valid yang rapi dan terstruktur (Kode Booking, Nama Pasien, No WA, Dokter & Spesialisasi, Layanan, Tanggal, Jam WIB, Lokasi, dan Catatan), 2) Ketika pengguna kembali ke website, ditampilkan kotak modal informasi reservasi berhasil yang elegan, 3) Saat kotak modal berhasil ditutup atau kembali, pengguna langsung diarahkan ke halaman Riwayat Reservasi Saya dengan reservasi terbaru berada di posisi paling atas daftar.",
+    "details": [
+      "Auto-Dispatch WhatsApp Admin: Pesan terformat rapi dikirimkan langsung ke nomor WhatsApp Admin Klinik saat reservasi dibuat.",
+      "Modal Sukses Terintegrasi: Menampilkan rincian reservasi dan notifikasi bahwa pesan telah diteruskan ke WhatsApp.",
+      "Navigasi Riwayat Otomatis: Menutup modal sukses atau modal e-tiket langsung mengarahkan pasien ke halaman Riwayat Reservasi.",
+      "Prioritas Reservasi Terbaru: Data riwayat reservasi terurut otomatis menampilkan janji temu yang baru dibuat di posisi paling atas.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-360",
+    "timestamp": "2026-08-27T17:39:00.000Z",
+    "category": "reservation-confirmation-documents-specialization",
+    "title": "Pemisahan Mekanisme Dokumen Konfirmasi: Syarat & Ketentuan (Ceklis Saja) dan Surat Perjanjian (Tanda Tangan Digital Saja)",
+    "description": "Menyempurnakan dan memisahkan mekanisme verifikasi 2 file pada tahap konfirmasi reservasi: 1) Dokumen Syarat & Ketentuan (TermsPdfModal) dikhususkan untuk mekanisme Ceklis Persetujuan saja tanpa perlu canvas tanda tangan, 2) Dokumen Surat Perjanjian / Informed Consent (ReservationConsentPdfModal) dikhususkan untuk pembubuhan Tanda Tangan Digital saja, 3) Alur verifikasi pada NewBookingFlow dan GuestBookingFlow disinkronkan secara konsisten sehingga tombol konfirmasi reservasi aktif saat kedua verifikasi tersebut telah terpenuhi.",
+    "details": [
+      "Syarat & Ketentuan (Ceklis Saja): Modal S&K kini hanya memuat checkbox persetujuan dan input nama pasien untuk konfirmasi digital instan.",
+      "Surat Perjanjian (Tanda Tangan Saja): Modal Informed Consent fokus pada pembubuhan tanda tangan digital resmi dan nama pasien/wali sah.",
+      "Sinkronisasi Alur Booking: Tahap 4 NewBookingFlow dan GuestBookingFlow terhubung rapi ke kedua modal dengan indikator status jelas.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-360",
+    "timestamp": "2026-08-27T17:32:00.000Z",
+    "category": "reservation-history-header-button-cleanup",
+    "title": "Pembersihan Tombol Refresh & Buat Reservasi Baru di Header Riwayat Reservasi",
+    "description": "Menghapus tombol 'Perbarui' (Refresh) dan tombol 'Buat Reservasi Baru' dari bagian atas header halaman Riwayat Reservasi Saya sehingga antarmuka header menjadi lebih bersih, minimalis, dan terfokus langsung ke tab filter serta daftar kartu riwayat reservasi.",
+    "details": [
+      "Pembersihan Header: Menghapus tombol Perbarui dan tombol Buat Reservasi Baru pada header Riwayat Reservasi.",
+      "Layout Minimalis: Bagian atas riwayat reservasi menyajikan identitas klinik dan judul halaman yang rapi tanpa tombol yang mengalihkan fokus.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh aset publik telah disinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-359",
+    "timestamp": "2026-08-27T17:26:00.000Z",
+    "category": "reservation-history-and-modal-layout-refactor",
+    "title": "Penataan Ulang Tata Letak Halaman Riwayat Reservasi Pasien & Pembersihan Kotak Modal Detail Reservasi",
+    "description": "Menyempurnakan antarmuka halaman Riwayat Reservasi Saya dan Kotak Modal Detail Reservasi/E-Tiket agar lebih bersih, elegan, dan user-friendly: 1) Pada kartu daftar riwayat reservasi, informasi disederhanakan hanya menampilkan Nama Dokter (dengan avatar), Tanggal, dan Jam saja tanpa elemen redundant yang memenuhi kartu, 2) Menata letak tombol aksi di header (Refresh & Buat Reservasi Baru) serta pada setiap kartu reservasi (Lihat Detail & Bantuan) dengan proporsi rapi, 3) Pada Kotak Modal Detail Reservasi, elemen barcode/QR code dihilangkan seluruhnya, tata letak disesuaikan menjadi grid 2 kolom yang simetris, rapi, dan proporsional dengan palet soft gold/cream yang mewah, 4) Template cetak e-tiket resmi diselaraskan bersih tanpa barcode.",
+    "details": [
+      "Kartu Riwayat Minimalis: Hanya menampilkan Nama Dokter, Tanggal Janji Temu, dan Jam Praktik beserta status badge (Terkonfirmasi, Selesai, Menunggu, Dibatalkan).",
+      "Pembersihan Modal Reservasi: Menghapus kotak barcode/QR code dan menata ulang informasi dokter, jadwal, pasien, dan lokasi dalam 2-column grid yang simetris.",
+      "Tombol & Aksi Terstruktur: Tombol di header dan kartu reservasi memiliki tata letak yang proporsional dan responsif.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan seluruh aset publik telah disinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-358",
+    "timestamp": "2026-08-27T17:25:00.000Z",
+    "category": "letter-document-and-modal-signature-overhaul",
+    "title": "Standardisasi Dokumen Formal Letter Hitam-Putih dengan Kop Surat Resmi & Integrasi Tanda Tangan Dalam Modal",
+    "description": "Menyempurnakan seluruh dokumen Syarat & Ketentuan serta Informed Consent ke standar surat resmi: 1) Format tampilan dokumen diubah ke ukuran proporsi kertas Letter dengan tipografi standar surat formal hitam-putih tanpa gradien/warna warni mencolok, 2) Menambahkan Kop Surat tetap dengan logo klinik resmi (/logo/logo.webp), identitas PT NAVENA INTERNATIONAL GROUP, alamat lengkap, dan garis ganda hitam klasik, 3) Memindahkan seluruh mekanisme penandatanganan digital (canvas signature, input nama, dan persetujuan) ke dalam kotak modal pop-up dokumen, 4) Membersihkan tampilan luar tahap 4 konfirmasi dari canvas tanda tangan duplikat sehingga antarmuka luar menjadi bersih, rapi, dan modern.",
+    "details": [
+      "Ukuran Kertas Letter Standar: Dokumen modal dan cetak dikonfigurasi dengan proporsi Letter portrait (8.5 x 11 inch) dan margin 15mm.",
+      "Kop Surat Resmi & Logo Klinik: Menampilkan logo resmi klinik yang pas, nama klinik, badan hukum, dan kontak bergaris ganda hitam klasik.",
+      "Tipografi Formal Hitam Putih: Standar layout surat perjanjian hukum/medikolegal yang bersih, rapi, dan mudah dibaca tanpa pewarnaan berlebih.",
+      "Integrasi Tanda Tangan Dalam Modal: Canvas tanda tangan digital, opsi clear, input nama/kontak, checkbox persetujuan, dan tombol 'Kirim Persetujuan' terintegrasi langsung di dalam modal.",
+      "Pembersihan Antarmuka Luar: Menghapus canvas dan form duplikat di luar modal pada NewBookingFlow dan GuestBookingFlow, digantikan oleh baris aksi status dokumen yang ringkas.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan bundle public/assets/ tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-357",
+    "timestamp": "2026-08-27T17:10:00.000Z",
+    "category": "booking-header-and-modal-ui-refinements",
+    "title": "Penyederhanaan Header Konfirmasi, Penghilangan Tombol Riwayat, Judul Catatan Bersih & Ikon Print Modal PDF",
+    "description": "Menyempurnakan detail UI antarmuka booking dan modal dokumen: 1) Teks judul header atas pada tahap konfirmasi diubah menjadi 'Konfirmasi' saja, 2) Tombol 'Riwayat' pada header atas dihilangkan dari antarmuka, 3) Judul collapsible catatan diubah menjadi 'Catatan' bersih tanpa teks '(Opsional)', 4) Tombol cetak/simpan PDF pada seluruh modal dokumen (S&K, Informed Consent, E-Tiket) disederhanakan menjadi tombol icon print minimalis, 5) Header judul modal Syarat dan Ketentuan dibuat bersih tanpa deskripsi panjang hanya berupa tulisan 'Syarat dan Ketentuan'.",
+    "details": [
+      "Header Konfirmasi Bersih: Judul header disederhanakan menjadi 'Konfirmasi'.",
+      "Pembersihan Header Top Bar: Tombol Riwayat Booking dihilangkan dari header navigasi alur booking.",
+      "Label Catatan Minimalis: Judul section catatan disederhanakan menjadi 'Catatan'.",
+      "Icon-Only Print Button: Tombol Cetak / Simpan PDF diubah menjadi tombol icon Printer berukuran pas dan elegan pada TermsPdfModal, ReservationConsentPdfModal, dan ETicketModal.",
+      "Header Modal S&K Ringkas: Menghilangkan teks deskripsi panjang pada modal S&K, hanya menampilkan judul 'Syarat dan Ketentuan'.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0)."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-356",
+    "timestamp": "2026-08-27T17:03:00.000Z",
+    "category": "consultation-streamline-and-livechat-ui",
+    "title": "Penyederhanaan Form Konsultasi 1 Halaman Langsung & Tampilan Live Chat Ringan & User-Friendly",
+    "description": "Menyederhanakan alur konsultasi medis menjadi 1 halaman formulir langsung yang ringkas dan terhubung seketika ke antarmuka Live Chat: 1) Formulir konsultasi dirancang langsung dalam 1 halaman bersih berisikan Dropdown Gejala yang Dirasakan, Dropdown Tingkat Nyeri (Skala 0-10), Textarea Detail Keluhan, dan Tombol Mulai Konsultasi, 2) Menghapus sistem multi-step wizard pada alur konsultasi guest dan dashboard pasien, 3) Begitu tombol Mulai Konsultasi ditekan, tampilan langsung beralih ke Live Chat interaktif yang ringan, bersih, dan modern dengan ringkasan keluhan di bagian atas, bubble chat responsif berpalet luxury gold/charcoal, auto-scroll, dan polling otomatis.",
+    "details": [
+      "Formulir Konsultasi 1 Halaman: Menyediakan pilihan dropdown gejala (Sakit Gigi, Gigi Ngilu, Gusi Berdarah, Karies, dll.), dropdown tingkat nyeri (skala 0-10 dengan deskripsi), textarea detail keluhan, dan tombol Mulai Konsultasi.",
+      "Integrasi Live Chat Instan: Mengalihkan pengguna seketika ke ruang live chat yang rapi dan responsif.",
+      "UI Live Chat Ringan: Dilengkapi ringkasan keluhan awal pasien di bagian atas, bubble percakapan pasien (gold gradient) dan tim medis (crisp white + soft border), auto-scroll, dan polling real-time.",
+      "Quick Booking Action: Menyediakan tombol aksi cepat Booking Janji Temu jika pasien memerlukan tindakan langsung di klinik.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-355",
+    "timestamp": "2026-08-27T17:00:00.000Z",
+    "category": "booking-ui-fine-tuning-and-clutter-removal",
+    "title": "Penyelarasan & Penyederhanaan UI Dashboard Booking Pasien (Tanpa Ikon Layanan, Tanpa Teks WIB/Redundant, Tanpa Harga Frontend, Catatan Dropdown)",
+    "description": "Menyempurnakan dan membersihkan tampilan antarmuka alur booking reservasi di dashboard pasien: 1) Pada tahap Pilih Layanan, kartu layanan disajikan bersih hanya dengan nama layanan saja tanpa icon, 2) Pada tahap Pilih Jadwal, teks redundant seperti '(Kelipatan 10 Menit)' dan subjudul dihilangkan, tulisan 'WIB' pada tombol jam dihapus sehingga slot waktu bersih dan rapi, 3) Warna tanggal merah (libur) diubah ke palet warna normal putih/kuning lembut (#FAF5EA / #EADBBD) senada dengan tema keseluruhan, 4) Tombol 'Ganti Dokter' pada kartu dokter dihilangkan, 5) Di halaman konfirmasi, card 'Detail Jadwal & Perawatan' dan card 'Lokasi Cabang Klinik' dihilangkan dari tampilan frontend, 6) Input catatan tambahan dibuat menjadi menu drop/collapsible yang dapat dibuka-tutup, 7) Judul verifikasi diubah menjadi 'Verifikasi Persetujuan' bersih tanpa label langkah wajib, 8) Tampilan harga dan penukaran poin reward disembunyikan dari UI frontend reservasi tanpa mengubah logika backend.",
+    "details": [
+      "Pilih Layanan Bersih: Kartu layanan kini hanya menampilkan nama layanan dengan font Poppins rapi tanpa ikon grafis.",
+      "Pilih Jadwal Minimalis: Teks 'WIB', label kelipatan 10 menit, dan subjudul petunjuk dihapus; slot jam tampil bersih (10:00, 10:10, dst.).",
+      "Harmonisasi Warna Tanggal: Tanggal libur/off-duty menggunakan palet soft cream/gold (#FAF8F5 / #EADBBD) tanpa warna merah yang mencolok.",
+      "Penyederhanaan Konfirmasi: Card detail jadwal dan lokasi klinik disembunyikan dari tampilan frontend; catatan tambahan menggunakan dropdown collapsible.",
+      "Verifikasi Persetujuan: Judul ringkas 'Verifikasi Persetujuan' tanpa prefix nomor langkah atau badge wajib.",
+      "Frontend Price Masking: Tampilan nominal harga layanan, estimasi biaya, dan opsi redeem poin disembunyikan di UI tanpa mengubah backend.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0)."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-354",
+    "timestamp": "2026-08-27T16:38:00.000Z",
+    "category": "booking-flow-ui-ux-streamline",
+    "title": "Optimasi Alur Booking Reservasi: Kartu Layanan Ringkas, Dokter & Spesialisasi, Kalender & Slot Jam 10 Menit",
+    "description": "Menata ulang alur reservasi janji temu (Patient & Guest Booking Flow) agar lebih cepat, rapi, dan responsif: 1) Tahap Pilih Layanan diringkas menampilkan nama layanan saja dalam grid bersih tanpa clutter, 2) Tahap Pilih Dokter menampilkan foto, nama dokter, dan jenis/spesialisasi dokternya saja, 3) Tahap Pilih Jadwal dilengkapi tombol kalender interaktif langsung di bagian atas dan slider kalender minggu berjalan di bawahnya, 4) Sesi jam praktik diubah menjadi interval 10 menit (10:00, 10:10, 10:20, dst.) dalam grid sentuh responsif, 5) Merapikan tampilan konfirmasi, modal lihat dokumen S&K/Informed Consent, pad tanda tangan digital, serta daftar riwayat reservasi pasien.",
+    "details": [
+      "Pilih Layanan Ringkas: Kartu layanan menampilkan ikon luxury, nama layanan utama, dan chevron aksi dalam layout responsif grid (1 kolom di mobile, 2-3 kolom di desktop).",
+      "Pilih Dokter Fokus: Kartu dokter menyajikan foto profil, nama dokter, dan gelar spesialisasi saja tanpa teks deskripsi yang menumpuk.",
+      "Kalender Interaktif & Slider Mingguan: Dilengkapi tombol kalender langsung (date picker dialog) di sisi atas dan slider kartu hari (Sen, Sel, Rab, Kam, Jum, Sab, Min) dengan indikator status Praktik/Libur.",
+      "Slot Waktu Kelipatan 10 Menit: Parser waktu dan grid sesi praktik menghasilkan slot kelipatan 10 menit (10.00, 10.10, 10.20, 10.30, dst.) yang mudah diklik/disentuh.",
+      "Tanda Tangan Digital & Dokumen Resmi: Dialog tanda tangan digital dengan canvas responsif dan tombol reset/simpan yang elegan, sinkron dengan dokumen persetujuan Informed Consent dan Syarat & Ketentuan.",
+      "Riwayat Reservasi Pasien: Kartu booking aktif & selesai berformat rapi dengan status badge, detail jadwal, dan tombol aksi E-Tiket.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-353",
+    "timestamp": "2026-08-27T16:40:00.000Z",
+    "category": "poppins-font-weight-refinement",
+    "title": "Penyesuaian Ketebalan Font Poppins Bold (Softened Weight 600) untuk Estetika Lebih Elegan",
+    "description": "Menyesuaikan skala ketebalan font Poppins bold secara menyeluruh di seluruh aplikasi: 1) Mengatur mapping fontWeight.bold pada Tailwind CSS dari 700 menjadi 600 (SemiBold) agar elemen bertipe font-bold tidak tampak terlalu tebal/chunky, 2) Menyesuaikan fontWeight.extrabold menjadi 700 dan fontWeight.black menjadi 800, 3) Menstandarkan bobot tag <b>, <strong>, dan heading editor/S&K ke 600, 4) Memperbarui splash screen PWA agar serasi dan bernuansa luxury yang halus.",
+    "details": [
+      "Tailwind Font Weight Scale: fontWeight.bold dimapping ke '600' (SemiBold), extrabold ke '700', dan black ke '800' di tailwind.config.js sehingga ribuan elemen berkelas font-bold otomatis tampil lebih ramping dan bersih.",
+      "Base CSS & Elements: Tag <b>, <strong>, dan h1-h6 pada base layer serta elemen tipografi editor dokumen/S&K disesuaikan ke font-weight: 600.",
+      "PWA Splash Screen: Bobot teks eyebrow splash screen diperbarui dari 700 menjadi 600.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% dan bundle public/assets/ telah tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-352",
+    "timestamp": "2026-08-27T16:25:00.000Z",
+    "category": "mobile-pwa-ui-redesign-and-poppins-unification",
+    "title": "Redesain UI/UX Mobile PWA Komprehensif, Standardisasi Font Poppins & Harmonisasi Warna",
+    "description": "Menyelaraskan seluruh tipografi aplikasi menggunakan font Poppins secara global, harmonisasi palet warna luxury gold & charcoal tanpa tabrakan warna, serta mengoptimalkan antarmuka seluruh halaman admin dan pasien untuk mobile-friendly responsif tanpa merusak tata letak desktop.",
+    "details": [
+      "Standardisasi Tipografi Global: Mengimpor dan menerapkan font Poppins di index.html, tailwind.config.js, serta base CSS (:root, body, h1-h6, button, input, select, textarea, .font-display, .font-body).",
+      "Harmonisasi Palet Warna & Kontras: Menyelaraskan teks judul Charcoal (#2C2416 / #3D332A), deskripsi Warm Gray (#5C5546 / #8A7B6B), border kartu Luxury Cream (#F0E6D3 / #E8DFC8), dan aksen tombol Gold Primary (#C59E3F / #B8943F).",
+      "Mobile Responsive Content Wrapper: Layout NewMobileDashboardLayout dilengkapi padding responsif dan safe-area inset yang rapi tanpa clipping konten.",
+      "Responsive Stat Cards: Mengubah layout kartu statistik dari 1 kolom besar menjadi 2 kolom rapi di mobile (grid-cols-2 sm:grid-cols-3/4) pada DoctorsPage, BlogPage, PromoPage, PopupPage, TestimonialsPage, GalleryPage, DownloadAppPage, ComplaintsPage, dan AdminMembership.",
+      "Horizontal Scrollable Tables: Membungkus seluruh tabel admin (BranchTable, DoctorTable, UserTable, BlogPage, PromoPage, TestimonialsPage, GalleryPage, DownloadAppPage, ConsultationTable, ComplaintTable) dengan overflow-x-auto agar nyaman di-scroll pada perangkat mobile tanpa memecah lebar layar.",
+      "Responsive Action & CTA Buttons: Tombol Tambah/Aksi utama dibuat full-width di layar mobile (w-full sm:w-auto) untuk kenyamanan sentuhan jari.",
+      "Scrollable Filter Chips: Filter tabs & status chips dilengkapi overflow-x-auto, no-scrollbar, dan shrink-0 agar tidak terpotong di tepi layar mobile.",
+      "Dual Environment Readiness: Kompilasi bundle tersinkronisasi 100% dan siap produksi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-351",
     "timestamp": "2026-08-27T01:35:00.000Z",
     "category": "about-page-db-persistence-fix",

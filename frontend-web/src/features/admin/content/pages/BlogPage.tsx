@@ -119,7 +119,7 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
           <p className="text-sm text-[#8A7B6B] mt-1">Kelola publikasi edukasi kesehatan gigi, tips medis, dan draf artikel klinik.</p>
         </div>
         <Button
-          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
           onClick={() => {
             setSearchParams((prev: any) => {
               const next = new URLSearchParams(prev);
@@ -136,18 +136,18 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <FileText className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Total Artikel</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{apiPosts.length}</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{apiPosts.length}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Eye className="w-5 h-5" />
@@ -155,19 +155,19 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
             <p className="text-xs font-semibold text-[#8A7B6B]">Dipublikasikan</p>
           </div>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-bold text-[#4A3F35]">{publishedCount}</p>
-            {draftCount > 0 && <span className="text-xs font-semibold text-amber-700">({draftCount} draf)</span>}
+            <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{publishedCount}</p>
+            {draftCount > 0 && <span className="text-[10px] sm:text-xs font-semibold text-amber-700">({draftCount} draf)</span>}
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <Tag className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Kategori Aktif</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{categoriesUsed}</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{categoriesUsed}</p>
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
               key={st}
               type="button"
               onClick={() => setFilterStatus(st)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                 filterStatus === st
                   ? "bg-[#C9A24A] text-white shadow-xs"
                   : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
@@ -192,7 +192,7 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="h-8 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] px-2.5 text-xs text-[#4A3F35] font-semibold outline-hidden cursor-pointer"
+              className="h-8 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] px-2.5 text-xs text-[#4A3F35] font-semibold outline-hidden cursor-pointer shrink-0"
             >
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
@@ -213,8 +213,8 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+      {/* Table with horizontal scroll */}
+      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">

@@ -1,92 +1,155 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
+import { Textarea } from "@/shared/ui/textarea";
 import { toast } from "@/shared/ui/toast";
 import {
-  ChevronRight,
-  ArrowLeft,
-  Zap,
   MessageSquareText,
-  ShieldCheck,
   Clock,
+  Sparkles,
+  Send,
   Loader2,
-  Frown,
-  Meh,
-  AlertCircle,
-  Stethoscope,
+  ChevronRight,
+  ShieldCheck,
+  History,
+  UserCheck,
 } from "lucide-react";
 import { createGuestConsultation } from "../services/guestConsultationApi";
 import { useGuestSession } from "../services/GuestSessionContext";
+import { getSession } from "@/core/auth/services/session";
 
-const symptoms = [
-  { id: "sakit", label: "Sakit Gigi", icon: Frown, color: "bg-red-100 text-red-600" },
-  { id: "ngilu", label: "Gigi Ngilu", icon: Meh, color: "bg-orange-100 text-orange-600" },
-  { id: "berdarah", label: "Gusi Berdarah", icon: AlertCircle, color: "bg-rose-100 text-rose-600" },
-  { id: "bengkak", label: "Gusi Bengkak", icon: AlertCircle, color: "bg-pink-100 text-pink-600" },
-  { id: "patah", label: "Gigi Patah", icon: AlertCircle, color: "bg-purple-100 text-purple-600" },
-  { id: "kuning", label: "Gigi Kuning", icon: AlertCircle, color: "bg-yellow-100 text-yellow-600" },
-  { id: "karies", label: "Gigi Berlubang", icon: AlertCircle, color: "bg-blue-100 text-blue-600" },
-  { id: "lainnya", label: "Lainnya", icon: Stethoscope, color: "bg-gray-100 text-gray-600" },
+const SYMPTOMS_OPTIONS = [
+  "Sakit Gigi / Nyeri Berdenyut",
+  "Gigi Ngilu / Sensitif Dingin & Panas",
+  "Gusi Berdarah / Radang Gusi",
+  "Gusi Bengkak / Abses",
+  "Gigi Berlubang (Karies)",
+  "Gigi Patah / Retak",
+  "Gigi Goyang / Longgar",
+  "Gigi Kuning / Noda (Pemutihan / Bleaching)",
+  "Pemasangan / Kontrol Kawat Gigi (Behel)",
+  "Bau Mulut & Karang Gigi (Pembersihan / Scaling)",
+  "Pencabutan / Masalah Gigi Bungsu",
+  "Keluhan Gigi Lainnya",
 ];
 
-const painLevels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const PAIN_SCALE_OPTIONS = [
+  { value: 0, label: "0 - Tidak Nyeri (Pemeriksaan / Estetika / Scaling)" },
+  { value: 1, label: "1 - Sangat Ringan (Hampir tidak terasa)" },
+  { value: 2, label: "2 - Ringan (Terasa sesekali saat ditekan)" },
+  { value: 3, label: "3 - Ringan (Mulai terasa sedikit mengganggu)" },
+  { value: 4, label: "4 - Sedang (Terasa ngilu saat makan / minum)" },
+  { value: 5, label: "5 - Sedang (Nyeri berdenyut sedang)" },
+  { value: 6, label: "6 - Sedang Menuju Berat (Nyeri sering kambuh)" },
+  { value: 7, label: "7 - Berat (Mengganggu konsentrasi & makan)" },
+  { value: 8, label: "8 - Sangat Berat (Nyeri intens dan konstan)" },
+  { value: 9, label: "9 - Amat Berat (Nyeri hebat sulit tertahankan)" },
+  { value: 10, label: "10 - Nyeri Ekstrem / Darurat Medis" },
+];
 
 export default function GuestKonsultasiPage() {
   const navigate = useNavigate();
-  const { addRef } = useGuestSession();
+  const { addRef, refs } = useGuestSession();
+  const authSession = getSession();
 
-  const [step, setStep] = useState<"landing" | "identity" | "complaint">("landing");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [painLevel, setPainLevel] = useState<number | null>(null);
-  const [description, setDescription] = useState("");
+  const [selectedSymptom, setSelectedSymptom] = useState("");
+  const [painScale, setPainScale] = useState<string>("");
+  const [complaintDetails, setComplaintDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const toggleSymptom = (id: string) => {
-    setSelectedSymptoms((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
-  };
+  // Auto-fill from active auth session if user is logged in
+  useEffect(() => {
+    if (authSession) {
+      if (authSession.name) setName(authSession.name);
+      if (authSession.whatsapp || authSession.phone) {
+        setPhone(authSession.whatsapp || authSession.phone || "");
+      }
+      if (authSession.email) setEmail(authSession.email);
+    }
+  }, [authSession]);
 
-  const handleSubmit = async () => {
-    if (!name.trim() || !phone.trim()) {
-      toast({ title: "Lengkapi Data", message: "Nama dan nomor WhatsApp wajib diisi", variant: "error" });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const finalName = (name || authSession?.name || "").trim();
+    const finalPhone = (phone || authSession?.whatsapp || authSession?.phone || "").trim();
+
+    if (!finalName) {
+      toast({
+        title: "Nama Lengkap Wajib Diisi",
+        message: "Silakan masukkan nama lengkap Anda untuk memulai konsultasi.",
+        variant: "error",
+      });
       return;
     }
-    if (selectedSymptoms.length === 0) {
-      toast({ title: "Pilih Gejala", message: "Silakan pilih minimal 1 gejala", variant: "error" });
+
+    if (!finalPhone) {
+      toast({
+        title: "Nomor WhatsApp Wajib Diisi",
+        message: "Silakan masukkan nomor WhatsApp aktif Anda agar tim medis dapat merespons.",
+        variant: "error",
+      });
+      return;
+    }
+
+    if (!selectedSymptom) {
+      toast({
+        title: "Pilih Gejala",
+        message: "Silakan pilih gejala yang Anda rasakan dari dropdown.",
+        variant: "error",
+      });
+      return;
+    }
+
+    if (!complaintDetails.trim()) {
+      toast({
+        title: "Isi Detail Keluhan",
+        message: "Silakan ceritakan sedikit detail tentang keluhan gigi Anda.",
+        variant: "error",
+      });
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const parsedPain = painScale !== "" ? parseInt(painScale, 10) : undefined;
       const { consultation, token } = await createGuestConsultation({
-        name: name.trim(),
-        phone: phone.trim(),
+        name: finalName,
+        phone: finalPhone,
         email: email.trim() || undefined,
-        topic: selectedSymptoms.map((id) => symptoms.find((s) => s.id === id)?.label).filter(Boolean).join(", ") || "Konsultasi",
-        chiefComplaint: description.trim() || (selectedSymptoms.map((id) => symptoms.find((s) => s.id === id)?.label).filter(Boolean).join(", ") || "Keluhan gigi"),
-        painScale: painLevel ?? undefined,
+        topic: selectedSymptom,
+        chiefComplaint: complaintDetails.trim(),
+        painScale: parsedPain,
         preferredContact: "whatsapp",
-        contactNumber: phone.trim(),
+        contactNumber: finalPhone,
       });
+
       addRef({
         token,
-        name: name.trim(),
-        phone: phone.trim(),
-        topic: consultation.topic || "Konsultasi",
+        name: finalName,
+        phone: finalPhone,
+        topic: consultation.topic || selectedSymptom,
         status: consultation.status || "Menunggu",
       });
-      navigate(`/konsultasi/guest/${token}`);
-    } catch (err) {
+
       toast({
-        title: "Gagal",
-        message: (err as Error)?.message || "Tidak bisa mengirim konsultasi. Coba lagi.",
+        title: "Konsultasi Terkirim",
+        message: "Membuka ruang live chat dengan tim medis...",
+        variant: "success",
+      });
+
+      // Navigate directly into the live chat UI
+      navigate(`/konsultasi/guest/${token}`);
+    } catch (err: any) {
+      toast({
+        title: "Gagal Mengirim Konsultasi",
+        message: err?.message || "Terjadi kendala saat mengirim konsultasi. Silakan coba lagi.",
         variant: "error",
       });
     } finally {
@@ -94,242 +157,228 @@ export default function GuestKonsultasiPage() {
     }
   };
 
-  const stepDots = ["landing", "identity", "complaint"];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FDF8F0] via-white to-[#F5E6C8]/40">
+    <div className="min-h-screen bg-gradient-to-br from-[#FAF8F5] via-[#FFFDF8] to-[#F5EFE6] flex flex-col justify-between">
       <Header />
-      <main className="max-w-3xl mx-auto px-4 py-10 sm:py-14">
-        {/* Back */}
-        <button
-          onClick={() => {
-            if (step === "identity") setStep("landing");
-            else if (step === "complaint") setStep("identity");
-            else navigate("/");
-          }}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#8A7B6B] hover:text-[#4A3F35] transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {step === "landing" ? "Kembali ke Beranda" : "Kembali"}
-        </button>
 
-        {/* Progress */}
-        {step !== "landing" && (
-          <div className="flex items-center gap-2 mb-8">
-            {stepDots.map((s) => (
-              <div
-                key={s}
-                className={`h-1.5 rounded-full transition-all flex-1 ${
-                  stepDots.indexOf(s) <= stepDots.indexOf(step) ? "bg-[#C9A24A]" : "bg-[#F0E6D3]"
-                }`}
-              />
-            ))}
+      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12 w-full">
+        {/* Top Header Badge */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAF5EA] border border-[#EADBBD] text-[#8C6B1C] text-xs font-bold shadow-2xs mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-[#C9A24A]" />
+            Layanan Konsultasi Medis Online Gratis
           </div>
-        )}
+          <h1 className="text-2xl sm:text-4xl font-bold text-[#2C2416] tracking-tight">
+            Konsultasi Dokter Gigi Online
+          </h1>
+          <p className="mt-2 text-xs sm:text-sm text-[#5C5546] max-w-xl mx-auto leading-relaxed">
+            Ceritakan keluhan yang Anda rasakan untuk mendapatkan asesmen awal dan panduan langsung dari tim dokter gigi kami.
+          </p>
+        </div>
 
-        {step === "landing" && (
-          <div className="text-center">
-            <div className="mx-auto w-20 h-20 rounded-3xl bg-gradient-to-br from-[#C9A24A] to-[#B8943F] flex items-center justify-center shadow-lg shadow-[#C9A24A]/20 mb-6">
-              <MessageSquareText className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-[#4A3F35]">Konsultasi Online Gratis</h1>
-            <p className="mt-3 text-base text-[#8A7B6B] max-w-lg mx-auto">
-              Ceritakan keluhan gigi Anda secara langsung tanpa perlu datang ke klinik. Tim klinik akan
-              merespons dalam 15–30 menit.
-            </p>
-
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-              <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 text-left shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center mb-3">
-                  <Clock className="w-5 h-5 text-[#B8943F]" />
-                </div>
-                <p className="text-sm font-bold text-[#4A3F35]">Respon Cepat</p>
-                <p className="text-xs text-[#8A7B6B] mt-1">Estimasi respon 15–30 menit</p>
+        {/* 1-Page Consultation Form Card */}
+        <div className="bg-white rounded-3xl border border-[#E8DFC8] shadow-sm overflow-hidden mb-6">
+          <div className="px-6 py-4 border-b border-[#F0EAE1] bg-gradient-to-r from-[#FAF8F5] to-[#FAF5EA] flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#C9A24A] to-[#A8843A] flex items-center justify-center text-white shadow-2xs">
+                <MessageSquareText className="w-5 h-5" />
               </div>
-              <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 text-left shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center mb-3">
-                  <Zap className="w-5 h-5 text-[#B8943F]" />
-                </div>
-                <p className="text-sm font-bold text-[#4A3F35]">Tanpa Daftar</p>
-                <p className="text-xs text-[#8A7B6B] mt-1">Cukup isi nama & nomor WhatsApp</p>
-              </div>
-              <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 text-left shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-[#FDF8F0] flex items-center justify-center mb-3">
-                  <ShieldCheck className="w-5 h-5 text-[#B8943F]" />
-                </div>
-                <p className="text-sm font-bold text-[#4A3F35]">Data Aman</p>
-                <p className="text-xs text-[#8A7B6B] mt-1">Informasi Anda dijaga kerahasiaannya</p>
+              <div>
+                <h2 className="text-sm sm:text-base font-bold text-[#2C2416]">
+                  Formulir Konsultasi & Keluhan
+                </h2>
+                <p className="text-[11px] text-[#8C8272]">
+                  Lengkapi data di bawah ini untuk langsung terhubung ke ruang Live Chat
+                </p>
               </div>
             </div>
 
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                onClick={() => setStep("identity")}
-                className="h-13 px-8 py-4 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20"
-              >
-                Mulai Konsultasi Sekarang
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button
-                variant="outline"
+            {refs.length > 0 && (
+              <button
+                type="button"
                 onClick={() => navigate("/konsultasi/lanjut")}
-                className="h-13 px-8 py-4 rounded-xl border-[#C9A24A]/50 text-[#8A6B2B] hover:bg-[#F5E6C8] font-semibold"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#8C6B1C] bg-white border border-[#EADBBD] hover:bg-[#FAF5EA] transition-all cursor-pointer"
               >
-                Lanjutkan Konsultasi Sebelumnya
-              </Button>
-            </div>
+                <History className="w-3.5 h-3.5" />
+                Riwayat Sesi ({refs.length})
+              </button>
+            )}
           </div>
-        )}
 
-        {step === "identity" && (
-          <div className="bg-white rounded-3xl border border-[#F0E6D3] shadow-sm p-6 sm:p-8">
-            <h2 className="text-2xl font-bold text-[#4A3F35]">Data Diri</h2>
-            <p className="text-sm text-[#8A7B6B] mt-1 mb-6">
-              Diperlukan agar tim klinik dapat menghubungi Anda.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-semibold text-[#4A3F35] block mb-1.5">
-                  Nama Lengkap *
-                </label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Contoh: Budi Santoso"
-                  className="h-12 rounded-xl border-[#E8D4A2] bg-[#FDF8F0] focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/30"
-                />
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-5">
+            {/* Identity fields (Only if not logged in, or displayed as verified badge if logged in) */}
+            {authSession ? (
+              <div className="p-3.5 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-[#C9A24A] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                    <UserCheck className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 text-xs">
+                    <p className="font-bold text-[#2C2416] truncate">
+                      Konsultasi sebagai: {authSession.name || "Pasien Terdaftar"}
+                    </p>
+                    <p className="text-[11px] text-[#8C6B1C] truncate">
+                      {authSession.whatsapp || authSession.phone || authSession.email || "Akun Terverifikasi"}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                  ✓ Akun Aktif
+                </span>
               </div>
-              <div>
-                <label className="text-sm font-semibold text-[#4A3F35] block mb-1.5">
-                  Nomor WhatsApp *
-                </label>
-                <Input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Contoh: 081234567890"
-                  inputMode="tel"
-                  className="h-12 rounded-xl border-[#E8D4A2] bg-[#FDF8F0] focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/30"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-[#4A3F35] block mb-1.5">
-                  Email (Opsional)
-                </label>
-                <Input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Contoh: budi@email.com"
-                  inputMode="email"
-                  className="h-12 rounded-xl border-[#E8D4A2] bg-[#FDF8F0] focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/30"
-                />
-              </div>
-              <Button
-                onClick={() => setStep("complaint")}
-                disabled={!name.trim() || !phone.trim()}
-                className="w-full h-13 py-4 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl disabled:opacity-50"
-              >
-                Selanjutnya
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {step === "complaint" && (
-          <div className="bg-white rounded-3xl border border-[#F0E6D3] shadow-sm p-6 sm:p-8">
-            <h2 className="text-2xl font-bold text-[#4A3F35]">Keluhan Utama</h2>
-            <p className="text-sm text-[#8A7B6B] mt-1 mb-6">
-              Pilih gejala yang Anda rasakan saat ini (bisa lebih dari satu).
-            </p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              {symptoms.map((symptom) => {
-                const Icon = symptom.icon;
-                const isSelected = selectedSymptoms.includes(symptom.id);
-                return (
-                  <button
-                    key={symptom.id}
-                    type="button"
-                    onClick={() => toggleSymptom(symptom.id)}
-                    className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${
-                      isSelected
-                        ? "border-[#C9A24A] bg-[#C9A24A]/5"
-                        : "border-[#F0E6D3] bg-white hover:border-[#E8D4A2]"
-                    }`}
-                  >
-                    <div className={`w-11 h-11 rounded-xl ${symptom.color} flex items-center justify-center`}>
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span className={`text-xs font-medium text-center ${isSelected ? "text-[#C9A24A]" : "text-[#4A3F35]"}`}>
-                      {symptom.label}
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2416] mb-1.5">
+                    Nama Lengkap <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Contoh: Budi Santoso"
+                    className="h-11 rounded-xl border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs font-medium text-[#2C2416] focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#2C2416] mb-1.5">
+                    Nomor WhatsApp <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3 text-xs font-bold text-[#8C6B1C] select-none">
+                      🇮🇩 +62
                     </span>
-                  </button>
-                );
-              })}
-            </div>
+                    <Input
+                      value={phone.startsWith("+62") ? phone.slice(3) : phone.startsWith("0") ? phone.slice(1) : phone}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, "");
+                        setPhone(raw.startsWith("0") ? raw.slice(1) : raw);
+                      }}
+                      placeholder="812-3456-7890"
+                      inputMode="tel"
+                      className="h-11 pl-18 rounded-xl border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs font-medium text-[#2C2416] focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <div className="mb-6">
-              <label className="text-sm font-semibold text-[#4A3F35] block mb-2">
-                Seberapa parah rasa sakitnya? (Opsional)
+            {/* Dropdown 1: Gejala yang dirasakan */}
+            <div>
+              <label htmlFor="symptom-select" className="block text-xs font-bold text-[#2C2416] mb-1.5">
+                Gejala yang Dirasakan <span className="text-rose-500">*</span>
               </label>
-              <div className="flex flex-wrap gap-2">
-                {painLevels.map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => setPainLevel(level)}
-                    className={`w-10 h-10 rounded-full font-semibold text-sm transition-all ${
-                      painLevel === level
-                        ? "bg-[#C9A24A] text-white shadow-lg shadow-[#C9A24A]/30"
-                        : level <= 3
-                          ? "bg-green-100 text-green-700 hover:bg-green-200"
-                          : level <= 6
-                            ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                            : "bg-red-100 text-red-700 hover:bg-red-200"
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
+              <div className="relative">
+                <select
+                  id="symptom-select"
+                  value={selectedSymptom}
+                  onChange={(e) => setSelectedSymptom(e.target.value)}
+                  className="w-full h-11 px-3.5 pr-10 rounded-xl border border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs font-semibold text-[#2C2416] outline-none focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">-- Pilih Gejala yang Dirasakan --</option>
+                  {SYMPTOMS_OPTIONS.map((sym) => (
+                    <option key={sym} value={sym}>
+                      {sym}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#8C6B1C]">
+                  <ChevronRight className="w-4 h-4 rotate-90" />
+                </div>
               </div>
             </div>
 
-            <div className="mb-6">
-              <label className="text-sm font-semibold text-[#4A3F35] block mb-1.5">
-                Detail Keluhan (Opsional)
+            {/* Dropdown 2: Tingkat Nyeri */}
+            <div>
+              <label htmlFor="pain-select" className="block text-xs font-bold text-[#2C2416] mb-1.5">
+                Tingkat Nyeri (Skala 0 - 10)
               </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Jelaskan kapan gejala mulai terasa, apa yang memperparah/memperbaiki, dll..."
-                className="w-full min-h-[120px] p-4 bg-[#FDF8F0] rounded-2xl text-sm text-[#4A3F35] placeholder:text-[#B8A99A] focus:outline-none focus:ring-2 focus:ring-[#C9A24A]/30 resize-none border border-[#E8D4A2]"
+              <div className="relative">
+                <select
+                  id="pain-select"
+                  value={painScale}
+                  onChange={(e) => setPainScale(e.target.value)}
+                  className="w-full h-11 px-3.5 pr-10 rounded-xl border border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs font-semibold text-[#2C2416] outline-none focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all appearance-none cursor-pointer"
+                >
+                  <option value="">-- Pilih Tingkat Nyeri (Opsional) --</option>
+                  {PAIN_SCALE_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#8C6B1C]">
+                  <ChevronRight className="w-4 h-4 rotate-90" />
+                </div>
+              </div>
+            </div>
+
+            {/* Textarea: Detail Keluhan */}
+            <div>
+              <label htmlFor="complaint-details" className="block text-xs font-bold text-[#2C2416] mb-1.5">
+                Detail Keluhan <span className="text-rose-500">*</span>
+              </label>
+              <Textarea
+                id="complaint-details"
+                value={complaintDetails}
+                onChange={(e) => setComplaintDetails(e.target.value)}
+                placeholder="Ceritakan keluhan Anda secara spesifik (misal: gigi bagian mana yang sakit, sudah berapa hari dirasakan, apakah mengganggu saat mengunyah/tidur, dll)..."
+                rows={4}
+                className="w-full p-3.5 rounded-2xl border border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs text-[#2C2416] placeholder:text-[#9E9485] focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 outline-none transition-all resize-none"
               />
             </div>
 
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || selectedSymptoms.length === 0}
-              className="w-full h-13 py-4 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl disabled:opacity-50"
+            {/* Submit Button */}
+            <div className="pt-2">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:from-[#B8943F] hover:to-[#967430] text-white font-bold text-sm rounded-xl shadow-md shadow-[#C9A24A]/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Menghubungkan ke Ruang Chat...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Mulai Konsultasi & Buka Live Chat
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Privacy & Trust Badge */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#8C8272] border-t border-[#F0EAE1]">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Privasi data pasien terjamin dan dijaga kerahasiaannya.</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#C9A24A] shrink-0" />
+                <span>Respon cepat tim medis dalam 15-30 menit.</span>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Mobile History Link (if any saved) */}
+        {refs.length > 0 && (
+          <div className="sm:hidden text-center mb-6">
+            <button
+              type="button"
+              onClick={() => navigate("/konsultasi/lanjut")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-[#8C6B1C] bg-white border border-[#EADBBD] shadow-2xs cursor-pointer"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Mengirim Konsultasi...
-                </>
-              ) : (
-                <>
-                  <MessageSquareText className="w-5 h-5 mr-2" />
-                  Kirim Konsultasi
-                </>
-              )}
-            </Button>
-            <p className="text-[11px] text-[#B8A99A] mt-3 text-center">
-              Dengan mengirim, Anda menyetujui data di atas digunakan untuk keperluan layanan konsultasi.
-            </p>
+              <History className="w-4 h-4" />
+              Buka Sesi Konsultasi Sebelumnya ({refs.length})
+            </button>
           </div>
         )}
       </main>
+
       <Footer />
     </div>
   );
 }
+

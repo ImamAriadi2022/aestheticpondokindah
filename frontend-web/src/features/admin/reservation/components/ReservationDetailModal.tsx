@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   X,
+  ArrowLeft,
   Coins,
   CreditCard,
   Banknote,
@@ -28,7 +29,6 @@ import {
   Users,
   ChevronRight,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { toast } from "@/shared/ui/toast";
@@ -37,9 +37,10 @@ import { getAdminDoctorSchedules, type AdminDoctorScheduleItem } from "@/feature
 import ReservationConsentPdfModal from "./ReservationConsentPdfModal";
 import TermsPdfModal from "@/features/patient/reservation/components/TermsPdfModal";
 import { broadcastRealtimeReservationEvent } from "@/core/services/GlobalNotificationManager";
+import { scrollPageToTop } from "@/core/router/ScrollToTop";
 
 interface Props {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   reservation: ReservationItem | null;
   doctors?: any[];
@@ -493,27 +494,41 @@ export default function ReservationDetailModal({
     setSelectedTimeSlot(sched.timeRange);
   };
 
+  useEffect(() => {
+    scrollPageToTop();
+  }, [reservation?.id]);
+
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="w-[95vw] max-w-5xl lg:max-w-5xl xl:max-w-6xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl">
-          {/* Header */}
-          <div className="sticky top-0 z-20 flex items-center justify-between px-6 py-5 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8]">
+      <div className="space-y-6 animate-fade-in">
+        {/* Header Navigation & Summary */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 bg-white rounded-3xl border border-[#E8DFC8] shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] flex items-center justify-center text-[#8A6B2B] shadow-inner">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAF5EA] hover:bg-[#F3EAD5] text-[#8C6B1C] hover:text-[#735614] text-xs font-bold border border-[#EADBBD] shadow-2xs transition-all cursor-pointer shrink-0"
+              title="Kembali ke Daftar Reservasi"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Kembali</span>
+            </button>
+
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] flex items-center justify-center text-[#8A6B2B] shadow-inner shrink-0">
               <Calendar className="w-5 h-5 text-[#8A6B2B]" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <DialogTitle className="text-lg font-bold text-[#3D332A]">
+
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-[#3D332A]">
                   Reservasi #{bookingCode}
-                </DialogTitle>
+                </h2>
                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusConfig.bg}`}>
                   <statusConfig.icon className="w-3.5 h-3.5" />
                   {statusConfig.label}
                 </span>
               </div>
-              <DialogDescription className="text-xs text-[#8A7B6B] mt-0.5">
+              <p className="text-xs text-[#8A7B6B] mt-0.5">
                 {isGuest ? (
                   <span className="inline-flex items-center gap-1 text-blue-600 font-semibold">
                     🌐 Alur: Guest Booking (Admin Menentukan & Menjadwalkan Dokter Sesuai Jam Praktik)
@@ -524,19 +539,24 @@ export default function ReservationDetailModal({
                   </span>
                 )}
                 {reservation.createdAt && ` • Masuk pada ${new Date(reservation.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`}
-              </DialogDescription>
+              </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-[#F5ECE0] hover:bg-[#EADBBD] text-[#4A3F35] flex items-center justify-center transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="rounded-xl text-xs font-bold px-4 py-2 h-9 border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
+            >
+              ← Kembali ke Daftar
+            </Button>
+          </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
           {/* Top Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Card 1: Data Pasien */}
@@ -1077,21 +1097,20 @@ export default function ReservationDetailModal({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 z-20 flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-md border-t border-[#E8DFC8]">
+        {/* In-Page Bottom Navigation Footer */}
+        <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-[#E8DFC8] shadow-xs">
           <span className="text-xs text-[#8A7B6B]">
-            Status Saat Ini: <strong className="text-[#3D332A]">{status}</strong>
+            Status Penanganan Saat Ini: <strong className="text-[#3D332A]">{status}</strong>
           </span>
           <Button
             onClick={onClose}
             variant="outline"
-            className="rounded-xl text-xs font-semibold px-5 py-2 h-auto border-[#E8DFC8] text-[#4A3F35]"
+            className="rounded-xl text-xs font-bold px-5 py-2.5 h-auto border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
           >
-            Tutup
+            ← Kembali ke Daftar Reservasi
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
 
     {/* Modal Viewer Dokumen PDF Syarat Ketentuan & Tanda Tangan Lengkap */}
     <ReservationConsentPdfModal

@@ -111,16 +111,16 @@ export default function DesktopClinicHome({
             <p className="text-sm text-[#7A6E60] mt-2 leading-relaxed">
               Kelola pengguna, konten, dan jadwal dokter dari dashboard ini.
             </p>
-            <div className="flex items-center gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6">
               <Link
                 to="/dashboard/clinic?tab=doctors"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white rounded-xl text-sm font-semibold hover:from-[#B8943F] hover:to-[#A67F3A] transition-all shadow-md shadow-[#C9A24A]/20"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white rounded-xl text-sm font-semibold hover:from-[#B8943F] hover:to-[#A67F3A] transition-all shadow-md shadow-[#C9A24A]/20"
               >
                 <Stethoscope className="w-4 h-4" /> Kelola Dokter
               </Link>
               <Link
                 to="/dashboard/clinic?tab=reservasi"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#4A3F35] rounded-xl text-sm font-semibold border border-[#E8DFC8] hover:bg-[#FAF6EE] transition-all shadow-sm"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-[#4A3F35] rounded-xl text-sm font-semibold border border-[#E8DFC8] hover:bg-[#FAF6EE] transition-all shadow-xs"
               >
                 <Calendar className="w-4 h-4 text-[#8A7B6B]" /> Lihat Reservasi
               </Link>

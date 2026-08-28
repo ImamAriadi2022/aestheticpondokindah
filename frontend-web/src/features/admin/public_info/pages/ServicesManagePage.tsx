@@ -100,7 +100,7 @@ export default function ServicesManagePage() {
             setEditingService(null);
             setIsModalOpen(true);
           }}
-          className="bg-brand-gold hover:opacity-90 text-white"
+          className="w-full sm:w-auto bg-[#C9A24A] hover:bg-[#B8943F] text-white font-bold rounded-xl h-10 px-5 shadow-xs cursor-pointer justify-center"
         >
           <Plus className="w-4 h-4 mr-2" /> Tambah Layanan
         </Button>

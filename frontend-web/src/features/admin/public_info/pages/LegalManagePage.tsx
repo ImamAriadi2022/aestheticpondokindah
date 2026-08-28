@@ -72,12 +72,12 @@ export default function LegalManagePage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
         <Button
           type="button"
           variant={activeType === "privacy_policy" ? "default" : "outline"}
-          className={`rounded-xl text-xs font-semibold ${
-            activeType === "privacy_policy" ? "bg-brand-gold text-white" : ""
+          className={`rounded-xl text-xs font-semibold shrink-0 cursor-pointer ${
+            activeType === "privacy_policy" ? "bg-[#C9A24A] hover:bg-[#B8943F] text-white" : ""
           }`}
           onClick={() => setActiveType("privacy_policy")}
         >
@@ -86,8 +86,8 @@ export default function LegalManagePage() {
         <Button
           type="button"
           variant={activeType === "terms_of_service" ? "default" : "outline"}
-          className={`rounded-xl text-xs font-semibold ${
-            activeType === "terms_of_service" ? "bg-brand-gold text-white" : ""
+          className={`rounded-xl text-xs font-semibold shrink-0 cursor-pointer ${
+            activeType === "terms_of_service" ? "bg-[#C9A24A] hover:bg-[#B8943F] text-white" : ""
           }`}
           onClick={() => setActiveType("terms_of_service")}
         >
@@ -104,7 +104,7 @@ export default function LegalManagePage() {
           <Card className="rounded-2xl border-border">
             <CardHeader>
               <CardTitle className="text-base font-bold text-brand-charcoal">
-                {activeType === "privacy_policy" ? "Dokumen Kebijakan Privasi" : "Dokumen Syarat & Ketentuan"}
+                {activeType === "privacy_policy" ? "Isi Kebijakan Privasi" : "Isi Syarat & Ketentuan"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -143,7 +143,7 @@ export default function LegalManagePage() {
                 <Button
                   type="submit"
                   disabled={saving}
-                  className="bg-brand-gold hover:opacity-90 text-white"
+                  className="w-full sm:w-auto bg-[#C9A24A] hover:bg-[#B8943F] text-white font-bold rounded-xl h-10 px-5 shadow-xs cursor-pointer justify-center"
                 >
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                   Simpan Dokumen

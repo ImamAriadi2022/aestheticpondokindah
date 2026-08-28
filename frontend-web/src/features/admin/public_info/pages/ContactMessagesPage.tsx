@@ -106,14 +106,14 @@ export default function ContactMessagesPage() {
 
       {/* Filter & Search */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
           {["all", "unread", "read", "replied", "archived"].map((st) => (
             <Button
               key={st}
               size="sm"
               variant={statusFilter === st ? "default" : "outline"}
-              className={`rounded-xl text-xs font-semibold ${
-                statusFilter === st ? "bg-brand-gold text-white" : ""
+              className={`rounded-xl text-xs font-semibold shrink-0 cursor-pointer ${
+                statusFilter === st ? "bg-[#C9A24A] hover:bg-[#B8943F] text-white" : ""
               }`}
               onClick={() => setStatusFilter(st)}
             >

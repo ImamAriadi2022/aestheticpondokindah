@@ -327,30 +327,7 @@ export function triggerPushNotification(payload: PushNotificationPayload) {
   playNotificationChime(chimeType);
 
   // 4. Dispatch to OS Desktop / Mobile Notification Bar
-  dispatchDeviceSystemNotification(payload, notifKey);
-
-  // 5. Trigger In-App Visual Toast Banner
-  try {
-    toast({
-      title: payload.title || "🔔 Notifikasi Klinik",
-      message: payload.message,
-      variant: "info",
-      durationMs: 6000,
-      action: payload.url ? {
-        label: "Buka",
-        onClick: () => {
-          if (payload.onClick) {
-            payload.onClick();
-          } else if (payload.url) {
-            const cleanUrl = payload.url.replace(/^#/, "");
-            window.location.hash = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
-          }
-        },
-      } : undefined,
-    });
-  } catch {}
-
-  // 6. Notify in-app TopBar UI listeners
+  // 5. Notify in-app TopBar UI / Bell Icon listeners (No in-app toast popup banner)
   listeners.forEach((listener) => listener(payload));
 }
 

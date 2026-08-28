@@ -143,7 +143,7 @@ export default function GalleryPage({
           </p>
         </div>
         <Button
-          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
           onClick={openCreateModal}
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -152,35 +152,35 @@ export default function GalleryPage({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <Camera className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Total Foto</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{apiGalleryItems.length}</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{apiGalleryItems.length}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Tag className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Kategori Galeri</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{categories.length - 1}</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{categories.length - 1}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <ImageIcon className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Kategori Aktif</p>
           </div>
-          <p className="text-sm font-bold text-[#4A3F35] mt-1">{activeCategory}</p>
+          <p className="text-xs sm:text-sm font-bold text-[#4A3F35] mt-1">{activeCategory}</p>
         </div>
       </div>
 
@@ -192,7 +192,7 @@ export default function GalleryPage({
               key={c}
               type="button"
               onClick={() => setActiveCategory(c)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                 activeCategory === c
                   ? "bg-[#C9A24A] text-white shadow-xs"
                   : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
@@ -215,8 +215,8 @@ export default function GalleryPage({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+      {/* Table with horizontal scroll */}
+      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">
         {selectedIds.length > 0 && (
           <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#F0E6D3] bg-rose-50/70">
             <span className="text-xs font-semibold text-rose-700">{selectedIds.length} foto dipilih</span>

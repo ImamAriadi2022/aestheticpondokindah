@@ -1,417 +1,232 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/shared/ui/button";
+import { Textarea } from "@/shared/ui/textarea";
 import { toast } from "@/shared/ui/toast";
 import { createConsultation } from "@/features/patient/consultation/services/consultationApi";
-import { 
-  ChevronRight,
+import { setCachedConsultation } from "@/features/patient/consultation/services/consultationCache";
+import {
   MessageSquareText,
-  Camera,
   Send,
-  ArrowLeft,
-  Stethoscope,
-  Smile,
-  Frown,
-  Meh,
-  AlertCircle,
+  Loader2,
+  ChevronRight,
+  ShieldCheck,
   Clock,
-  Check,
-  Zap,
-  Calendar,
+  Sparkles,
 } from "lucide-react";
 
-const symptoms = [
-  { id: "sakit", label: "Sakit Gigi", icon: Frown, color: "bg-red-100 text-red-600" },
-  { id: "ngilu", label: "Gigi Ngilu", icon: Meh, color: "bg-orange-100 text-orange-600" },
-  { id: "berdarah", label: "Gusi Berdarah", icon: AlertCircle, color: "bg-rose-100 text-rose-600" },
-  { id: "bengkak", label: "Gusi Bengkak", icon: AlertCircle, color: "bg-pink-100 text-pink-600" },
-  { id: "patah", label: "Gigi Patah", icon: AlertCircle, color: "bg-purple-100 text-purple-600" },
-  { id: "goyang", label: "Gigi Goyang", icon: AlertCircle, color: "bg-blue-100 text-blue-600" },
-  { id: "kuning", label: "Gigi Kuning", icon: Smile, color: "bg-yellow-100 text-yellow-600" },
-  { id: "lainnya", label: "Lainnya", icon: Stethoscope, color: "bg-gray-100 text-gray-600" },
+const SYMPTOMS_OPTIONS = [
+  "Sakit Gigi / Nyeri Berdenyut",
+  "Gigi Ngilu / Sensitif Dingin & Panas",
+  "Gusi Berdarah / Radang Gusi",
+  "Gusi Bengkak / Abses",
+  "Gigi Berlubang (Karies)",
+  "Gigi Patah / Retak",
+  "Gigi Goyang / Longgar",
+  "Gigi Kuning / Noda (Pemutihan / Bleaching)",
+  "Pemasangan / Kontrol Kawat Gigi (Behel)",
+  "Bau Mulut & Karang Gigi (Pembersihan / Scaling)",
+  "Pencabutan / Masalah Gigi Bungsu",
+  "Keluhan Gigi Lainnya",
 ];
 
-const painLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const PAIN_SCALE_OPTIONS = [
+  { value: 0, label: "0 - Tidak Nyeri (Pemeriksaan / Estetika / Scaling)" },
+  { value: 1, label: "1 - Sangat Ringan (Hampir tidak terasa)" },
+  { value: 2, label: "2 - Ringan (Terasa sesekali saat ditekan)" },
+  { value: 3, label: "3 - Ringan (Mulai terasa sedikit mengganggu)" },
+  { value: 4, label: "4 - Sedang (Terasa ngilu saat makan / minum)" },
+  { value: 5, label: "5 - Sedang (Nyeri berdenyut sedang)" },
+  { value: 6, label: "6 - Sedang Menuju Berat (Nyeri sering kambuh)" },
+  { value: 7, label: "7 - Berat (Mengganggu konsentrasi & makan)" },
+  { value: 8, label: "8 - Sangat Berat (Nyeri intens dan konstan)" },
+  { value: 9, label: "9 - Amat Berat (Nyeri hebat sulit tertahankan)" },
+  { value: 10, label: "10 - Nyeri Ekstrem / Darurat Medis" },
+];
 
 export default function DesktopKonsultasi() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<"symptoms" | "pain" | "details" | "success">("symptoms");
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [painLevel, setPainLevel] = useState<number | null>(null);
-  const [description, setDescription] = useState("");
-  const [attachments, setAttachments] = useState<File[]>([]);
+  const [selectedSymptom, setSelectedSymptom] = useState("");
+  const [painScale, setPainScale] = useState<string>("");
+  const [complaintDetails, setComplaintDetails] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const toggleSymptom = (id: string) => {
-    setSelectedSymptoms(prev => 
-      prev.includes(id) 
-        ? prev.filter(s => s !== id)
-        : [...prev, id]
-    );
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      if (files.length + attachments.length > 3) {
-        toast({ title: "Maksimal 3 foto", message: "Anda hanya dapat mengupload maksimal 3 foto", variant: "error" });
-        return;
-      }
-      setAttachments(prev => [...prev, ...files].slice(0, 3));
+    if (!selectedSymptom) {
+      toast({
+        title: "Pilih Gejala",
+        message: "Silakan pilih gejala yang Anda rasakan dari dropdown.",
+        variant: "error",
+      });
+      return;
     }
-  };
 
-  const removeAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async () => {
-    if (selectedSymptoms.length === 0) {
-      toast({ title: "Pilih Gejala", message: "Silakan pilih minimal 1 gejala", variant: "error" });
+    if (!complaintDetails.trim()) {
+      toast({
+        title: "Isi Detail Keluhan",
+        message: "Silakan tuliskan detail keluhan gigi yang Anda rasakan.",
+        variant: "error",
+      });
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const symptomLabels = selectedSymptoms
-        .map((id) => symptoms.find((s) => s.id === id)?.label)
-        .filter(Boolean)
-        .join(", ");
+      const parsedPain = painScale !== "" ? parseInt(painScale, 10) : undefined;
       const consultation = await createConsultation({
         type: "quick",
-        topic: symptomLabels || "Konsultasi",
-        chiefComplaint: description.trim() || symptomLabels || "Keluhan gigi",
-        painScale: painLevel ?? undefined,
+        topic: selectedSymptom,
+        chiefComplaint: complaintDetails.trim(),
+        painScale: parsedPain,
         preferredContact: "whatsapp",
-        attachments: attachments.map((file) => ({ name: file.name, size: file.size, type: file.type })),
       });
-      toast({ title: "Berhasil", message: "Konsultasi Anda telah dikirim", variant: "success" });
-      navigate(`/dashboard/user/consultation/${consultation.id}`);
-    } catch (err) {
+
+      if (consultation && consultation.id) {
+        setCachedConsultation(String(consultation.id), consultation);
+      }
+
       toast({
-        title: "Gagal",
-        message: (err as Error)?.message || "Tidak bisa mengirim konsultasi. Coba lagi.",
+        title: "Konsultasi Terkirim",
+        message: "Menghubungkan ke ruang Live Chat...",
+        variant: "success",
+      });
+
+      navigate(`/dashboard/user/consultation/${consultation.id}`);
+    } catch (err: any) {
+      toast({
+        title: "Gagal Mengirim Konsultasi",
+        message: err?.message || "Tidak dapat mengirim data konsultasi. Silakan coba lagi.",
         variant: "error",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const getStepNumber = () => {
-    switch (step) {
-      case "symptoms": return 1;
-      case "pain": return 2;
-      case "details": return 3;
-      default: return 1;
-    }
-  };
-
-  const getTotalSteps = () => 3;
-
-  // Success Screen
-  if (step === "success") {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 px-6">
-        <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-500/30">
-          <Check className="w-12 h-12 text-white" strokeWidth={3} />
-        </div>
-        
-        <h1 className="text-2xl font-bold text-gray-900 mb-2 text-center">
-          Keluhan berhasil dikirim!
-        </h1>
-        <p className="text-base text-gray-500 text-center mb-8 max-w-md">
-          Dokter akan segera menanggapi keluhan Anda dalam waktu 15-30 menit
-        </p>
-        
-        <div className="w-full max-w-md bg-gray-50 rounded-xl p-5 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#c9a24a]/10 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-[#c9a24a]" />
-            </div>
-            <div>
-              <p className="text-base font-medium text-gray-900">Estimasi Respon</p>
-              <p className="text-sm text-gray-500">15 - 30 menit</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <Button
-            onClick={() => navigate("/dashboard/user?tab=konsultasi")}
-            className="h-12 px-6 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl"
-          >
-            <MessageSquareText className="w-5 h-5 mr-2" />
-            Chat Admin
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/dashboard/user")}
-            className="h-12 px-6 rounded-xl"
-          >
-            Kembali ke Beranda
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="bg-white rounded-3xl border border-[#E8DFC8] shadow-xs overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        {step !== "symptoms" && (
-          <button
-            onClick={() => {
-              if (step === "pain") setStep("symptoms");
-              else if (step === "details") setStep("pain");
-            }}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-700" />
-          </button>
-        )}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Konsultasi Instan</h2>
-          <p className="text-sm text-gray-500">
-            {step === "symptoms" && "Pilih gejala yang Anda rasakan"}
-            {step === "pain" && "Seberapa parah rasa sakitnya?"}
-            {step === "details" && "Ceritakan keluhan Anda"}
-          </p>
-        </div>
-      </div>
-
-      {/* Progress Indicator */}
-      <div className="flex items-center gap-3">
-        {Array.from({ length: getTotalSteps() }).map((_, i) => (
-          <div key={i} className="flex-1">
-            <div className={`h-2 rounded-full transition-all ${
-              i + 1 < getStepNumber() ? "bg-green-500" :
-              i + 1 === getStepNumber() ? "bg-[#c9a24a]" : "bg-gray-200"
-            }`} />
+      <div className="px-6 py-4 border-b border-[#F0EAE1] bg-gradient-to-r from-[#FAF8F5] to-[#FAF5EA] flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#C9A24A] to-[#A8843A] flex items-center justify-center text-white shadow-2xs">
+            <Sparkles className="w-4 h-4" />
           </div>
-        ))}
-        <span className="text-sm text-gray-500 font-medium">
-          Langkah {getStepNumber()} dari {getTotalSteps()}
+          <div>
+            <h2 className="text-base font-bold text-[#2C2416]">Konsultasi Online Langsung</h2>
+            <p className="text-[11px] text-[#8C8272]">
+              Sampaikan keluhan gigi Anda dan langsung mulai sesi live chat dengan tim medis
+            </p>
+          </div>
+        </div>
+        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Dokter Siaga
         </span>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 border border-gray-100">
-
-        {/* Symptoms Step */}
-        {step === "symptoms" && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Apa Keluhan Utama Anda?
-              </h3>
-              <p className="text-sm text-gray-500">
-                Pilih satu atau lebih gejala yang Anda rasakan saat ini
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {symptoms.map((symptom) => {
-                const Icon = symptom.icon;
-                const isSelected = selectedSymptoms.includes(symptom.id);
-                
-                return (
-                  <button
-                    key={symptom.id}
-                    onClick={() => toggleSymptom(symptom.id)}
-                    className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
-                      isSelected
-                        ? "border-[#c9a24a] bg-[#c9a24a]/5"
-                        : "border-gray-100 bg-white hover:border-gray-200"
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-xl ${symptom.color} flex items-center justify-center`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <span className={`text-sm font-medium text-center ${isSelected ? "text-[#c9a24a]" : "text-gray-700"}`}>
-                      {symptom.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <Button
-              onClick={() => setStep("pain")}
-              disabled={selectedSymptoms.length === 0}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl disabled:opacity-50"
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-5">
+        {/* Dropdown 1: Gejala yang dirasakan */}
+        <div>
+          <label htmlFor="user-symptom-select" className="block text-xs font-bold text-[#2C2416] mb-1.5">
+            Gejala yang Dirasakan <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <select
+              id="user-symptom-select"
+              value={selectedSymptom}
+              onChange={(e) => setSelectedSymptom(e.target.value)}
+              className="w-full h-11 px-3.5 pr-10 rounded-xl border border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs font-semibold text-[#2C2416] outline-none focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all appearance-none cursor-pointer"
             >
-              Selanjutnya
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
-        )}
-
-        {/* Pain Level Step */}
-        {step === "pain" && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Tingkat Nyeri
-              </h3>
-              <p className="text-sm text-gray-500">
-                Pada skala 0 - 10, seberapa parah rasa sakit yang Anda rasakan?
-              </p>
-            </div>
-
-            <div className="flex justify-center gap-3 flex-wrap mb-6">
-              {painLevels.map((level) => (
-                <button
-                  key={level}
-                  onClick={() => setPainLevel(level)}
-                  className={`w-12 h-12 rounded-full font-semibold text-base transition-all ${
-                    painLevel === level
-                      ? "bg-[#c9a24a] text-white shadow-lg shadow-[#c9a24a]/30"
-                      : level <= 3
-                      ? "bg-green-100 text-green-700 hover:bg-green-200"
-                      : level <= 6
-                      ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
-                      : "bg-red-100 text-red-700 hover:bg-red-200"
-                  }`}
-                >
-                  {level}
-                </button>
+              <option value="">-- Pilih Gejala yang Dirasakan --</option>
+              {SYMPTOMS_OPTIONS.map((sym) => (
+                <option key={sym} value={sym}>
+                  {sym}
+                </option>
               ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#8C6B1C]">
+              <ChevronRight className="w-4 h-4 rotate-90" />
             </div>
+          </div>
+        </div>
 
-            {painLevel && (
-              <div className="text-center mb-6">
-                <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${
-                  painLevel <= 3
-                    ? "bg-green-100 text-green-700"
-                    : painLevel <= 6
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
-                }`}>
-                  {painLevel <= 3 ? "Nyeri Ringan" : painLevel <= 6 ? "Nyeri Sedang" : "Nyeri Berat"}
-                </span>
-              </div>
+        {/* Dropdown 2: Tingkat Nyeri */}
+        <div>
+          <label htmlFor="user-pain-select" className="block text-xs font-bold text-[#2C2416] mb-1.5">
+            Tingkat Nyeri (Skala 0 - 10)
+          </label>
+          <div className="relative">
+            <select
+              id="user-pain-select"
+              value={painScale}
+              onChange={(e) => setPainScale(e.target.value)}
+              className="w-full h-11 px-3.5 pr-10 rounded-xl border border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs font-semibold text-[#2C2416] outline-none focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all appearance-none cursor-pointer"
+            >
+              <option value="">-- Pilih Tingkat Nyeri (Opsional) --</option>
+              {PAIN_SCALE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-[#8C6B1C]">
+              <ChevronRight className="w-4 h-4 rotate-90" />
+            </div>
+          </div>
+        </div>
+
+        {/* Textarea: Detail Keluhan */}
+        <div>
+          <label htmlFor="user-complaint-details" className="block text-xs font-bold text-[#2C2416] mb-1.5">
+            Detail Keluhan <span className="text-rose-500">*</span>
+          </label>
+          <Textarea
+            id="user-complaint-details"
+            value={complaintDetails}
+            onChange={(e) => setComplaintDetails(e.target.value)}
+            placeholder="Ceritakan detail keluhan Anda (misal: gigi bagian mana yang sakit, sudah berapa hari dirasakan, apakah ada bengkak atau rasa ngilu saat makan/minum, dll)..."
+            rows={4}
+            className="w-full p-3.5 rounded-2xl border border-[#D9D0BC] bg-[#FAF8F5] focus:bg-white text-xs text-[#2C2416] placeholder:text-[#9E9485] focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 outline-none transition-all resize-none"
+          />
+        </div>
+
+        {/* Submit Button */}
+        <div className="pt-2">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-12 bg-gradient-to-r from-[#C9A24A] to-[#A8843A] hover:from-[#B8943F] hover:to-[#967430] text-white font-bold text-sm rounded-xl shadow-md shadow-[#C9A24A]/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Menghubungkan ke Ruang Live Chat...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                Mulai Konsultasi & Buka Live Chat
+              </>
             )}
+          </Button>
+        </div>
 
-            <Button
-              onClick={() => setStep("details")}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl"
-            >
-              Selanjutnya
-              <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
+        {/* Footer info */}
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-[#8C8272] border-t border-[#F0EAE1]">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Kerahasiaan rekam keluhan Anda terenkripsi aman.</span>
           </div>
-        )}
-
-        {/* Details Step */}
-        {step === "details" && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Detail Keluhan
-              </h3>
-              <p className="text-sm text-gray-500">
-                Ceritakan lebih detail tentang kondisi gigi Anda
-              </p>
-            </div>
-
-            {/* Selected Symptoms Summary */}
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-sm text-gray-500 mb-3">Gejala Terpilih:</p>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {selectedSymptoms.map(id => {
-                  const symptom = symptoms.find(s => s.id === id);
-                  return symptom ? (
-                    <span 
-                      key={id}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-white rounded-full text-sm font-medium text-gray-700 border border-gray-200"
-                    >
-                      {symptom.label}
-                    </span>
-                  ) : null;
-                })}
-              </div>
-              {painLevel && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Tingkat nyeri:</span>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                    painLevel <= 3
-                      ? "bg-green-100 text-green-700"
-                      : painLevel <= 6
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-red-100 text-red-700"
-                  }`}>
-                    {painLevel}/10
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Keterangan (Opsional)
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Jelaskan kapan gejala mulai terasa, apa yang memperparah/memperbaiki, dll..."
-                className="w-full h-32 p-4 bg-gray-50 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c9a24a]/30 resize-none border border-gray-200"
-              />
-            </div>
-
-            {/* Photo Upload */}
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-3 block">
-                Lampiran Foto (Opsional)
-              </label>
-              <div className="flex gap-3">
-                {attachments.map((file, index) => (
-                  <div key={index} className="relative w-24 h-24 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`Attachment ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => removeAttachment(index)}
-                      className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {attachments.length < 3 && (
-                  <label className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-[#c9a24a] transition-colors">
-                    <Camera className="w-6 h-6 text-gray-400 mb-1" />
-                    <span className="text-xs text-gray-400">Tambah</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-              <p className="text-xs text-gray-400 mt-2">Maksimal 3 foto</p>
-            </div>
-
-            <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold rounded-xl disabled:opacity-50"
-            >
-              {isSubmitting ? "Mengirim..." : (
-                <>
-                  <Send className="w-5 h-5 mr-2" />
-                  Kirim Konsultasi
-                </>
-              )}
-            </Button>
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-[#C9A24A] shrink-0" />
+            <span>Estimasi respon dokter 15-30 menit.</span>
           </div>
-        )}
-      </div>
+        </div>
+      </form>
     </div>
   );
 }
+

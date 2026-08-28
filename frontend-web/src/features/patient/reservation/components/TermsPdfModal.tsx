@@ -3,9 +3,7 @@ import {
   FileText,
   X,
   Printer,
-  ShieldCheck,
-  CheckCircle2,
-  Building2,
+  Check,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
@@ -14,7 +12,12 @@ import { getPublicClinicSettings } from "@/features/guest/reservation/services/c
 interface TermsPdfModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAccept?: () => void;
+  onAccept?: (name?: string) => void;
+  initialName?: string;
+  initialEmail?: string;
+  initialPhone?: string;
+  initialSignature?: string | null;
+  isAgreed?: boolean;
   showAcceptButton?: boolean;
 }
 
@@ -22,15 +25,29 @@ export default function TermsPdfModal({
   isOpen,
   onClose,
   onAccept,
-  showAcceptButton = false,
+  initialName = "",
+  initialEmail = "",
+  initialPhone = "",
+  initialSignature,
+  isAgreed = false,
+  showAcceptButton = true,
 }: TermsPdfModalProps) {
-      const [adminTerms, setAdminTerms] = useState<string | null>(null);
+  const [adminTerms, setAdminTerms] = useState<string | null>(null);
   const [customTerms, setCustomTerms] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+
+  // In-modal form state (Checkbox & Name only)
+  const [fullName, setFullName] = useState(initialName);
+  const [agreed, setAgreed] = useState(isAgreed);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialName) setFullName(initialName);
+    setAgreed(isAgreed);
+  }, [initialName, isAgreed]);
 
   useEffect(() => {
     if (isOpen) {
-      setLoading(true);
+      setErrorMessage(null);
       getPublicClinicSettings()
         .then((settings: any) => {
           if (settings.pdf_terms_and_conditions) {
@@ -40,12 +57,27 @@ export default function TermsPdfModal({
             setAdminTerms(settings.booking_terms);
           }
         })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+        .catch(() => {});
     }
   }, [isOpen]);
 
-    const handlePrint = () => {
+  const handleSubmitAgreement = () => {
+    if (!agreed) {
+      setErrorMessage("Harap centang kotak persetujuan Syarat dan Ketentuan.");
+      return;
+    }
+    if (!fullName.trim()) {
+      setErrorMessage("Harap lengkapi nama Anda.");
+      return;
+    }
+
+    if (onAccept) {
+      onAccept(fullName.trim());
+    }
+    onClose();
+  };
+
+  const handlePrint = () => {
     const printFrame = document.createElement("iframe");
     printFrame.style.position = "fixed";
     printFrame.style.right = "0";
@@ -61,35 +93,16 @@ export default function TermsPdfModal({
       return;
     }
 
-    const w = customTerms?.kop?.logoWidth || 75;
-    const h = customTerms?.kop?.logoHeight || 75;
-
-    const sectionsHtml = customTerms?.bodyHtml || (customTerms?.sections && customTerms.sections.length > 0
-      ? customTerms.sections.map((s: any) => `
-          <div class="section-title">${s.title}</div>
-          <p>${s.content}</p>
-        `).join('')
-      : `
-          <div class="section-title">1. Ketentuan Umum & Pendaftaran Layanan</div>
-          <p>Seluruh reservasi konsultasi dan tindakan medis gigi di Aesthetic Pondok Indah Dental Clinic wajib didaftarkan melalui platform resmi klinik.</p>
-          <div class="section-title">2. Ketentuan Penjadwalan, Kedatangan & Reschedule</div>
-          <p>Pasien diharapkan hadir di klinik minimal 10 menit sebelum waktu janji temu yang telah dikonfirmasi.</p>
-          <div class="section-title">3. Standar Pelayanan Medis & Keselamatan Pasien</div>
-          <p>Seluruh tindakan perawatan gigi dan estetik dilakukan oleh dokter gigi spesialis berizin praktik resmi.</p>
-          <div class="section-title">4. Kebijakan Pembayaran & Garansi Layanan</div>
-          <p>Biaya tindakan disesuaikan dengan jenis perawatan dan bahan medis yang disetujui pasien sebelum tindakan.</p>
-        `);
-
     const printContent = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="utf-8" />
-          <title>${customTerms?.docTitle || "Syarat dan Ketentuan Layanan Pasien"} - Aesthetic Pondok Indah</title>
+          <title>Syarat dan Ketentuan - Aesthetic Pondok Indah</title>
           <style>
             @page {
-              size: A4 portrait;
-              margin: 16mm 14mm;
+              size: letter portrait;
+              margin: 15mm 15mm;
             }
             * {
               box-sizing: border-box;
@@ -102,86 +115,188 @@ export default function TermsPdfModal({
               line-height: 1.5;
               margin: 0;
               padding: 0;
-              font-size: ${customTerms?.baseFontSize || "9.5pt"};
+              font-size: 9.5pt;
               background: #fff;
             }
             .kop-header {
               display: flex;
               align-items: center;
               justify-content: center;
-              gap: 16px;
+              gap: 14px;
               padding-bottom: 10px;
               margin-bottom: 14px;
-              border-bottom: 3px double #111;
+              border-bottom: 3px double #000;
+              text-align: center;
             }
-            .kop-logo { flex-shrink: 0; }
-            .kop-logo img { width: ${w}px; height: ${h}px; object-fit: contain; }
-            .kop-details { text-align: center; flex: 1; }
-            .kop-title { font-size: 13.5pt; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
-            .kop-contact { font-size: 8.5pt; font-weight: 500; color: #222; margin-bottom: 2px; }
-            .kop-contact a { color: #0056b3; text-decoration: underline; }
-            .kop-address { font-size: 8pt; color: #333; line-height: 1.3; }
-
+            .kop-logo {
+              width: 50px;
+              height: 50px;
+              object-fit: contain;
+              flex-shrink: 0;
+            }
+            .kop-details {
+              text-align: center;
+            }
+            .kop-title {
+              font-size: 12.5pt;
+              font-weight: 900;
+              color: #000;
+              letter-spacing: 0.5px;
+              text-transform: uppercase;
+              margin: 0;
+            }
+            .kop-sub {
+              font-size: 8.5pt;
+              font-weight: 700;
+              color: #222;
+              margin: 2px 0 0 0;
+            }
+            .kop-address {
+              font-size: 7.5pt;
+              color: #333;
+              margin-top: 3px;
+              line-height: 1.3;
+            }
             .doc-header {
               text-align: center;
-              margin-bottom: 14px;
+              margin-bottom: 16px;
             }
             .doc-title {
-              font-size: 11pt;
+              font-size: 13pt;
               font-weight: 800;
-              color: #111;
+              color: #000;
               text-transform: uppercase;
               letter-spacing: 0.5px;
+              margin: 0;
             }
             .doc-sub {
               font-size: 8.5pt;
               color: #555;
-              font-style: italic;
-              margin-top: 1px;
+              margin-top: 4px;
             }
-            .section-title {
+            .clause {
+              margin-bottom: 12px;
+            }
+            .clause-title {
               font-size: 9.5pt;
               font-weight: 700;
-              color: #111;
-              margin: 10px 0 2px 0;
+              color: #000;
+              margin-bottom: 3px;
             }
-            p {
-              margin: 0 0 6px 0;
+            .clause-text {
+              font-size: 9pt;
+              color: #222;
+              line-height: 1.45;
               text-align: justify;
-              color: #333;
-              font-size: 8.8pt;
-              line-height: 1.4;
+              margin: 0;
             }
-            .footer-info {
-              margin-top: 20px;
-              border-top: 1px dashed #bbb;
-              padding-top: 8px;
-              font-size: 7.5pt;
-              color: #666;
-              text-align: center;
+            .clause-list {
+              margin: 4px 0 0 0;
+              padding-left: 18px;
+              font-size: 9pt;
+              color: #222;
+            }
+            .clause-list li {
+              margin-bottom: 2px;
+            }
+            .signature-section {
+              margin-top: 24px;
+              padding-top: 14px;
+              border-top: 1px solid #ccc;
+            }
+            .sig-row {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+            }
+            .sig-name {
+              font-weight: 700;
+              text-decoration: underline;
+              margin-top: 6px;
+              font-size: 9pt;
             }
           </style>
         </head>
         <body>
           <div class="kop-header">
-            ${customTerms?.kop?.logoUrl ? `<div class="kop-logo"><img src="${customTerms.kop.logoUrl}" alt="Logo" /></div>` : ''}
+            <img src="/logo/logo.webp" class="kop-logo" alt="Logo" />
             <div class="kop-details">
-              <div class="kop-title">${customTerms?.kop?.clinicName || 'PT NAVENA INTERNATIONAL GROUP'}</div>
-              <div class="kop-contact">Phone: ${customTerms?.kop?.phone || '+62 21 555 1900'} &nbsp; E-mail: <a>${customTerms?.kop?.email || 'navenainternationalgroup@gmail.com'}</a></div>
-              <div class="kop-address">${customTerms?.kop?.address || 'Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan'}</div>
+              <div class="kop-title">Aesthetic Pondok Indah Dental Clinic</div>
+              <div class="kop-sub">PT NAVENA INTERNATIONAL GROUP</div>
+              <div class="kop-address">
+                Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br/>
+                Telepon: (021) 765-4321 | WhatsApp: 0812-3456-7890 | Email: info@aestheticpondokindah.id
+              </div>
             </div>
           </div>
 
           <div class="doc-header">
-            <div class="doc-title">${customTerms?.docTitle || "SYARAT DAN KETENTUAN LAYANAN & PERAWATAN GIGI"}</div>
-            <div class="doc-sub">${customTerms?.docSubtitle || "Pedoman Resmi Pasien Aesthetic Pondok Indah"} (${customTerms?.docVersion || "Versi 2.4 - Berlaku Resmi 2026"})</div>
+            <h1 class="doc-title">Syarat dan Ketentuan</h1>
+            <div class="doc-sub">Harap baca dan kirim konfirmasi persetujuan Anda di bawah...</div>
           </div>
 
-          ${sectionsHtml}
+          <div class="clause">
+            <div class="clause-title">1. Penerimaan Persyaratan</div>
+            <p class="clause-text">Dengan mengakses atau menggunakan layanan kami, Anda setuju untuk terikat dengan Syarat dan Ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari ketentuan ini, Anda tidak boleh mengakses atau menggunakan layanan kami.</p>
+          </div>
 
-          <div class="footer-info">
-            ${customTerms?.footerNote || "Dokumen ini sah dan diterbitkan secara digital oleh Aesthetic Pondok Indah Dental Clinic."}<br/>
-            Dicetak pada: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })} WIB
+          <div class="clause">
+            <div class="clause-title">2. Deskripsi Layanan</div>
+            <p class="clause-text">Layanan kami meliputi pemeriksaan klinis, konsultasi medis, dan tindakan perawatan gigi estetik maupun spesialis. Kami berhak mengubah, menangguhkan, atau menghentikan setiap aspek layanan kami kapan saja, dengan atau tanpa pemberitahuan.</p>
+          </div>
+
+          <div class="clause">
+            <div class="clause-title">3. Akun Pengguna</div>
+            <p class="clause-text">Anda mungkin diminta membuat akun atau melengkapi data identitas untuk mengakses fitur layanan kami. Anda bertanggung jawab untuk menjaga kerahasiaan data serta membatasi akses ke akun Anda. Anda setuju untuk menerima tanggung jawab atas semua aktivitas yang terjadi di akun Anda.</p>
+          </div>
+
+          <div class="clause">
+            <div class="clause-title">4. Perilaku Pengguna</div>
+            <p class="clause-text">Anda setuju untuk tidak menggunakan layanan kami untuk tujuan yang melanggar hukum atau dengan cara apa pun yang melanggar Persyaratan dan Ketentuan ini. Anda juga setuju untuk tidak:</p>
+            <ul class="clause-list">
+              <li>Mengganggu, menyalahgunakan, atau menyakiti pengguna atau staf medis lain</li>
+              <li>Melanggar hak pihak ketiga</li>
+              <li>Mengganggu atau mengacaukan pengoperasian sistem dan layanan klinik</li>
+              <li>Menggunakan layanan kami untuk tujuan komersial tanpa persetujuan tertulis kami sebelumnya</li>
+            </ul>
+          </div>
+
+          <div class="clause">
+            <div class="clause-title">5. Hak Kekayaan Intelektual</div>
+            <p class="clause-text">Semua konten dan materi yang tersedia di layanan kami, termasuk namun tidak terbatas pada teks, grafik, logo, gambar, rekam medis digital, dan perangkat lunak, adalah milik Aesthetic Pondok Indah atau pemberi lisensinya dan dilindungi oleh hak cipta, merek dagang, dan undang-undang kekayaan intelektual lainnya.</p>
+          </div>
+
+          <div class="clause">
+            <div class="clause-title">6. Batasan Tanggung Jawab</div>
+            <p class="clause-text">Sejauh diizinkan oleh hukum, Aesthetic Pondok Indah tidak bertanggung jawab atas segala kerugian langsung, tidak langsung, insidental, khusus, atau konsekuensial yang timbul dari atau dengan cara apa pun terkait dengan penggunaan layanan kami.</p>
+          </div>
+
+          <div class="clause">
+            <div class="clause-title">7. Ganti Rugi</div>
+            <p class="clause-text">Anda setuju untuk mengganti kerugian dan membebaskan Aesthetic Pondok Indah, afiliasinya, pejabatnya, direkturnya, karyawannya, dan agennya dari dan terhadap segala tuntutan, kewajiban, kerusakan, kerugian, atau biaya yang timbul dari atau dengan cara apa pun terkait dengan penggunaan layanan kami.</p>
+          </div>
+
+          <div class="clause">
+            <div class="clause-title">8. Hukum yang Mengatur</div>
+            <p class="clause-text">Syarat dan Ketentuan ini akan diatur dan ditafsirkan sesuai dengan hukum Republik Indonesia, tanpa memperhatikan ketentuan konflik hukumnya.</p>
+          </div>
+
+          <div class="clause">
+            <div class="clause-title">9. Perubahan Syarat dan Ketentuan</div>
+            <p class="clause-text">Kami berhak memperbarui atau mengubah Syarat dan Ketentuan ini kapan saja tanpa pemberitahuan sebelumnya. Penggunaan layanan kami secara terus-menerus setelah perubahan tersebut merupakan bentuk penerimaan Anda terhadap Syarat dan Ketentuan yang baru.</p>
+          </div>
+
+          <div class="signature-section">
+            <div class="sig-row">
+              <div style="font-size: 8.5pt; color: #444;">
+                Status: <strong>✓ Disetujui Secara Digital (Ceklis Persetujuan Pasien)</strong><br/>
+                Waktu: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })} WIB
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 8pt; color: #555;">Disetujui oleh:</div>
+                <div class="sig-name">${fullName || "Pasien"}</div>
+              </div>
+            </div>
           </div>
         </body>
       </html>
@@ -195,185 +310,243 @@ export default function TermsPdfModal({
       printFrame.contentWindow?.focus();
       printFrame.contentWindow?.print();
       setTimeout(() => {
-        document.body.removeChild(printFrame);
-      }, 1000);
+        if (document.body.contains(printFrame)) {
+          document.body.removeChild(printFrame);
+        }
+      }, 1500);
     }, 350);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-4xl lg:max-w-4xl xl:max-w-5xl max-h-[92vh] flex flex-col p-0 rounded-3xl bg-[#FAF8F5] border border-[#E8DFC8] shadow-2xl text-left">
-        {/* Header Modal */}
-        <div className="flex items-center justify-between px-6 py-4 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8] rounded-t-3xl shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center border border-[#EADBBD] shadow-inner">
-              <FileText className="w-5 h-5 text-[#8C6B1C]" />
+      <DialogContent className="w-[95vw] max-w-3xl lg:max-w-3xl xl:max-w-4xl max-h-[94vh] flex flex-col p-0 rounded-3xl bg-[#F5F5F5] border border-[#D9D0BC] shadow-2xl text-left">
+        {/* Modal Top Bar */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 bg-white border-b border-gray-200 rounded-t-3xl shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-800 flex items-center justify-center border border-gray-200">
+              <FileText className="w-4 h-4" />
             </div>
             <div>
-              <DialogTitle className="text-base sm:text-lg font-bold text-[#2C2416]">
-                Dokumen Syarat & Ketentuan Layanan Pasien
+              <DialogTitle className="text-base sm:text-lg font-bold text-black leading-tight">
+                Syarat dan Ketentuan
               </DialogTitle>
-              <DialogDescription className="text-xs text-[#8C8272]">
-                Kebijakan operasional, aturan penjadwalan, tata tertib, dan perlindungan privasi klinik.
+              <DialogDescription className="sr-only">
+                Syarat dan Ketentuan Layanan Pasien
               </DialogDescription>
             </div>
           </div>
+
           <div className="flex items-center gap-2">
             <Button
               type="button"
+              variant="outline"
+              size="icon"
               onClick={handlePrint}
-              className="h-9 px-4 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="h-9 w-9 rounded-xl bg-white border-gray-300 text-gray-800 hover:bg-gray-100 shadow-xs cursor-pointer"
+              title="Cetak / Simpan Dokumen"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Cetak / Simpan PDF</span>
+              <Printer className="w-4 h-4" />
             </Button>
             <button
+              type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-[#F5ECE0] hover:bg-[#EADBBD] text-[#4A3F35] flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-white border border-gray-300 flex items-center justify-center text-gray-700 hover:text-black hover:bg-gray-100 transition-all shadow-xs cursor-pointer"
+              title="Tutup"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Paper Document Preview Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#EDE5D6]/30">
-          <div className="max-w-3xl mx-auto bg-white p-6 sm:p-10 rounded-2xl shadow-md border border-[#E0D7C4] text-[#2C2416] space-y-6">
-            {/* Letterhead */}
-            <div className="border-b-2 border-[#8C6B1C] pb-4 text-center space-y-1">
-              <div className="flex items-center justify-center gap-2 text-[#8C6B1C]">
-                <Building2 className="w-5 h-5" />
-                <h1 className="text-lg sm:text-xl font-black uppercase tracking-wider">
-                  Aesthetic Pondok Indah
-                </h1>
+        {/* Paper Document Preview Body - Letter Size Proportion, Pure B&W Letter Style */}
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#ECEAE5]">
+          <div className="max-w-[680px] mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-md border border-gray-300 text-black space-y-6 font-sans">
+            {/* Formal Letterhead (Header Kop Surat) with Clinic Logo */}
+            <div className="border-b-2 border-black pb-4 text-center space-y-1" style={{ borderBottom: "3px double #000" }}>
+              <div className="flex items-center justify-center gap-3">
+                <img
+                  src="/logo/logo.webp"
+                  alt="Aesthetic Pondok Indah"
+                  className="h-12 w-auto object-contain shrink-0"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                <div className="text-left">
+                  <h1 className="text-base sm:text-lg font-black text-black tracking-wider uppercase leading-tight">
+                    AESTHETIC PONDOK INDAH DENTAL CLINIC
+                  </h1>
+                  <p className="text-[11px] font-bold text-gray-800">
+                    PT NAVENA INTERNATIONAL GROUP
+                  </p>
+                </div>
               </div>
-              <p className="text-xs sm:text-sm font-bold text-[#4A3F35]">
-                DENTAL CLINIC & IMPLANT CENTER
-              </p>
-              <p className="text-[11px] text-[#7A6E60] leading-relaxed">
+              <p className="text-[10px] text-gray-700 leading-snug pt-1">
                 Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br />
-                Telepon: (021) 765-4321 | WhatsApp Layanan: 0812-3456-7890 | Website: https://aestheticpondokindah.web.id
+                Telepon: (021) 765-4321 | WhatsApp: 0812-3456-7890 | Email: info@aestheticpondokindah.id
               </p>
             </div>
 
             {/* Document Title Header */}
-            <div className="text-center space-y-1 py-1 bg-[#FAF8F5] rounded-xl border border-[#EDE5D6] p-3">
-              <h2 className="text-sm sm:text-base font-extrabold uppercase text-[#2C2416] tracking-wide">
-                Syarat dan Ketentuan Layanan Pasien
+            <div className="text-center space-y-0.5 pt-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
+                Syarat dan Ketentuan
               </h2>
-              <p className="text-[11px] text-[#8C6B1C] font-semibold">
-                DOKUMEN KEBIJAKAN OPERASIONAL & PERJANJIAN LAYANAN KLINIK
+              <p className="text-xs text-gray-600">
+                Harap baca dan berikan tanda centang persetujuan Anda di bawah ini
               </p>
             </div>
 
-            {/* Content Sections */}
-            {customTerms?.bodyHtml ? (
-              <div
-                className="wp-editor-content prose max-w-none text-xs sm:text-sm leading-relaxed text-[#3D332A]"
-                dangerouslySetInnerHTML={{ __html: customTerms.bodyHtml }}
-              />
-            ) : (
-              <div className="space-y-4 text-xs sm:text-sm leading-relaxed text-[#3D332A]">
-                {/* Pasal 1 */}
-                <div className="space-y-1.5">
-                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                    1. Ketentuan Umum & Pendaftaran Layanan
-                  </h3>
-                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                    <li>Seluruh reservasi konsultasi dan tindakan medis gigi di Aesthetic Pondok Indah Dental Clinic wajib didaftarkan melalui platform reservasi resmi klinik atau bagian resepsionis.</li>
-                    <li>Pasien atau wali sah wajib memberikan data identitas diri, nomor kontak aktif, serta riwayat medis yang akurat dan dapat dipertanggungjawabkan.</li>
-                    <li>Klinik berhak memverifikasi identitas pasien saat kedatangan untuk keperluan administrasi dan rekam medis elektronik.</li>
-                  </ol>
-                </div>
-
-                {/* Pasal 2 */}
-                <div className="space-y-1.5">
-                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                    2. Ketentuan Penjadwalan, Kedatangan & Reschedule
-                  </h3>
-                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                    <li>Pasien diharapkan hadir di klinik minimal 15 (lima belas) menit sebelum estimasi jam tindakan untuk proses registrasi dan pengecekan awal.</li>
-                    <li>Keterlambatan lebih dari 20 menit dari waktu jadwal yang telah dikonfirmasi dapat mengakibatkan penyesuaian durasi perawatan atau penjadwalan ulang (*reschedule*) demi kenyamanan antrean pasien berikutnya.</li>
-                    <li>Permohonan perubahan jadwal (*reschedule*) dapat dilakukan maksimal 4 (empat) jam sebelum jadwal tindakan melalui sistem atau staf klinik.</li>
-                  </ol>
-                </div>
-
-                {/* Pasal 3 */}
-                <div className="space-y-1.5">
-                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                    3. Tata Tertib & Prosedur Medis Klinik
-                  </h3>
-                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                    <li>Sebelum tindakan medis dilakukan, dokter gigi yang bertugas akan melakukan pemeriksaan klinis dan menjelaskan rencana perawatan, indikasi, serta estimasi biaya.</li>
-                    <li>Tindakan medis invasif, bedah minor, restorasi lanjutan, dan estetik memerlukan penandatanganan <strong>Surat Pernyataan dan Persetujuan Pasien (Informed Consent)</strong> yang sah.</li>
-                    <li>Pasien wajib mematuhi seluruh instruksi pra-tindakan dan pasca-tindakan yang diberikan oleh dokter gigi demi efektivitas dan keamanan hasil perawatan.</li>
-                  </ol>
-                </div>
-
-                {/* Pasal 4 */}
-                <div className="space-y-1.5">
-                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                    4. Kebijakan Pembayaran & Jaminan Layanan
-                  </h3>
-                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                    <li>Pembayaran tagihan tindakan dapat dilakukan secara tunai, kartu debit/kredit, transfer bank, maupun metode pembayaran digital resmi yang disediakan klinik.</li>
-                    <li>Setiap perawatan bergaransi (seperti pemasangan veneer porselen atau implan tertentu) tunduk pada syarat kontrol berkala sesuai rekomendasi dokter penanggung jawab.</li>
-                  </ol>
-                </div>
-
-                {/* Pasal 5 */}
-                <div className="space-y-1.5">
-                  <h3 className="font-bold text-[#8C6B1C] text-xs uppercase tracking-wide border-b border-[#EADBBD] pb-1">
-                    5. Kerahasiaan Data Pribadi & Rekam Medis
-                  </h3>
-                  <ol className="list-decimal pl-5 space-y-1 text-[#4A3F35] text-xs">
-                    <li>Aesthetic Pondok Indah menjamin kerahasiaan data pribadi dan rekam medis pasien sesuai dengan peraturan perundang-undangan kesehatan yang berlaku di Republik Indonesia.</li>
-                    <li>Dokumentasi klinis (foto gigi intraoral/ekstraoral dan rontgen panoramic) digunakan secara ketat untuk kepentingan diagnosis medis dan rekam jejak kesehatan gigi pasien.</li>
-                  </ol>
-                </div>
+            {/* Standard Letter Clauses 1 - 9 */}
+            <div className="space-y-4 text-xs sm:text-sm text-gray-900 leading-relaxed text-left">
+              {/* 1 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  1. Penerimaan Persyaratan
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Dengan mengakses atau menggunakan layanan kami, Anda setuju untuk terikat dengan Syarat dan Ketentuan ini. Jika Anda tidak setuju dengan bagian mana pun dari ketentuan ini, Anda tidak boleh mengakses atau menggunakan layanan kami.
+                </p>
               </div>
-            )}
 
-            {/* Certification Footer Note */}
-            <div className="pt-4 border-t border-[#E8DFC8] text-center text-[11px] text-[#7A6E60] space-y-1">
-              <p className="font-semibold text-[#8C6B1C]">
-                Aesthetic Pondok Indah Dental Clinic — Standar Pelayanan & Keselamatan Pasien Terakreditasi
-              </p>
-              <p>
-                Dokumen ini merupakan standar resmi syarat & ketentuan layanan klinik yang berlaku mengikat bagi seluruh pasien terdaftar.
-              </p>
+              {/* 2 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  2. Deskripsi Layanan
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Layanan kami meliputi pemeriksaan klinis, konsultasi medis, dan tindakan perawatan gigi estetik maupun spesialis. Kami berhak mengubah, menangguhkan, atau menghentikan setiap aspek layanan kami kapan saja, dengan atau tanpa pemberitahuan.
+                </p>
+              </div>
+
+              {/* 3 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  3. Akun Pengguna
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Anda mungkin diminta membuat akun atau melengkapi data identitas untuk mengakses fitur layanan kami. Anda bertanggung jawab untuk menjaga kerahasiaan data serta membatasi akses ke akun Anda. Anda setuju untuk menerima tanggung jawab atas semua aktivitas yang terjadi di akun Anda.
+                </p>
+              </div>
+
+              {/* 4 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  4. Perilaku Pengguna
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Anda setuju untuk tidak menggunakan layanan kami untuk tujuan yang melanggar hukum atau dengan cara apa pun yang melanggar Persyaratan dan Ketentuan ini. Anda juga setuju untuk tidak:
+                </p>
+                <ul className="list-disc pl-5 space-y-0.5 text-xs sm:text-[13px] text-gray-800 pt-0.5">
+                  <li>Mengganggu, menyalahgunakan, atau menyakiti pengguna atau staf medis lain</li>
+                  <li>Melanggar hak pihak ketiga</li>
+                  <li>Mengganggu atau mengacaukan pengoperasian sistem dan layanan klinik</li>
+                  <li>Menggunakan layanan kami untuk tujuan komersial tanpa persetujuan tertulis kami sebelumnya</li>
+                </ul>
+              </div>
+
+              {/* 5 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  5. Hak Kekayaan Intelektual
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Semua konten dan materi yang tersedia di layanan kami, termasuk namun tidak terbatas pada teks, grafik, logo, gambar, rekam medis digital, dan perangkat lunak, adalah milik Aesthetic Pondok Indah atau pemberi lisensinya dan dilindungi oleh hak cipta, merek dagang, dan undang-undang kekayaan intelektual lainnya.
+                </p>
+              </div>
+
+              {/* 6 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  6. Batasan Tanggung Jawab
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Sejauh diizinkan oleh hukum, Aesthetic Pondok Indah tidak bertanggung jawab atas segala kerugian langsung, tidak langsung, insidental, khusus, atau konsekuensial yang timbul dari atau dengan cara apa pun terkait dengan penggunaan layanan kami.
+                </p>
+              </div>
+
+              {/* 7 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  7. Ganti Rugi
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Anda setuju untuk mengganti kerugian dan membebaskan Aesthetic Pondok Indah, afiliasinya, pejabatnya, direkturnya, karyawannya, dan agennya dari dan terhadap segala tuntutan, kewajiban, kerusakan, kerugian, atau biaya yang timbul dari atau dengan cara apa pun terkait dengan penggunaan layanan kami.
+                </p>
+              </div>
+
+              {/* 8 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  8. Hukum yang Mengatur
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Syarat dan Ketentuan ini akan diatur dan ditafsirkan sesuai dengan hukum Republik Indonesia, tanpa memperhatikan ketentuan konflik hukumnya.
+                </p>
+              </div>
+
+              {/* 9 */}
+              <div className="space-y-1">
+                <h3 className="font-bold text-black text-xs sm:text-sm">
+                  9. Perubahan Syarat dan Ketentuan
+                </h3>
+                <p className="text-xs sm:text-[13px] text-gray-800 text-justify">
+                  Kami berhak memperbarui atau mengubah Syarat dan Ketentuan ini kapan saja tanpa pemberitahuan sebelumnya. Penggunaan layanan kami secara terus-menerus setelah perubahan tersebut merupakan bentuk penerimaan Anda terhadap Syarat dan Ketentuan yang baru.
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Footer Actions */}
-        <div className="px-6 py-4 bg-white border-t border-[#E8DFC8] rounded-b-3xl flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2 text-xs text-[#8C8272]">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Dokumen Syarat & Ketentuan Resmi Terverifikasi</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="h-9 px-4 rounded-xl border-[#D9D0BC] text-[#4A3F35] hover:bg-[#FAF8F5] text-xs font-semibold cursor-pointer"
-            >
-              Tutup
-            </Button>
-            {showAcceptButton && onAccept && (
-              <Button
-                type="button"
-                onClick={() => {
-                  onAccept();
-                  onClose();
-                }}
-                className="h-9 px-5 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Saya Menyetujui Syarat & Ketentuan</span>
-              </Button>
-            )}
+            {/* Checkbox-Only Agreement Form Section (Without signature canvas) */}
+            <div className="pt-6 border-t-2 border-gray-300 space-y-4">
+              {/* Checkbox */}
+              <label className="flex items-start gap-2.5 cursor-pointer select-none bg-gray-50/80 p-3.5 rounded-xl border border-gray-200">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => {
+                    setAgreed(e.target.checked);
+                    setErrorMessage(null);
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-400 text-black focus:ring-black cursor-pointer"
+                />
+                <span className="text-xs sm:text-sm text-gray-900 leading-snug">
+                  Saya telah membaca, memahami, dan menyetujui seluruh <strong className="underline">Syarat dan Ketentuan Layanan Pasien</strong> klinik Aesthetic Pondok Indah di atas. <span className="text-red-500">*</span>
+                </span>
+              </label>
+
+              {/* Name Field */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  Nama Lengkap Pasien <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Masukkan nama lengkap Anda"
+                  className="w-full h-10 px-3.5 rounded-lg border border-gray-300 bg-white text-xs sm:text-sm text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                />
+              </div>
+
+              {/* Error Message */}
+              {errorMessage && (
+                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                  {errorMessage}
+                </div>
+              )}
+
+              {/* Submit Button (Ceklis / Setujui S&K) */}
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  onClick={handleSubmitAgreement}
+                  className="w-full h-11 rounded-xl bg-[#00A859] hover:bg-[#00914c] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>Saya Menyetujui Syarat & Ketentuan</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

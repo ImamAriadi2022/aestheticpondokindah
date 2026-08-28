@@ -7,6 +7,24 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Poppins", "system-ui", "sans-serif"],
+        poppins: ["Poppins", "system-ui", "sans-serif"],
+        display: ["Poppins", "system-ui", "sans-serif"],
+        body: ["Poppins", "system-ui", "sans-serif"],
+      },
+      fontWeight: {
+        hairline: "100",
+        thin: "100",
+        extralight: "200",
+        light: "300",
+        normal: "400",
+        medium: "500",
+        semibold: "600",
+        bold: "600", // Softened Poppins bold from 700 to 600 for a cleaner, refined aesthetic
+        extrabold: "700", // Softened from 800 to 700
+        black: "800", // Softened from 900 to 800
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",

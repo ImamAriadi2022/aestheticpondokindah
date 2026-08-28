@@ -43,13 +43,13 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           <span className="text-xs font-semibold text-gray-500 shrink-0">Filter Status:</span>
-          <div className="flex bg-[#FAF8F5] p-1 rounded-xl border border-[#F0E6D3]">
+          <div className="flex bg-[#FAF8F5] p-1 rounded-xl border border-[#F0E6D3] overflow-x-auto no-scrollbar shrink-0">
             <button
               type="button"
               onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
                 statusFilter === "all" ? "bg-[#C9A24A] text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -58,7 +58,7 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
             <button
               type="button"
               onClick={() => setStatusFilter("active")}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
                 statusFilter === "active" ? "bg-emerald-600 text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -67,7 +67,7 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
             <button
               type="button"
               onClick={() => setStatusFilter("inactive")}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
                 statusFilter === "inactive" ? "bg-rose-600 text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -77,8 +77,8 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
         </div>
       </div>
 
-      {/* Table List */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+      {/* Table List with horizontal scroll on mobile */}
+      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">

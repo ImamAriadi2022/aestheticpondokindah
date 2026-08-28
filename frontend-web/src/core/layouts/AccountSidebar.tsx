@@ -19,6 +19,8 @@ import {
   Upload,
 } from "lucide-react";
 
+import { useSubmenuBadges } from "@/core/services/menuBadgeService";
+
 interface MenuItem {
   label: string;
   href: string;
@@ -33,6 +35,15 @@ interface AccountSidebarProps {
 export default function AccountSidebar({ userName, onLogout }: AccountSidebarProps) {
   const location = useLocation();
   const session = getSession();
+  const submenuBadges = useSubmenuBadges("user");
+
+  const getMenuBadge = (label: string): number => {
+    const l = label.toLowerCase();
+    if (l.includes("reservasi") || l.includes("booking")) return submenuBadges.booking;
+    if (l.includes("konsultasi")) return submenuBadges.konsultasi;
+    if (l.includes("pengaduan")) return submenuBadges.pengaduan;
+    return 0;
+  };
 
   const [expanded, setExpanded] = useState<boolean>(() => {
     try {
@@ -189,7 +200,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 <div
                   className={`
                   flex items-center justify-center
-                  w-9 h-9 rounded-xl
+                  w-9 h-9 rounded-xl relative
                   transition-all duration-300
                   ${active
                     ? "bg-[#E8C547]/20 text-[#FFF8E1] shadow-inner"
@@ -198,18 +209,28 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 `}
                 >
                   <Icon className="w-[18px] h-[18px]" strokeWidth={active ? 2.5 : 2} />
+                  {!expanded && getMenuBadge(label) > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#1a1612] shadow-xs animate-in zoom-in-50">
+                      {getMenuBadge(label) > 99 ? "99+" : getMenuBadge(label)}
+                    </span>
+                  )}
                 </div>
 
                 {/* Label */}
                 <span
                   className={`
-                  text-sm font-medium transition-all duration-500
+                  text-sm font-medium transition-all duration-500 truncate
                   ${active ? "text-white" : "text-[#D4C5B0] group-hover:text-[#E8C547]"}
                   ${expanded ? "opacity-100 w-auto" : "opacity-0 w-0"}
                 `}
                 >
                   {label}
                 </span>
+                {expanded && getMenuBadge(label) > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                    {getMenuBadge(label) > 99 ? "99+" : getMenuBadge(label)}
+                  </span>
+                )}
 
                 {/* Tooltip when collapsed */}
                 {!expanded && (
@@ -228,6 +249,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                   "
                   >
                     {label}
+                    {getMenuBadge(label) > 0 && ` (${getMenuBadge(label)})`}
                     <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
                   </div>
                 )}
@@ -258,7 +280,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 <div
                   className={`
                   flex items-center justify-center
-                  w-9 h-9 rounded-xl shrink-0
+                  w-9 h-9 rounded-xl shrink-0 relative
                   transition-all duration-300
                   ${isHelpSectionActive
                     ? "bg-[#E8C547]/20 text-[#FFF8E1] shadow-inner"
@@ -267,6 +289,11 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 `}
                 >
                   <LifeBuoy className="w-[18px] h-[18px]" strokeWidth={isHelpSectionActive ? 2.5 : 2} />
+                  {!expanded && submenuBadges.pengaduan > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#1a1612] shadow-xs">
+                      {submenuBadges.pengaduan > 99 ? "99+" : submenuBadges.pengaduan}
+                    </span>
+                  )}
                 </div>
 
                 <span
@@ -278,6 +305,11 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 >
                   Bantuan & Pengaduan
                 </span>
+                {expanded && submenuBadges.pengaduan > 0 && (
+                  <span className="ml-auto mr-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                    {submenuBadges.pengaduan > 99 ? "99+" : submenuBadges.pengaduan}
+                  </span>
+                )}
               </div>
 
               {expanded && (
@@ -305,6 +337,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 "
                 >
                   Bantuan & Pengaduan
+                  {submenuBadges.pengaduan > 0 && ` (${submenuBadges.pengaduan})`}
                   <div className="absolute left-0 top-1/2 -translate-x-1 -translate-y-1/2 w-2 h-2 bg-[#1a1612] border-l border-t border-[#C9A24A]/40 rotate-45" />
                 </div>
               )}
@@ -339,13 +372,14 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                 {helpSubMenus.map((sub) => {
                   const subActive = isActive(sub.href);
                   const SubIcon = sub.icon;
+                  const subBadge = getMenuBadge(sub.label);
                   return (
                     <Link
                       key={sub.label}
                       to={sub.href}
                       onClick={handleMenuClick}
                       className={`
-                        flex items-center gap-2.5 py-2.5 px-3 rounded-xl text-xs font-semibold
+                        flex items-center justify-between gap-2.5 py-2.5 px-3 rounded-xl text-xs font-semibold
                         transition-all duration-200
                         ${subActive
                           ? "bg-gradient-to-r from-[#C9A24A]/30 to-[#B8943F]/30 text-[#E8C547] font-bold border border-[#C9A24A]/40 shadow-inner"
@@ -353,8 +387,15 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
                         }
                       `}
                     >
-                      <SubIcon className={`w-4 h-4 shrink-0 ${subActive ? "text-[#E8C547]" : "text-[#A89F91]"}`} />
-                      <span className="truncate">{sub.label}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <SubIcon className={`w-4 h-4 shrink-0 ${subActive ? "text-[#E8C547]" : "text-[#A89F91]"}`} />
+                        <span className="truncate">{sub.label}</span>
+                      </div>
+                      {subBadge > 0 && (
+                        <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs">
+                          {subBadge > 99 ? "99+" : subBadge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

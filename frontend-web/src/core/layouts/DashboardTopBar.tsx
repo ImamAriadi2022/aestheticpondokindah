@@ -402,11 +402,48 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     if (item.onClick) {
       item.onClick();
     } else if (item.url) {
-      navigate(item.url.replace(/^#/, ""));
-    } else if (item.type === "complaint") {
+      const cleanUrl = item.url.replace(/^#/, "");
+      navigate(cleanUrl);
+    } else if (
+      item.type === "complaint" ||
+      item.type === "pengaduan" ||
+      item.type === "complaint_response"
+    ) {
       navigate(role === "clinic" ? "/dashboard/clinic?tab=pengaduan" : "/dashboard/user?tab=pengaduan");
-    } else if (item.type === "consultation") {
-      navigate(role === "clinic" ? "/dashboard/clinic?tab=konsultasi" : "/dashboard/user?tab=konsultasi");
+    } else if (
+      item.type === "consultation" ||
+      item.type === "chat" ||
+      item.type === "konsultasi" ||
+      item.type === "consultation_message"
+    ) {
+      navigate(
+        role === "clinic"
+          ? "/dashboard/clinic?tab=konsultasi"
+          : role === "doctor"
+          ? "/dashboard/doctor?tab=konsultasi"
+          : "/dashboard/user?tab=konsultasi&view=list"
+      );
+    } else if (
+      item.type === "reservation_new" ||
+      item.type === "reservation_confirmed" ||
+      item.type === "reservation_cancelled" ||
+      item.type === "booking" ||
+      item.type === "reservation" ||
+      item.type === "appointment"
+    ) {
+      if (role === "clinic") {
+        navigate("/dashboard/clinic?tab=reservasi");
+      } else if (role === "doctor") {
+        navigate("/dashboard/doctor?tab=reservasi");
+      } else {
+        navigate("/dashboard/user?tab=riwayat");
+      }
+    } else if (item.type === "membership") {
+      navigate(role === "clinic" ? "/dashboard/clinic/membership" : "/dashboard/user?tab=membership");
+    } else if (item.type === "promo") {
+      navigate(role === "clinic" ? "/dashboard/clinic?tab=content-promo" : "/promo");
+    } else if (item.type === "article" || item.type === "blog") {
+      navigate(role === "clinic" ? "/dashboard/clinic?tab=content-blog" : "/blog");
     } else if (role === "clinic") {
       navigate("/dashboard/clinic?tab=reservasi");
     } else if (role === "doctor") {

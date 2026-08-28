@@ -86,7 +86,7 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
           <p className="text-sm text-[#8A7B6B] mt-1">Kelola ulasan kepuasan pasien, rating bintang, dan cerita pengalaman perawatan.</p>
         </div>
         <Button
-          className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer"
+          className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
           onClick={() => {
             setSearchParams((prev: any) => {
               const next = new URLSearchParams(prev);
@@ -103,18 +103,18 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
               <MessageSquareHeart className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Total Testimoni</p>
           </div>
-          <p className="text-2xl font-bold text-[#4A3F35]">{apiTestimonials.length}</p>
+          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{apiTestimonials.length}</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-[#B8943F]">
               <Star className="w-5 h-5 fill-[#B8943F]" />
@@ -122,19 +122,19 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
             <p className="text-xs font-semibold text-[#8A7B6B]">Rating Rata-rata</p>
           </div>
           <div className="flex items-baseline gap-1.5">
-            <p className="text-2xl font-bold text-[#4A3F35]">{avgRating}</p>
+            <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{avgRating}</p>
             <span className="text-xs text-[#8A7B6B]">/ 5.0</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-xs">
+        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
               <Quote className="w-5 h-5" />
             </div>
             <p className="text-xs font-semibold text-[#8A7B6B]">Bintang 5</p>
           </div>
-          <p className="text-2xl font-bold text-emerald-600">
+          <p className="text-xl sm:text-2xl font-bold text-emerald-600">
             {apiTestimonials.filter((t) => Number(t.rating) === 5).length}
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
               key={String(r)}
               type="button"
               onClick={() => setFilterRating(r)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
                 filterRating === r
                   ? "bg-[#C9A24A] text-white shadow-xs"
                   : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
@@ -171,8 +171,8 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+      {/* Table with horizontal scroll */}
+      <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">

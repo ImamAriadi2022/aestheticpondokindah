@@ -9,12 +9,14 @@ import {
   Printer,
   ShieldCheck,
   Building2,
-  QrCode,
   Ticket,
   CheckCircle2,
+  FileText,
+  ExternalLink,
+  Sparkles,
+  Phone,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { FileText, ExternalLink } from "lucide-react";
 import TermsPdfModal from "./TermsPdfModal";
 import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 
@@ -91,7 +93,7 @@ export default function ETicketModal({
         }).format(ticketData.totalAmount)
       : ticketData.totalAmount || "Rp 1.500.000";
 
-  // Clean Isolated Print for Official E-Ticket
+  // Clean Isolated Print for Official E-Ticket (without barcode)
   const handlePrintTicket = () => {
     const printFrame = document.createElement("iframe");
     printFrame.style.position = "fixed";
@@ -115,134 +117,28 @@ export default function ETicketModal({
           <meta charset="utf-8" />
           <title>E-Tiket Reservasi - ${formattedCode} - Aesthetic Pondok Indah</title>
           <style>
-            @page {
-              size: A4 portrait;
-              margin: 18mm 16mm 18mm 16mm;
-            }
-            * {
-              box-sizing: border-box;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            body {
-              font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
-              color: #1a1a1a;
-              line-height: 1.5;
-              margin: 0;
-              padding: 0;
-              font-size: 10.5pt;
-              background: #fff;
-            }
-            .letterhead {
-              border-bottom: 2.5px solid #8C6B1C;
-              padding-bottom: 12px;
-              margin-bottom: 18px;
-              text-align: center;
-            }
-            .letterhead-title {
-              font-size: 16pt;
-              font-weight: 800;
-              color: #8C6B1C;
-              letter-spacing: 1.5px;
-              text-transform: uppercase;
-              margin-bottom: 2px;
-            }
-            .letterhead-subtitle {
-              font-size: 11pt;
-              font-weight: 700;
-              color: #2C2416;
-              margin-bottom: 4px;
-            }
-            .letterhead-contact {
-              font-size: 8.5pt;
-              color: #555;
-              line-height: 1.35;
-            }
-            .ticket-card {
-              border: 1.5px solid #E6DECB;
-              border-radius: 12px;
-              padding: 18px;
-              margin-bottom: 18px;
-              background: #FAF8F5;
-            }
-            .ticket-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              border-bottom: 1.5px dashed #D9D0BC;
-              padding-bottom: 12px;
-              margin-bottom: 14px;
-            }
-            .ticket-code {
-              font-family: monospace;
-              font-size: 15pt;
-              font-weight: bold;
-              color: #8C6B1C;
-            }
-            .status-tag {
-              background: #d1fae5;
-              color: #065f46;
-              padding: 4px 10px;
-              border-radius: 6px;
-              font-size: 9pt;
-              font-weight: bold;
-              border: 1px solid #a7f3d0;
-            }
-            .grid-2 {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 12px;
-              font-size: 10pt;
-            }
-            .info-group {
-              margin-bottom: 8px;
-            }
-            .info-label {
-              font-size: 8.5pt;
-              color: #777;
-              text-transform: uppercase;
-              font-weight: 600;
-              margin-bottom: 2px;
-            }
-            .info-value {
-              font-weight: 700;
-              color: #2C2416;
-            }
-            .notice-box {
-              background: #fef6e8;
-              border: 1px solid #fadb9e;
-              border-radius: 8px;
-              padding: 10px 14px;
-              font-size: 9pt;
-              color: #8c5300;
-              margin-top: 15px;
-            }
-            .footer-sign {
-              margin-top: 24px;
-              padding-top: 12px;
-              border-top: 1px dashed #bbb;
-              display: flex;
-              justify-content: space-between;
-              font-size: 8.5pt;
-              color: #555;
-            }
+            @page { size: A4 portrait; margin: 18mm; }
+            * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: 'Segoe UI', sans-serif; color: #1a1a1a; line-height: 1.5; font-size: 10.5pt; }
+            .letterhead { border-bottom: 2.5px solid #8C6B1C; padding-bottom: 12px; margin-bottom: 18px; text-align: center; }
+            .brand-title { font-size: 16pt; font-weight: bold; color: #2C2416; letter-spacing: 0.5px; }
+            .brand-sub { font-size: 9pt; color: #666; }
+            .ticket-card { border: 1.5px solid #E6DECB; border-radius: 12px; padding: 18px; margin-bottom: 18px; background: #FAF8F5; }
+            .ticket-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EDE5D6; padding-bottom: 12px; margin-bottom: 14px; }
+            .ticket-code { font-family: monospace; font-size: 14pt; font-weight: bold; color: #8C6B1C; }
+            .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+            .info-group { margin-bottom: 8px; }
+            .info-label { font-size: 8pt; text-transform: uppercase; letter-spacing: 0.5px; color: #888; font-weight: bold; }
+            .info-value { font-size: 10pt; font-weight: bold; color: #2C2416; }
+            .notice-box { background: #FAF5EA; border: 1px solid #EADBBD; border-radius: 8px; padding: 12px; font-size: 8.5pt; color: #555; margin-top: 14px; }
+            .footer-sign { margin-top: 24px; font-size: 8.5pt; color: #777; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 10px; }
           </style>
         </head>
         <body>
           <div class="letterhead">
-            <div class="letterhead-title">Aesthetic Pondok Indah</div>
-            <div class="letterhead-subtitle">Klinik Gigi & Estetika Medis</div>
-            <div class="letterhead-contact">
-              Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br/>
-              Telepon: (021) 765-4321 • WhatsApp: +62 811-9876-5432 • Web: aestheticpondokindah.com
-            </div>
-          </div>
-
-          <div style="text-align: center; margin-bottom: 15px;">
-            <h2 style="font-size: 13pt; font-weight: 800; text-transform: uppercase; margin: 0 0 3px 0; color: #111;">
-              E-Tiket Konfirmasi Reservasi Pasien
-            </h2>
-            <div style="font-size: 8.5pt; color: #777;">Tunjukkan e-tiket ini kepada resepsionis saat kedatangan</div>
+            <div class="brand-title">AESTHETIC PONDOK INDAH</div>
+            <div class="brand-sub">Dental Clinic & Esthetic Oral Surgery Center</div>
+            <div class="brand-sub">Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310</div>
           </div>
 
           <div class="ticket-card">
@@ -251,7 +147,7 @@ export default function ETicketModal({
                 <div class="info-label">Kode Reservasi Resmi</div>
                 <div class="ticket-code">${formattedCode}</div>
               </div>
-              <div class="status-tag">✓ Terkonfirmasi</div>
+              <div style="font-weight: bold; color: #047857; font-size: 10.5pt;">✓ Terkonfirmasi</div>
             </div>
 
             <div class="grid-2">
@@ -260,16 +156,12 @@ export default function ETicketModal({
                 <div class="info-value">${ticketData.patientName || "Pasien Terdaftar"}</div>
               </div>
               <div class="info-group">
-                <div class="info-label">Nomor Telepon / WhatsApp</div>
-                <div class="info-value">${ticketData.phone || "-"}</div>
-              </div>
-              <div class="info-group">
                 <div class="info-label">Dokter Spesialis</div>
                 <div class="info-value">${ticketData.doctorName}</div>
                 <div style="font-size: 9pt; color: #8C6B1C;">${ticketData.specialization || "Spesialis Gigi"}</div>
               </div>
               <div class="info-group">
-                <div class="info-label">Layanan Tindakan</div>
+                <div class="info-label">Layanan Perawatan</div>
                 <div class="info-value">${ticketData.serviceName}</div>
               </div>
               <div class="info-group">
@@ -278,26 +170,21 @@ export default function ETicketModal({
                 <div style="font-size: 9pt; color: #8C6B1C; font-weight: bold;">Pukul ${ticketData.time} WIB</div>
               </div>
               <div class="info-group">
-                <div class="info-label">Estimasi Biaya</div>
-                <div class="info-value" style="color: #8C6B1C; font-size: 11pt;">${formattedPrice}</div>
+                <div class="info-label">Lokasi Klinik</div>
+                <div class="info-value">Aesthetic Pondok Indah</div>
+                <div style="font-size: 8.5pt; color: #666;">Jakarta Selatan</div>
               </div>
-            </div>
-
-            <div class="info-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ede5d6;">
-              <div class="info-label">Lokasi Klinik</div>
-              <div class="info-value">Aesthetic Pondok Indah</div>
-              <div style="font-size: 8.5pt; color: #555;">Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310 (Telp: 021-7654321)</div>
             </div>
           </div>
 
           <div class="notice-box">
             <strong>Petunjuk Kedatangan Pasien:</strong><br/>
-            Harap tiba di klinik sekurang-kurangnya 15 menit sebelum waktu appointment Anda untuk proses verifikasi identitas dan administrasi awal.
+            Harap tiba di klinik 15 menit sebelum waktu janji temu untuk verifikasi data awal di resepsionis.
           </div>
 
           <div class="footer-sign">
             <div>
-              <strong style="color: #047857;">✓ Tanda Tangan Digital Persetujuan Tindakan Medis Terverifikasi</strong><br/>
+              <strong style="color: #047857;">✓ Persetujuan Tindakan Medis Terverifikasi Secara Digital</strong><br/>
               Klinik Utama Aesthetic Pondok Indah — Jakarta Selatan
             </div>
             <div style="text-align: right;">
@@ -325,19 +212,19 @@ export default function ETicketModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl lg:max-w-3xl flex flex-col bg-white rounded-3xl shadow-2xl border border-[#EADBBD] overflow-hidden animate-in zoom-in-95 duration-200 my-auto text-left max-h-[90vh]">
-        {/* Top Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#EDE5D6] bg-[#FAF8F5]">
+      <div className="relative w-full max-w-xl lg:max-w-2xl flex flex-col bg-white rounded-3xl shadow-2xl border border-[#EADBBD] overflow-hidden animate-in zoom-in-95 duration-200 my-auto text-left max-h-[90vh]">
+        {/* Top Modal Header */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#EDE5D6] bg-[#FAF8F5]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center border border-[#EADBBD] shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#C9A24A] to-[#A8843A] text-white flex items-center justify-center shadow-2xs shrink-0">
               <Ticket className="w-4.5 h-4.5" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold font-display text-[#2C2416]">
-                E-Tiket Reservasi Pasien
+              <h3 className="text-base font-bold text-[#2C2416]">
+                Detail Reservasi Pasien
               </h3>
-              <p className="text-xs text-[#7C7365]">
-                Bukti Konfirmasi Janji Temu Resmi Aesthetic Pondok Indah
+              <p className="text-[11px] text-[#7C7365]">
+                Bukti Resmi Janji Temu Aesthetic Pondok Indah
               </p>
             </div>
           </div>
@@ -346,12 +233,12 @@ export default function ETicketModal({
             <Button
               type="button"
               variant="outline"
+              size="icon"
               onClick={handlePrintTicket}
-              className="h-9 px-3.5 rounded-xl bg-white border-[#D9D0BC] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-bold flex items-center gap-1.5 shadow-2xs cursor-pointer"
-              title="Cetak / Simpan PDF E-Tiket"
+              className="h-9 w-9 rounded-xl bg-white border-[#D9D0BC] text-[#8C6B1C] hover:bg-[#FAF5EA] shadow-2xs cursor-pointer"
+              title="Cetak E-Tiket"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Cetak E-Tiket</span>
+              <Printer className="w-4 h-4" />
             </Button>
             <button
               type="button"
@@ -364,132 +251,114 @@ export default function ETicketModal({
           </div>
         </div>
 
-        {/* Scrollable E-Ticket Card */}
+        {/* Scrollable Modal Content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-[#FAF8F5]">
-          {/* Main Visual Ticket Card */}
-          <div className="bg-white border-2 border-[#E6DECB] rounded-3xl p-5 sm:p-7 shadow-xs space-y-5 text-[#2C2416] relative overflow-hidden">
-            {/* Top Brand Banner */}
-            <div className="border-b border-[#EDE5D6] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center border border-[#EADBBD]">
-                  <Building2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-[#2C2416]">
-                    Aesthetic Pondok Indah
-                  </h4>
-                  <p className="text-[11px] text-[#7C7365]">
-                    Jl. Metro Pondok Indah Blok TB No. 12, Jakarta Selatan
-                  </p>
-                </div>
-              </div>
-              <div className="text-left sm:text-right">
+          {/* Main Visual Card */}
+          <div className="bg-white border border-[#E8DFC8] rounded-2xl p-5 space-y-4 text-[#2C2416] shadow-xs">
+            {/* Top Code & Status Banner (Without Barcode) */}
+            <div className="bg-[#FAF5EA] border border-[#EADBBD] rounded-xl p-3.5 flex items-center justify-between gap-3">
+              <div>
                 <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider">
-                  Status Reservasi
+                  Kode Reservasi
                 </p>
-                <div className="mt-0.5">{statusBadge}</div>
-              </div>
-            </div>
-
-            {/* Ticket Code & QR Code Mockup */}
-            <div className="bg-[#FAF8F5] border border-[#EADBBD] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-0.5">
-                <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider">
-                  Kode Reservasi Resmi
-                </p>
-                <p className="font-mono text-xl sm:text-2xl font-bold text-[#8C6B1C] tracking-wider">
+                <p className="font-mono text-base sm:text-lg font-bold text-[#8C6B1C] tracking-wide">
                   {formattedCode}
                 </p>
-                <p className="text-[11px] text-[#7C7365]">
-                  Tunjukkan kode atau e-tiket ini kepada staf resepsionis klinik
+              </div>
+              <div className="shrink-0">{statusBadge}</div>
+            </div>
+
+            {/* Structured 2-Column Info Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Doctor */}
+              <div className="bg-[#FAF8F5] p-3 rounded-xl border border-[#EDE5D6] space-y-1">
+                <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                  <span>Dokter Spesialis</span>
+                </p>
+                <p className="font-bold text-[#2C2416] text-xs sm:text-sm">
+                  {ticketData.doctorName}
+                </p>
+                <p className="text-[11px] text-[#8C6B1C] font-semibold">
+                  {ticketData.specialization || "Dokter Gigi Spesialis"}
                 </p>
               </div>
 
-              <div className="w-16 h-16 rounded-2xl bg-white border border-[#D9D0BC] p-2 flex items-center justify-center text-[#2C2416] shadow-inner shrink-0 self-start sm:self-auto">
-                <QrCode className="w-full h-full" />
-              </div>
-            </div>
-
-            {/* 2-Column Info Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
-              {/* Patient */}
-              <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#EDE5D6] space-y-1">
+              {/* Schedule */}
+              <div className="bg-[#FAF8F5] p-3 rounded-xl border border-[#EDE5D6] space-y-1">
                 <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider flex items-center gap-1.5">
-                  <User className="w-3 h-3 text-[#8C6B1C]" />
-                  <span>Pasien</span>
+                  <Calendar className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                  <span>Jadwal Janji Temu</span>
+                </p>
+                <p className="font-bold text-[#2C2416] text-xs sm:text-sm">
+                  {ticketData.displayDate || ticketData.date}
+                </p>
+                <p className="text-[11px] font-bold text-[#8C6B1C]">
+                  Pukul {ticketData.time} WIB
+                </p>
+              </div>
+
+              {/* Patient */}
+              <div className="bg-[#FAF8F5] p-3 rounded-xl border border-[#EDE5D6] space-y-1">
+                <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                  <span>Nama Pasien</span>
                 </p>
                 <p className="font-bold text-[#2C2416]">
                   {ticketData.patientName || "Pasien Terdaftar"}
                 </p>
                 {ticketData.phone && (
-                  <p className="text-xs text-[#7C7365]">{ticketData.phone}</p>
+                  <p className="text-[11px] text-[#7C7365] flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-[#8C8272]" />
+                    {ticketData.phone}
+                  </p>
                 )}
               </div>
 
-              {/* Doctor */}
-              <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#EDE5D6] space-y-1">
+              {/* Location */}
+              <div className="bg-[#FAF8F5] p-3 rounded-xl border border-[#EDE5D6] space-y-1">
                 <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider flex items-center gap-1.5">
-                  <User className="w-3 h-3 text-[#8C6B1C]" />
-                  <span>Dokter Spesialis</span>
+                  <MapPin className="w-3.5 h-3.5 text-[#8C6B1C]" />
+                  <span>Lokasi Klinik</span>
                 </p>
                 <p className="font-bold text-[#2C2416]">
-                  {ticketData.doctorName}
+                  Aesthetic Pondok Indah
                 </p>
-                <p className="text-xs text-[#8C6B1C] font-semibold">
-                  {ticketData.specialization || "Dokter Gigi Spesialis"}
-                </p>
-              </div>
-
-              {/* Service */}
-              <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#EDE5D6] space-y-1">
-                <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider flex items-center gap-1.5">
-                  <Briefcase className="w-3 h-3 text-[#8C6B1C]" />
-                  <span>Layanan Tindakan</span>
-                </p>
-                <p className="font-bold text-[#2C2416]">
-                  {ticketData.serviceName}
-                </p>
-              </div>
-
-              {/* Schedule */}
-              <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#EDE5D6] space-y-1">
-                <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider flex items-center gap-1.5">
-                  <Calendar className="w-3 h-3 text-[#8C6B1C]" />
-                  <span>Jadwal Kunjungan</span>
-                </p>
-                <p className="font-bold text-[#2C2416]">
-                  {ticketData.displayDate || ticketData.date}
-                </p>
-                <p className="text-xs font-bold text-[#8C6B1C]">
-                  Pukul {ticketData.time} WIB
+                <p className="text-[11px] text-[#7C7365]">
+                  Jakarta Selatan
                 </p>
               </div>
             </div>
 
-            {/* Total Estimate & Verification Badge */}
-            <div className="pt-3 border-t border-[#EDE5D6] flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-semibold">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Tanda Tangan Digital & Persetujuan Tindakan Sah</span>
+            {/* Arrival Notice Box */}
+            <div className="p-3 bg-[#FAF5EA] border border-[#EADBBD] rounded-xl text-xs space-y-1">
+              <p className="font-bold text-[#8C6B1C] text-[11px]">
+                📌 Petunjuk Kedatangan:
+              </p>
+              <p className="text-[11px] text-[#6B5E4F] leading-relaxed">
+                Harap hadir di klinik 15 menit sebelum waktu janji temu untuk proses registrasi di meja resepsionis. Tunjukkan kode reservasi kepada staf kami.
+              </p>
+            </div>
+
+            {/* Digital Signature Verified Badge */}
+            <div className="pt-2 border-t border-[#EDE5D6] flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 text-emerald-700 font-semibold text-[11px]">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Persetujuan Tindakan Medis Terverifikasi</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-[#7C7365]">Estimasi Biaya:</span>
-                <span className="text-base font-bold text-[#8C6B1C]">
-                  {formattedPrice}
-                </span>
-              </div>
+              <span className="text-[10px] text-[#8C8272]">Sistem Terintegrasi</span>
             </div>
           </div>
         </div>
 
-        {/* Bottom Action Buttons & PDF Viewers */}
-        <div className="p-4 sm:px-6 border-t border-[#EDE5D6] bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Modal Footer Actions */}
+        <div className="p-4 sm:px-6 border-t border-[#EDE5D6] bg-white flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowTermsModal(true)}
-              className="flex-1 sm:flex-none h-10 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+              className="flex-1 sm:flex-none h-9 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>PDF S&K</span>
@@ -497,7 +366,7 @@ export default function ETicketModal({
             <Button
               type="button"
               onClick={() => setShowConsentModal(true)}
-              className="flex-1 sm:flex-none h-10 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+              className="flex-1 sm:flex-none h-9 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span>PDF Surat Persetujuan</span>
@@ -509,7 +378,7 @@ export default function ETicketModal({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="flex-1 sm:flex-none h-10 px-4 rounded-xl border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] text-xs font-semibold cursor-pointer"
+              className="flex-1 sm:flex-none h-9 px-4 rounded-xl border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] text-xs font-semibold cursor-pointer"
             >
               Tutup
             </Button>
@@ -517,7 +386,7 @@ export default function ETicketModal({
             <Button
               type="button"
               onClick={onBookAgain}
-              className="flex-1 sm:flex-none h-10 px-5 rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+              className="flex-1 sm:flex-none h-9 px-4 rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
             >
               Reservasi Baru
             </Button>

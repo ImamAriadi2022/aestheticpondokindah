@@ -5,6 +5,8 @@ import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
 import { NotificationCenterModal } from "@/core/layouts/NotificationCenterModal";
 import { fetchNotifications } from "@/core/api/notificationApi";
 import { initializePushNotifications } from "@/core/api/firebaseNotification";
+import { scrollPageToTop } from "@/core/router/ScrollToTop";
+import { useSubmenuBadges } from "@/core/services/menuBadgeService";
 import {
   Home,
   CalendarDays,
@@ -64,6 +66,7 @@ export default function NewMobileDashboardLayout({
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const submenuBadges = useSubmenuBadges(role);
 
   useEffect(() => {
     // Inisialisasi Push Notification & token registration
@@ -83,8 +86,15 @@ export default function NewMobileDashboardLayout({
     (session as any)?.membership_status === "member" ||
     (session as any)?.membershipStatus === "member";
 
+  const mainScrollRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     setProfileMenuOpen(false);
+    scrollPageToTop();
+    if (mainScrollRef.current) {
+      mainScrollRef.current.scrollTop = 0;
+      mainScrollRef.current.scrollLeft = 0;
+    }
   }, [location.pathname, location.search]);
 
   useEffect(() => {
@@ -102,22 +112,22 @@ export default function NewMobileDashboardLayout({
       case "user":
         return [
           { label: "Beranda", icon: Home, href: "/dashboard/user" },
-          { label: "Booking", icon: CalendarDays, href: "/dashboard/user?tab=booking" },
-          { label: "Konsultasi", icon: MessageSquareText, href: "/dashboard/user?tab=konsultasi" },
+          { label: "Booking", icon: CalendarDays, href: "/dashboard/user?tab=booking", badge: submenuBadges.booking || undefined },
+          { label: "Konsultasi", icon: MessageSquareText, href: "/dashboard/user?tab=konsultasi", badge: submenuBadges.konsultasi || undefined },
           { label: "Riwayat", icon: Clock, href: "/dashboard/user?tab=riwayat" },
           { label: "Akun", icon: UserCircle, href: "/dashboard/user?tab=akun" },
         ];
       case "clinic":
         return [
           { label: "Beranda", icon: Home, href: "/dashboard/clinic" },
-          { label: "Reservasi", icon: CalendarDays, href: "/dashboard/clinic?tab=reservasi" },
-          { label: "Konsultasi", icon: MessageSquare, href: "/dashboard/clinic?tab=konsultasi" },
+          { label: "Reservasi", icon: CalendarDays, href: "/dashboard/clinic?tab=reservasi", badge: submenuBadges.booking || undefined },
+          { label: "Konsultasi", icon: MessageSquare, href: "/dashboard/clinic?tab=konsultasi", badge: submenuBadges.konsultasi || undefined },
         ];
       case "doctor":
         return [
           { label: "Beranda", icon: Home, href: "/dashboard/doctor" },
           { label: "Jadwal", icon: CalendarDays, href: "/dashboard/doctor?tab=jadwal" },
-          { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi" },
+          { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi", badge: submenuBadges.booking || undefined },
           { label: "Profil", icon: UserCircle, href: "/settings" },
         ];
       default:
@@ -154,7 +164,7 @@ export default function NewMobileDashboardLayout({
       items: [
         { label: "Layanan", icon: Layers, href: "/dashboard/clinic?tab=public-services" },
         { label: "FAQ", icon: HelpCircle, href: "/dashboard/clinic?tab=public-faqs" },
-        { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan" },
+        { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan", badge: submenuBadges.pengaduan || undefined },
         { label: "Kebijakan", icon: Shield, href: "/dashboard/clinic?tab=public-legal" },
       ],
     },
@@ -329,7 +339,7 @@ export default function NewMobileDashboardLayout({
       )}
 
       {/* Main Content */}
-      <main className={`mobile-dashboard-main flex-1 min-w-0 overflow-y-auto scrollbar-hide ${hideBottomNav ? '' : 'pb-24'}`}>
+      <main ref={mainScrollRef} className={`mobile-dashboard-main flex-1 min-w-0 overflow-y-auto scrollbar-hide ${hideBottomNav ? '' : 'pb-24'}`}>
         <div className="mobile-dashboard-content">
           {children}
         </div>
@@ -451,7 +461,14 @@ export default function NewMobileDashboardLayout({
                               : "bg-gray-50 text-gray-600 hover:bg-gray-100"
                           }`}
                         >
-                          <item.icon className={`w-5 h-5 ${isItemActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
+                          <div className="relative">
+                            <item.icon className={`w-5 h-5 ${isItemActive ? "stroke-[2px]" : "stroke-[1.5px]"}`} />
+                            {item.badge && (
+                              <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white shadow-xs">
+                                {item.badge > 9 ? "9+" : item.badge}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[9px] font-medium text-center leading-tight">{item.label}</span>
                         </Link>
                       );

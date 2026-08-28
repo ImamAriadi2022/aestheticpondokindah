@@ -27,7 +27,7 @@ class WebPushNotificationService
             ];
 
             $options = [
-                'timeout' => 15,
+                'timeout' => 2,
                 'automatic_padding' => true,
             ];
 

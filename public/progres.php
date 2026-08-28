@@ -60,8 +60,12 @@ $categoryBreakdown = [
             'Toast Notification System (deduplication & variants), Error Boundary, & Sanitized Logger',
             'Global API Client dengan auto-retry GET & handle 401 auto logout',
             'Komponen UI Klinis Terintegrasi (SOAP, Diagnosis, Odontogram Tooth Chart, Procedure List)',
-            'Konsultasi Online End-to-End (Guest via token publik, Pasien room chat, Admin antrian Terima/Tolak/Teruskan/Tutup + chat + link meeting, Dokter room chat + meeting link + patient summary)',
-            'PWA mobile terkonsolidasi ke website SPA: fitur mobile (booking, konsultasi, riwayat, akun) dirender dari komponen website yang sama via NewMobileDashboardLayout bottom-nav (folder features/patient/mobile dihapus)'
+            'Konsultasi Online 1 Halaman Langsung & Live Chat Instan: Dropdown gejala yang dirasakan, dropdown tingkat nyeri (skala 0-10), textarea detail keluhan, dan tombol Mulai Konsultasi yang langsung membuka antarmuka Live Chat interaktif dengan triage summary & quick booking CTA',
+            'PWA mobile terkonsolidasi ke website SPA: fitur mobile (booking, konsultasi, riwayat, akun) dirender dari komponen website yang sama via NewMobileDashboardLayout bottom-nav',
+            'Alur Booking Reservasi Ringkas & Cepat: Kartu layanan nama saja, kartu dokter & spesialisasi saja, tombol kalender langsung + slider mingguan, slot waktu kelipatan 10 menit, serta integrasi tanda tangan digital & riwayat booking',
+            'Penataan Ulang Riwayat Reservasi & Pembersihan Modal E-Tiket: Kartu riwayat menyajikan Nama Dokter, Tanggal, dan Jam saja secara rapi, pembersihan tombol header (Refresh & Booking Baru) agar fokus, serta penghapusan total barcode/QR code pada modal detail reservasi dengan grid 2-kolom yang proporsional',
+            'Integrasi Otomatis WhatsApp Konfirmasi Reservasi & Alur Navigasi Riwayat: Auto-dispatch pesan terformat rapi ke WhatsApp Admin Klinik saat konfirmasi diklik, modal informasi reservasi sukses, serta navigasi otomatis ke Riwayat Reservasi dengan data terbaru di paling atas',
+            'Standardisasi Font Poppins Global & Penyesuaian Ketebalan Bold (Weight 600 Softened) serta Harmonisasi Palet Warna Luxury Gold/Charcoal di seluruh komponen web & mobile'
         ],
         'missing' => [
             'Refactoring beberapa tipe data `any` pada ClinicDashboard.tsx',
@@ -70,14 +74,14 @@ $categoryBreakdown = [
     ],
     'mobile' => [
         'title' => 'Mobile Native Application (React Native & PWA)',
-        'progress' => 85,
-        'status' => '🟡 In Progress (85%)',
+        'progress' => 90,
+        'status' => '🟢 Complete & Polished (90%)',
         'completed' => [
             'Aplikasi React Native + Expo Router di folder mobile-native/',
             '11 Screens lengkap (Login, Home, Booking List, Membership Card, Upgrade, Notifikasi, Profil, Article Detail)',
             'SecureStore token & AsyncStorage TTL Cache untuk Offline Mode',
-            'Theme System & Color Palette identik dengan Design System Web',
-            'Mobile PWA terkonsolidasi ke satu website SPA: bottom-nav NewMobileDashboardLayout (Beranda, Booking, Konsultasi, Riwayat, Akun) me-reuse seluruh fitur website (Desktop*) tanpa folder fitur mobile terpisah',
+            'Theme System & Color Palette identik dengan Design System Web (Poppins & Luxury Gold Palette)',
+            'Mobile PWA Responsive Layout: NewMobileDashboardLayout dilengkapi padding responsif, safe-area inset, 2-column stat cards, full-width touch CTA buttons, dan horizontal scrollable tables',
             'sw.js, manifest.json, offline.html, PullToRefresh, Skeleton sebagai infrastruktur PWA'
         ],
         'missing' => [

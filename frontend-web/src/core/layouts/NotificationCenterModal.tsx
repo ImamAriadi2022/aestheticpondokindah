@@ -8,6 +8,7 @@ import {
   clearAllNotifications,
 } from "@/core/api/notificationApi";
 import { handleDeepLink } from "@/core/api/firebaseNotification";
+import { getSession } from "@/core/auth/services/session";
 import { Bell, Calendar, Crown, Tag, FileText, Trash2, CheckCheck, X } from "lucide-react";
 
 interface NotificationCenterProps {
@@ -47,7 +48,8 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
       await markNotificationRead(n.id);
       loadData();
     }
-    const targetUrl = handleDeepLink(n.type, n.deep_link);
+    const session = getSession();
+    const targetUrl = handleDeepLink(n.type, n.deep_link, (session?.role as string) || "user");
     onClose();
     window.location.href = targetUrl;
   };
