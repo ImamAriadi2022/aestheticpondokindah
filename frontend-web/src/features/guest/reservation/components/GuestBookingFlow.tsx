@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Link, useSearchParams } from "react-router";
 import {
   Calendar,
@@ -67,17 +68,71 @@ export default function GuestBookingFlow() {
     scrollPageToTop();
   }, [currentStep]);
 
-  // Step 1: Services
-  const [services, setServices] = useState<ServiceItem[]>([]);
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  // Step 1: Services with Instant Cache
+  const [services, setServices] = useState<ServiceItem[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_services");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_services");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      }
+    } catch {}
+    return null;
+  });
   const [searchService, setSearchService] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
-  const [servicesLoading, setServicesLoading] = useState(false);
+  const [servicesLoading, setServicesLoading] = useState<boolean>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_services");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return false;
+      }
+    } catch {}
+    return true;
+  });
 
-  // Step 2: Doctors
-  const [doctors, setDoctors] = useState<DoctorItem[]>([]);
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorItem | null>(null);
-  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  // Step 2: Doctors with Instant Cache
+  const [doctors, setDoctors] = useState<DoctorItem[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_doctors");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+  const [selectedDoctor, setSelectedDoctor] = useState<DoctorItem | null>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_doctors");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      }
+    } catch {}
+    return null;
+  });
+  const [doctorsLoading, setDoctorsLoading] = useState<boolean>(() => {
+    try {
+      const cached = localStorage.getItem("apig_cached_doctors");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return false;
+      }
+    } catch {}
+    return true;
+  });
 
   // Step 3: Date & Time
   const availableDates = useMemo(() => {
@@ -154,9 +209,9 @@ export default function GuestBookingFlow() {
   // Load Services
   useEffect(() => {
     const fetchServices = async () => {
-      setServicesLoading(true);
+      if (services.length === 0) setServicesLoading(true);
       try {
-        const res = await apiClient.get("/public/services");
+        const res = await apiClient.get("/public/services", { skipToast: true });
         const list = Array.isArray(res) ? res : res?.data || res?.services || [];
         if (Array.isArray(list) && list.length > 0) {
           const mapped = list.map((item: any) => ({
@@ -168,6 +223,9 @@ export default function GuestBookingFlow() {
             description: item.short_desc || item.description || "Layanan perawatan dental estetik terbaik di Aesthetic Pondok Indah.",
             popular: Boolean(item.is_featured || item.popular),
           }));
+          try {
+            localStorage.setItem("apig_cached_services", JSON.stringify(mapped));
+          } catch {}
           setServices(mapped);
 
           let initialMatch = mapped[0];
@@ -198,9 +256,9 @@ export default function GuestBookingFlow() {
   // Load Doctors
   useEffect(() => {
     const fetchDoctors = async () => {
-      setDoctorsLoading(true);
+      if (doctors.length === 0) setDoctorsLoading(true);
       try {
-        const res = await apiClient.get("/public/doctors");
+        const res = await apiClient.get("/public/doctors", { skipToast: true });
         const list = Array.isArray(res) ? res : res?.data || res?.doctors || [];
         if (Array.isArray(list) && list.length > 0) {
           const mapped = list.map((doc: any, index: number) => ({
@@ -213,6 +271,9 @@ export default function GuestBookingFlow() {
             avatar: doc.avatar_url || doc.avatar || "https://images.unsplash.com/photo-1594824813628-98e3532c2560?w=400&q=80",
             branches: ["Aesthetic Pondok Indah Main Branch"],
           }));
+          try {
+            localStorage.setItem("apig_cached_doctors", JSON.stringify(mapped));
+          } catch {}
           setDoctors(mapped);
           setSelectedDoctor(mapped[0]);
         }
@@ -1070,60 +1131,62 @@ export default function GuestBookingFlow() {
       )}
 
       {/* Success Modal for Guest */}
-      {activeTicket && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 border border-[#E8DFC8] shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
-              <Check className="w-8 h-8 stroke-[3]" />
-            </div>
+      {activeTicket &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 border border-[#E8DFC8] shadow-2xl">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-inner">
+                <Check className="w-8 h-8 stroke-[3]" />
+              </div>
 
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                Reservasi Berhasil Diajukan
-              </span>
-              <h3 className="text-xl font-bold text-[#3D332A] mt-2">Tiket Janji Temu #{activeTicket.code}</h3>
-              <p className="text-xs text-[#8A7B6B] mt-1">
-                Halo <strong>{activeTicket.patientName}</strong>, data janji temu Anda telah masuk ke sistem kami.
-              </p>
-            </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                  Reservasi Berhasil Diajukan
+                </span>
+                <h3 className="text-xl font-bold text-[#3D332A] mt-2">Tiket Janji Temu #{activeTicket.code}</h3>
+                <p className="text-xs text-[#8A7B6B] mt-1">
+                  Halo <strong>{activeTicket.patientName}</strong>, data janji temu Anda telah masuk ke sistem kami.
+                </p>
+              </div>
 
-            <div className="p-4 bg-[#FAF8F5] rounded-2xl border border-[#E8DFC8] text-left space-y-2 text-xs text-[#3D332A]">
-              <p><strong>Layanan:</strong> {activeTicket.serviceName}</p>
-              <p><strong>Dokter:</strong> {activeTicket.doctorName}</p>
-              <p><strong>Waktu:</strong> {activeTicket.date} • {activeTicket.time} WIB</p>
-              <p><strong>Lokasi:</strong> {activeTicket.locationName}</p>
-            </div>
+              <div className="p-4 bg-[#FAF8F5] rounded-2xl border border-[#E8DFC8] text-left space-y-2 text-xs text-[#3D332A]">
+                <p><strong>Layanan:</strong> {activeTicket.serviceName}</p>
+                <p><strong>Dokter:</strong> {activeTicket.doctorName}</p>
+                <p><strong>Waktu:</strong> {activeTicket.date} • {activeTicket.time} WIB</p>
+                <p><strong>Lokasi:</strong> {activeTicket.locationName}</p>
+              </div>
 
-            {/* Registration Promo for Guest */}
-            <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 text-left">
-              <p className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                Ingin Menyimpan Riwayat & Rekam Medis?
-              </p>
-              <p className="text-[11px] text-amber-800 mt-1">
-                Daftarkan akun pasien untuk melacak riwayat konsultasi, klaim poin reward, dan kemudahan booking selanjutnya.
-              </p>
-              <Link
-                to="/login?mode=register"
-                className="mt-3 inline-block w-full py-2 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white text-center text-xs font-bold rounded-xl shadow-xs hover:opacity-90"
+              {/* Registration Promo for Guest */}
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200 text-left">
+                <p className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  Ingin Menyimpan Riwayat & Rekam Medis?
+                </p>
+                <p className="text-[11px] text-amber-800 mt-1">
+                  Daftarkan akun pasien untuk melacak riwayat konsultasi, klaim poin reward, dan kemudahan booking selanjutnya.
+                </p>
+                <Link
+                  to="/login?mode=register"
+                  className="mt-3 inline-block w-full py-2 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white text-center text-xs font-bold rounded-xl shadow-xs hover:opacity-90"
+                >
+                  Daftar Akun Pasien (Gratis)
+                </Link>
+              </div>
+
+              <Button
+                onClick={() => {
+                  setActiveTicket(null);
+                  setCurrentStep("layanan");
+                }}
+                variant="outline"
+                className="w-full rounded-xl text-xs font-semibold py-2.5 h-auto border-[#E8DFC8] text-[#4A3F35]"
               >
-                Daftar Akun Pasien (Gratis)
-              </Link>
+                Tutup
+              </Button>
             </div>
-
-            <Button
-              onClick={() => {
-                setActiveTicket(null);
-                setCurrentStep("layanan");
-              }}
-              variant="outline"
-              className="w-full rounded-xl text-xs font-semibold py-2.5 h-auto border-[#E8DFC8] text-[#4A3F35]"
-            >
-              Tutup
-            </Button>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

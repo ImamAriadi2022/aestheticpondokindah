@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
 import {
@@ -416,8 +417,9 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
       )}
 
       {/* Create / Edit Modal */}
-      {(isCreating || selectedPopup) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      {(isCreating || selectedPopup) &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl border border-[#E8DFC8] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
             {/* Modal Header */}
             <div className="px-5 py-3.5 bg-gradient-to-r from-[#FAF8F5] via-[#FAF5EA] to-[#F5EFE6] border-b border-[#E8DFC8] flex items-center justify-between gap-3 shrink-0">
@@ -592,12 +594,14 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Preview Dialog */}
-      {previewItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      {previewItem &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white w-full max-w-xl rounded-3xl border border-[#E8DFC8] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
             <div className="p-4 bg-[#FAF8F5] border-b border-[#E8DFC8] flex items-center justify-between">
               <span className="text-xs font-bold text-[#2C2416]">Preview Tampilan Pengunjung</span>
@@ -629,7 +633,8 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Check, User, Sparkles, Calendar, Clock, ArrowRight, MapPin, Ticket, X, MessageCircle } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 
@@ -26,14 +27,25 @@ export default function BookingSuccessModal({
   onViewETicket,
   bookingData,
 }: BookingSuccessModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const formattedCode =
     bookingData.code ||
     `#RSV-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
       <div className="relative w-full max-w-md lg:max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#EADBBD] text-center space-y-4 animate-in zoom-in-95 duration-200 my-auto">
         {/* Close Button */}
         <button
@@ -164,7 +176,8 @@ export default function BookingSuccessModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

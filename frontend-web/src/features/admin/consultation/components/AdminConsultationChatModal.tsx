@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Send,
@@ -40,6 +41,12 @@ export default function AdminConsultationChatModal({
   onClose,
   onRefresh,
 }: Props) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
   // Read cache immediately (0ms instant render if opened before)
   const [consultation, setConsultation] = useState<Consultation | null>(() => {
     return getCachedConsultation(consultationId);
@@ -197,8 +204,8 @@ export default function AdminConsultationChatModal({
 
   const isClosed = consultation?.status === "Selesai" || consultation?.status === "Ditolak";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-4xl h-[90vh] max-h-[780px] rounded-3xl border border-[#E8DFC8] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Modal Header */}
         <div className="px-5 py-3.5 bg-gradient-to-r from-[#FAF8F5] via-[#FAF5EA] to-[#F5EFE6] border-b border-[#E8DFC8] flex items-center justify-between gap-3 shrink-0">
@@ -474,6 +481,7 @@ export default function AdminConsultationChatModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

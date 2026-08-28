@@ -24,10 +24,8 @@ export function PageTransition({ children, className = "", transitionKey }: Prop
 
   return (
     <div
-      className={`transition-all duration-200 ease-out will-change-[opacity,transform] ${
-        stage === "enter"
-          ? "opacity-0 translate-y-1.5"
-          : "opacity-100 translate-y-0"
+      className={`transition-opacity duration-200 ease-out ${
+        stage === "enter" ? "opacity-0" : "opacity-100"
       } ${className}`}
     >
       {children}
@@ -51,10 +49,8 @@ export default function RouteTransition({ children, className = "" }: Props) {
 
   return (
     <div
-      className={`transition-all duration-200 ease-out will-change-[opacity,transform] ${
-        stage === "enter"
-          ? "opacity-0 translate-y-1.5"
-          : "opacity-100 translate-y-0"
+      className={`transition-opacity duration-200 ease-out ${
+        stage === "enter" ? "opacity-0" : "opacity-100"
       } ${className}`}
     >
       {children}

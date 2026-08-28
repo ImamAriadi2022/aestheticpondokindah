@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   User,
@@ -51,6 +52,17 @@ export default function ETicketModal({
 }: ETicketModalProps) {
   const [showTermsModal, setShowTermsModal] = React.useState(false);
   const [showConsentModal, setShowConsentModal] = React.useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -210,8 +222,8 @@ export default function ETicketModal({
     }, 300);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl lg:max-w-2xl flex flex-col bg-white rounded-3xl shadow-2xl border border-[#EADBBD] overflow-hidden animate-in zoom-in-95 duration-200 my-auto text-left max-h-[90vh]">
         {/* Top Modal Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#EDE5D6] bg-[#FAF8F5]">
@@ -415,6 +427,7 @@ export default function ETicketModal({
         signatureData={(ticketData as any)?.signatureData || (ticketData as any)?.signature_data || (ticketData as any)?.signature || null}
         acceptedAt={(ticketData as any)?.termsAcceptedAt || (ticketData as any)?.terms_accepted_at || (ticketData as any)?.acceptedAt || new Date().toISOString()}
       />
-    </div>
+    </div>,
+    document.body
   );
 }

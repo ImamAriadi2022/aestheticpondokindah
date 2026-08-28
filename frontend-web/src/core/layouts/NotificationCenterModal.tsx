@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AppNotification,
   fetchNotifications,
@@ -25,6 +26,17 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   const loadData = async () => {
     setLoading(true);
@@ -85,60 +97,61 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="bg-[#FAF8F5] border border-[#C59E3F]/30 rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Modal Header */}
         <div className="p-5 bg-white border-b border-[#E6DECB] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#F4EFE4] flex items-center justify-center text-[#C59E3F]">
-              <Bell className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+              <Bell className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-lg text-[#2C2416]">Pusat Notifikasi</h3>
-              <span className="text-xs text-[#5C5546]">
-                {unreadCount > 0 ? `${unreadCount} belum dibaca` : "Tidak ada notifikasi baru"}
-              </span>
+              <h3 className="font-bold text-gray-900 text-lg">Pusat Notifikasi</h3>
+              <p className="text-xs text-gray-500">
+                {unreadCount > 0 ? `${unreadCount} pesan belum dibaca` : "Semua notifikasi telah dibaca"}
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-all"
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Control Action Toolbar */}
-        {notifications.length > 0 && (
-          <div className="px-5 py-2.5 bg-[#F4EFE4]/50 border-b border-[#E6DECB] flex items-center justify-between text-xs">
-            <button
-              onClick={handleMarkAllRead}
-              className="text-[#A37E28] hover:text-[#2C2416] font-semibold flex items-center gap-1 transition-all"
-            >
-              <CheckCheck className="w-3.5 h-3.5" /> Tandai Semua Dibaca
-            </button>
-            <button
-              onClick={handleClearAll}
-              className="text-red-500 hover:text-red-700 font-semibold flex items-center gap-1 transition-all"
-            >
-              <Trash2 className="w-3.5 h-3.5" /> Bersihkan Riwayat
-            </button>
-          </div>
-        )}
+        {/* Toolbar */}
+        <div className="px-5 py-2.5 bg-gray-50/80 border-b border-[#E6DECB] flex items-center justify-between text-xs text-gray-600">
+          <button
+            onClick={handleMarkAllRead}
+            disabled={unreadCount === 0}
+            className="flex items-center gap-1.5 font-medium hover:text-amber-700 disabled:opacity-40 disabled:hover:text-gray-600 cursor-pointer"
+          >
+            <CheckCheck className="w-4 h-4" />
+            Tandai semua dibaca
+          </button>
+          <button
+            onClick={handleClearAll}
+            disabled={notifications.length === 0}
+            className="flex items-center gap-1.5 font-medium hover:text-red-600 disabled:opacity-40 disabled:hover:text-gray-600 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Hapus semua
+          </button>
+        </div>
 
-        {/* Notification List */}
-        <div className="p-4 overflow-y-auto flex-1 space-y-3">
+        {/* Content List */}
+        <div className="overflow-y-auto flex-1 p-3 space-y-2">
           {loading ? (
-            <div className="py-12 text-center text-[#5C5546] text-sm">Memuat notifikasi...</div>
+            <div className="py-12 text-center text-gray-400 text-sm">Memuat notifikasi...</div>
           ) : notifications.length === 0 ? (
-            <div className="py-16 text-center px-4">
-              <div className="w-16 h-16 rounded-full bg-[#F4EFE4] flex items-center justify-center text-[#C59E3F] mx-auto mb-3">
-                <Bell className="w-8 h-8" />
-              </div>
-              <h4 className="font-display font-semibold text-[#2C2416] mb-1">Belum Ada Notifikasi</h4>
-              <p className="text-xs text-[#5C5546]">Pemberitahuan tentang janji temu, promo, dan membership akan muncul di sini.</p>
+            <div className="py-12 text-center text-gray-400 text-sm flex flex-col items-center gap-2">
+              <Bell className="w-8 h-8 text-gray-300 stroke-[1.5]" />
+              <p>Belum ada notifikasi</p>
             </div>
           ) : (
             notifications.map((n) => {
@@ -147,24 +160,28 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
                 <div
                   key={n.id}
                   onClick={() => handleItemClick(n)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 relative ${
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer relative group flex items-start gap-3.5 ${
                     isUnread
-                      ? "bg-white border-[#C59E3F]/40 shadow-sm"
-                      : "bg-[#FAF8F5]/80 border-transparent opacity-80"
-                  } hover:shadow-md hover:border-[#C59E3F]/50`}
+                      ? "bg-white border-amber-300 shadow-xs hover:border-amber-400"
+                      : "bg-[#FAF8F5]/60 border-gray-200/80 hover:bg-white hover:border-gray-300"
+                  }`}
                 >
-                  <div className="p-2.5 rounded-xl bg-[#F4EFE4] shrink-0 mt-0.5">
+                  <div className="mt-0.5 p-2 rounded-xl bg-gray-50 border border-gray-100 shrink-0">
                     {getTypeIcon(n.type)}
                   </div>
-                  <div className="flex-1 pr-6">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h5 className="font-semibold text-sm text-[#2C2416] leading-snug">{n.title}</h5>
+                  <div className="flex-1 min-w-0 pr-6">
+                    <div className="flex items-center gap-2">
+                      <h4 className={`text-sm leading-tight truncate ${isUnread ? "font-bold text-gray-900" : "font-semibold text-gray-700"}`}>
+                        {n.title}
+                      </h4>
                       {isUnread && (
-                        <span className="w-2 h-2 rounded-full bg-[#C59E3F] shrink-0" />
+                        <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-[#5C5546] leading-relaxed mb-2">{n.body}</p>
-                    <span className="text-[10px] text-gray-400 font-medium">
+                    <p className="text-xs text-gray-600 mt-1 line-clamp-2 leading-relaxed">
+                      {n.body}
+                    </p>
+                    <span className="text-[10px] text-gray-400 mt-2 block">
                       {new Date(n.created_at).toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "short",
@@ -186,6 +203,7 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

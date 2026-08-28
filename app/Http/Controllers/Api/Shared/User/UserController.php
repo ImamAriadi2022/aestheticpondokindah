@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -153,39 +154,42 @@ class UserController extends Controller
      */
     public function publicDoctors(): JsonResponse
     {
-        $doctors = User::query()
-            ->where('role', 'doctor')
-            ->where('status', 'active')
-            ->orderBy('id')
-            ->get()
-            ->map(function (User $u) {
-                $photo = $this->formatMediaUrl($u->avatar);
-                if (!$photo || !str_starts_with($photo, 'http')) {
-                    $photo = '/dokter/' . $u->name . '.webp';
-                }
+        $doctors = Cache::remember('apig_public_doctors_list', 3600, function () {
+            return User::query()
+                ->where('role', 'doctor')
+                ->where('status', 'active')
+                ->orderBy('id')
+                ->get()
+                ->map(function (User $u) {
+                    $photo = $this->formatMediaUrl($u->avatar);
+                    if (!$photo || !str_starts_with($photo, 'http')) {
+                        $photo = '/dokter/' . $u->name . '.webp';
+                    }
 
-                $exp = (int) ($u->experience_years ?: 5);
+                    $exp = (int) ($u->experience_years ?: 5);
 
-                return [
-                    'id' => (string) $u->id,
-                    'userId' => (string) $u->id,
-                    'name' => $u->name,
-                    'specialization' => $u->specialization ?: ($u->job ?: 'Dokter Gigi Spesialis'),
-                    'university' => $u->education ?: 'Universitas Indonesia',
-                    'education' => $u->education ?: 'Universitas Indonesia',
-                    'experienceYears' => $exp,
-                    'experience_years' => $exp,
-                    'photo' => $photo,
-                    'avatar' => $photo,
-                    'bio' => $u->bio,
-                    'primary_branch' => $u->primary_branch ?: 'Aesthetic Pondok Indah Main Branch',
-                ];
-            })
-            ->values();
+                    return [
+                        'id' => (string) $u->id,
+                        'userId' => (string) $u->id,
+                        'name' => $u->name,
+                        'specialization' => $u->specialization ?: ($u->job ?: 'Dokter Gigi Spesialis'),
+                        'university' => $u->education ?: 'Universitas Indonesia',
+                        'education' => $u->education ?: 'Universitas Indonesia',
+                        'experienceYears' => $exp,
+                        'experience_years' => $exp,
+                        'photo' => $photo,
+                        'avatar' => $photo,
+                        'bio' => $u->bio,
+                        'primary_branch' => $u->primary_branch ?: 'Aesthetic Pondok Indah Main Branch',
+                    ];
+                })
+                ->values()
+                ->toArray();
+        });
 
         return response()->json([
             'doctors' => $doctors,
-        ]);
+        ])->header('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
     }
 
     /**
@@ -285,6 +289,8 @@ class UserController extends Controller
             'source_info' => $request->sourceInfo,
             'insurance_provider' => $request->insuranceProvider,
         ]);
+
+        Cache::forget('apig_public_doctors_list');
 
         return response()->json([
             'message' => 'Akun dokter berhasil dibuat',
@@ -504,6 +510,10 @@ class UserController extends Controller
 
         $user->loadMissing('profile');
 
+        if ($user->role === 'doctor') {
+            Cache::forget('apig_public_doctors_list');
+        }
+
         $domicile = $user->city;
         if ($domicile) {
             $domicile = preg_replace('/^(kabupaten|kota)\s+/i', '', $domicile);
@@ -546,7 +556,11 @@ class UserController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
+        $role = $user->role;
         $user->delete();
+        if ($role === 'doctor') {
+            Cache::forget('apig_public_doctors_list');
+        }
         return response()->json(['message' => 'User deleted']);
     }
 

@@ -279,7 +279,14 @@
   }
 
   .mobile-dashboard-nav {
-    box-shadow: 0 -8px 24px rgba(39, 33, 24, 0.07);
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+    box-shadow: 0 -4px 25px rgba(39, 33, 24, 0.08);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 
   /* Keep the mobile-only clinic navigation focused on available workflows. */

@@ -112,8 +112,8 @@ export default function NewMobileDashboardLayout({
       case "user":
         return [
           { label: "Beranda", icon: Home, href: "/dashboard/user" },
-          { label: "Booking", icon: CalendarDays, href: "/dashboard/user?tab=booking", badge: submenuBadges.booking || undefined },
-          { label: "Konsultasi", icon: MessageSquareText, href: "/dashboard/user?tab=konsultasi", badge: submenuBadges.konsultasi || undefined },
+          { label: "Booking", icon: CalendarDays, href: "/dashboard/user?tab=booking" },
+          { label: "Konsultasi", icon: MessageSquareText, href: "/dashboard/user?tab=konsultasi" },
           { label: "Riwayat", icon: Clock, href: "/dashboard/user?tab=riwayat" },
           { label: "Akun", icon: UserCircle, href: "/dashboard/user?tab=akun" },
         ];
@@ -339,15 +339,15 @@ export default function NewMobileDashboardLayout({
       )}
 
       {/* Main Content */}
-      <main ref={mainScrollRef} className={`mobile-dashboard-main flex-1 min-w-0 overflow-y-auto scrollbar-hide ${hideBottomNav ? '' : 'pb-24'}`}>
+      <main ref={mainScrollRef} className={`mobile-dashboard-main flex-1 min-w-0 overflow-y-auto scrollbar-hide ${hideBottomNav ? '' : 'pb-28'}`}>
         <div className="mobile-dashboard-content">
           {children}
         </div>
       </main>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation (Fixed at bottom for Mobile PWA) */}
       {!hideBottomNav && (
-        <nav className="mobile-dashboard-nav fixed bottom-0 left-0 right-0 z-40 max-w-lg mx-auto bg-white border-t border-gray-100 px-2 pt-2 pb-2" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}>
+        <nav className="mobile-dashboard-nav fixed bottom-0 left-0 right-0 z-50 max-w-lg mx-auto bg-white/95 backdrop-blur-md border-t border-[#F0E6D3] shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-2 pt-2 pb-2 select-none" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className={`flex items-center ${role === 'clinic' ? 'justify-around' : 'justify-around'}`}>
             {navItems.map((item) => {
               const active = isActive(item.href);

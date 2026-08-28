@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Sparkles,
   Search,
@@ -438,39 +439,41 @@ export default function AdminTreatmentManagement() {
       />
 
       {/* Delete Confirmation Modal */}
-      {deletingId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-[#EADBBD] shadow-2xl space-y-4 text-left">
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-6 h-6" />
+      {deletingId &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+            <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-[#EADBBD] shadow-2xl space-y-4 text-left">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <div className="text-center space-y-1">
+                <h4 className="text-base font-bold text-[#3D332A]">Hapus Layanan Klinik?</h4>
+                <p className="text-xs text-[#7A6E60]">
+                  Layanan yang dihapus tidak akan muncul lagi pada formulir booking pasien dan katalog layanan klinik.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDeletingId(null)}
+                  className="flex-1 rounded-xl text-xs font-semibold py-2.5 h-auto border-[#D9D0BC]"
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleDelete}
+                  className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 h-auto shadow-md"
+                >
+                  {isDeleting ? "Menghapus..." : "Ya, Hapus Layanan"}
+                </Button>
+              </div>
             </div>
-            <div className="text-center space-y-1">
-              <h4 className="text-base font-bold text-[#3D332A]">Hapus Layanan Klinik?</h4>
-              <p className="text-xs text-[#7A6E60]">
-                Layanan yang dihapus tidak akan muncul lagi pada formulir booking pasien dan katalog layanan klinik.
-              </p>
-            </div>
-            <div className="flex items-center gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDeletingId(null)}
-                className="flex-1 rounded-xl text-xs font-semibold py-2.5 h-auto border-[#D9D0BC]"
-              >
-                Batal
-              </Button>
-              <Button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleDelete}
-                className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold py-2.5 h-auto shadow-md"
-              >
-                {isDeleting ? "Menghapus..." : "Ya, Hapus Layanan"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

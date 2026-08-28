@@ -353,6 +353,12 @@ export function generateDefaultTimeSlots(startH = 10, endH = 20): string[] {
   return slots;
 }
 
+// Module-level in-memory cache for instant 0ms sub-navigation across steps
+let memoryServicesCache: ServiceItem[] | null = null;
+let memoryDoctorsCache: DoctorItem[] | null = null;
+let memoryBranchesCache: BranchItem[] | null = null;
+let memorySchedulesCache: any[] | null = null;
+
 interface NewBookingFlowProps {
   initialStep?: "layanan" | "dokter" | "jadwal" | "konfirmasi" | "history";
   onBackToDashboard?: () => void;
@@ -382,17 +388,80 @@ export default function NewBookingFlow({
       : 1
   );
 
-  // Dynamic Backend Datasets
-  const [servicesList, setServicesList] = useState<ServiceItem[]>(INITIAL_SERVICES_CATALOG);
-  const [servicesLoading, setServicesLoading] = useState(true);
+  // Dynamic Backend Datasets with 0ms Instant Cache
+  const [servicesList, setServicesList] = useState<ServiceItem[]>(() => {
+    if (memoryServicesCache && memoryServicesCache.length > 0) return memoryServicesCache;
+    try {
+      const cached = localStorage.getItem("apig_cached_services");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_SERVICES_CATALOG;
+  });
+  const [servicesLoading, setServicesLoading] = useState<boolean>(() => {
+    if (memoryServicesCache && memoryServicesCache.length > 0) return false;
+    try {
+      const cached = localStorage.getItem("apig_cached_services");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return false;
+      }
+    } catch {}
+    return INITIAL_SERVICES_CATALOG.length === 0;
+  });
 
-  const [doctorsList, setDoctorsList] = useState<DoctorItem[]>(INITIAL_DOCTORS_CATALOG);
-  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [doctorsList, setDoctorsList] = useState<DoctorItem[]>(() => {
+    if (memoryDoctorsCache && memoryDoctorsCache.length > 0) return memoryDoctorsCache;
+    try {
+      const cached = localStorage.getItem("apig_cached_doctors");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return INITIAL_DOCTORS_CATALOG;
+  });
+  const [doctorsLoading, setDoctorsLoading] = useState<boolean>(() => {
+    if (memoryDoctorsCache && memoryDoctorsCache.length > 0) return false;
+    try {
+      const cached = localStorage.getItem("apig_cached_doctors");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return false;
+      }
+    } catch {}
+    return INITIAL_DOCTORS_CATALOG.length === 0;
+  });
 
-  const [branchesList, setBranchesList] = useState<BranchItem[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<BranchItem | null>(null);
+  const [branchesList, setBranchesList] = useState<BranchItem[]>(() => {
+    if (memoryBranchesCache && memoryBranchesCache.length > 0) return memoryBranchesCache;
+    try {
+      const cached = localStorage.getItem("apig_cached_branches");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+  const [selectedBranch, setSelectedBranch] = useState<BranchItem | null>(() => {
+    if (memoryBranchesCache && memoryBranchesCache.length > 0) return memoryBranchesCache[0];
+    return null;
+  });
 
-  const [doctorSchedules, setDoctorSchedules] = useState<any[]>([]);
+  const [doctorSchedules, setDoctorSchedules] = useState<any[]>(() => {
+    if (memorySchedulesCache && memorySchedulesCache.length > 0) return memorySchedulesCache;
+    try {
+      const cached = localStorage.getItem("apig_cached_doctor_schedules");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
 
   // Form selections
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -498,8 +567,8 @@ export default function NewBookingFlow({
   }, [currentStep, viewMode]);
 
   // 1. Fetch Services from Backend
-  const fetchServices = async () => {
-    setServicesLoading(true);
+  const fetchServices = async (silent = false) => {
+    if (!silent && servicesList.length === 0) setServicesLoading(true);
     try {
       let res = await apiClient.get("/public/services", { skipToast: true });
       let list = Array.isArray(res) ? res : res?.data || res?.services || [];
@@ -509,6 +578,10 @@ export default function NewBookingFlow({
       }
       if (Array.isArray(list) && list.length > 0) {
         const mapped = list.map(mapBackendService);
+        memoryServicesCache = mapped;
+        try {
+          localStorage.setItem("apig_cached_services", JSON.stringify(mapped));
+        } catch {}
         setServicesList(mapped);
         if (mapped.length > 0) {
           setSelectedService((prev) => {
@@ -519,17 +592,17 @@ export default function NewBookingFlow({
         }
       }
     } catch (e) {
-      // Retain INITIAL_SERVICES_CATALOG on network error
+      // Retain cached on network error
     } finally {
       setServicesLoading(false);
     }
   };
 
-  // 2. Fetch Doctors from Backend
-  const fetchDoctors = async () => {
-    setDoctorsLoading(true);
+  // 2. Fetch Doctors from Backend with SWR Cache
+  const fetchDoctors = async (silent = false) => {
+    if (!silent && doctorsList.length === 0) setDoctorsLoading(true);
     try {
-      const res = await apiClient.get("/public/doctors");
+      const res = await apiClient.get("/public/doctors", { skipToast: true });
       const list = Array.isArray(res?.doctors)
         ? res.doctors
         : Array.isArray(res)
@@ -545,6 +618,10 @@ export default function NewBookingFlow({
           experienceYears: Number(doc.experienceYears || doc.experience_years || 5),
           photo: doc.photo || doc.avatar || `/dokter/${doc.name}.webp`,
         }));
+        memoryDoctorsCache = mapped;
+        try {
+          localStorage.setItem("apig_cached_doctors", JSON.stringify(mapped));
+        } catch {}
         setDoctorsList(mapped);
         if (mapped.length > 0) {
           setSelectedDoctor((prev) => {
@@ -564,7 +641,7 @@ export default function NewBookingFlow({
   // 3. Fetch Branch from Backend (Only Aesthetic Pondok Indah)
   const fetchBranches = async () => {
     try {
-      const res = await apiClient.get("/public/branches");
+      const res = await apiClient.get("/public/branches", { skipToast: true });
       const list = Array.isArray(res) ? res : res?.data || res?.branches || [];
       if (Array.isArray(list) && list.length > 0) {
         const mapped: BranchItem[] = list.map((b: any) => ({
@@ -574,6 +651,10 @@ export default function NewBookingFlow({
           address: b.address || "Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310",
           phone: b.phone || "(021) 765-4321",
         }));
+        memoryBranchesCache = mapped;
+        try {
+          localStorage.setItem("apig_cached_branches", JSON.stringify(mapped));
+        } catch {}
         setBranchesList(mapped);
         setSelectedBranch(mapped[0]);
       } else {
@@ -603,9 +684,13 @@ export default function NewBookingFlow({
   // 4. Fetch Doctor Schedules from Backend
   const fetchDoctorSchedules = async () => {
     try {
-      const res = await apiClient.get("/public/doctor-schedules");
+      const res = await apiClient.get("/public/doctor-schedules", { skipToast: true });
       const list = Array.isArray(res) ? res : res?.data || [];
       if (Array.isArray(list) && list.length > 0) {
+        memorySchedulesCache = list;
+        try {
+          localStorage.setItem("apig_cached_doctor_schedules", JSON.stringify(list));
+        } catch {}
         setDoctorSchedules(list);
       }
     } catch (e) {
@@ -710,9 +795,9 @@ export default function NewBookingFlow({
   };
 
   useEffect(() => {
-    // 1. Initial database fetch on load with Cache-First strategy
-    fetchServices();
-    fetchDoctors();
+    // 1. Initial database fetch on load with Cache-First strategy (silently revalidates in background)
+    fetchServices(true);
+    fetchDoctors(true);
     fetchBranches();
     fetchDoctorSchedules();
     fetchPatientProfile();
@@ -1560,7 +1645,7 @@ export default function NewBookingFlow({
             </div>
           ) : (
             /* STEP 4: KONFIRMASI BOOKING (DUAL COLUMN DESKTOP WITH SUMMARY & SUBMIT) */
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pb-10">
               {/* Left Column: Form Details & Digital Signature */}
               <div className="lg:col-span-7 xl:col-span-8 space-y-6">
                 <div className="space-y-4 animate-in fade-in duration-200 text-left">
@@ -1747,29 +1832,6 @@ export default function NewBookingFlow({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Mobile Sticky Bottom Bar (ONLY SHOWN ON STEP 4) */}
-      {viewMode === "booking" && currentStep === 4 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E6DECB] p-3.5 sm:p-4 shadow-xl">
-          <div className="max-w-md mx-auto">
-            <Button
-              type="button"
-              disabled={!agreeTerms || !signatureData || !patientName.trim() || isSubmitting}
-              onClick={handleSubmitBooking}
-              className="w-full h-12 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Memproses...</span>
-                </>
-              ) : (
-                <span>Konfirmasi & Buat Janji Temu</span>
-              )}
-            </Button>
-          </div>
         </div>
       )}
       </PageTransition>
