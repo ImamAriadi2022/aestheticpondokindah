@@ -1,5 +1,20 @@
 [
   {
+    "id": "act-371",
+    "timestamp": "2026-08-29T06:45:00.000Z",
+    "category": "eticket-modal-mobile-button-stuck-fix",
+    "title": "Perbaikan Bug Interaksi Tombol Stuck / Unclickable pada Kotak Modal Detail Reservasi (ETicketModal)",
+    "description": "Memperbaiki bug di mana ketika modal Detail Reservasi Pasien dibuka pada perangkat mobile, interaksi layar menjadi stuck dan tombol-tombol (PDF S&K, PDF Surat Persetujuan, Tutup, Reservasi Baru) tidak bisa diklik: 1) Memperbaiki komponen TermsPdfModal dengan guard `if (!isOpen) return null;` agar tidak menginstansiasi Radix UI Dialog / Focus Trap dan overlay saat ditutup, 2) Mengubah pemanggilan modal anak (TermsPdfModal & ReservationConsentPdfModal) di dalam ETicketModal menjadi strictly conditional rendering `{showTermsModal && ...}` dan `{showConsentModal && ...}`, 3) Menambahkan `e.stopPropagation()` pada kartu modal serta `touch-manipulation` dan `active:scale-95` pada seluruh tombol aksi untuk respon sentuhan instan di layar sentuh mobile.",
+    "details": [
+      "No Focus Trap / Pointer Lock: TermsPdfModal dan ConsentModal kini 100% inert/tidak dimount saat tertutup.",
+      "Instant Button Responsiveness: Seluruh tombol di footer modal (PDF S&K, PDF Persetujuan, Tutup, Reservasi Baru) dapat diklik secara instan dan responsif di mobile.",
+      "Touch Feedback: Ditambahkan touch-manipulation dan animasi scale responsif untuk interaksi sentuhan yang optimal.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-370",
     "timestamp": "2026-08-28T17:04:00.000Z",
     "category": "modal-popup-viewport-centering-and-portal-fix",

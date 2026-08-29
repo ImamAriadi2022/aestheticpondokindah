@@ -223,10 +223,20 @@ export default function ETicketModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl lg:max-w-2xl flex flex-col bg-white rounded-3xl shadow-2xl border border-[#EADBBD] overflow-hidden animate-in zoom-in-95 duration-200 my-auto text-left max-h-[90vh]">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div
+        className="relative w-full max-w-xl lg:max-w-2xl flex flex-col bg-white rounded-3xl shadow-2xl border border-[#EADBBD] overflow-hidden animate-in zoom-in-95 duration-200 my-auto text-left max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Top Modal Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#EDE5D6] bg-[#FAF8F5]">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-[#EDE5D6] bg-[#FAF8F5] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#C9A24A] to-[#A8843A] text-white flex items-center justify-center shadow-2xs shrink-0">
               <Ticket className="w-4.5 h-4.5" />
@@ -247,7 +257,7 @@ export default function ETicketModal({
               variant="outline"
               size="icon"
               onClick={handlePrintTicket}
-              className="h-9 w-9 rounded-xl bg-white border-[#D9D0BC] text-[#8C6B1C] hover:bg-[#FAF5EA] shadow-2xs cursor-pointer"
+              className="h-9 w-9 rounded-xl bg-white border-[#D9D0BC] text-[#8C6B1C] hover:bg-[#FAF5EA] shadow-2xs cursor-pointer touch-manipulation"
               title="Cetak E-Tiket"
             >
               <Printer className="w-4 h-4" />
@@ -255,7 +265,7 @@ export default function ETicketModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-9 h-9 rounded-xl bg-white border border-[#D9D0BC] flex items-center justify-center text-[#7C7365] hover:text-[#2C2416] hover:bg-[#FAF5EA] transition-all shadow-2xs cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-white border border-[#D9D0BC] flex items-center justify-center text-[#7C7365] hover:text-[#2C2416] hover:bg-[#FAF5EA] transition-all shadow-2xs cursor-pointer touch-manipulation"
               title="Tutup"
             >
               <X className="w-4 h-4" />
@@ -364,13 +374,13 @@ export default function ETicketModal({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="p-4 sm:px-6 border-t border-[#EDE5D6] bg-white flex flex-col sm:flex-row items-center justify-between gap-2.5">
+        <div className="p-3.5 sm:p-5 border-t border-[#EDE5D6] bg-white flex flex-col sm:flex-row items-center justify-between gap-2.5 shrink-0 z-10">
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               variant="outline"
               onClick={() => setShowTermsModal(true)}
-              className="flex-1 sm:flex-none h-9 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+              className="flex-1 sm:flex-none h-10 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation active:scale-95 transition-transform"
             >
               <FileText className="w-3.5 h-3.5" />
               <span>PDF S&K</span>
@@ -378,7 +388,7 @@ export default function ETicketModal({
             <Button
               type="button"
               onClick={() => setShowConsentModal(true)}
-              className="flex-1 sm:flex-none h-9 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
+              className="flex-1 sm:flex-none h-10 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation active:scale-95 transition-transform"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span>PDF Surat Persetujuan</span>
@@ -390,7 +400,7 @@ export default function ETicketModal({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="flex-1 sm:flex-none h-9 px-4 rounded-xl border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] text-xs font-semibold cursor-pointer"
+              className="flex-1 sm:flex-none h-10 px-4 rounded-xl border-[#D9D0BC] text-[#5C5546] hover:bg-[#FAF8F5] text-xs font-semibold cursor-pointer touch-manipulation active:scale-95 transition-transform"
             >
               Tutup
             </Button>
@@ -398,7 +408,7 @@ export default function ETicketModal({
             <Button
               type="button"
               onClick={onBookAgain}
-              className="flex-1 sm:flex-none h-9 px-4 rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+              className="flex-1 sm:flex-none h-10 px-4 rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white text-xs font-bold shadow-xs transition-all cursor-pointer touch-manipulation active:scale-95 transition-transform"
             >
               Reservasi Baru
             </Button>
@@ -407,26 +417,30 @@ export default function ETicketModal({
       </div>
 
       {/* PDF Modal 1: Syarat & Ketentuan */}
-      <TermsPdfModal
-        isOpen={showTermsModal}
-        onClose={() => setShowTermsModal(false)}
-      />
+      {showTermsModal && (
+        <TermsPdfModal
+          isOpen={showTermsModal}
+          onClose={() => setShowTermsModal(false)}
+        />
+      )}
 
       {/* PDF Modal 2: Surat Pernyataan & Persetujuan Pasien */}
-      <ReservationConsentPdfModal
-        isOpen={showConsentModal}
-        onClose={() => setShowConsentModal(false)}
-        bookingCode={ticketData.code || `#RSV-${ticketData.id || "000001"}`}
-        patientName={ticketData.patientName || "Pasien Terdaftar"}
-        patientPhone={ticketData.phone || "-"}
-        isGuest={false}
-        serviceName={ticketData.serviceName}
-        doctorName={ticketData.doctorName}
-        dateStr={ticketData.displayDate || ticketData.date}
-        timeStr={`${ticketData.time} WIB`}
-        signatureData={(ticketData as any)?.signatureData || (ticketData as any)?.signature_data || (ticketData as any)?.signature || null}
-        acceptedAt={(ticketData as any)?.termsAcceptedAt || (ticketData as any)?.terms_accepted_at || (ticketData as any)?.acceptedAt || new Date().toISOString()}
-      />
+      {showConsentModal && (
+        <ReservationConsentPdfModal
+          isOpen={showConsentModal}
+          onClose={() => setShowConsentModal(false)}
+          bookingCode={ticketData.code || `#RSV-${ticketData.id || "000001"}`}
+          patientName={ticketData.patientName || "Pasien Terdaftar"}
+          patientPhone={ticketData.phone || "-"}
+          isGuest={false}
+          serviceName={ticketData.serviceName}
+          doctorName={ticketData.doctorName}
+          dateStr={ticketData.displayDate || ticketData.date}
+          timeStr={`${ticketData.time} WIB`}
+          signatureData={(ticketData as any)?.signatureData || (ticketData as any)?.signature_data || (ticketData as any)?.signature || null}
+          acceptedAt={(ticketData as any)?.termsAcceptedAt || (ticketData as any)?.terms_accepted_at || (ticketData as any)?.acceptedAt || new Date().toISOString()}
+        />
+      )}
     </div>,
     document.body
   );
