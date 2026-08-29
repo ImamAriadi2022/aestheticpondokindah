@@ -43,7 +43,7 @@ import { PageTransition } from "@/core/router/RouteTransition";
 import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 import BookingSuccessModal from "./BookingSuccessModal";
 import ETicketModal from "./ETicketModal";
-import BookingHistoryList from "./BookingHistoryList";
+import BookingHistoryList, { resolveDoctorPhotoUrl } from "./BookingHistoryList";
 
 // Branch Catalog Interface
 export interface BranchItem {
@@ -731,28 +731,32 @@ export default function NewBookingFlow({
         ? res
         : res?.reservations || res?.data?.reservations || res?.data || [];
       if (Array.isArray(list)) {
-        const formatted = list.map((r: any) => ({
-          id: r.id,
-          code: r.code || `#RSV-${String(r.id).padStart(6, "0")}`,
-          doctorName: r.doctor_name || r.doctor?.name || "drg. Yulita Dora",
-          doctorPhoto: r.doctor?.avatar || `/dokter/${r.doctor_name || r.doctor?.name || "drg. Yulita Dora"}.jpeg`,
-          specialization: r.treatment_interest || r.doctor?.specialization || "Dokter Gigi Spesialis",
-          serviceName: r.service_name || r.treatment_interest || "Pemeriksaan Gigi & Mulut",
-          date: r.scheduled_date || r.date,
-          displayDate: r.scheduled_date || r.date,
-          time: r.scheduled_time || r.preferred_time || "10:00",
-          status: r.status || "confirmed",
-          rawStatus: r.raw_status || r.status,
-          totalAmount: r.total_amount || 1500000,
-          locationName: "Aesthetic Pondok Indah",
-          locationAddress: "Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310",
-          examinationResult: r.admin_notes || r.notes || r.complaint,
-          patientName: r.patient_name || r.name || patientName,
-          phone: r.phone || patientPhone,
-          signatureData: r.signature_data || r.signature || r.signatureData || null,
-          signature_data: r.signature_data || r.signature || r.signatureData || null,
-          termsAcceptedAt: r.terms_accepted_at || r.created_at || null,
-        }));
+        const formatted = list.map((r: any) => {
+          const docName = r.doctor_name || r.doctor?.name || "drg. Yulita Dora";
+          const rawPhoto = r.doctor_photo || r.doctor?.photo || r.doctor?.avatar || r.doctor?.photo_url || r.doctor?.avatar_url;
+          return {
+            id: r.id,
+            code: r.code || `#RSV-${String(r.id).padStart(6, "0")}`,
+            doctorName: docName,
+            doctorPhoto: resolveDoctorPhotoUrl(rawPhoto, docName),
+            specialization: r.treatment_interest || r.doctor?.specialization || "Dokter Gigi Spesialis",
+            serviceName: r.service_name || r.treatment_interest || "Pemeriksaan Gigi & Mulut",
+            date: r.scheduled_date || r.date,
+            displayDate: r.scheduled_date || r.date,
+            time: r.scheduled_time || r.preferred_time || "10:00",
+            status: r.status || "confirmed",
+            rawStatus: r.raw_status || r.status,
+            totalAmount: r.total_amount || 1500000,
+            locationName: "Aesthetic Pondok Indah",
+            locationAddress: "Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310",
+            examinationResult: r.admin_notes || r.notes || r.complaint,
+            patientName: r.patient_name || r.name || patientName,
+            phone: r.phone || patientPhone,
+            signatureData: r.signature_data || r.signature || r.signatureData || null,
+            signature_data: r.signature_data || r.signature || r.signatureData || null,
+            termsAcceptedAt: r.terms_accepted_at || r.created_at || null,
+          };
+        });
 
         // Detect status transition to 'confirmed' / 'Dikonfirmasi'
         formatted.forEach((item) => {

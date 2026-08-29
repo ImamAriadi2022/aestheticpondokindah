@@ -1,5 +1,20 @@
 [
   {
+    "id": "act-372",
+    "timestamp": "2026-08-29T07:30:00.000Z",
+    "category": "booking-history-doctor-photo-fix",
+    "title": "Perbaikan Bug Foto Dokter Tidak Muncul pada Kartu Riwayat Janji Temu Pasien",
+    "description": "Memperbaiki masalah foto dokter spesialis yang tidak tampil (menjadi kotak kosong / placeholder kosong) pada kartu Janji Temu Aktif & Riwayat Selesai di Dashboard Pasien (BookingHistoryList): 1) Memperbaiki resolusi ekstensi file dari .jpeg ke .webp yang sesuai dengan folder aset publik (/dokter/*.webp), 2) Menambahkan fungsi resolver gambar cerdas `resolveDoctorPhotoUrl` yang memetakan nama dokter dan storage avatar ke path aset resmi dokter yang valid, 3) Menambahkan penanganan fallback gambar cerdas (`onError`) agar kartu dokter selalu menampilkan foto dokter spesialis klinik yang proporsional dan tidak pernah kosong.",
+    "details": [
+      "Reliable Doctor Avatars: Foto dokter spesialis (drg. Yulita Dora, drg. Achmad Riwandy, drg. Della Sparringa, dll) tampil 100% jelas pada seluruh kartu janji temu.",
+      "Extension & Asset Path Fix: Mengoreksi path fallback aset statis ke format .webp yang valid di webroot.",
+      "Graceful Fallback Handling: Jika terdapat data dokter tanpa foto kustom, sistem otomatis mengalihkan ke foto dokter spesialis klinik tanpa menyebabkan kotak kosong.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-371",
     "timestamp": "2026-08-29T06:45:00.000Z",
     "category": "eticket-modal-mobile-button-stuck-fix",

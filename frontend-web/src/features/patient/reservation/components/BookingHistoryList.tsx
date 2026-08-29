@@ -13,6 +13,53 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { getStorageUrl } from "@/core/api/apiConfig";
+
+const KNOWN_DOCTOR_PHOTOS: Record<string, string> = {
+  "drg. yulita dora": "/dokter/drg. Yulita Dora.webp",
+  "drg. achmad riwandy": "/dokter/drg. Achmad Riwandy.webp",
+  "drg. della sparringa": "/dokter/drg. Della Sparringa.webp",
+  "drg. eric sulistio, sp. perio": "/dokter/drg. Eric Sulistio, Sp. Perio.webp",
+  "drg. melati putri, sp. pros": "/dokter/drg. Melati Putri, Sp. Pros.webp",
+  "drg. nona lolita t": "/dokter/drg. Nona Lolita T.webp",
+  "drg. pramodanti jiwanakusuma, sp.kg": "/dokter/drg. Pramodanti Jiwanakusuma, Sp.KG.webp",
+  "drg. ramayani ramli": "/dokter/drg. Ramayani Ramli.webp",
+  "drg. riesta paluvi, sp.kg": "/dokter/drg. Riesta Paluvi, Sp.KG.webp",
+  "drg. ryan jusuf": "/dokter/drg. Ryan Jusuf.webp",
+  "drg. sharah syam, sp. ort": "/dokter/drg. Sharah Syam, Sp. Ort.webp",
+  "drg. shilvy": "/dokter/drg. Shilvy.webp",
+  "drg. yudy ardila utomo, sp.bmm, subsp.i.dm.(k)": "/dokter/drg. Yudy Ardila Utomo, Sp.BMM, Subsp.I.DM.(K).webp",
+  "drg. yudy ardila utomo, sp.bmm": "/dokter/drg. Yudy Ardila Utomo, Sp.BMM, Subsp.I.DM.(K).webp",
+};
+
+export const resolveDoctorPhotoUrl = (rawPhoto?: string | null, doctorName?: string | null): string => {
+  if (rawPhoto && typeof rawPhoto === "string" && rawPhoto.trim().length > 0) {
+    if (rawPhoto.startsWith("http") || rawPhoto.startsWith("blob:") || rawPhoto.startsWith("data:")) {
+      return rawPhoto;
+    }
+    const storageUrl = getStorageUrl(rawPhoto);
+    if (storageUrl) return storageUrl;
+    if (rawPhoto.startsWith("/")) return rawPhoto;
+  }
+
+  const nameKey = (doctorName || "").toLowerCase().trim();
+  if (nameKey && KNOWN_DOCTOR_PHOTOS[nameKey]) {
+    return KNOWN_DOCTOR_PHOTOS[nameKey];
+  }
+
+  for (const [key, path] of Object.entries(KNOWN_DOCTOR_PHOTOS)) {
+    const cleanKey = key.replace("drg. ", "");
+    if (nameKey && (nameKey.includes(cleanKey) || cleanKey.includes(nameKey))) {
+      return path;
+    }
+  }
+
+  if (doctorName && !doctorName.toLowerCase().includes("spesialis") && doctorName.toLowerCase().startsWith("drg")) {
+    return `/dokter/${doctorName}.webp`;
+  }
+
+  return "/dokter/drg. Yulita Dora.webp";
+};
 
 export interface BookingHistoryItem {
   id: string | number;
@@ -198,21 +245,18 @@ export default function BookingHistoryList({
                   {/* Top Doctor & Status Row */}
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] overflow-hidden shrink-0 border border-[#EADBBD] shadow-2xs">
-                        {item.doctorPhoto ? (
-                          <img
-                            src={item.doctorPhoto}
-                            alt={item.doctorName}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.display = "none";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#8C6B1C]">
-                            <User className="w-5 h-5" />
-                          </div>
-                        )}
+                      <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] overflow-hidden shrink-0 border border-[#EADBBD] shadow-2xs flex items-center justify-center">
+                        <img
+                          src={resolveDoctorPhotoUrl(item.doctorPhoto, item.doctorName)}
+                          alt={item.doctorName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            if (!img.src.includes("Yulita")) {
+                              img.src = "/dokter/drg. Yulita Dora.webp";
+                            }
+                          }}
+                        />
                       </div>
 
                       <div className="min-w-0">
