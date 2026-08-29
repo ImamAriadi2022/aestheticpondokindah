@@ -1,5 +1,35 @@
 [
   {
+    "id": "act-377",
+    "timestamp": "2026-08-29T08:18:00.000Z",
+    "category": "pdf-modal-history-readonly-mode",
+    "title": "Mode Pratinjau Riwayat Dokumen PDF (Read-Only & Tombol Tutup)",
+    "description": "Mengunci dokumen PDF pada mode Riwayat (baik di sisi User maupun Admin) agar bersifat read-only dan tidak dapat diedit ulang: 1) Pada ReservationConsentPdfModal (Surat Persetujuan Pasien/Informed Consent), saat dibuka dari riwayat/detail booking atau saat data tanda tangan sudah tersimpan, form edit nama & canvas tanda tangan dinonaktifkan dan diganti dengan kartu nama penandatangan terverifikasi, tampilan goresan tanda tangan digital dengan badge sah, serta tombol aksi bertuliskan 'Tutup' menggantikan tombol simpan/edit, 2) Pada TermsPdfModal (Syarat & Ketentuan Layanan), dalam mode riwayat/readOnly form persetujuan digantikan dengan kartu status 'Syarat & Ketentuan Layanan Telah Disetujui' dan tombol 'Tutup'.",
+    "details": [
+      "Strict Read-Only History Mode: Memastikan dokumen riwayat terlindungi dari perubahan data yang tidak disengaja.",
+      "Clean 'Tutup' Action Button: Mengganti tombol 'Kirim & Simpan Tanda Tangan' dengan tombol 'Tutup' berdesain tegas dan mudah diakses.",
+      "Verified Signature & Consent Badge: Menampilkan tanda tangan digital sah beserta stempel waktu persetujuan.",
+      "Zero Errors: Build production frontend lulus 100% (exit code 0)."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-376",
+    "timestamp": "2026-08-29T08:15:00.000Z",
+    "category": "admin-reservation-detail-ui-redesign",
+    "title": "Pembaruan Antarmuka Detail Reservasi Admin (Mobile-Friendly Layout & 5 Rekomendasi Jadwal Dokter)",
+    "description": "Menata ulang tampilan halaman/modal Detail Reservasi Admin (ReservationDetailModal.tsx) agar presisi sesuai desain mockup visual dan 100% mobile-friendly: 1) Header bar dilengkapi tombol Kembali, kode reservasi, badge status, info alur masuk, serta tombol 'Kembali ke Daftar', 2) Baris atas 2 kartu responsif: Kartu 'IDENTITAS PASIEN' (nama pengguna, no HP, email, jenis kelamin, tgl lahir/usia) dan Kartu 'LAYANAN & JADWAL KUNJUNGAN' (layanan diminati dalam kotak elegan, input tanggal kalender, input jam praktik resmi dokter, dan lokasi cabang), 3) Kartu 'PENUGASAN DOKTER & SINKRONISASI JADWAL PRAKTIK' dilengkapi peringatan jadwal bentrok / kesesuaian real-time, form penugasan dokter dan catatan keluhan pasien, serta dibatasi tepat 5 rekomendasi jadwal dokter aktif terdekat, 4) Footer aksi penanganan dengan label status dan tombol 'Konfirmasi Reservasi', 'Tandai Selesai Dirawat', 'Batalkan Reservasi', dan 'Tolak'.",
+    "details": [
+      "Pixel-Accurate Card Layout: Tata letak kartu identitas pasien dan layanan kunjungan rapi dan selaras dengan mockup visual.",
+      "Optimized 5 Schedule Recommendations: Rekomendasi slot dokter aktif dibatasi tepat maksimal 5 entri untuk menjaga kebersihan UI.",
+      "Mobile-Friendly & Touch Responsive: Seluruh tombol dan form memiliki touch-manipulation dan active micro-transitions.",
+      "Zero Errors: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-375",
     "timestamp": "2026-08-29T08:02:00.000Z",
     "category": "branding-and-kop-surat-standardization",

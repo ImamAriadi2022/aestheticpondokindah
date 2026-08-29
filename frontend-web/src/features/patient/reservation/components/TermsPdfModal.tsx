@@ -19,6 +19,7 @@ interface TermsPdfModalProps {
   initialSignature?: string | null;
   isAgreed?: boolean;
   showAcceptButton?: boolean;
+  readOnly?: boolean;
 }
 
 export default function TermsPdfModal({
@@ -31,7 +32,9 @@ export default function TermsPdfModal({
   initialSignature,
   isAgreed = false,
   showAcceptButton = true,
+  readOnly,
 }: TermsPdfModalProps) {
+  const isReadOnly = readOnly || !onAccept || !showAcceptButton;
   const [adminTerms, setAdminTerms] = useState<string | null>(null);
   const [customTerms, setCustomTerms] = useState<any>(null);
 
@@ -497,56 +500,89 @@ export default function TermsPdfModal({
               </div>
             </div>
 
-            {/* Checkbox-Only Agreement Form Section (Without signature canvas) */}
+            {/* Agreement Section */}
             <div className="pt-6 border-t-2 border-gray-300 space-y-4">
-              {/* Checkbox */}
-              <label className="flex items-start gap-2.5 cursor-pointer select-none bg-gray-50/80 p-3.5 rounded-xl border border-gray-200">
-                <input
-                  type="checkbox"
-                  checked={agreed}
-                  onChange={(e) => {
-                    setAgreed(e.target.checked);
-                    setErrorMessage(null);
-                  }}
-                  className="mt-0.5 w-4 h-4 rounded border-gray-400 text-black focus:ring-black cursor-pointer"
-                />
-                <span className="text-xs sm:text-sm text-gray-900 leading-snug">
-                  Saya telah membaca, memahami, dan menyetujui seluruh <strong className="underline">Syarat dan Ketentuan Layanan Pasien</strong> klinik Aesthetic Pondok Indah di atas. <span className="text-red-500">*</span>
-                </span>
-              </label>
+              {isReadOnly ? (
+                /* READ-ONLY / HISTORY PREVIEW MODE */
+                <div className="space-y-4">
+                  <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                        Status Persetujuan Ketentuan
+                      </span>
+                      <p className="text-xs sm:text-sm font-bold text-emerald-700 flex items-center gap-1.5 mt-0.5">
+                        <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                        <span>Syarat & Ketentuan Layanan Telah Disetujui</span>
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      ✓ Terverifikasi
+                    </span>
+                  </div>
 
-              {/* Name Field */}
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-gray-800">
-                  Nama Lengkap Pasien <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Masukkan nama lengkap Anda"
-                  className="w-full h-10 px-3.5 rounded-lg border border-gray-300 bg-white text-xs sm:text-sm text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
-                />
-              </div>
-
-              {/* Error Message */}
-              {errorMessage && (
-                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
-                  {errorMessage}
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      onClick={onClose}
+                      className="w-full h-11 rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation active:scale-95"
+                    >
+                      <span>Tutup</span>
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ) : (
+                /* EDITABLE / NEW BOOKING APPROVAL MODE */
+                <>
+                  {/* Checkbox */}
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none bg-gray-50/80 p-3.5 rounded-xl border border-gray-200">
+                    <input
+                      type="checkbox"
+                      checked={agreed}
+                      onChange={(e) => {
+                        setAgreed(e.target.checked);
+                        setErrorMessage(null);
+                      }}
+                      className="mt-0.5 w-4 h-4 rounded border-gray-400 text-black focus:ring-black cursor-pointer"
+                    />
+                    <span className="text-xs sm:text-sm text-gray-900 leading-snug">
+                      Saya telah membaca, memahami, dan menyetujui seluruh <strong className="underline">Syarat dan Ketentuan Layanan Pasien</strong> klinik Aesthetic Pondok Indah di atas. <span className="text-red-500">*</span>
+                    </span>
+                  </label>
 
-              {/* Submit Button (Ceklis / Setujui S&K) */}
-              <div className="pt-2">
-                <Button
-                  type="button"
-                  onClick={handleSubmitAgreement}
-                  className="w-full h-11 rounded-xl bg-[#00A859] hover:bg-[#00914c] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Check className="w-4 h-4 stroke-[3]" />
-                  <span>Saya Menyetujui Syarat & Ketentuan</span>
-                </Button>
-              </div>
+                  {/* Name Field */}
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-800">
+                      Nama Lengkap Pasien <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Masukkan nama lengkap Anda"
+                      className="w-full h-10 px-3.5 rounded-lg border border-gray-300 bg-white text-xs sm:text-sm text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                    />
+                  </div>
+
+                  {/* Error Message */}
+                  {errorMessage && (
+                    <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                      {errorMessage}
+                    </div>
+                  )}
+
+                  {/* Submit Button (Ceklis / Setujui S&K) */}
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      onClick={handleSubmitAgreement}
+                      className="w-full h-11 rounded-xl bg-[#00A859] hover:bg-[#00914c] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation active:scale-95"
+                    >
+                      <Check className="w-4 h-4 stroke-[3]" />
+                      <span>Saya Menyetujui Syarat & Ketentuan</span>
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

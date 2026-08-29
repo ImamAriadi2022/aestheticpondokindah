@@ -23,6 +23,7 @@ interface ReservationConsentPdfModalProps {
   timeStr?: string;
   signatureData?: string | null;
   acceptedAt?: string | null;
+  readOnly?: boolean;
   onSaveSignature?: (signatureDataUrl: string) => void;
   onAccept?: (signatureDataUrl: string) => void;
 }
@@ -41,9 +42,11 @@ export default function ReservationConsentPdfModal({
   timeStr = "10:00",
   signatureData: initialSignatureData = null,
   acceptedAt,
+  readOnly,
   onSaveSignature,
   onAccept,
 }: ReservationConsentPdfModalProps) {
+  const isReadOnly = readOnly || (!onAccept && !onSaveSignature) || Boolean(initialSignatureData);
   const [adminTerms, setAdminTerms] = useState<string | null>(null);
   const [customConsent, setCustomConsent] = useState<any>(null);
 
@@ -423,68 +426,129 @@ export default function ReservationConsentPdfModal({
             </div>
 
             <div className="pt-6 border-t-2 border-gray-300 space-y-4">
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-gray-800">
-                  Nama Pasien / Wali Sah <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Masukkan nama lengkap pasien / wali sah"
-                  className="w-full h-10 px-3.5 rounded-lg border border-gray-300 bg-white text-xs sm:text-sm text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
-                />
-              </div>
+              {isReadOnly ? (
+                /* READ-ONLY / HISTORY PREVIEW MODE */
+                <div className="space-y-4">
+                  {/* Patient Name / Signee */}
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                      Nama Pasien / Penandatangan Sah
+                    </span>
+                    <p className="text-sm font-bold text-black mt-0.5">
+                      {fullName || patientName}
+                    </p>
+                  </div>
 
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-gray-800">
-                    Tanda Tangan Digital Pasien <span className="text-red-500">*</span>
-                  </label>
-                  {(hasDrawn || currentSignature) && (
-                    <button
+                  {/* Verified Digital Signature Display */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-gray-800">
+                        Tanda Tangan Digital Pasien (Terverifikasi)
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                        ✓ Sah & Tersimpan
+                      </span>
+                    </div>
+
+                    <div className="border border-gray-300 rounded-xl bg-white p-3 flex items-center justify-center min-h-[90px] shadow-2xs">
+                      {currentSignature || initialSignatureData ? (
+                        <img
+                          src={currentSignature || initialSignatureData || ""}
+                          alt="Tanda Tangan Digital Pasien"
+                          className="max-h-20 w-auto object-contain"
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-400 italic">
+                          Tanda tangan digital telah tercatat dalam sistem riwayat reservasi.
+                        </span>
+                      )}
+                    </div>
+
+                    {acceptedAt && (
+                      <p className="text-[10px] text-gray-500 text-right">
+                        Tercatat pada: {new Date(acceptedAt).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })} WIB
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Close Button for History Mode */}
+                  <div className="pt-2">
+                    <Button
                       type="button"
-                      onClick={handleClearSignature}
-                      className="text-[11px] font-semibold text-gray-500 hover:text-red-600 underline cursor-pointer"
+                      onClick={onClose}
+                      className="w-full h-11 rounded-xl bg-[#2C2416] hover:bg-[#443823] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation active:scale-95"
                     >
-                      Clear / Ganti Tanda Tangan
-                    </button>
-                  )}
+                      <span>Tutup</span>
+                    </Button>
+                  </div>
                 </div>
-                <div className="relative border border-gray-300 rounded-xl bg-white overflow-hidden shadow-2xs">
-                  {!hasDrawn && !isDrawing && !currentSignature && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-400 text-xs">
-                      <span>Sign Here (Goreskan tanda tangan Anda di sini)</span>
+              ) : (
+                /* EDITABLE / NEW SIGNATURE MODE */
+                <>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-800">
+                      Nama Pasien / Wali Sah <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Masukkan nama lengkap pasien / wali sah"
+                      className="w-full h-10 px-3.5 rounded-lg border border-gray-300 bg-white text-xs sm:text-sm text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-gray-800">
+                        Tanda Tangan Digital Pasien <span className="text-red-500">*</span>
+                      </label>
+                      {(hasDrawn || currentSignature) && (
+                        <button
+                          type="button"
+                          onClick={handleClearSignature}
+                          className="text-[11px] font-semibold text-gray-500 hover:text-red-600 underline cursor-pointer"
+                        >
+                          Clear / Ganti Tanda Tangan
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative border border-gray-300 rounded-xl bg-white overflow-hidden shadow-2xs">
+                      {!hasDrawn && !isDrawing && !currentSignature && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-gray-400 text-xs">
+                          <span>Sign Here (Goreskan tanda tangan Anda di sini)</span>
+                        </div>
+                      )}
+                      <canvas
+                        ref={canvasRef}
+                        onMouseDown={startDrawing}
+                        onMouseMove={draw}
+                        onMouseUp={stopDrawing}
+                        onMouseLeave={stopDrawing}
+                        onTouchStart={startDrawing}
+                        onTouchMove={draw}
+                        onTouchEnd={stopDrawing}
+                        className="w-full h-32 cursor-crosshair touch-none"
+                      />
+                    </div>
+                  </div>
+
+                  {errorMessage && (
+                    <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
+                      {errorMessage}
                     </div>
                   )}
-                  <canvas
-                    ref={canvasRef}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
-                    className="w-full h-32 cursor-crosshair touch-none"
-                  />
-                </div>
-              </div>
 
-              {errorMessage && (
-                <div className="p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-medium">
-                  {errorMessage}
-                </div>
+                  <Button
+                    type="button"
+                    onClick={handleSubmitAgreement}
+                    className="w-full h-11 rounded-xl bg-[#00A859] hover:bg-[#00914c] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation active:scale-95"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    <span>Kirim & Simpan Tanda Tangan</span>
+                  </Button>
+                </>
               )}
-
-              <Button
-                type="button"
-                onClick={handleSubmitAgreement}
-                className="w-full h-11 rounded-xl bg-[#00A859] hover:bg-[#00914c] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Check className="w-4 h-4 stroke-[3]" />
-                <span>Kirim & Simpan Tanda Tangan</span>
-              </Button>
             </div>
           </div>
         </div>

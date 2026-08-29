@@ -421,6 +421,7 @@ export default function ETicketModal({
         <TermsPdfModal
           isOpen={showTermsModal}
           onClose={() => setShowTermsModal(false)}
+          readOnly={true}
         />
       )}
 
@@ -439,6 +440,7 @@ export default function ETicketModal({
           timeStr={`${ticketData.time} WIB`}
           signatureData={(ticketData as any)?.signatureData || (ticketData as any)?.signature_data || (ticketData as any)?.signature || null}
           acceptedAt={(ticketData as any)?.termsAcceptedAt || (ticketData as any)?.terms_accepted_at || (ticketData as any)?.acceptedAt || new Date().toISOString()}
+          readOnly={true}
         />
       )}
     </div>,

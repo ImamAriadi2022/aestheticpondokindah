@@ -500,615 +500,507 @@ export default function ReservationDetailModal({
 
   return (
     <>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header Navigation & Summary */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 bg-white rounded-3xl border border-[#E8DFC8] shadow-xs">
-          <div className="flex items-center gap-3">
+      <div className="space-y-4 sm:space-y-5 animate-fade-in pb-8">
+        {/* 1. Header Navigation & Summary Card */}
+        <div className="p-4 sm:p-5 bg-white rounded-2xl sm:rounded-3xl border border-[#E8DFC8] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAF5EA] hover:bg-[#F3EAD5] text-[#8C6B1C] hover:text-[#735614] text-xs font-bold border border-[#EADBBD] shadow-2xs transition-all cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#FAF5EA] hover:bg-[#F3EAD5] text-[#8C6B1C] text-xs font-bold border border-[#EADBBD] transition-all cursor-pointer shrink-0 mt-0.5 sm:mt-0 active:scale-95 touch-manipulation"
               title="Kembali ke Daftar Reservasi"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-3.5 h-3.5" />
               <span>Kembali</span>
             </button>
 
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] flex items-center justify-center text-[#8A6B2B] shadow-inner shrink-0">
-              <Calendar className="w-5 h-5 text-[#8A6B2B]" />
-            </div>
-
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-bold text-[#3D332A]">
+                <h2 className="text-base sm:text-lg font-bold text-[#2C2416]">
                   Reservasi #{bookingCode}
                 </h2>
-                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusConfig.bg}`}>
-                  <statusConfig.icon className="w-3.5 h-3.5" />
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusConfig.bg}`}>
+                  <statusConfig.icon className="w-3 h-3" />
                   {statusConfig.label}
                 </span>
               </div>
-              <p className="text-xs text-[#8A7B6B] mt-0.5">
+              <p className="text-[11px] text-[#8A7B6B] mt-0.5 leading-snug">
                 {isGuest ? (
-                  <span className="inline-flex items-center gap-1 text-blue-600 font-semibold">
-                    🌐 Alur: Guest Booking (Admin Menentukan & Menjadwalkan Dokter Sesuai Jam Praktik)
-                  </span>
+                  <span className="text-blue-600 font-semibold">🌐 Alur: Guest Booking</span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold">
-                    👤 Alur: Pasien Terdaftar (Dokter & Jadwal Dipilih Langsung Pasien)
-                  </span>
+                  <span className="text-emerald-700 font-semibold">👤 Alur: Pasien Terdaftar (Dokter & Jadwal Dipilih Langsung Pasien)</span>
                 )}
                 {reservation.createdAt && ` • Masuk pada ${new Date(reservation.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="self-end sm:self-auto rounded-xl text-xs font-bold px-3.5 py-2 h-8.5 border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer flex items-center gap-1 active:scale-95 touch-manipulation shrink-0"
+          >
+            <span>Kembali ke Daftar</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+
+        {/* 2. Top Info Grid (2 Cards: Identitas Pasien & Layanan/Jadwal) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card 1: Identitas Pasien */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F0E6D3] shadow-xs flex flex-col justify-between space-y-4">
+            <div>
+              <div className="flex items-center justify-between border-b border-[#F0E6D3]/60 pb-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C6B1C] flex items-center gap-2">
+                  <User className="w-4 h-4 text-[#8C6B1C]" /> IDENTITAS PASIEN
+                </h4>
+                <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                  isGuest ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-[#FAF5EA] text-[#8C6B1C] border-[#EADBBD]"
+                }`}>
+                  {isGuest ? "Pasien Guest" : "Pasien Member"}
+                </span>
+              </div>
+
+              <div className="mt-4 space-y-2.5">
+                <div>
+                  <span className="text-[10px] font-medium text-[#8A7B6B] block">Pengguna</span>
+                  <p className="text-base sm:text-lg font-black text-[#2C2416] leading-tight mt-0.5">
+                    {patientName}
+                  </p>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-[#5C5546]">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-[#8C6B1C] shrink-0" />
+                    <span className="font-semibold text-[#2C2416]">{reservation.phone || "-"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-[#8C6B1C] shrink-0" />
+                    <span className="text-[#6B5E4F] truncate">{reservation.email || "user@aestheticpondokindah.local"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-[#F0E6D3]/60 grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-[10px] text-[#8A7B6B] block">Jenis Kelamin:</span>
+                <p className="font-bold text-[#2C2416] text-xs capitalize mt-0.5">{reservation.gender || "male"}</p>
+              </div>
+              <div>
+                <span className="text-[10px] text-[#8A7B6B] block">Tgl Lahir / Usia:</span>
+                <p className="font-bold text-[#2C2416] text-xs mt-0.5">{reservation.birth_date || "2004-11-21"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Layanan & Jadwal Kunjungan */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F0E6D3] shadow-xs space-y-3.5">
+            <div className="flex items-center justify-between border-b border-[#F0E6D3]/60 pb-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C6B1C] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#8C6B1C]" /> LAYANAN & JADWAL KUNJUNGAN
+              </h4>
+            </div>
+
+            {/* Layanan yang Diminati Box */}
+            <div className="p-3 sm:p-3.5 bg-[#FAF8F5] rounded-xl border border-[#EDE5D6]">
+              <p className="text-[10px] font-bold text-[#8A7B6B] uppercase tracking-wider">Layanan yang Diminati</p>
+              <p className="text-base sm:text-lg font-black text-[#2C2416] mt-0.5">{serviceName}</p>
+            </div>
+
+            {/* Tanggal & Jam Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#8A7B6B] block">Tanggal Kunjungan</label>
+                <div className="relative flex items-center">
+                  <Calendar className="w-3.5 h-3.5 text-[#8C6B1C] absolute left-3 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={normalizeDate(selectedDate)}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="h-10 text-xs rounded-xl bg-white border-[#E8DFC8] font-bold text-[#2C2416] pl-9 w-full"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-[#8A7B6B] block">Jam Praktik Resmi Dokter</label>
+                <div className="relative flex items-center">
+                  <Clock className="w-3.5 h-3.5 text-[#8C6B1C] absolute left-3 pointer-events-none" />
+                  {doctorSchedulesOnDate.length > 0 ? (
+                    <select
+                      value={selectedScheduleId}
+                      onChange={(e) => {
+                        const sched = doctorSchedulesOnDate.find((s) => s.id === e.target.value);
+                        if (sched) {
+                          setSelectedScheduleId(sched.id);
+                          setSelectedTimeSlot(sched.timeRange);
+                        }
+                      }}
+                      className="h-10 text-xs rounded-xl bg-white border border-[#E8DFC8] font-bold text-[#2C2416] pl-9 pr-3 w-full focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+                    >
+                      {doctorSchedulesOnDate.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.timeRange} WIB ({s.isFull ? "⚠️ Kuota Penuh" : `Sisa ${s.slotsLeft} Slot`})
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Input
+                      type="text"
+                      value={selectedTimeSlot}
+                      onChange={(e) => setSelectedTimeSlot(e.target.value)}
+                      placeholder="Contoh: 10:40 WIB"
+                      className="h-10 text-xs rounded-xl bg-white border-[#E8DFC8] font-bold text-[#2C2416] pl-9 w-full"
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Branch Location Box */}
+            <div className="p-2.5 bg-[#FAF8F5] rounded-xl border border-[#EDE5D6] text-xs text-[#6B5E4F] flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#8C6B1C] shrink-0" />
+              <span className="font-semibold text-[#3D332A]">{reservation.branch_name || "Aesthetic Pondok Indah Main Branch"}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Card Penugasan Dokter & Sinkronisasi Jadwal Praktik */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F0E6D3] shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-[#F0E6D3]/60 pb-3 flex-wrap gap-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C6B1C] flex items-center gap-2">
+              <Stethoscope className="w-4 h-4 text-[#8C6B1C]" /> PENUGASAN DOKTER & SINKRONISASI JADWAL PRAKTIK
+            </h4>
+            <span className="text-[10px] font-semibold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-0.5 rounded-full border border-[#EADBBD]">
+              Live Sync: Jadwal Dokter Database
+            </span>
+          </div>
+
+          {/* Schedule Conflict Warning Banner */}
+          {scheduleConflictWarning.hasConflict ? (
+            <div
+              className={`p-3.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2.5 ${
+                scheduleConflictWarning.level === "danger"
+                  ? "bg-red-50/90 border-red-200 text-red-800"
+                  : "bg-amber-50/90 border-amber-200 text-amber-800"
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium">{scheduleConflictWarning.message}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/90 text-emerald-800 text-xs font-medium flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{scheduleConflictWarning.message}</span>
+            </div>
+          )}
+
+          {/* 2-Column Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left: Pilih Dokter */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#2C2416]">
+                Pilih Dokter Spesialis yang Bertugas
+              </label>
+              <select
+                value={selectedDoctorId}
+                onChange={(e) => handleDoctorChange(e.target.value)}
+                className="w-full bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#2C2416] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+              >
+                <option value="">--- Tetapkan Dokter Spesialis ---</option>
+                {doctors.map((d) => {
+                  const docClean = cleanDocName(d.name);
+                  const sched = dbSchedules.find((s) => {
+                    const matchDoc = String(s.doctorId) === String(d.id || d.user_id) ||
+                                     (s.doctorName && docClean && (cleanDocName(s.doctorName) === docClean || cleanDocName(s.doctorName).includes(docClean)));
+                    return matchDoc && normalizeDate(s.date) === cleanSelectedDate;
+                  });
+                  const statusLabel = sched
+                    ? sched.isFull
+                      ? `[⚠️ Kuota Penuh (${sched.timeRange})]`
+                      : `[✅ Ada Praktik: ${sched.timeRange} (Sisa ${sched.slotsLeft} Slot)]`
+                    : `[⚠️ Tidak Praktik di Tgl ${cleanSelectedDate || "ini"}]`;
+
+                  return (
+                    <option key={d.id || d.user_id} value={d.id || d.user_id}>
+                      {d.name} {statusLabel}
+                    </option>
+                  );
+                })}
+              </select>
+              <p className="text-[10px] text-[#8A7B6B]">
+                Pilih dokter yang memiliki badge hijau ✅ untuk memastikan jam praktik dokter sesuai.
+              </p>
+            </div>
+
+            {/* Right: Keluhan / Catatan Pasien */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#2C2416]">
+                Keluhan / Catatan Pasien
+              </label>
+              <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#E8DFC8] text-xs text-[#4A3F35] min-h-[46px] leading-relaxed">
+                {reservation.complaint || `Reservasi ${serviceName} bersama ${doctorName}`}
+              </div>
+            </div>
+          </div>
+
+          {/* Rekomendasi Jadwal Dokter (Maksimal 5 Rekomendasi sesuai instruksi pengguna) */}
+          {availableSchedulesOnDate.length > 0 && (
+            <div className="pt-2 border-t border-[#F0E6D3]/60">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[11px] font-bold text-[#8C6B1C] uppercase tracking-wider block">
+                  Rekomendasi Jadwal Dokter Aktif ({Math.min(availableSchedulesOnDate.length, 5)} Jadwal):
+                </label>
+                <span className="text-[10px] text-[#8A7B6B]">Klik untuk tetapkan otomatis</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                {availableSchedulesOnDate.slice(0, 5).map((sc) => {
+                  const isSelected = String(sc.doctorId) === String(selectedDoctorId);
+                  return (
+                    <div
+                      key={sc.id}
+                      onClick={() => handleSelectActiveSchedule(sc)}
+                      className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-xs touch-manipulation active:scale-98 ${
+                        isSelected
+                          ? "bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200"
+                          : sc.isFull
+                          ? "bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed"
+                          : "bg-[#FAF8F5] border-[#E8DFC8] hover:border-[#C9A24A] hover:bg-[#FDFBF7]"
+                      }`}
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p className="font-bold text-[#2C2416] text-xs truncate">{sc.doctorName || "Dokter Spesialis"}</p>
+                        <p className="text-[11px] text-[#7A6E60] mt-0.5 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-[#8C6B1C] shrink-0" />
+                          <span>{sc.timeRange} WIB</span>
+                        </p>
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 ${
+                          sc.isFull
+                            ? "bg-red-100 text-red-700"
+                            : "bg-emerald-100 text-emerald-800"
+                        }`}
+                      >
+                        {sc.isFull ? "Penuh" : `Sisa ${sc.slotsLeft}`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 4. Verifikasi Dokumen Legal & Persetujuan Pasien */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F0E6D3] shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-[#F0E6D3] pb-3">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C6B1C] flex items-center gap-1.5">
+              <FileCheck className="w-4 h-4 text-[#8C6B1C]" />
+              Verifikasi Dokumen Legal & Persetujuan Pasien
+            </h4>
+            <span className="text-[10px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-0.5 rounded-full border border-[#EADBBD]">
+              2 Dokumen Terdaftar
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* S&K */}
+            <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-2.5 flex flex-col justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    1. Syarat & Ketentuan Layanan
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    ✓ Disetujui
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7A6E60] leading-relaxed">
+                  Pasien telah menyetujui seluruh ketentuan operasional klinik & kebijakan rekam medis.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsTermsPdfModalOpen(true)}
+                className="h-8 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation active:scale-95 w-full"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Lihat PDF Syarat & Ketentuan</span>
+              </Button>
+            </div>
+
+            {/* Informed Consent */}
+            <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-2.5 flex flex-col justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-[#3D332A] flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#8C6B1C] shrink-0" />
+                    2. Surat Persetujuan (Informed Consent)
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    ✓ Bertanda Tangan Digital
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7A6E60] leading-relaxed">
+                  Surat pernyataan persetujuan tindakan medis bertanda tangan sah elektronik.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => setIsPdfModalOpen(true)}
+                className="h-8 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation active:scale-95 w-full"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Lihat PDF Surat Persetujuan</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* 5. Aksi Fast Action WhatsApp */}
+        <div className="bg-gradient-to-br from-[#FDFBF7] to-[#F5ECE0] rounded-2xl p-4 sm:p-5 border border-[#EADBBD] shadow-xs space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#8A6B2B] flex items-center gap-1.5">
+            <MessageSquare className="w-3.5 h-3.5" /> Aksi Komunikasi WhatsApp Terintegrasi
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <button
+              type="button"
+              onClick={handleSendWhatsAppConfirmation}
+              className="p-3 bg-white hover:bg-emerald-50/80 border border-emerald-200 rounded-xl text-left transition-all shadow-xs cursor-pointer active:scale-95 touch-manipulation"
+            >
+              <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
+                <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Konfirmasi ke Pasien</span>
+              </div>
+              <p className="text-[10px] text-[#8A7B6B] mt-1 line-clamp-2">
+                Kirim detail booking & dokter ke WA {patientName}.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSendWhatsAppToDoctor}
+              className="p-3 bg-white hover:bg-amber-50/80 border border-[#EADBBD] rounded-xl text-left transition-all shadow-xs cursor-pointer active:scale-95 touch-manipulation"
+            >
+              <div className="flex items-center gap-2 text-[#8A6B2B] font-bold text-xs">
+                <Stethoscope className="w-4 h-4 text-[#C9A24A] shrink-0" />
+                <span>Notifikasi ke Dokter</span>
+              </div>
+              <p className="text-[10px] text-[#8A7B6B] mt-1 line-clamp-2">
+                Infokan janji temu dan keluhan pasien ke dokter.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSendWhatsAppReminder}
+              className="p-3 bg-white hover:bg-blue-50/80 border border-blue-200 rounded-xl text-left transition-all shadow-xs cursor-pointer active:scale-95 touch-manipulation"
+            >
+              <div className="flex items-center gap-2 text-blue-700 font-bold text-xs">
+                <Bell className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>Pengingat H-1 Jam</span>
+              </div>
+              <p className="text-[10px] text-[#8A7B6B] mt-1 line-clamp-2">
+                Ingatkan pasien untuk hadir 15-30 menit sebelum jadwal.
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* 6. Catatan Internal Staf */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F0E6D3] shadow-xs space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C6B1C] flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5" /> Catatan Internal Staf & Dokter
+          </h4>
+          <textarea
+            value={adminNotes}
+            onChange={(e) => setAdminNotes(e.target.value)}
+            placeholder="Tulis catatan internal untuk staf front-desk / dokter (contoh: Pasien ingin konsultasi behel, sudah dihubungi via WA)..."
+            rows={2}
+            className="w-full bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl p-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
+          />
+          <div className="flex justify-end">
             <Button
               type="button"
+              onClick={handleSaveNotesAndDoctor}
+              disabled={isSubmitting}
+              size="sm"
               variant="outline"
-              onClick={onClose}
-              className="rounded-xl text-xs font-bold px-4 py-2 h-9 border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
+              className="text-xs h-8 rounded-xl border-[#C9A24A] text-[#8A6B2B] hover:bg-[#FDF8F0] cursor-pointer touch-manipulation active:scale-95"
             >
-              ← Kembali ke Daftar
+              {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Simpan Catatan & Dokter ke Database"}
             </Button>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="space-y-6">
-          {/* Top Info Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Card 1: Data Pasien */}
-            <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" /> Identitas Pasien
-                </h4>
-                <span className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-md ${
-                  isGuest ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                }`}>
-                  {isGuest ? "🌐 Guest User" : "👤 Pasien Member"}
-                </span>
-              </div>
-
-              <div>
-                <p className="text-base font-bold text-[#3D332A]">{patientName}</p>
-                <div className="mt-2.5 space-y-1.5 text-xs text-[#6B5E4F]">
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-3.5 h-3.5 text-[#B8943F]" />
-                    <span className="font-semibold text-[#3D332A]">{reservation.phone || "-"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-3.5 h-3.5 text-[#B8943F]" />
-                    <span>{reservation.email || "Email tidak dicantumkan"}</span>
-                  </div>
-                  {reservation.gender && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#8A7B6B]">Jenis Kelamin:</span>
-                      <span className="font-medium text-[#3D332A]">{reservation.gender}</span>
-                    </div>
-                  )}
-                  {reservation.birth_date && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#8A7B6B]">Tgl Lahir / Usia:</span>
-                      <span className="font-medium text-[#3D332A]">{reservation.birth_date}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Layanan & Jadwal Kunjungan */}
-            <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" /> Layanan & Jadwal Kunjungan
-              </h4>
-
-              <div className="space-y-3">
-                <div className="p-3 bg-[#FDF8F0] rounded-xl border border-[#F5E6C8]">
-                  <p className="text-[11px] font-semibold text-[#8A6B2B]">Layanan yang Diminati</p>
-                  <p className="text-sm font-bold text-[#3D332A] mt-0.5">{serviceName}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[#8A7B6B] block">Tanggal Kunjungan</label>
-                    <Input
-                      type="date"
-                      value={normalizeDate(selectedDate)}
-                      onChange={(e) => {
-                        setSelectedDate(e.target.value);
-                      }}
-                      className="h-9 text-xs rounded-xl bg-white border-[#E8DFC8] font-semibold text-[#3D332A]"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[#8A7B6B] block">
-                      Jam Praktik Resmi Dokter
-                    </label>
-                    {doctorSchedulesOnDate.length > 0 ? (
-                      <select
-                        value={selectedScheduleId}
-                        onChange={(e) => {
-                          const sched = doctorSchedulesOnDate.find((s) => s.id === e.target.value);
-                          if (sched) {
-                            setSelectedScheduleId(sched.id);
-                            setSelectedTimeSlot(sched.timeRange);
-                          }
-                        }}
-                        className="h-9 text-xs rounded-xl bg-white border-[#E8DFC8] font-bold text-[#3D332A] w-full px-2 focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
-                      >
-                        {doctorSchedulesOnDate.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.timeRange} WIB ({s.isFull ? "⚠️ Kuota Penuh" : `Sisa ${s.slotsLeft} Slot`})
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <Input
-                        type="text"
-                        value={selectedTimeSlot}
-                        onChange={(e) => setSelectedTimeSlot(e.target.value)}
-                        placeholder="Contoh: 10:00 WIB"
-                        className="h-9 text-xs rounded-xl bg-white border-[#E8DFC8] font-semibold text-[#3D332A]"
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="text-xs text-[#6B5E4F] flex items-start gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-[#B8943F] shrink-0 mt-0.5" />
-                  <span>{reservation.branch_name || "Aesthetic Pondok Indah Main Branch"}</span>
-                </div>
-              </div>
-            </div>
+        {/* 7. Bottom Action Footer Bar (Sesuai Mockup Desain) */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5 p-4 sm:p-5 bg-white rounded-2xl border border-[#E8DFC8] shadow-xs">
+          <div className="text-xs text-[#8A7B6B] flex items-center gap-2">
+            <span>Status Penanganan Saat Ini:</span>
+            <strong className="text-[#2C2416] font-bold text-sm">{status}</strong>
           </div>
 
-          {/* Card 3: PENUGASAN DOKTER & SINKRONISASI JADWAL DATABASE (ANTI-BENTROK) */}
-          <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
-                <Stethoscope className="w-3.5 h-3.5" /> Penugasan Dokter & Sinkronisasi Jadwal Praktik
-              </h4>
-              <span className="text-[10px] font-semibold text-[#8A6B2B] bg-[#FAF4E8] px-2 py-0.5 rounded-md border border-[#EADBBD]">
-                Live Sync Jadwal Dokter Database
-              </span>
-            </div>
-
-            {/* Schedule Conflict Live Warning Banner */}
-            <div
-              className={`p-3.5 rounded-2xl border text-xs leading-relaxed flex items-start gap-2.5 ${
-                scheduleConflictWarning.level === "danger"
-                  ? "bg-red-50/90 border-red-200 text-red-800"
-                  : scheduleConflictWarning.level === "warning"
-                  ? "bg-amber-50/90 border-amber-200 text-amber-800"
-                  : "bg-emerald-50/90 border-emerald-200 text-emerald-800 font-medium"
-              }`}
-            >
-              {scheduleConflictWarning.level === "danger" ? (
-                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-              ) : scheduleConflictWarning.level === "warning" ? (
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-              )}
-              <div className="flex-1">
-                <p>{scheduleConflictWarning.message}</p>
-              </div>
-            </div>
-
-            {/* Doctor Selection with Live Status Badges */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-[#3D332A]">
-                  Pilih Dokter Spesialis yang Bertugas
-                </label>
-                <select
-                  value={selectedDoctorId}
-                  onChange={(e) => handleDoctorChange(e.target.value)}
-                  className="w-full bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl px-3 py-2.5 text-xs font-semibold text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
-                >
-                  <option value="">-- Tetapkan Dokter Spesialis --</option>
-                  {doctors.map((d) => {
-                    const docClean = cleanDocName(d.name);
-                    const sched = dbSchedules.find((s) => {
-                      const matchDoc = String(s.doctorId) === String(d.id || d.user_id) ||
-                                       (s.doctorName && docClean && (cleanDocName(s.doctorName) === docClean || cleanDocName(s.doctorName).includes(docClean)));
-                      return matchDoc && normalizeDate(s.date) === cleanSelectedDate;
-                    });
-                    const statusLabel = sched
-                      ? sched.isFull
-                        ? `[⚠️ Kuota Penuh (${sched.timeRange})]`
-                        : `[✅ Ada Praktik: ${sched.timeRange} (Sisa ${sched.slotsLeft} Slot)]`
-                      : `[⚠️ Tidak Praktik di Tgl ${cleanSelectedDate || "ini"}]`;
-
-                    return (
-                      <option key={d.id || d.user_id} value={d.id || d.user_id}>
-                        {d.name} {statusLabel}
-                      </option>
-                    );
-                  })}
-                </select>
-                <p className="text-[10px] text-[#8A7B6B]">
-                  Pilih dokter yang memiliki badge hijau ✅ untuk memastikan jam praktik dokter sesuai.
-                </p>
-              </div>
-
-              {/* Patient Notes / Complaint */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-[#3D332A]">
-                  Keluhan / Catatan Pasien
-                </label>
-                <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#E8DFC8] text-xs text-[#4A3F35] min-h-[50px] leading-relaxed">
-                  {reservation.complaint || "Tidak ada catatan keluhan khusus yang diinputkan."}
-                </div>
-              </div>
-            </div>
-
-            {/* If doctor has other available dates, offer 1-click switch */}
-            {doctorOtherUpcomingSchedules.length > 0 && doctorSchedulesOnDate.length === 0 && (
-              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-2">
-                <p className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-amber-700" />
-                  Jadwal Praktik Aktif Lainnya untuk {doctorName}:
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {doctorOtherUpcomingSchedules.slice(0, 4).map((alt) => (
-                    <button
-                      key={alt.id}
-                      type="button"
-                      onClick={() => handleSelectActiveSchedule(alt)}
-                      className="px-2.5 py-1.5 bg-white hover:bg-amber-100/70 border border-amber-300 rounded-xl text-[11px] font-semibold text-amber-900 flex items-center gap-1.5 transition-all shadow-xs"
-                    >
-                      <span>{alt.date} ({alt.timeRange} WIB)</span>
-                      <span className="text-[10px] text-emerald-700 font-bold">• Sisa {alt.slotsLeft} slot</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Konfirmasi Reservasi */}
+            {status !== "Dikonfirmasi" && status !== "Selesai" && (
+              <Button
+                type="button"
+                onClick={() => handleUpdateStatus("Dikonfirmasi")}
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none h-10 px-5 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-xs transition-all cursor-pointer touch-manipulation active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Konfirmasi Reservasi</span>
+              </Button>
             )}
 
-            {/* Quick Pick Active Schedule Cards on Selected Date */}
-            {availableSchedulesOnDate.length > 0 && (
-              <div className="pt-2">
-                <label className="text-[11px] font-bold text-[#8A6B2B] uppercase tracking-wider block mb-2">
-                  Jadwal Praktik Dokter yang Aktif pada Tanggal {selectedDate}:
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {availableSchedulesOnDate.map((sc) => {
-                    const isSelected = String(sc.doctorId) === String(selectedDoctorId);
-                    return (
-                      <div
-                        key={sc.id}
-                        onClick={() => handleSelectActiveSchedule(sc)}
-                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-xs ${
-                          isSelected
-                            ? "bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200"
-                            : sc.isFull
-                            ? "bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed"
-                            : "bg-[#FAF8F5] border-[#E8DFC8] hover:border-[#C9A24A] hover:bg-[#FDFBF7]"
-                        }`}
-                      >
-                        <div>
-                          <p className="font-bold text-[#3D332A]">{sc.doctorName || "Dokter Spesialis"}</p>
-                          <p className="text-[11px] text-[#7A6E60] mt-0.5 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-[#B8943F]" />
-                            {sc.timeRange} WIB
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                              sc.isFull
-                                ? "bg-red-100 text-red-700"
-                                : "bg-emerald-100 text-emerald-800"
-                            }`}
-                          >
-                            {sc.isFull ? "Penuh" : `Sisa ${sc.slotsLeft} Slot`}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            {/* Tandai Selesai Dirawat */}
+            {status !== "Selesai" && (
+              <Button
+                type="button"
+                onClick={() => handleUpdateStatus("Selesai")}
+                disabled={isSubmitting}
+                variant="outline"
+                className="flex-1 sm:flex-none h-10 px-4 rounded-xl border-[#D9D0BC] bg-white hover:bg-[#FAF8F5] text-[#4A3F35] text-xs font-bold shadow-2xs transition-all cursor-pointer touch-manipulation active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Tandai Selesai Dirawat</span>
+              </Button>
             )}
 
-            </div>
-
-          {/* Card 3: 2 Langkah Verifikasi Dokumen & Tanda Tangan Pasien */}
-          <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-[#F0E6D3] pb-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
-                <FileCheck className="w-4 h-4 text-[#8C6B1C]" />
-                Verifikasi Dokumen Legal & Persetujuan Pasien
-              </h4>
-              <span className="text-[10px] font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-0.5 rounded-full border border-[#EADBBD]">
-                2 Dokumen Terdaftar
-              </span>
-            </div>
-
-            {/* Verifikasi 1: Syarat & Ketentuan Layanan Pasien */}
-            <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#3D332A]">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>1. Syarat & Ketentuan Layanan Pasien</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    ✓ Disetujui via Ceklis
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsTermsPdfModalOpen(true)}
-                    className="h-7 px-3 rounded-xl border-[#8C6B1C] text-[#8C6B1C] hover:bg-[#FAF5EA] text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
-                  >
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>Lihat PDF Syarat & Ketentuan</span>
-                  </Button>
-                </div>
-              </div>
-              <p className="text-[11px] text-[#7A6E60] leading-relaxed">
-                Pasien telah menyetujui seluruh ketentuan operasional klinik, aturan penjadwalan & reschedule, garansi perawatan, hak & kewajiban pasien, serta kebijakan rekam medis.
-              </p>
-            </div>
-
-            {/* Verifikasi 2: Surat Pernyataan & Persetujuan Pasien (Informed Consent + Tanda Tangan Digital) */}
-            <div className="bg-[#FAF8F5] border border-[#E8DFC8] rounded-2xl p-4 space-y-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 text-xs font-bold text-[#3D332A]">
-                  <ShieldCheck className="w-4 h-4 text-[#8C6B1C] shrink-0" />
-                  <span>2. Surat Pernyataan & Persetujuan Pasien (Informed Consent)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                    ✓ Bertanda Tangan Digital
-                  </span>
-                  <Button
-                    type="button"
-                    onClick={() => setIsPdfModalOpen(true)}
-                    className="h-7 px-3 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Lihat PDF Surat Persetujuan</span>
-                  </Button>
-                </div>
-              </div>
-
-              {reservation.signature_data ? (
-                <div className="bg-white border border-[#EADBBD] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                  <div className="flex items-center gap-3">
-                    <div
-                      onClick={() => setIsPdfModalOpen(true)}
-                      className="w-36 h-16 bg-[#FAF8F5] border border-[#D9D0BC] rounded-lg p-1 flex items-center justify-center cursor-pointer hover:border-[#8C6B1C] transition-all group"
-                      title="Klik untuk melihat dokumen PDF Surat Persetujuan Pasien"
-                    >
-                      <img
-                        src={reservation.signature_data}
-                        alt="Digital Signature Canvas"
-                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                    <div className="text-xs text-[#6B5E4F] space-y-0.5">
-                      <p className="font-bold text-[#3D332A]">Goresan Tangan Asli Terverifikasi</p>
-                      <p className="text-[11px]">
-                        Penandatangan: <strong className="text-[#2C2416]">{patientName}</strong> ({isGuest ? "Guest User" : "Pasien Member"})
-                      </p>
-                      <p className="text-[10px] text-[#8A7B6B]">
-                        Tersimpan permanen pada database reservasi klinik Aesthetic Pondok Indah.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 bg-white rounded-xl border border-dashed border-[#D9D0BC] flex items-center justify-between text-xs text-[#8A7B6B]">
-                  <span>Persetujuan medis elektronik telah terkonfirmasi.</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Card 4: AKSI FAST ACTION WHATSAPP (Pasien, Dokter, Pengingat H-1) */}
-          <div className="bg-gradient-to-br from-[#FDFBF7] to-[#F5ECE0] rounded-2xl p-5 border border-[#EADBBD] shadow-xs space-y-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#8A6B2B] flex items-center gap-1.5">
-              <MessageSquare className="w-3.5 h-3.5" /> Aksi Komunikasi WhatsApp Terintegrasi
-            </h4>
-            <p className="text-xs text-[#7A6E60]">
-              Admin dapat mengirimkan konfirmasi dan notifikasi otomatis 1-klik ke nomor WhatsApp pasien maupun dokter bertugas:
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-              {/* 1. Konfirmasi ke Pasien */}
-              <button
-                onClick={handleSendWhatsAppConfirmation}
-                className="p-3 bg-white hover:bg-emerald-50/80 border border-emerald-200 rounded-xl text-left transition-all group shadow-xs hover:border-emerald-400 cursor-pointer"
+            {/* Batalkan Reservasi */}
+            {status !== "Dibatalkan" && (
+              <Button
+                type="button"
+                onClick={() => handleUpdateStatus("Dibatalkan")}
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-none h-10 px-4 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition-all cursor-pointer touch-manipulation active:scale-95 flex items-center justify-center gap-1.5"
               >
-                <div className="flex items-center gap-2 text-emerald-700 font-bold text-xs">
-                  <MessageSquare className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Konfirmasi ke Pasien</span>
-                </div>
-                <p className="text-[11px] text-[#8A7B6B] mt-1 line-clamp-2">
-                  Kirim rincian kode booking, jadwal praktik & dokter ke WhatsApp {patientName}.
-                </p>
-              </button>
+                <XCircle className="w-4 h-4" />
+                <span>Batalkan Reservasi</span>
+              </Button>
+            )}
 
-              {/* 2. Notifikasi ke Dokter */}
-              <button
-                onClick={handleSendWhatsAppToDoctor}
-                className="p-3 bg-white hover:bg-amber-50/80 border border-[#EADBBD] rounded-xl text-left transition-all group shadow-xs hover:border-[#C9A24A] cursor-pointer"
+            {/* Tolak */}
+            {status !== "Ditolak" && status === "Baru" && (
+              <Button
+                type="button"
+                onClick={() => handleUpdateStatus("Ditolak")}
+                disabled={isSubmitting}
+                variant="outline"
+                className="flex-1 sm:flex-none h-10 px-4 rounded-xl border-gray-300 text-gray-700 hover:bg-gray-100 text-xs font-bold transition-all cursor-pointer touch-manipulation active:scale-95"
               >
-                <div className="flex items-center gap-2 text-[#8A6B2B] font-bold text-xs">
-                  <Stethoscope className="w-4 h-4 text-[#C9A24A] shrink-0" />
-                  <span>Notifikasi ke Dokter</span>
-                </div>
-                <p className="text-[11px] text-[#8A7B6B] mt-1 line-clamp-2">
-                  Infokan jadwal janji temu dan keluhan pasien ke dokter bertugas.
-                </p>
-              </button>
-
-              {/* 3. Pengingat H-1 Jam / Hari H */}
-              <button
-                onClick={handleSendWhatsAppReminder}
-                className="p-3 bg-white hover:bg-blue-50/80 border border-blue-200 rounded-xl text-left transition-all group shadow-xs hover:border-blue-400 cursor-pointer"
-              >
-                <div className="flex items-center gap-2 text-blue-700 font-bold text-xs">
-                  <Bell className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Pengingat H-1 Jam</span>
-                </div>
-                <p className="text-[11px] text-[#8A7B6B] mt-1 line-clamp-2">
-                  Ingatkan pasien untuk hadir 15-30 menit sebelum jadwal treatment.
-                </p>
-              </button>
-            </div>
+                <span>Tolak</span>
+              </Button>
+            )}
           </div>
-
-
-          {/* Card: KONFIRMASI PEMBAYARAN KASIR & POIN PASIEN */}
-          <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-3.5">
-            <div className="flex items-center justify-between border-b border-[#F0E6D3] pb-2.5">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
-                <Coins className="w-4 h-4 text-[#8C6B1C]" />
-                Status Pembayaran Kasir & Perolehan Poin Member
-              </h4>
-              <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
-                isPaid ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-amber-50 text-amber-800 border-amber-200"
-              }`}>
-                {isPaid ? "🟢 Sudah Bayar (Lunas)" : "🟡 Belum Bayar (Kasir Offline)"}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-3.5 bg-[#FAF8F5] rounded-xl border border-[#E8DFC8] space-y-1">
-                <p className="text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">Layanan Terdaftar</p>
-                <p className="font-bold text-[#2C2416] text-sm">{serviceName}</p>
-                <p className="text-[11px] text-emerald-700 font-semibold pt-1">
-                  ✨ Pasien otomatis mendapatkan poin sesuai aturan poin layanan saat status pembayaran dikonfirmasi Lunas.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-[#FAF5EA] rounded-xl border border-[#EADBBD] flex flex-col justify-between space-y-2">
-                <div>
-                  <p className="text-[10px] text-[#8C6B1C] uppercase font-bold tracking-wider">Tindakan Kasir</p>
-                  <p className="text-xs text-[#2C2416] mt-0.5">
-                    {isPaid
-                      ? "Pembayaran telah terverifikasi dan poin member telah masuk ke buku besar ledger."
-                      : "Pasien membayar langsung di klinik/kasir secara offline. Klik tombol di bawah untuk mencatat pembayaran dan memberikan poin reward otomatis."}
-                  </p>
-                </div>
-
-                {!isPaid && (
-                  <Button
-                    type="button"
-                    onClick={handleConfirmPaymentInModal}
-                    disabled={isSubmitting}
-                    className="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold h-9 px-4 flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
-                  >
-                    <Coins className="w-4 h-4" />
-                    <span>Konfirmasi Sudah Bayar (Kasir) & Beri Poin</span>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Card 5: Catatan Admin & Alur Penanganan Status */}
-          <div className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-xs space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#B8943F] flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" /> Catatan Internal Staf & Alur Status
-            </h4>
-
-            <div>
-              <textarea
-                value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
-                placeholder="Tulis catatan internal untuk staf front-desk / dokter (contoh: Pasien ingin konsultasi behel transparan, sudah dihubungi via WA)..."
-                rows={2}
-                className="w-full bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl p-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]"
-              />
-              <div className="flex justify-end mt-2">
-                <Button
-                  onClick={handleSaveNotesAndDoctor}
-                  disabled={isSubmitting}
-                  size="sm"
-                  variant="outline"
-                  className="text-xs h-8 rounded-xl border-[#C9A24A] text-[#8A6B2B] hover:bg-[#FDF8F0]"
-                >
-                  {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Simpan Catatan & Dokter ke Database"}
-                </Button>
-              </div>
-            </div>
-
-            {/* Quick Status Action Flow */}
-            <div className="pt-4 border-t border-[#F0E6D3]">
-              <p className="text-xs font-bold text-[#3D332A] mb-3">
-                Ubah Status Penanganan Reservasi:
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                {status !== "Dikonfirmasi" && status !== "Selesai" && (
-                  <Button
-                    onClick={() => handleUpdateStatus("Dikonfirmasi")}
-                    disabled={isSubmitting}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold px-4 py-2 h-auto flex items-center gap-1.5 shadow-sm"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    Konfirmasi Reservasi
-                  </Button>
-                )}
-
-                {status !== "Selesai" && (
-                  <Button
-                    onClick={() => handleUpdateStatus("Selesai")}
-                    disabled={isSubmitting}
-                    className="bg-[#C9A24A] hover:bg-[#B8943F] text-white rounded-xl text-xs font-semibold px-4 py-2 h-auto flex items-center gap-1.5 shadow-sm"
-                  >
-                    <FileCheck className="w-4 h-4" />
-                    Tandai Selesai Dirawat
-                  </Button>
-                )}
-
-                {status !== "Dibatalkan" && (
-                  <Button
-                    onClick={() => handleUpdateStatus("Dibatalkan")}
-                    disabled={isSubmitting}
-                    variant="outline"
-                    className="bg-white hover:bg-red-50 text-red-600 border-red-200 rounded-xl text-xs font-semibold px-4 py-2 h-auto flex items-center gap-1.5 shadow-xs"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Batalkan Reservasi
-                  </Button>
-                )}
-
-                {status !== "Ditolak" && status === "Baru" && (
-                  <Button
-                    onClick={() => handleUpdateStatus("Ditolak")}
-                    disabled={isSubmitting}
-                    variant="ghost"
-                    className="hover:bg-gray-100 text-gray-600 rounded-xl text-xs font-semibold px-3 py-2 h-auto"
-                  >
-                    Tolak
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* In-Page Bottom Navigation Footer */}
-        <div className="flex items-center justify-between p-5 bg-white rounded-2xl border border-[#E8DFC8] shadow-xs">
-          <span className="text-xs text-[#8A7B6B]">
-            Status Penanganan Saat Ini: <strong className="text-[#3D332A]">{status}</strong>
-          </span>
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="rounded-xl text-xs font-bold px-5 py-2.5 h-auto border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
-          >
-            ← Kembali ke Daftar Reservasi
-          </Button>
         </div>
       </div>
 
@@ -1126,10 +1018,12 @@ export default function ReservationDetailModal({
       timeStr={timeStr}
       signatureData={reservation.signature_data}
       acceptedAt={reservation.terms_accepted_at || reservation.createdAt}
+      readOnly={true}
     />
     <TermsPdfModal
         isOpen={isTermsPdfModalOpen}
         onClose={() => setIsTermsPdfModalOpen(false)}
+        readOnly={true}
       />
     </>
   );
