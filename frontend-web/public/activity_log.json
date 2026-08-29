@@ -1,5 +1,49 @@
 [
   {
+    "id": "act-375",
+    "timestamp": "2026-08-29T08:02:00.000Z",
+    "category": "branding-and-kop-surat-standardization",
+    "title": "Standardisasi Kop Surat Dokumen Resmi & Migrasi Aset Logo Global ke logo-vertikal.webp",
+    "description": "Menyelaraskan tata letak kop surat resmi (PDF S&K dan Surat Persetujuan Pasien/Informed Consent) dan memutakhirkan seluruh aset logo klinik di ekosistem web & PWA: 1) Mengonversi master logo `Logo-vertikal.png` ke format modern WebP terkompresi optimal `logo-vertikal.webp`, 2) Mengubah desain kop surat di modal interaktif dan template cetak PDF menjadi konsisten berpusat di tengah (centered) baik pada tampilan mobile maupun desktop dengan logo kecil di atas, judul tunggal 'Aesthetic Pondok Indah', serta informasi alamat dan telepon yang persis dengan footer website (Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kebayoran Lama, Jakarta Selatan | Telp: 021-7695948 | WA: 0812-3456-7890 | Email: aesthetic.pondokindah@gmail.com), 3) Memperbarui seluruh pemanggilan logo di Header navbar, Footer brand, PWA splash loader & shortcut icon di index.html, Login gate, Membership digital card, dan Swagger console.",
+    "details": [
+      "Optimal WebP Conversion: Menghasilkan aset logo-vertikal.webp tajam dan ringan untuk kecepatan loading instan.",
+      "Consistent Centered Kop Layout: Desain kop surat simetris dan rapi di layar HP (mobile) maupun layar lebar (desktop).",
+      "Exact Footer Info Matching: Alamat, nomor telepon, WA, dan email di kop surat tersinkronisasi 100% dengan footer.",
+      "Global Brand Refresh: Navigasi header, footer, PWA splash screen, dan halaman auth kini seragam menggunakan logo-vertikal.webp."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-374",
+    "timestamp": "2026-08-29T07:47:00.000Z",
+    "category": "pdf-modal-top-layer-presentation-fix",
+    "title": "Peningkatan Mekanisme UI Kotak Modal PDF S&K & Surat Persetujuan (Top-Layer React Portal & Multi-Modal Stacking)",
+    "description": "Mengimplementasikan mekanisme rendering kotak modal PDF Syarat & Ketentuan (TermsPdfModal) dan PDF Surat Pernyataan/Persetujuan Pasien (ReservationConsentPdfModal) agar saat tombol 'PDF S&K' atau 'PDF Surat Persetujuan' diklik langsung muncul sempurna di lapisan paling atas (top-layer) di atas modal induk (seperti ETicketModal): 1) Mengubah arsitektur modal PDF menggunakan React Portal (`createPortal(..., document.body)`) dengan z-index tinggi (`z-[200]`) sehingga selalu berada di atas modal induk (`z-[100]`), 2) Menambahkan backdrop gelap semi-transparan bergradasi (`bg-black/75 backdrop-blur-xs`) dengan animasi zoom/fade-in yang halus, 3) Mengisolasi klik backdrop dan event propagation (`stopPropagation`) agar penutupan modal berjalan presisi baik via tombol X, tombol Cetak, maupun klik di luar kotak.",
+    "details": [
+      "Top-Layer Modal Hierarchy: Modal PDF S&K dan Surat Persetujuan selalu tampil di lapisan paling depan (z-[200]).",
+      "Seamless Multi-Modal Stacking: Membuka dokumen PDF dari dalam modal Detail Reservasi berjalan mulus tanpa tumpang tindih.",
+      "React Portal Architecture: Modal di-teleport langsung ke root document.body dengan penguncian scroll latar belakang.",
+      "Dual Environment Readiness: Kompilasi npm run build sukses 100% (exit code 0) dan aset publik tersinkronisasi."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
+    "id": "act-373",
+    "timestamp": "2026-08-29T07:35:00.000Z",
+    "category": "design-system-typography-update",
+    "title": "Pembaruan Standarisasi Desain Sistem UI (.agent/skills/ui/skill.md) — Only Poppins Typography",
+    "description": "Memperbarui dokumentasi panduan Desain Sistem & Standardisasi UI/UX pada file .agent/skills/ui/skill.md pada Bagian 3 (Tipografi): 1) Menetapkan standarisasi tipografi tunggal eksklusif 'Only Poppins' ('Poppins', sans-serif) dari Google Fonts di seluruh komponen aplikasi, 2) Menyelaraskan seluruh hierarki teks (Hero Display, Section Title H1-H6, Sub-heading, Body Text, Tombol, Form, Modal Pop-up, Bottom Navigation, Tabel, dan Label/Badge) dengan bobot font Poppins (Weight 400, 500, 600, 700, 800), 3) Mendokumentasikan keselarasan utility class Tailwind font-sans, .font-display, .font-body, dan .font-poppins secara konsisten.",
+    "details": [
+      "Exclusive Single Font Family: 'Poppins', sans-serif menjadi font standar tunggal di seluruh elemen aplikasi.",
+      "Complete Weight Hierarchy: Rincian bobot Poppins (400-800) untuk seluruh tipe komponen UI terdokumentasi jelas.",
+      "Design System Integrity: Memastikan panduan agent skill selalu sinkron dengan implementasi kode frontend."
+    ],
+    "author": "Antigravity Assistant",
+    "version": "1.0.0"
+  },
+  {
     "id": "act-372",
     "timestamp": "2026-08-29T07:30:00.000Z",
     "category": "booking-history-doctor-photo-fix",

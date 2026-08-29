@@ -91,7 +91,14 @@ export default function FeaturesSection({ content: propContent }: FeaturesSectio
 
             <div className="absolute -bottom-6 left-10">
               <div className="bg-background rounded-2xl border border-border shadow-xl shadow-black/10 px-6 py-4 flex items-center gap-3">
-                <img src="/logo/logo.webp" alt="Aesthetic Pondok Indah" className="h-10 w-auto" />
+                <img
+                  src="/logo/logo-vertikal.webp"
+                  alt="Aesthetic Pondok Indah"
+                  className="h-12 w-auto object-contain"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo/Logo-vertikal.png";
+                  }}
+                />
               </div>
             </div>
           </div>

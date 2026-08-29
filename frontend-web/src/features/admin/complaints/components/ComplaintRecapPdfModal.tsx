@@ -27,10 +27,10 @@ export default function ComplaintRecapPdfModal({
 
   const kop = clinicSettings?.pdf_terms_and_conditions?.kopSurat || {
     clinicName: "Aesthetic Pondok Indah Dental Clinic",
-    phone: "+62 812-3456-7890",
-    email: "info@aestheticpondokindah.id",
-    address: "Jl. Metro Pondok Indah Blok TB No. 27, Pondok Indah, Jakarta Selatan 12310",
-    logoUrl: "/logo/logo.webp",
+    phone: "021-7695948 | 0812-3456-7890",
+    email: "aesthetic.pondokindah@gmail.com",
+    address: "Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310",
+    logoUrl: "/logo/logo-vertikal.webp",
     logoWidth: 75,
     logoHeight: 75,
   };

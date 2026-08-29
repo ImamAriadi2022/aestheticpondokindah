@@ -520,7 +520,7 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
                   value={termsSettings.kop.logoUrl || ""}
                   onChange={(e) => setTermsSettings((p) => ({ ...p, kop: { ...p.kop, logoUrl: e.target.value } }))}
                   className="rounded-xl border-[#E8DFC8] text-xs flex-1 min-w-[200px]"
-                  placeholder="Atau masukkan URL / path logo (misal: /logo/logo.webp)"
+                  placeholder="Atau masukkan URL / path logo (misal: /logo/logo-vertikal.webp)"
                 />
               </div>
 
@@ -860,7 +860,7 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
                   value={consentSettings.kop.logoUrl || ""}
                   onChange={(e) => setConsentSettings((p) => ({ ...p, kop: { ...p.kop, logoUrl: e.target.value } }))}
                   className="rounded-xl border-[#E8DFC8] text-xs flex-1 min-w-[200px]"
-                  placeholder="Atau masukkan URL / path logo (misal: /logo/logo.webp)"
+                  placeholder="Atau masukkan URL / path logo (misal: /logo/logo-vertikal.webp)"
                 />
               </div>
 

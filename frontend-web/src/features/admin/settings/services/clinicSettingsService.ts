@@ -128,11 +128,11 @@ export const DEFAULT_GENERAL_INFO: ClinicGeneralInfo = {
 
 export const DEFAULT_TERMS_SETTINGS: PdfTermsSettings = {
   kop: {
-    clinicName: "PT NAVENA INTERNATIONAL GROUP",
-    phone: "+62 21 555 1900",
-    email: "navenainternationalgroup@gmail.com",
-    address: "Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan, Provinsi DKI Jakarta, 12310",
-    logoUrl: "/logo/logo.webp",
+    clinicName: "Aesthetic Pondok Indah",
+    phone: "021-7695948 | 0812-3456-7890",
+    email: "aesthetic.pondokindah@gmail.com",
+    address: "Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310",
+    logoUrl: "/logo/logo-vertikal.webp",
     logoWidth: 75,
     logoHeight: 75,
   },
@@ -178,11 +178,11 @@ export const DEFAULT_TERMS_SETTINGS: PdfTermsSettings = {
 
 export const DEFAULT_CONSENT_SETTINGS: PdfConsentSettings = {
   kop: {
-    clinicName: "PT NAVENA INTERNATIONAL GROUP",
-    phone: "+62 21 555 1900",
-    email: "navenainternationalgroup@gmail.com",
-    address: "Jl. Sapta Taruna Raya No.7, Desa/Kelurahan Pondok Pinang, Kec. Kebayoran Lama, Kota Adm. Jakarta Selatan, Provinsi DKI Jakarta, 12310",
-    logoUrl: "/logo/logo.webp",
+    clinicName: "Aesthetic Pondok Indah",
+    phone: "021-7695948 | 0812-3456-7890",
+    email: "aesthetic.pondokindah@gmail.com",
+    address: "Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310",
+    logoUrl: "/logo/logo-vertikal.webp",
     logoWidth: 75,
     logoHeight: 75,
   },

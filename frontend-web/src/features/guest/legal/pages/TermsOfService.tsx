@@ -203,7 +203,7 @@ export default function TermsOfServicePage() {
         </head>
         <body>
           <div class="kop-container">
-            <img src="/logo/logo.webp" class="kop-logo" alt="Logo" />
+            <img src="/logo/logo-vertikal.webp" class="kop-logo" alt="Logo" />
             <div class="kop-text">
               <h1>${clinicName}</h1>
               <p>${clinicAddress}</p>
@@ -309,25 +309,26 @@ export default function TermsOfServicePage() {
             {/* Document Sheet */}
             <div className="bg-white rounded-3xl p-6 sm:p-10 md:p-12 shadow-md border border-[#E8DFC8] relative overflow-hidden">
               {/* Kop Surat Resmi */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 pb-6 border-b-2 border-[#8C6B1C] mb-8 text-center sm:text-left">
+              <div className="text-center pb-6 border-b-2 border-[#8C6B1C] mb-8 space-y-1">
                 <img
-                  src="/logo/logo.webp"
+                  src="/logo/logo-vertikal.webp"
                   alt="Logo"
-                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain shrink-0"
+                  className="h-16 w-auto object-contain mx-auto mb-1.5"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = "/logo/Logo-vertikal.png";
+                  }}
                 />
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base sm:text-lg md:text-xl font-extrabold text-[#8C6B1C] tracking-wide uppercase">
-                    {clinicName}
-                  </h2>
-                  <p className="text-xs text-[#6B5E4E] mt-1 leading-relaxed">
-                    {clinicAddress}
-                  </p>
-                  <p className="text-[11px] text-[#8A7B6B] mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-0.5">
-                    <span>Telp: {clinicPhone}</span>
-                    <span>Email: {clinicEmail}</span>
-                    <span>WhatsApp: {clinicWhatsapp}</span>
-                  </p>
-                </div>
+                <h2 className="text-base sm:text-lg md:text-xl font-extrabold text-[#8C6B1C] tracking-wide uppercase">
+                  {clinicName}
+                </h2>
+                <p className="text-xs text-[#6B5E4E] mt-1 leading-relaxed">
+                  {clinicAddress}
+                </p>
+                <p className="text-[11px] text-[#8A7B6B] mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
+                  <span>Telp: {clinicPhone}</span>
+                  <span>Email: {clinicEmail}</span>
+                  <span>WhatsApp: {clinicWhatsapp}</span>
+                </p>
               </div>
 
               {/* Title & Document Badge */}

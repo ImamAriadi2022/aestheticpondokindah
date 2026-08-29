@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FileText,
   X,
@@ -6,7 +7,6 @@ import {
   Check,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
 import { getPublicClinicSettings } from "@/features/guest/reservation/services/clinicSettingsApi";
 
 interface ReservationConsentPdfModalProps {
@@ -245,13 +245,10 @@ export default function ReservationConsentPdfModal({
           <style>
             @page { size: letter portrait; margin: 15mm 15mm; }
             * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #111; line-height: 1.5; margin: 0; padding: 0; font-size: 9.5pt; background: #fff; }
-            .kop-header { display: flex; align-items: center; justify-content: center; gap: 14px; padding-bottom: 10px; margin-bottom: 14px; border-bottom: 3px double #000; text-align: center; }
-            .kop-logo { width: 50px; height: 50px; object-fit: contain; flex-shrink: 0; }
-            .kop-details { text-align: center; }
-            .kop-title { font-size: 12.5pt; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
-            .kop-sub { font-size: 8.5pt; font-weight: 700; color: #222; margin: 2px 0 0 0; }
-            .kop-address { font-size: 7.5pt; color: #333; margin-top: 3px; line-height: 1.3; }
+            .kop-header { text-align: center; border-bottom: 2.5px solid #000; padding-bottom: 12px; margin-bottom: 16px; }
+            .kop-logo { height: 48px; width: auto; margin: 0 auto 6px auto; display: block; }
+            .kop-title { font-size: 13pt; font-weight: 800; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
+            .kop-address { font-size: 7.5pt; color: #333; margin-top: 4px; line-height: 1.35; }
             .doc-header { text-align: center; margin-bottom: 16px; }
             .doc-title { font-size: 12pt; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
             .doc-sub { font-size: 8.5pt; color: #555; margin-top: 4px; }
@@ -269,13 +266,11 @@ export default function ReservationConsentPdfModal({
         </head>
         <body>
           <div class="kop-header">
-            <div class="kop-details">
-              <div class="kop-title">Aesthetic Pondok Indah Dental Clinic</div>
-              <div class="kop-sub">PT NAVENA INTERNATIONAL GROUP</div>
-              <div class="kop-address">
-                Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br/>
-                Telepon: (021) 765-4321 | WhatsApp: 0812-3456-7890
-              </div>
+            <img src="/logo/logo-vertikal.webp" class="kop-logo" alt="Logo" />
+            <div class="kop-title">Aesthetic Pondok Indah</div>
+            <div class="kop-address">
+              Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310<br/>
+              Telepon: 021-7695948 | WhatsApp: 0812-3456-7890 | Email: aesthetic.pondokindah@gmail.com
             </div>
           </div>
           <div class="doc-header">
@@ -339,25 +334,36 @@ export default function ReservationConsentPdfModal({
     }, 350);
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] max-w-3xl max-h-[94vh] flex flex-col p-0 rounded-3xl bg-[#F5F5F5] border border-[#D9D0BC] shadow-2xl text-left">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-2.5 sm:p-6 bg-black/75 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="relative w-full max-w-3xl max-h-[92vh] flex flex-col p-0 rounded-3xl bg-[#F5F5F5] border border-[#D9D0BC] shadow-2xl text-left overflow-hidden animate-in zoom-in-95 duration-200 my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 bg-white border-b border-gray-200 rounded-t-3xl shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-800 flex items-center justify-center border border-gray-200">
               <FileText className="w-4 h-4" />
             </div>
             <div>
-              <DialogTitle className="text-base sm:text-lg font-bold text-black leading-tight">
+              <h3 className="text-base sm:text-lg font-bold text-black leading-tight">
                 Surat Persetujuan Pasien (Informed Consent)
-              </DialogTitle>
+              </h3>
+              <p className="text-[11px] text-gray-500">
+                Persetujuan Tindakan Medis & Anamnesis Pasien
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="icon" onClick={handlePrint} className="h-9 w-9 rounded-xl bg-white border-gray-300 text-gray-800 hover:bg-gray-100">
+            <Button type="button" variant="outline" size="icon" onClick={handlePrint} className="h-9 w-9 rounded-xl bg-white border-gray-300 text-gray-800 hover:bg-gray-100 shadow-xs cursor-pointer" title="Cetak Dokumen">
               <Printer className="w-4 h-4" />
             </Button>
-            <button type="button" onClick={onClose} className="w-9 h-9 rounded-xl bg-white border border-gray-300 flex items-center justify-center text-gray-700 hover:text-black hover:bg-gray-100">
+            <button type="button" onClick={onClose} className="w-9 h-9 rounded-xl bg-white border border-gray-300 flex items-center justify-center text-gray-700 hover:text-black hover:bg-gray-100 transition-all shadow-xs cursor-pointer" title="Tutup">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -365,28 +371,22 @@ export default function ReservationConsentPdfModal({
 
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#ECEAE5]">
           <div className="max-w-[680px] mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-md border border-gray-300 text-black space-y-6 font-sans">
-            <div className="border-b-2 border-black pb-4 text-center space-y-1" style={{ borderBottom: "3px double #000" }}>
-              <div className="flex items-center justify-center gap-3">
-                <img
-                  src="/logo/logo.webp"
-                  alt="Aesthetic Pondok Indah"
-                  className="h-12 w-auto object-contain shrink-0"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                <div className="text-left">
-                  <h1 className="text-base sm:text-lg font-black text-black tracking-wider uppercase leading-tight">
-                    AESTHETIC PONDOK INDAH DENTAL CLINIC
-                  </h1>
-                  <p className="text-[11px] font-bold text-gray-800">
-                    PT NAVENA INTERNATIONAL GROUP
-                  </p>
-                </div>
-              </div>
-              <p className="text-[10px] text-gray-700 leading-snug pt-1">
-                Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310<br />
-                Telepon: (021) 765-4321 | WhatsApp: 0812-3456-7890 | Email: info@aestheticpondokindah.id
+            {/* Formal Letterhead (Header Kop Surat) with Centered Clinic Logo */}
+            <div className="border-b-2 border-black pb-3.5 text-center space-y-1" style={{ borderBottom: "3px double #000" }}>
+              <img
+                src="/logo/logo-vertikal.webp"
+                alt="Aesthetic Pondok Indah"
+                className="h-14 sm:h-16 w-auto object-contain mx-auto mb-1"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/logo/Logo-vertikal.png";
+                }}
+              />
+              <h1 className="text-base sm:text-lg font-bold text-black tracking-wider uppercase leading-tight">
+                Aesthetic Pondok Indah
+              </h1>
+              <p className="text-[10px] text-gray-700 leading-snug pt-0.5">
+                Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310<br />
+                Telepon: 021-7695948 | WhatsApp: 0812-3456-7890 | Email: aesthetic.pondokindah@gmail.com
               </p>
             </div>
 
@@ -488,7 +488,8 @@ export default function ReservationConsentPdfModal({
             </div>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>,
+    document.body
   );
 }

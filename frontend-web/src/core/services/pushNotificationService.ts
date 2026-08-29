@@ -240,7 +240,7 @@ export function dispatchDeviceSystemNotification(payload: PushNotificationPayloa
   );
 
   const origin = window.location.origin || "";
-  const iconUrl = `${origin}/logo/logo.webp`;
+  const iconUrl = `${origin}/logo/logo-vertikal.webp`;
   // Stable tag without timestamp so the OS collapses/replaces identical items
   const stableTag = `apid_${notifKey}`;
 

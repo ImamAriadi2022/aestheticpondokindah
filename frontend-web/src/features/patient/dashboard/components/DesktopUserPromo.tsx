@@ -41,7 +41,7 @@ export default function DesktopUserPromo() {
       code: "BEHEL500K",
       discount: "Rp 500.000",
       ends_at: "2026-12-31",
-      image_url: "/logo/logo.webp",
+      image_url: "/logo/logo-vertikal.webp",
     },
     {
       id: "promo-3",

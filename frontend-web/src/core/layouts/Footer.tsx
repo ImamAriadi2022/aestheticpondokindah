@@ -19,9 +19,12 @@ export default function Footer() {
           <div className="col-span-2 sm:col-span-2 lg:col-span-1 space-y-2 sm:space-y-3">
             <Link to="/" className="flex items-center gap-2">
               <img
-                src="https://019caa26-b43a-74ce-b207-4a397d517d3f.mochausercontent.com/image.png_9613.png"
+                src="/logo/logo-vertikal.webp"
                 alt="Aesthetic Pondok Indah"
-                className="h-10 sm:h-12 w-auto"
+                className="h-12 sm:h-14 w-auto object-contain"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/logo/Logo-vertikal.png";
+                }}
               />
             </Link>
             <p className="text-gray-500 text-xs sm:text-sm leading-relaxed max-w-[280px]">

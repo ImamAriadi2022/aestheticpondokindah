@@ -536,7 +536,7 @@ export default function MembershipPage() {
                     <span className="text-[9px] font-bold tracking-[0.2em] text-white/70 block uppercase">AESPI DIGITAL</span>
                     <span className="text-[11px] font-extrabold tracking-wider text-white drop-shadow">MEMBERSHIP CARD</span>
                   </div>
-                  <img src="/logo/logo.webp" alt="Aesthetic" className="h-6 w-auto object-contain brightness-0 invert opacity-90" />
+                  <img src="/logo/logo-vertikal.webp" alt="Aesthetic" className="h-7 w-auto object-contain brightness-0 invert opacity-90" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo/Logo-vertikal.png'; }} />
                 </div>
 
                 <div className="relative z-10 my-auto">
@@ -819,7 +819,7 @@ export default function MembershipPage() {
                     <span className="text-[9px] font-bold tracking-[0.2em] text-white/70 block uppercase">AESPI DIGITAL</span>
                     <span className="text-[11px] font-extrabold tracking-wider text-white drop-shadow">MEMBERSHIP CARD</span>
                   </div>
-                  <img src="/logo/logo.webp" alt="Aesthetic" className="h-6 w-auto object-contain brightness-0 invert opacity-90" />
+                  <img src="/logo/logo-vertikal.webp" alt="Aesthetic" className="h-7 w-auto object-contain brightness-0 invert opacity-90" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo/Logo-vertikal.png'; }} />
                 </div>
 
                 <div className="relative z-10 my-auto">

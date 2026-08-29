@@ -180,7 +180,7 @@ export default function DocsApiPage() {
 
           <div className="w-full max-w-md bg-[#1A1612]/90 backdrop-blur-xl border border-[#C9A24A]/30 rounded-3xl p-8 shadow-2xl relative z-10">
             <div className="text-center mb-6">
-              <img src="/logo/logo.webp" alt="Aesthetic Pondok Indah" className="h-12 mx-auto mb-3 object-contain" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+              <img src="/logo/logo-vertikal.webp" alt="Aesthetic Pondok Indah" className="h-16 mx-auto mb-3 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo/Logo-vertikal.png'; }} />
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C9A24A]/15 border border-[#C9A24A]/40 text-[#E8D4A2] text-xs font-bold uppercase tracking-wider">
                 <Lock className="w-3.5 h-3.5 text-[#C9A24A]" />
                 <span>Developer Access Only</span>
@@ -253,7 +253,7 @@ export default function DocsApiPage() {
           {/* Custom Header Bar */}
           <header className="sticky top-0 z-50 bg-[#1A1612] text-white border-b-2 border-[#C9A24A] px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
             <div className="flex items-center gap-3">
-              <img src="/logo/logo.webp" alt="Logo" className="h-9 object-contain" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+              <img src="/logo/logo-vertikal.webp" alt="Logo" className="h-10 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo/Logo-vertikal.png'; }} />
               <div>
                 <h1 className="text-base font-bold leading-tight">Aesthetic Pondok Indah Dental Clinic</h1>
                 <p className="text-[11px] font-bold text-[#D4AF37] tracking-wider uppercase">REST API Documentation & Interactive Test Console</p>

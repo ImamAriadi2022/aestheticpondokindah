@@ -383,9 +383,12 @@ export default function LoginPage() {
               <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-brand-gold/30 via-brand-cream to-brand-gold-light/40 p-10 rounded-l-[2.5rem]">
                 <div className="w-full max-w-md flex flex-col items-center text-center">
                   <img
-                    src="/logo/logo.webp"
+                    src="/logo/logo-vertikal.webp"
                     alt="Aesthetic Pondok Indah"
-                    className="h-20 w-auto"
+                    className="h-24 w-auto object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = "/logo/Logo-vertikal.png";
+                    }}
                   />
                   <div className="mt-8 text-5xl font-bold text-brand-charcoal leading-tight">Selamat datang</div>
                   <div className="mt-4 text-lg text-brand-warm-gray font-body">

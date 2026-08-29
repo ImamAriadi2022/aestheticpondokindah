@@ -923,7 +923,7 @@ export default function EditBerandaPage() {
                   </div>
                 </div>
                 <div className="absolute -bottom-4 left-6 bg-white rounded-xl border border-gray-200 shadow-md px-4 py-2 flex items-center gap-2">
-                  <img src="/logo/logo.webp" alt="Logo" className="h-6 w-auto" />
+                  <img src="/logo/logo-vertikal.webp" alt="Logo" className="h-8 w-auto object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo/Logo-vertikal.png'; }} />
                 </div>
               </div>
 
