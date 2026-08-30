@@ -111,10 +111,10 @@ export default function UserDashboardPage() {
   const isMembership = true;
   const tierLabel =
     (session as any)?.membership_level === 'platinum'
-      ? "Priority Member"
+      ? "Platinum Member"
       : (session as any)?.membership_level === 'gold'
-        ? "Premium Member"
-        : "Basic Member";
+        ? "Gold Member"
+        : "Bronze Member";
 
   // Calculate progress
   const calculateProgress = () => {

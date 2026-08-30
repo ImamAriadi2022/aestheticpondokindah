@@ -291,31 +291,31 @@ export default function MembershipPage() {
 
   const tierConfig = {
     bronze: {
-      label: 'Basic Member',
+      label: 'Bronze Member',
       badge: 'BRONZE',
       icon: Star,
-      gradient: 'from-[#C9A24A] to-[#B8943F]',
-      lightGradient: 'from-[#C9A24A]/20 to-[#B8943F]/20',
-      textColor: 'text-[#C9A24A]',
-      bgColor: 'bg-[#C9A24A]',
+      gradient: 'from-[#CD7F32] to-[#A0522D]',
+      lightGradient: 'from-[#CD7F32]/20 to-[#A0522D]/20',
+      textColor: 'text-[#A0522D]',
+      bgColor: 'bg-[#CD7F32]',
     },
     gold: {
-      label: 'Premium Member',
+      label: 'Gold Member',
       badge: 'GOLD',
       icon: Crown,
       gradient: 'from-[#E8C547] to-[#C9A24A]',
       lightGradient: 'from-[#E8C547]/20 to-[#C9A24A]/20',
-      textColor: 'text-[#E8C547]',
+      textColor: 'text-[#C9A24A]',
       bgColor: 'bg-[#E8C547]',
     },
     platinum: {
-      label: 'Priority Member',
+      label: 'Platinum Member',
       badge: 'PLATINUM',
       icon: Sparkles,
-      gradient: 'from-[#F5E6C8] to-[#E8C547]',
-      lightGradient: 'from-[#F5E6C8]/20 to-[#E8C547]/20',
-      textColor: 'text-[#E8C547]',
-      bgColor: 'bg-[#F5E6C8]',
+      gradient: 'from-[#8B9DAF] to-[#6B7D8F]',
+      lightGradient: 'from-[#8B9DAF]/20 to-[#6B7D8F]/20',
+      textColor: 'text-[#6B7D8F]',
+      bgColor: 'bg-[#8B9DAF]',
     },
   };
 

@@ -15,7 +15,6 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
-  Printer,
   ExternalLink,
   MapPin,
   CheckCircle2,
@@ -25,7 +24,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export default function GuestGuideView({ onPrint }: { onPrint?: () => void }) {
+export default function GuestGuideView() {
   const [openSection, setOpenSection] = useState<string | null>("bab-1");
 
   const toggleSection = (id: string) => {
@@ -56,13 +55,6 @@ export default function GuestGuideView({ onPrint }: { onPrint?: () => void }) {
                 Mulai Reservasi Cepat <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              onClick={() => window.print()}
-              className="h-10 px-4 rounded-xl border-[#D9D0BC] text-[#6B5E4F] hover:bg-[#FAF5EA] font-semibold text-xs cursor-pointer"
-            >
-              <Printer className="w-4 h-4 mr-1.5" /> Cetak / Simpan PDF
-            </Button>
           </div>
         </div>
       </div>

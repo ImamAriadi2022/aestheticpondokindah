@@ -90,7 +90,7 @@ export default function MembershipUpgradePage() {
   const navigate = useNavigate();
   const [options, setOptions] = useState<UpgradeOption[]>([]);
   const [currentLevel, setCurrentLevel] = useState<string>("bronze");
-  const [currentLabel, setCurrentLabel] = useState<string>("Basic Member");
+  const [currentLabel, setCurrentLabel] = useState<string>("Bronze Member");
   const [autoProgress, setAutoProgress] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);

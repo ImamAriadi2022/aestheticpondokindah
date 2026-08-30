@@ -31,10 +31,10 @@ export default function DesktopUserAkun() {
   const whatsapp = session?.whatsapp || session?.phone || "";
   const tierLabel =
     session?.membership_level === "platinum"
-      ? "Priority Member"
+      ? "Platinum Member"
       : session?.membership_level === "gold"
-        ? "Premium Member"
-        : "Basic Member";
+        ? "Gold Member"
+        : "Bronze Member";
 
   const handleLogout = () => {
     clearSession();

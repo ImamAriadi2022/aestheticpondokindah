@@ -142,14 +142,12 @@ export default function ProfileDetailPage() {
 
   const getTierBadge = (level: string) => {
     switch (level?.toLowerCase()) {
-      case "diamond":
-        return { label: "VIP Member (Diamond)", bg: "bg-cyan-500/10 text-cyan-700 border-cyan-200" };
       case "platinum":
-        return { label: "Priority Member (Platinum)", bg: "bg-slate-500/10 text-slate-700 border-slate-200" };
+        return { label: "Platinum Member", bg: "bg-slate-500/10 text-slate-700 border-slate-200" };
       case "gold":
-        return { label: "Premium Member (Gold)", bg: "bg-[#c9a24a]/15 text-[#a8843a] border-[#c9a24a]/30" };
+        return { label: "Gold Member", bg: "bg-[#c9a24a]/15 text-[#a8843a] border-[#c9a24a]/30" };
       default:
-        return { label: "Basic Member (Bronze)", bg: "bg-amber-700/10 text-amber-800 border-amber-300/30" };
+        return { label: "Bronze Member", bg: "bg-amber-700/10 text-amber-800 border-amber-300/30" };
     }
   };
 

@@ -24,9 +24,9 @@ class MembershipPaymentController extends Controller
     ];
 
     const TIER_LABELS = [
-        'bronze' => 'Basic Member',
-        'gold' => 'Premium Member',
-        'platinum' => 'Priority Member',
+        'bronze' => 'Bronze Member',
+        'gold' => 'Gold Member',
+        'platinum' => 'Platinum Member',
     ];
 
     private const LEVEL_ORDER = ['bronze', 'gold', 'platinum'];

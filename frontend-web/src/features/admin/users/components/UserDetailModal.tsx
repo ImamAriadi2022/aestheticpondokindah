@@ -34,6 +34,7 @@ import {
   Compass,
   CalendarDays,
   CreditCard,
+  Trash2,
 } from "lucide-react";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
@@ -46,9 +47,10 @@ interface Props {
   onClose: () => void;
   user: any | null;
   onUpdated?: () => void;
+  onDeleteUser?: (user: any) => void;
 }
 
-export default function UserDetailModal({ isOpen, onClose, user: initialUser, onUpdated }: Props) {
+export default function UserDetailModal({ isOpen, onClose, user: initialUser, onUpdated, onDeleteUser }: Props) {
   const [user, setUser] = useState<any | null>(initialUser);
   const [activeTab, setActiveTab] = useState<"biodata" | "dental" | "reservations">("biodata");
   const [isResettingPassword, setIsResettingPassword] = useState(false);
@@ -867,22 +869,41 @@ export default function UserDetailModal({ isOpen, onClose, user: initialUser, on
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleResetPassword}
-              disabled={isResettingPassword}
-              className="text-xs font-semibold text-amber-800 border-amber-300 hover:bg-amber-50 rounded-xl px-4 py-2 cursor-pointer shadow-2xs"
-            >
-              {isResettingPassword ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
-              ) : (
-                <KeyRound className="w-3.5 h-3.5 mr-1.5 text-amber-700" />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleResetPassword}
+                disabled={isResettingPassword}
+                className="text-xs font-semibold text-amber-800 border-amber-300 hover:bg-amber-50 rounded-xl px-3.5 py-2 cursor-pointer shadow-2xs"
+              >
+                {isResettingPassword ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                ) : (
+                  <KeyRound className="w-3.5 h-3.5 mr-1.5 text-amber-700" />
+                )}
+                <span>Reset Password</span>
+              </Button>
+
+              {user?.role !== "admin" && onDeleteUser && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const target = user;
+                    onClose();
+                    onDeleteUser(target);
+                  }}
+                  className="text-xs font-semibold text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 rounded-xl px-3.5 py-2 cursor-pointer shadow-2xs transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5 text-red-500" />
+                  <span>Hapus Akun</span>
+                </Button>
               )}
-              <span>Reset Password</span>
-            </Button>
+            </div>
 
             <Button
               type="button"

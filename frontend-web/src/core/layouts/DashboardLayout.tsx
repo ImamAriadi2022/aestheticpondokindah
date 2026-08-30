@@ -136,18 +136,18 @@ export default function DashboardLayout({
 
   const tierConfig = {
     bronze: {
-      label: 'Basic Member',
-      shortLabel: 'Basic',
+      label: 'Bronze Member',
+      shortLabel: 'Bronze',
       gradient: 'from-[#CD7F32] to-[#A0522D]',
     },
     gold: {
-      label: 'Premium Member',
-      shortLabel: 'Premium',
+      label: 'Gold Member',
+      shortLabel: 'Gold',
       gradient: 'from-[#c9a24a] to-[#a8843a]',
     },
     platinum: {
-      label: 'Priority Member',
-      shortLabel: 'Priority',
+      label: 'Platinum Member',
+      shortLabel: 'Platinum',
       gradient: 'from-[#8B9DAF] to-[#6B7D8F]',
     },
   };

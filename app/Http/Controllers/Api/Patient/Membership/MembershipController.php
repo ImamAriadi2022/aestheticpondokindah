@@ -205,19 +205,19 @@ class MembershipController extends Controller
     {
         $tiers = [
             'bronze' => [
-                'label' => 'Basic Member',
+                'label' => 'Bronze Member',
                 'price' => 0,
                 'threshold_transaction' => 0,
                 'benefits' => $this->membershipService->getMembershipBenefits('bronze'),
             ],
             'gold' => [
-                'label' => 'Premium Member',
+                'label' => 'Gold Member',
                 'price' => 499000,
                 'threshold_transaction' => 5000000,
                 'benefits' => $this->membershipService->getMembershipBenefits('gold'),
             ],
             'platinum' => [
-                'label' => 'Priority Member',
+                'label' => 'Platinum Member',
                 'price' => 1500000,
                 'threshold_transaction' => 15000000,
                 'benefits' => $this->membershipService->getMembershipBenefits('platinum'),

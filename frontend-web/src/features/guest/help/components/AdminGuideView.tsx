@@ -14,7 +14,6 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
-  Printer,
   CheckCircle2,
   AlertCircle,
   Building2,
@@ -57,13 +56,6 @@ export default function AdminGuideView({ onPrint }: { onPrint?: () => void }) {
                 Buka Dashboard Admin <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              onClick={() => window.print()}
-              className="h-10 px-4 rounded-xl border-[#D9D0BC] text-[#6B5E4F] hover:bg-[#FAF5EA] font-semibold text-xs cursor-pointer"
-            >
-              <Printer className="w-4 h-4 mr-1.5" /> Cetak Buku Panduan Admin (PDF)
-            </Button>
           </div>
         </div>
       </div>

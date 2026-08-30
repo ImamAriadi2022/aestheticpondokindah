@@ -554,14 +554,28 @@ class UserController extends Controller
         ]);
     }
 
-    public function destroy(User $user): JsonResponse
+    public function destroy(Request $request, User $user): JsonResponse
     {
+        if ($request->user() && $user->id === $request->user()->id) {
+            return response()->json(['message' => 'Anda tidak dapat menghapus akun administrator yang sedang aktif digunakan.'], 403);
+        }
+
         $role = $user->role;
-        $user->delete();
+        $userName = $user->name;
+
+        DB::transaction(function () use ($user) {
+            $user->tokens()->delete();
+            $user->delete();
+        });
+
         if ($role === 'doctor') {
             Cache::forget('apig_public_doctors_list');
         }
-        return response()->json(['message' => 'User deleted']);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pengguna {$userName} berhasil dihapus dari sistem."
+        ]);
     }
 
     public function resetPassword(Request $request, User $user): JsonResponse

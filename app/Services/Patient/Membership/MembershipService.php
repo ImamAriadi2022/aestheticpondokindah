@@ -256,7 +256,7 @@ class MembershipService
                 'birthday_voucher' => false,
                 'discount_percentage' => 0,
                 'point_multiplier' => 1.0,
-                'privilege_badge' => 'Standard Member',
+                'privilege_badge' => 'Bronze Member',
             ],
             'gold' => [
                 'medical_record_digital' => true,
@@ -267,9 +267,9 @@ class MembershipService
                 'free_consultation' => true,
                 'birthday_voucher' => true,
                 'exclusive_promo' => true,
-                'discount_percentage' => 5,
+                'discount_percentage' => 10,
                 'point_multiplier' => 1.5,
-                'privilege_badge' => 'Premium Privilege',
+                'privilege_badge' => 'Gold Member',
             ],
             'platinum' => [
                 'medical_record_digital' => true,
@@ -285,9 +285,9 @@ class MembershipService
                 'birthday_voucher' => true,
                 'birthday_special_voucher' => true,
                 'exclusive_promo' => true,
-                'discount_percentage' => 10,
+                'discount_percentage' => 15,
                 'point_multiplier' => 2.0,
-                'privilege_badge' => 'VIP Priority Privilege',
+                'privilege_badge' => 'Platinum Member',
             ],
             default => [],
         };

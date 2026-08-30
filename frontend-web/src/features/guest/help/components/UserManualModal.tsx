@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Printer } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
 import GuestGuideView from "./GuestGuideView";
@@ -38,14 +38,6 @@ export default function UserManualModal({
             </DialogDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.print()}
-              className="h-8 px-3 rounded-xl border-[#D9D0BC] text-[#6B5E4F] hover:bg-[#FAF5EA] font-semibold text-xs cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5 mr-1" /> Cetak
-            </Button>
             <Button
               variant="ghost"
               size="sm"
