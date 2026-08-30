@@ -10,6 +10,7 @@ import {
 import { getDoctorQueue, type DoctorQueueItem } from "../services/doctorDashboardService";
 import DoctorSchedulePage from "@/features/doctor/schedule/pages/DoctorSchedulePage";
 import DoctorReservationPage from "@/features/doctor/reservation/pages/DoctorReservationPage";
+import DoctorGuideView from "@/features/guest/help/components/DoctorGuideView";
 
 export default function DoctorDashboardPage() {
   const session = getSession()!;
@@ -98,6 +99,11 @@ export default function DoctorDashboardPage() {
       case "pasien":
       case "klien":
         return <DoctorReservationPage />;
+
+      // Tab 3: Panduan Dokter Spesialis
+      case "panduan":
+      case "help":
+        return <DoctorGuideView />;
 
       // Tab Utama: Dashboard Home Dokter
       default:

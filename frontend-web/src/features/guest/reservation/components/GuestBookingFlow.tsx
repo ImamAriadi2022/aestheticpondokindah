@@ -56,6 +56,24 @@ interface DoctorItem {
   branches: string[];
 }
 
+const displayPhoneWithoutPrefix = (phone: string | null | undefined): string => {
+  if (!phone) return "";
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("62")) {
+    return digits.substring(2);
+  }
+  if (digits.startsWith("0")) {
+    return digits.substring(1);
+  }
+  return digits;
+};
+
+const handlePhoneChange = (input: string): string => {
+  const digits = input.replace(/\D/g, "");
+  const clean = digits.startsWith("62") ? digits.substring(2) : digits.startsWith("0") ? digits.substring(1) : digits;
+  return clean ? `+62${clean}` : "";
+};
+
 export default function GuestBookingFlow() {
   const [searchParams] = useSearchParams();
   const requestedServiceName = searchParams.get("service") || searchParams.get("treatment") || searchParams.get("layanan");
@@ -959,13 +977,20 @@ export default function GuestBookingFlow() {
                 <label className="text-xs font-bold text-[#3D332A]">
                   Nomor WhatsApp Aktif <span className="text-rose-500">*</span>
                 </label>
-                <Input
-                  type="tel"
-                  value={patientPhone}
-                  onChange={(e) => setPatientPhone(e.target.value)}
-                  placeholder="Contoh: 081234567890"
-                  className="h-11 rounded-xl bg-white border-[#D9D0BC] text-sm text-[#3D332A] focus:border-[#C9A24A]"
-                />
+                <div className="relative flex items-center w-full rounded-xl border border-[#D9D0BC] bg-white focus-within:border-[#C9A24A] focus-within:ring-1 focus-within:ring-[#C9A24A] overflow-hidden h-11 shadow-2xs">
+                  <div className="flex items-center gap-1.5 px-3.5 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs select-none shrink-0">
+                    <span className="text-sm leading-none">🇮🇩</span>
+                    <span>+62</span>
+                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={displayPhoneWithoutPrefix(patientPhone)}
+                    onChange={(e) => setPatientPhone(handlePhoneChange(e.target.value))}
+                    placeholder="81234567890"
+                    className="w-full h-full px-3 text-sm font-semibold text-[#3D332A] bg-transparent outline-none placeholder:text-[#8A7B6B]"
+                  />
+                </div>
                 <p className="text-[10px] text-[#8A7B6B]">Tiket booking dan konfirmasi dokter akan dikirim ke nomor ini.</p>
               </div>
             </div>

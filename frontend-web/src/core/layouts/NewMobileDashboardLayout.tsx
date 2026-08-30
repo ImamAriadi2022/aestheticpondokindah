@@ -37,6 +37,7 @@ import {
   Info,
   LayoutDashboard,
   MessageSquare,
+  BookOpen,
 } from "lucide-react";
 
 interface NewMobileDashboardLayoutProps {
@@ -128,6 +129,7 @@ export default function NewMobileDashboardLayout({
           { label: "Beranda", icon: Home, href: "/dashboard/doctor" },
           { label: "Jadwal", icon: CalendarDays, href: "/dashboard/doctor?tab=jadwal" },
           { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi", badge: submenuBadges.booking || undefined },
+          { label: "Panduan", icon: BookOpen, href: "/dashboard/doctor?tab=panduan" },
           { label: "Profil", icon: UserCircle, href: "/settings" },
         ];
       default:
@@ -160,8 +162,9 @@ export default function NewMobileDashboardLayout({
       ],
     },
     {
-      title: "Informasi Publik",
+      title: "Informasi Publik & Bantuan",
       items: [
+        { label: "Panduan Admin", icon: BookOpen, href: "/dashboard/clinic?tab=panduan" },
         { label: "Layanan", icon: Layers, href: "/dashboard/clinic?tab=public-services" },
         { label: "FAQ", icon: HelpCircle, href: "/dashboard/clinic?tab=public-faqs" },
         { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan", badge: submenuBadges.pengaduan || undefined },
@@ -206,6 +209,7 @@ export default function NewMobileDashboardLayout({
       if (tab === "riwayat") return "Riwayat";
       if (tab === "konsultasi") return "Konsultasi";
       if (tab === "pengaduan") return "Pengaduan";
+      if (tab === "panduan" || tab === "help") return "Panduan Pasien";
       if (tab === "promo") return "Promo";
       if (tab === "blog" || tab === "blog-detail") return "Artikel";
       if (tab === "download") return "Download";
@@ -221,6 +225,7 @@ export default function NewMobileDashboardLayout({
       if (tab === "membership") return "Membership";
       if (tab === "pengaduan") return "Pengaduan";
       if (tab === "settings") return "Pengaturan Klinik";
+      if (tab === "panduan" || tab === "help") return "Panduan Admin";
       if (tab === "public-faqs") return "Pusat Bantuan & FAQ";
       if (tab === "public-services") return "Katalog Layanan";
       if (tab === "public-legal") return "Kebijakan & Legal";
@@ -232,6 +237,7 @@ export default function NewMobileDashboardLayout({
       if (tab === "jadwal") return "Jadwal";
       if (tab === "reservasi") return "Reservasi";
       if (tab === "konsultasi") return "Konsultasi";
+      if (tab === "panduan" || tab === "help") return "Panduan Dokter";
       return "Dashboard Dokter";
     }
     if (path.startsWith("/dashboard/user/consultation/")) return "Konsultasi";

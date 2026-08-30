@@ -10,6 +10,7 @@ import {
   Crown,
   Settings,
   Store,
+  BookOpen,
 } from "lucide-react";
 import { ROLES, type AppRole } from "@/core/permissions/roles";
 
@@ -57,6 +58,7 @@ export const MENU: AppMenu = {
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/user" },
       { label: "Konsultasi", icon: Calendar, href: "/dashboard/user?tab=konsultasi" },
       { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/user?tab=pengaduan" },
+      { label: "Panduan Pasien", icon: BookOpen, href: "/dashboard/user?tab=panduan" },
     ],
     [ROLES.CLINIC]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/clinic" },
@@ -84,11 +86,22 @@ export const MENU: AppMenu = {
         href: "/dashboard/clinic?tab=users",
         submenu: USER_MANAGEMENT_SUBMENU,
       },
+      {
+        label: "Pengaturan",
+        icon: Settings,
+        href: "/dashboard/clinic?tab=settings",
+      },
+      {
+        label: "Panduan Admin",
+        icon: BookOpen,
+        href: "/dashboard/clinic?tab=panduan",
+      },
     ],
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },
       { label: "Jadwal Praktik", icon: Calendar, href: "/dashboard/doctor?tab=jadwal" },
       { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi" },
+      { label: "Panduan Dokter", icon: BookOpen, href: "/dashboard/doctor?tab=panduan" },
     ],
     [ROLES.DEVELOPER]: [
       { label: "REST API Docs", icon: FileText, href: "/docs-api" },

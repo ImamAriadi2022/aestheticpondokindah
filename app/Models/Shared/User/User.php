@@ -101,11 +101,39 @@ class User extends Authenticatable
             'membership_started_at' => 'datetime',
             'membership_expires_at' => 'datetime',
             'birth_date' => 'date',
-            'interests' => 'json',
+            'interests' => 'array',
             'is_coffee_drinker' => 'boolean',
             'is_smoker' => 'boolean',
+            'membership_points' => 'integer',
+            'consultation_fee' => 'decimal:2',
+            'experience_years' => 'integer',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Always normalize whatsapp / phone number to international +62 format.
+     */
+    public function setWhatsappAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['whatsapp'] = null;
+            return;
+        }
+
+        $clean = preg_replace('/[^\d]/', '', (string) $value);
+        if (empty($clean)) {
+            $this->attributes['whatsapp'] = null;
+            return;
+        }
+
+        if (str_starts_with($clean, '62')) {
+            $this->attributes['whatsapp'] = '+' . $clean;
+        } elseif (str_starts_with($clean, '0')) {
+            $this->attributes['whatsapp'] = '+62' . substr($clean, 1);
+        } else {
+            $this->attributes['whatsapp'] = '+62' . $clean;
+        }
     }
 
     // =========================================================================

@@ -40,6 +40,24 @@ const SPECIALIZATION_OPTIONS = [
   "Dokter Gigi Umum & Estetika",
 ];
 
+const displayPhoneWithoutPrefix = (phone: string | null | undefined): string => {
+  if (!phone) return "";
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("62")) {
+    return digits.substring(2);
+  }
+  if (digits.startsWith("0")) {
+    return digits.substring(1);
+  }
+  return digits;
+};
+
+const handlePhoneChange = (input: string): string => {
+  const digits = input.replace(/\D/g, "");
+  const clean = digits.startsWith("62") ? digits.substring(2) : digits.startsWith("0") ? digits.substring(1) : digits;
+  return clean ? `+62${clean}` : "";
+};
+
 export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }: DoctorEditorModalProps) {
   const isEdit = Boolean(doctor && doctor.id);
 
@@ -232,15 +250,19 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                   <label className="text-[11px] font-semibold text-stone-600 block">
                     Nomor WhatsApp / Telepon <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <div className="relative flex items-center w-full rounded-xl border border-[#E8DFC8] bg-white focus-within:border-[#C9A24A] focus-within:ring-1 focus-within:ring-[#C9A24A] overflow-hidden h-10 shadow-2xs">
+                    <div className="flex items-center gap-1.5 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs select-none shrink-0">
+                      <span className="text-sm leading-none">🇮🇩</span>
+                      <span>+62</span>
+                    </div>
                     <input
                       type="tel"
+                      inputMode="numeric"
                       required
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="+62887437525322"
-                      className="w-full pl-9 pr-3 h-10 bg-white border border-[#E8DFC8] rounded-xl text-xs font-medium text-stone-800 outline-none focus:border-[#C9A24A] focus:ring-1 focus:ring-[#C9A24A] shadow-2xs"
+                      value={displayPhoneWithoutPrefix(form.phone)}
+                      onChange={(e) => setForm({ ...form, phone: handlePhoneChange(e.target.value) })}
+                      placeholder="887437525322"
+                      className="w-full h-full px-3 text-xs font-semibold text-stone-800 bg-transparent outline-none placeholder:text-stone-400"
                     />
                   </div>
                 </div>

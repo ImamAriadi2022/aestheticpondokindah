@@ -56,6 +56,31 @@ class Reservation extends Model
         ];
     }
 
+    /**
+     * Always normalize phone / whatsapp number to +62 format.
+     */
+    public function setPhoneAttribute($value): void
+    {
+        if (empty($value)) {
+            $this->attributes['phone'] = null;
+            return;
+        }
+
+        $clean = preg_replace('/[^\d]/', '', (string) $value);
+        if (empty($clean)) {
+            $this->attributes['phone'] = null;
+            return;
+        }
+
+        if (str_starts_with($clean, '62')) {
+            $this->attributes['phone'] = '+' . $clean;
+        } elseif (str_starts_with($clean, '0')) {
+            $this->attributes['phone'] = '+62' . substr($clean, 1);
+        } else {
+            $this->attributes['phone'] = '+62' . $clean;
+        }
+    }
+
     // =========================================================================
     // QUERY SCOPES
     // =========================================================================

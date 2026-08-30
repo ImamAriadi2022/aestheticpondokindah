@@ -21,6 +21,7 @@ import DesktopUserBlog from "@/features/patient/dashboard/components/DesktopUser
 import DesktopUserBlogDetail from "@/features/patient/dashboard/components/DesktopUserBlogDetail";
 import DesktopUserDownload from "@/features/patient/dashboard/components/DesktopUserDownload";
 import DesktopUserAkun from "@/features/patient/dashboard/components/DesktopUserAkun";
+import PatientGuideView from "@/features/guest/help/components/PatientGuideView";
 import AccountSidebar from "@/core/layouts/AccountSidebar";
 import DashboardTopBar from "@/core/layouts/DashboardTopBar";
 import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
@@ -197,6 +198,13 @@ export default function UserDashboardPage() {
       case "akun":
       case "profile":
         return <DesktopUserAkun />;
+      case "panduan":
+      case "help":
+        return (
+          <div className="p-4 sm:p-6 bg-white rounded-3xl border border-[#EADBBD] shadow-xs">
+            <PatientGuideView />
+          </div>
+        );
       case "dashboard":
       default:
         return (

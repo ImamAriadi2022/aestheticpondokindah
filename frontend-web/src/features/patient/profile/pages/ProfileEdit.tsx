@@ -42,6 +42,24 @@ const normalizeGenderValue = (gender: string | null | undefined): string => {
   return gender;
 };
 
+const displayPhoneWithoutPrefix = (phone: string | null | undefined): string => {
+  if (!phone) return "";
+  let digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("62")) {
+    return digits.substring(2);
+  }
+  if (digits.startsWith("0")) {
+    return digits.substring(1);
+  }
+  return digits;
+};
+
+const handlePhoneChange = (input: string): string => {
+  const digits = input.replace(/\D/g, "");
+  const clean = digits.startsWith("62") ? digits.substring(2) : digits.startsWith("0") ? digits.substring(1) : digits;
+  return clean ? `+62${clean}` : "";
+};
+
 const LAST_DENTAL_VISIT_OPTIONS = [
   "< 6 Bulan Lalu",
   "6 - 12 Bulan Lalu",
@@ -473,12 +491,20 @@ export default function ProfileEditPage() {
               {/* Nomor WhatsApp */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Nomor WhatsApp Admin</label>
-                <Input
-                  value={profile.phone}
-                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                  placeholder="+628..."
-                  className="rounded-xl border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]/20 text-gray-900"
-                />
+                <div className="relative flex items-center w-full rounded-xl border border-gray-200 bg-white focus-within:border-[#c9a24a] focus-within:ring-2 focus-within:ring-[#c9a24a]/20 transition-all overflow-hidden h-10 shadow-2xs">
+                  <div className="flex items-center gap-1.5 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs select-none shrink-0">
+                    <span className="text-sm leading-none">🇮🇩</span>
+                    <span>+62</span>
+                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={displayPhoneWithoutPrefix(profile.phone)}
+                    onChange={(e) => setProfile({ ...profile, phone: handlePhoneChange(e.target.value) })}
+                    placeholder="81234567890"
+                    className="w-full h-full px-3 text-xs sm:text-sm font-semibold text-gray-900 bg-transparent outline-none placeholder:text-gray-400"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -549,12 +575,20 @@ export default function ProfileEditPage() {
               {/* WhatsApp */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-700">Nomor WhatsApp</label>
-                <Input
-                  value={profile.phone}
-                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                  placeholder="+628..."
-                  className="rounded-xl border-gray-200 focus:border-[#c9a24a] focus:ring-[#c9a24a]/20 text-gray-900"
-                />
+                <div className="relative flex items-center w-full rounded-xl border border-gray-200 bg-white focus-within:border-[#c9a24a] focus-within:ring-2 focus-within:ring-[#c9a24a]/20 transition-all overflow-hidden h-10 shadow-2xs">
+                  <div className="flex items-center gap-1.5 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs select-none shrink-0">
+                    <span className="text-sm leading-none">🇮🇩</span>
+                    <span>+62</span>
+                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    value={displayPhoneWithoutPrefix(profile.phone)}
+                    onChange={(e) => setProfile({ ...profile, phone: handlePhoneChange(e.target.value) })}
+                    placeholder="81234567890"
+                    className="w-full h-full px-3 text-xs sm:text-sm font-semibold text-gray-900 bg-transparent outline-none placeholder:text-gray-400"
+                  />
+                </div>
               </div>
 
               {/* Tanggal Lahir */}

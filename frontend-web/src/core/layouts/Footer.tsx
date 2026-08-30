@@ -1,11 +1,12 @@
 import { Link } from "react-router";
-import { MapPin, Phone, Mail, Facebook, Instagram, Youtube, FileText, Shield } from "lucide-react";
+import { MapPin, Phone, Mail, Facebook, Instagram, Youtube, FileText, Shield, BookOpen } from "lucide-react";
 
 const quickLinks = [
   { name: "Beranda", path: "/" },
   { name: "Tentang Kami", path: "/about" },
   { name: "Layanan", path: "/services" },
   { name: "Blog", path: "/blog" },
+  { name: "Panduan Pengunjung", path: "/panduan-guest" },
   { name: "Kontak", path: "/contact" },
 ];
 
@@ -139,6 +140,10 @@ export default function Footer() {
             <div className="flex flex-col items-start gap-1">
               <p>© 2026 Aesthetic Pondok Indah. All rights reserved.</p>
               <div className="flex flex-row gap-4">
+                <Link to="/panduan-guest" className="hover:text-brand-gold transition-colors flex items-center gap-1">
+                  <BookOpen className="w-3 h-3" />
+                  Panduan Pengunjung
+                </Link>
                 <Link to="/privacy-policy" className="hover:text-brand-gold transition-colors flex items-center gap-1">
                   <Shield className="w-3 h-3" />
                   Privacy Policy

@@ -102,6 +102,7 @@ const MembershipUpgradePage = lazy(() => import("@/features/patient/membership/p
 const AdminMembershipPage = lazy(() => import("@/features/admin/membership/pages/AdminMembership"));
 const SecurityPage = lazy(() => import("@/features/patient/profile/pages/Security"));
 const HelpPage = lazy(() => import("@/features/guest/help/pages/Help"));
+const GuestGuidePage = lazy(() => import("@/features/guest/help/pages/GuestGuidePage"));
 
 const GuestKonsultasiPage = lazy(() => import("@/features/guest/consultation/pages/GuestKonsultasiPage"));
 const GuestConsultationChatPage = lazy(() => import("@/features/guest/consultation/pages/GuestConsultationChatPage"));
@@ -404,6 +405,7 @@ export default function App() {
                 }
               />
               <Route path="/help" element={<HelpPage />} />
+              <Route path="/panduan-guest" element={<GuestGuidePage />} />
 
               {/* Guest Online Consultation (public) */}
               <Route path="/konsultasi" element={<GuestKonsultasiPage />} />

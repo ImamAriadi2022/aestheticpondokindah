@@ -34,6 +34,7 @@ import EditBerandaPage from "@/features/admin/etalase/pages/EditBerandaPage";
 import EditTentangPage from "@/features/admin/etalase/pages/EditTentangPage";
 import AnalyticsDashboard from "@/features/admin/dashboard/components/AnalyticsDashboard";
 import DesktopClinicHome from "@/features/admin/dashboard/components/DesktopClinicHome";
+import AdminGuideView from "@/features/guest/help/components/AdminGuideView";
 
 import { getAllConsultations } from "@/features/patient/consultation/services/consultationApi";
 import { getAdminDoctorSchedules } from "@/features/admin/doctors/services/adminDoctorScheduleApi";
@@ -401,6 +402,10 @@ export default function ClinicDashboardPage() {
 
       case "public-legal":
         return <LegalManagePage />;
+
+      case "panduan":
+      case "help":
+        return <AdminGuideView />;
 
       default:
         return (

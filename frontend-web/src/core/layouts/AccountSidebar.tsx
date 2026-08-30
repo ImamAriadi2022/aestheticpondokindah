@@ -17,6 +17,7 @@ import {
   Settings,
   Download,
   Upload,
+  BookOpen,
 } from "lucide-react";
 
 interface MenuItem {
@@ -87,6 +88,7 @@ export default function AccountSidebar({ userName, onLogout }: AccountSidebarPro
   ];
 
   const helpSubMenus = [
+    { label: "Panduan Pasien", href: "/dashboard/user?tab=panduan", icon: BookOpen },
     { label: "Pusat Bantuan (FAQ)", href: "/help", icon: HelpCircle },
     { label: "Pengaduan & Masukan", href: "/dashboard/user?tab=pengaduan", icon: AlertCircle },
   ];
