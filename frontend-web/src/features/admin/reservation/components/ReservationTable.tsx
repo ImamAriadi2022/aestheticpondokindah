@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/shared/ui/button";
 import {
   Eye,
+  Trash2,
   Calendar,
   Clock,
   User,
@@ -16,11 +17,12 @@ import type { ReservationItem } from "../services/reservationService";
 type Props = {
   reservations: ReservationItem[];
   onSelect: (item: ReservationItem) => void;
+  onDelete?: (item: ReservationItem) => void;
   token?: string;
   onRefresh?: () => void;
 };
 
-export default function ReservationTable({ reservations, onSelect }: Props) {
+export default function ReservationTable({ reservations, onSelect, onDelete }: Props) {
   const getStatusBadge = (status: string, isPaid: boolean) => {
     const raw = (status || "").toLowerCase();
     if (raw === "selesai" || raw === "completed") {
@@ -161,14 +163,28 @@ export default function ReservationTable({ reservations, onSelect }: Props) {
 
                     {/* Aksi */}
                     <TableCell className="py-4 pr-6 text-right">
-                      <Button
-                        size="sm"
-                        onClick={() => onSelect(item)}
-                        className="h-8 px-3.5 text-xs font-semibold bg-[#FAF4E8] hover:bg-[#F5E6C8] text-[#8A6B2B] rounded-xl border border-[#E8D4A2]/60 transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Detail
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          size="sm"
+                          onClick={() => onSelect(item)}
+                          className="h-8 px-3 text-xs font-semibold bg-[#FAF4E8] hover:bg-[#F5E6C8] text-[#8A6B2B] rounded-xl border border-[#E8D4A2]/60 transition-all shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+                          title="Lihat Detail Reservasi"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          Detail
+                        </Button>
+                        {onDelete && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onDelete(item)}
+                            className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-xl border border-red-200/60 transition-all shadow-2xs inline-flex items-center justify-center cursor-pointer"
+                            title="Hapus Data Reservasi"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

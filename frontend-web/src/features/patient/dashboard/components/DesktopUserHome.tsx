@@ -1,342 +1,559 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
-import { API_BASE } from "@/core/api/apiConfig";
+import { useNavigate } from "react-router";
 import {
   Calendar,
-  Stethoscope,
-  MessageCircle,
-  Sparkles,
-  ChevronRight,
   Clock,
-  CheckCircle2,
-  BookOpen,
+  Star,
+  Search,
+  Tag,
+  MessageSquare,
+  ChevronRight,
+  ArrowRight,
+  Award,
+  Grid,
 } from "lucide-react";
 
-// Welcome Hero Section with Elegant Modern Design
-function WelcomeHero({ userName }: { userName: string; isMembership?: boolean }) {
-  return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-[#C9A24A]/20 via-[#FDF8F0] to-[#F5E9D8]/50 rounded-3xl p-3 md:p-0 border border-[#C9A24A]/10 shadow-sm">
-      {/* Elegant Background Decorations */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-[#C9A24A]/10 to-transparent rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-[#E8C547]/10 to-transparent rounded-full blur-2xl translate-y-1/3 -translate-x-1/4" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23C9A24A%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />
-      
-      {/* Floating accent elements */}
-      <div className="absolute top-4 right-1/3 w-2 h-2 bg-[#C9A24A]/40 rounded-full animate-pulse" />
-      <div className="absolute bottom-6 left-1/3 w-1.5 h-1.5 bg-[#E8C547]/50 rounded-full animate-pulse delay-300" />
-      
-      <div className="relative z-10 flex items-center justify-between gap-4">
-        {/* Left - Welcome Text */}
-        <div className="flex-1 min-w-10 pl-6">
-          <div className="mb-2">
-            <span className="text-sm md:text-base text-[#8B7355] font-medium">Selamat datang kembali,</span>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#5C4A32] via-[#8B7355] to-[#5C4A32] bg-clip-text text-transparent tracking-tight mt-1">
-              {userName}
-            </h1>
-          </div>
-          
-          <div className="flex items-center gap-2 text-sm text-[#8B7355]">
-            <div className="w-1 h-1 rounded-full bg-[#C9A24A]" />
-            <span className="italic">Semoga harimu menyenangkan!</span>
-            <div className="w-1 h-1 rounded-full bg-[#C9A24A]" />
-          </div>
-          
-          {/* Quick Stats Row */}
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-[#C9A24A]/10">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#C9A24A]/20 to-[#E8C547]/10 flex items-center justify-center">
-                <Calendar className="w-4 h-4 text-[#C9A24A]" />
-              </div>
-              <div>
-                <p className="text-[10px] text-[#8B7355]">Hari Ini</p>
-                <p className="text-xs font-semibold text-[#5C4A32]">{new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</p>
-              </div>
-            </div>
-            <div className="w-px h-8 bg-[#C9A24A]/20" />
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#C9A24A]/20 to-[#E8C547]/10 flex items-center justify-center">
-                <Stethoscope className="w-4 h-4 text-[#C9A24A]" />
-              </div>
-              <div>
-                <p className="text-[10px] text-[#8B7355]">Status</p>
-                <p className="text-xs font-semibold text-[#5C4A32]">Siap Konsultasi</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Section - Doctor Image + Promo Card */}
-        <div className="hidden lg:flex items-center gap-3 shrink-0 -ml-6">
-          <div className="w-48 h-52 relative shrink-0 -ml-4">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#C9A24A]/10 to-[#E8C547]/5 blur-xl" />
-            </div>
-            <div className="absolute -bottom-2 w-40 h-4 bg-gradient-to-r from-transparent via-[#C9A24A]/20 to-transparent rounded-full blur-sm" />
-            <img 
-              src="/dashboard/sapadokter.webp" 
-              alt="Dokter" 
-              className="w-full h-full object-contain object-bottom drop-shadow-2xl relative z-10 hover:scale-105 transition-transform duration-500"
-            />
-          </div>
-
-          <div className="shrink-0 -ml-2">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-sm font-bold text-[#5C4A32]">Promo Spesial Untuk Anda</p>
-              <div className="w-5 h-5 rounded-full bg-[#C9A24A]/10 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-[#C9A24A]" />
-              </div>
-            </div>
-            
-            <p className="text-xs text-[#8B7355] mb-0">Dapatkan diskon hingga</p>
-            
-            <div className="flex items-start justify-between -mt-2">
-              <div className="pt-4">
-                <p className="text-4xl font-bold text-[#C9A24A]">25%</p>
-                <p className="text-xs text-[#8B7355]">untuk semua perawatan</p>
-                <Link
-                  to="/dashboard/user?tab=promo"
-                  className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white text-[10px] font-semibold rounded-full hover:shadow-lg hover:shadow-[#C9A24A]/25 hover:scale-105 transition-all"
-                >
-                  <span>Cek Promo</span>
-                  <ChevronRight className="w-3 h-3" />
-                </Link>
-              </div>
-              <img 
-                src="/dashboard/gigi.webp" 
-                alt="Promo" 
-                className="w-28 h-28 object-contain -mr-5 -mt-3"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default function DesktopUserHome({
-  consultations = [],
-  publicSchedules,
-  isMembership = false,
-  session,
-  complaints,
-  progress,
-}: {
+interface DesktopUserHomeProps {
+  session?: any;
   consultations?: any[];
   publicSchedules?: any[];
   isMembership?: boolean;
-  session?: any;
   complaints?: any[];
   progress?: number;
-}) {
-  const userName = session?.name || "Pengguna";
-  void publicSchedules;
-  void isMembership;
-  void complaints;
-  void progress;
+}
 
-  const [posts, setPosts] = useState<any[]>([]);
+export default function DesktopUserHome({
+  session,
+  consultations = [],
+  publicSchedules = [],
+}: DesktopUserHomeProps) {
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch(`${API_BASE}/public/posts`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => {
-        if (Array.isArray(data)) setPosts(data);
-      })
-      .catch(() => {});
-  }, []);
+  // User details
+  const userName = session?.name || "ROBIN";
+  const userTier = (session?.membership_level || session?.membershipLevel || "bronze").toLowerCase();
+  const memberId = session?.member_id || session?.memberId || `MEM-AESPI_${session?.id || "17"}`;
+  const points = session?.membership_points ?? session?.points ?? 0;
 
-  const latestConsultation = consultations && consultations.length > 0 ? consultations[0] : null;
+  // Active appointment / consultation
+  const activeAppointment = consultations && consultations.length > 0 ? consultations[0] : null;
+
+  // Doctor list for carousel/display
+  const featuredDoctor = {
+    name: "drg. Yulita Dora",
+    specialty: "Aesthetic Dentistry (Veneers)",
+    education: "Faculty of Dentistry, Trisakti University",
+    rating: "4.9",
+    reviewsCount: "214",
+    experience: "10+ Tahun Pengalaman",
+    image: "/dokter/drg. Yulita Dora.webp",
+  };
+
+  // Popular Services
+  const popularServices = [
+    {
+      id: "whitening",
+      title: "Dental Whitening",
+      image: "/layanan/Dental Whitening.webp",
+    },
+    {
+      id: "implants",
+      title: "Dental Implants",
+      image: "/layanan/Dental Implants.webp",
+    },
+    {
+      id: "braces",
+      title: "Orthodontic Braces",
+      image: "/layanan/Orthodontic Braces.webp",
+    },
+  ];
+
+  // Tier emblem asset
+  const getTierEmblem = (tier: string) => {
+    switch (tier) {
+      case "gold":
+        return "/dashboard/gold.webp";
+      case "platinum":
+        return "/dashboard/platinum.webp";
+      case "diamond":
+        return "/dashboard/diamond.webp";
+      case "bronze":
+      default:
+        return "/dashboard/bronze.webp";
+    }
+  };
+
+  const getTierLabel = (tier: string) => {
+    switch (tier) {
+      case "gold":
+        return "GOLD MEMBER";
+      case "platinum":
+        return "PLATINUM MEMBER";
+      case "diamond":
+        return "DIAMOND MEMBER";
+      case "bronze":
+      default:
+        return "BRONZE MEMBER";
+    }
+  };
 
   return (
-    <div className="space-y-6 w-full max-w-none">
-      {/* Welcome Hero with Stats */}
-      <WelcomeHero userName={userName} />
+    <div className="w-full max-w-lg mx-auto md:max-w-4xl space-y-5 px-3.5 py-2 sm:px-4 sm:py-4 text-left font-sans select-none">
+      {/* 1. HERO BANNER CARD */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FFFDF9] via-[#FAF5EA] to-[#F2E8D5] border border-[#EADBBD] p-5 sm:p-6 shadow-sm">
+        {/* Background 3D Tooth / Clinic Watermark Visual */}
+        <div className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none flex items-center justify-end pr-2 opacity-90 sm:opacity-100">
+          <img
+            src="/dashboard/gigi.webp"
+            alt="Dental Care Illustration"
+            className="w-36 h-36 sm:w-48 sm:h-48 object-contain drop-shadow-xl translate-x-4 translate-y-2 select-none"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp";
+            }}
+          />
+        </div>
 
-      {/* Quick Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Konsultasi Cepat */}
-        <Link
-          to="/dashboard/user?tab=konsultasi&view=quick"
-          className="relative overflow-hidden bg-white rounded-3xl p-6 border border-[#C9A24A]/10 hover:border-[#C9A24A]/30 hover:shadow-lg transition-all text-left group"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="w-14 h-14 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mb-4 group-hover:bg-[#F5E9D8] transition-colors">
-                <MessageCircle className="w-7 h-7 text-[#C9A24A]" />
-              </div>
-              <h4 className="font-bold text-[#5C4A32] text-lg mb-1">Konsultasi Cepat</h4>
-              <p className="text-sm text-[#8B7355] mb-4">Chat langsung dengan dokter gigi</p>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white text-sm font-semibold rounded-full group-hover:shadow-lg group-hover:shadow-[#C9A24A]/25 transition-all">
-                <span>Mulai Chat</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="w-32 h-32 flex-shrink-0">
+        <div className="relative z-10 max-w-[70%] sm:max-w-[65%] space-y-2.5">
+          {/* Tag Pill */}
+          <div className="inline-flex items-center px-3 py-0.5 rounded-full border border-[#C9A24A]/50 bg-white/80 backdrop-blur-xs">
+            <span className="text-[9px] sm:text-[10px] font-extrabold text-[#A8822D] uppercase tracking-wider">
+              BOOKING SEKARANG
+            </span>
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#2C2416] leading-tight tracking-tight">
+            Atur Janji,<br />
+            Senyum Lebih<br />
+            Percaya Diri
+          </h1>
+
+          {/* Subtitle */}
+          <p className="text-[11px] sm:text-xs text-[#6B5D4D] leading-relaxed line-clamp-2">
+            Booking konsultasi dengan dokter gigi terbaik kami dengan mudah dan cepat.
+          </p>
+
+          {/* Social Proof Row */}
+          <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center -space-x-2">
               <img
-                src="/dashboard/gigi.webp"
-                alt="Konsultasi"
-                className="w-full h-full object-contain drop-shadow-lg"
+                src="/dokter/drg. Yulita Dora.webp"
+                alt="Doctor 1"
+                className="w-6 h-6 rounded-full border-2 border-white object-cover shadow-2xs"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp"; }}
+              />
+              <img
+                src="/dokter/drg. Achmad Riwandy.webp"
+                alt="Doctor 2"
+                className="w-6 h-6 rounded-full border-2 border-white object-cover shadow-2xs"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp"; }}
+              />
+              <img
+                src="/dokter/drg. Della Sparringa.webp"
+                alt="Doctor 3"
+                className="w-6 h-6 rounded-full border-2 border-white object-cover shadow-2xs"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp"; }}
               />
             </div>
+            <p className="text-[11px] text-[#6B5D4D]">
+              <span className="font-bold text-[#A8822D]">{publicSchedules.length > 0 ? publicSchedules.length : "12"}</span> Dokter tersedia
+            </p>
           </div>
-        </Link>
 
-        {/* Booking Jadwal */}
-        <Link
-          to="/dashboard/user?tab=konsultasi&view=schedule"
-          className="relative overflow-hidden bg-white rounded-3xl p-6 border border-[#C9A24A]/10 hover:border-[#C9A24A]/30 hover:shadow-lg transition-all text-left group"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="w-14 h-14 rounded-2xl bg-[#FDF8F0] flex items-center justify-center mb-4 group-hover:bg-[#F5E9D8] transition-colors">
-                <Calendar className="w-7 h-7 text-[#C9A24A]" />
-              </div>
-              <h4 className="font-bold text-[#5C4A32] text-lg mb-1">Booking Jadwal</h4>
-              <p className="text-sm text-[#8B7355] mb-4">Atur janji dengan dokter pilihan</p>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white text-sm font-semibold rounded-full group-hover:shadow-lg group-hover:shadow-[#C9A24A]/25 transition-all">
-                <span>Atur Jadwal</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="w-32 h-32 flex-shrink-0">
-              <img
-                src="/dashboard/kalender.webp"
-                alt="Booking"
-                className="w-full h-full object-contain drop-shadow-lg"
-              />
-            </div>
+          {/* Action CTA Button */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/user?tab=booking")}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white text-xs font-bold shadow-md shadow-[#C9A24A]/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <span>Booking Sekarang</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-        </Link>
+        </div>
       </div>
 
-      {/* SECTION 1: Status Janji Temu / Kunjungan Terbaru (Backend API Data) */}
-      <div className="bg-white rounded-3xl p-6 border border-[#C9A24A]/10 shadow-sm space-y-4">
+      {/* 2. QUICK ACTIONS (3 CARDS) */}
+      <div className="grid grid-cols-3 gap-3">
+        {/* Card 1: Riwayat Reservasi */}
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/user?tab=riwayat")}
+          className="bg-white rounded-2xl p-3.5 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] group-hover:bg-[#F3EAD5] transition-colors mb-2">
+            <Clock className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-bold text-[#2C2416] text-center leading-tight">
+            Riwayat<br />Reservasi
+          </span>
+        </button>
+
+        {/* Card 2: Penawaran Spesial */}
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/user?tab=promo")}
+          className="bg-white rounded-2xl p-3.5 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] group-hover:bg-[#F3EAD5] transition-colors mb-2">
+            <Tag className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-bold text-[#2C2416] text-center leading-tight">
+            Penawaran<br />Spesial
+          </span>
+        </button>
+
+        {/* Card 3: Konsultasi Cepat */}
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/user?tab=konsultasi")}
+          className="bg-white rounded-2xl p-3.5 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] group-hover:bg-[#F3EAD5] transition-colors mb-2">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-bold text-[#2C2416] text-center leading-tight">
+            Konsultasi<br />Cepat
+          </span>
+        </button>
+      </div>
+
+      {/* 3. LAYANAN POPULER (Vector Dental Icons) */}
+      <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
-              <Clock className="w-4 h-4" />
+          <h2 className="text-base font-bold text-[#2C2416]">Layanan Populer</h2>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/user?tab=booking")}
+            className="text-xs font-bold text-[#C9A24A] hover:text-[#B8943F] hover:underline cursor-pointer"
+          >
+            Lihat Semua
+          </button>
+        </div>
+
+        {/* 3 Service Grid Cards with Line Art Dental Icons */}
+        <div className="grid grid-cols-3 gap-3">
+          {/* Service 1: Dental Whitening */}
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/user?tab=booking")}
+            className="bg-white rounded-2xl p-3 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] mb-2 group-hover:bg-[#F3EAD5] transition-colors">
+              <svg className="w-7 h-7 text-[#C9A24A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2C8 2 6 5 6 9c0 4 2 8 3 11 1 2 2 2 3 0 1 2 2 2 3 0 1-3 3-7 3-11 0-4-2-7-6-7z" fill="#FDF8F0" />
+                <path d="M4 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="#C9A24A" stroke="none" />
+                <path d="M19 12l.7 1.4 1.4.7-1.4.7-.7 1.4-.7-1.4-1.4-.7 1.4-.7.7-1.4z" fill="#C9A24A" stroke="none" />
+              </svg>
             </div>
-            <div>
-              <h3 className="font-bold text-[#5C4A32] text-base">Jadwal & Kunjungan Anda</h3>
-              <p className="text-xs text-[#8B7355]">Status reservasi dan riwayat pemeriksaan terdekat</p>
+            <span className="text-[11px] font-bold text-[#2C2416] text-center line-clamp-2 leading-tight">
+              Dental Whitening
+            </span>
+          </button>
+
+          {/* Service 2: Dental Implants */}
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/user?tab=booking")}
+            className="bg-white rounded-2xl p-3 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] mb-2 group-hover:bg-[#F3EAD5] transition-colors">
+              <svg className="w-7 h-7 text-[#C9A24A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 6c0-2.2 2.2-4 5-4s5 1.8 5 4c0 3-1.5 5-3 6H10C8.5 11 7 9 7 6z" fill="#FDF8F0" />
+                <line x1="9.5" y1="13" x2="14.5" y2="13" />
+                <line x1="10" y1="16" x2="14" y2="16" />
+                <line x1="10.5" y1="19" x2="13.5" y2="19" />
+                <line x1="12" y1="12" x2="12" y2="22" />
+              </svg>
+            </div>
+            <span className="text-[11px] font-bold text-[#2C2416] text-center line-clamp-2 leading-tight">
+              Dental Implants
+            </span>
+          </button>
+
+          {/* Service 3: Orthodontic Braces */}
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/user?tab=booking")}
+            className="bg-white rounded-2xl p-3 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] mb-2 group-hover:bg-[#F3EAD5] transition-colors">
+              <svg className="w-7 h-7 text-[#C9A24A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 3C8 3 6 6 6 10c0 4 2 7 3 10 1 1.5 2 1.5 3 0 1 1.5 2 1.5 3 0 1-3 3-6 3-10 0-4-2-7-6-7z" fill="#FDF8F0" />
+                <rect x="9.5" y="8.5" width="5" height="5" rx="1.5" fill="#FAF5EA" stroke="#C9A24A" strokeWidth="1.5" />
+                <line x1="4" y1="11" x2="20" y2="11" stroke="#C9A24A" strokeWidth="1.5" />
+              </svg>
+            </div>
+            <span className="text-[11px] font-bold text-[#2C2416] text-center line-clamp-2 leading-tight">
+              Orthodontic Braces
+            </span>
+          </button>
+        </div>
+
+        {/* Special Offer Banner Underneath with Gigi.webp */}
+        <div
+          onClick={() => navigate("/dashboard/user?tab=promo")}
+          className="bg-gradient-to-r from-[#FFFDF9] via-[#FAF5EA] to-[#F5EBD6] rounded-2xl p-4 border border-[#EADBBD] flex items-center justify-between gap-3 shadow-xs hover:shadow-md transition-all cursor-pointer overflow-hidden"
+        >
+          <div className="space-y-0.5 flex-1 min-w-0">
+            <span className="text-[9px] font-extrabold text-[#A8822D] uppercase tracking-wider block">
+              PENAWARAN SPESIAL
+            </span>
+            <p className="text-xs sm:text-sm font-black text-[#2C2416] leading-tight">
+              20% OFF Pemutihan Gigi
+            </p>
+            <p className="text-[10px] sm:text-[11px] text-[#6B5D4D]">
+              Book now and get a brighter smile!
+            </p>
+          </div>
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/90 border border-[#EADBBD] flex items-center justify-center p-1 shrink-0 shadow-2xs">
+            <img
+              src="/dashboard/gigi.webp"
+              alt="Promo Thumbnail"
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/layanan/Dental Whitening.webp";
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 4. DOKTER SPESIALIS KAMI */}
+      <div className="space-y-3 pt-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-[#2C2416]">Dokter Spesialis Kami</h2>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/user?tab=booking")}
+            className="text-xs font-bold text-[#C9A24A] hover:text-[#B8943F] hover:underline cursor-pointer"
+          >
+            Lihat Semua
+          </button>
+        </div>
+
+        {/* Featured Doctor Card */}
+        <div className="bg-white rounded-3xl p-4 border border-[#F0E6D3] shadow-xs">
+          <div className="flex items-start gap-3.5">
+            {/* Doctor Photo */}
+            <div className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl overflow-hidden bg-[#FAF5EA] border border-[#F0E6D3] shadow-2xs shrink-0">
+              <img
+                src={featuredDoctor.image}
+                alt={featuredDoctor.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = "/hero/drg-yulita-dora.webp";
+                }}
+              />
+            </div>
+
+            {/* Doctor Info */}
+            <div className="flex-1 min-w-0 space-y-1">
+              <h3 className="text-sm sm:text-base font-bold text-[#2C2416] truncate">
+                {featuredDoctor.name}
+              </h3>
+
+              <div className="inline-block px-2.5 py-0.5 rounded-full bg-[#FAF5EA] border border-[#EADBBD] text-[#8C6B1C] text-[10px] font-bold">
+                {featuredDoctor.specialty}
+              </div>
+
+              <p className="text-[10px] text-[#6B5D4D] flex items-center gap-1 line-clamp-1">
+                <span>📍</span>
+                <span>{featuredDoctor.education}</span>
+              </p>
+
+              <div className="flex items-center justify-between pt-1 text-[10px] text-[#6B5D4D]">
+                <div className="flex items-center gap-1">
+                  <Star className="w-3 h-3 text-[#C9A24A] fill-[#C9A24A]" />
+                  <span className="font-bold text-[#2C2416]">{featuredDoctor.rating}</span>
+                  <span className="text-gray-400">({featuredDoctor.reviewsCount})</span>
+                </div>
+                <span className="font-semibold text-gray-500">{featuredDoctor.experience}</span>
+              </div>
             </div>
           </div>
-          <Link
-            to="/dashboard/user?tab=reservasi"
-            className="text-xs font-semibold text-[#C9A24A] hover:text-[#b8923f] flex items-center gap-1"
+
+          {/* Full-width CTA Button inside doctor card */}
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/user?tab=booking")}
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-bold text-xs shadow-md shadow-[#C9A24A]/25 flex items-center justify-center gap-1.5 cursor-pointer mt-3 transition-all hover:scale-[1.01] active:scale-[0.99]"
+          >
+            <span>Lihat Profil</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Carousel Indicator Dots */}
+        <div className="flex items-center justify-center gap-1.5 pt-1">
+          <div className="w-6 h-1.5 bg-[#C9A24A] rounded-full transition-all" />
+          <div className="w-1.5 h-1.5 bg-gray-300 rounded-full" />
+          <div className="w-1.5 h-1.5 bg-gray-300 rounded-full" />
+        </div>
+      </div>
+
+      {/* 5. JADWAL & KUNJUNGAN ANDA */}
+      <div className="space-y-3 pt-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-[#2C2416]">Jadwal & Kunjungan Anda</h2>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard/user?tab=reservasi")}
+            className="text-xs font-bold text-[#6B5D4D] hover:text-[#C9A24A] flex items-center gap-0.5 cursor-pointer"
           >
             <span>Lihat Semua</span>
             <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
+          </button>
         </div>
 
-        {latestConsultation ? (
-          <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-200/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#C9A24A] text-white">
-                  {latestConsultation.status || "Aktif"}
-                </span>
-                <span className="text-xs font-semibold text-gray-500">
-                  {latestConsultation.date || "Terjadwal"}
-                </span>
-              </div>
-              <h4 className="font-bold text-gray-900 text-sm">
-                {latestConsultation.doctorName || "Dr. Aris S.Sp.KG - Spesialis Konservasi Gigi"}
-              </h4>
-              <p className="text-xs text-gray-600">
-                Layanan: {latestConsultation.service || "Pemeriksaan Kesehatan & Estetik Gigi"}
-              </p>
+        {/* Appointment Card */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#F0E6D3] shadow-xs relative overflow-hidden">
+          {/* Subtle calendar watermark */}
+          <Calendar className="w-24 h-24 text-[#C9A24A]/10 absolute -right-3 -bottom-3 pointer-events-none" />
+
+          <div className="relative z-10 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold bg-[#C9A24A] text-white uppercase">
+                {activeAppointment?.status || "DIBUK"}
+              </span>
+              <span className="text-[11px] font-semibold text-[#6B5D4D]">
+                {activeAppointment?.date
+                  ? `${activeAppointment.date} • ${activeAppointment.time || "15:18"}`
+                  : "10 Agustus 2026 • 15:18"}
+              </span>
             </div>
 
-            <Link
-              to="/dashboard/user?tab=reservasi"
-              className="px-4 py-2 bg-[#C9A24A] hover:bg-[#b8923f] text-white text-xs font-semibold rounded-xl transition-all shadow-sm shrink-0"
-            >
-              Detail Reservasi
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-[#FDF8F0]/70 p-5 rounded-2xl border border-[#C9A24A]/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-[#C9A24A]/15 flex items-center justify-center text-[#C9A24A] shrink-0">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-[#5C4A32] text-sm">Belum Ada Janji Temu Mendatang</h4>
-                <p className="text-xs text-[#8B7355]">
-                  Jadwalkan pemeriksaan berkala setiap 6 bulan sekali untuk menjaga kesehatan dan kilau senyum Anda.
-                </p>
-              </div>
-            </div>
+            <h3 className="text-sm sm:text-base font-bold text-[#2C2416]">
+              {activeAppointment?.doctor_name || activeAppointment?.doctorName || "Dokter Jaga"}
+            </h3>
 
-            <Link
-              to="/dashboard/user?tab=reservasi"
-              className="px-5 py-2.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white text-xs font-semibold rounded-xl shadow-md transition-all shrink-0"
-            >
-              Jadwalkan Periksa
-            </Link>
+            <p className="text-xs text-[#6B5D4D]">
+              Layanan: {activeAppointment?.service || activeAppointment?.service_name || "Pemeriksaan Kesehatan & Estetik Gigi"}
+            </p>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/user?tab=reservasi")}
+                className="inline-flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-bold text-xs shadow-md shadow-[#C9A24A]/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
+                <span>Detail Reservasi</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* SECTION 2: Edukasi & Artikel Kesehatan Gigi (Live Backend API GET /api/public/posts) */}
-      {posts.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#C9A24A]/10 flex items-center justify-center text-[#C9A24A]">
-                <BookOpen className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[#5C4A32] text-base">Edukasi & Tips Senyum Sehat</h3>
-                <p className="text-xs text-[#8B7355]">Panduan perawatan gigi harian dari tim dokter spesialis kami</p>
-              </div>
-            </div>
-            <Link
-              to="/dashboard/user?tab=blog"
-              className="text-xs font-semibold text-[#C9A24A] hover:text-[#b8923f] flex items-center gap-1"
-            >
-              <span>Lihat Semua</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
+      {/* 6. AESPI DIGITAL MEMBERSHIP CARD */}
+      <div className="bg-white rounded-3xl p-5 border border-[#EADBBD] shadow-xs relative overflow-hidden space-y-4">
+        {/* Header Label + Icon */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <p className="text-[9px] font-extrabold text-[#8C8272] tracking-widest uppercase">
+              AESPI DIGITAL
+            </p>
+            <p className="text-[10px] font-bold text-[#2C2416] tracking-wider uppercase">
+              MEMBERSHIP CARD
+            </p>
+          </div>
+          <Grid className="w-5 h-5 text-[#C9A24A]" />
+        </div>
+
+        {/* Tier & User Name Row with 3D Emblem */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <p className="text-xs font-extrabold text-[#A8822D] uppercase tracking-wide">
+              {getTierLabel(userTier)}
+            </p>
+            <h3 className="text-2xl sm:text-3xl font-black text-[#2C2416] tracking-tight uppercase">
+              {userName}
+            </h3>
+            <p className="text-[10px] text-[#8C8272] font-mono tracking-wider pt-0.5">
+              MEMBER ID {memberId}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {posts.slice(0, 3).map((art) => (
-              <div
-                key={art.id}
-                className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-gray-500">
-                    <span className="px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200/60 rounded-full font-semibold">
-                      {art.category || "Edukasi"}
-                    </span>
-                    <span>{art.reading_time_minutes ? `${art.reading_time_minutes} mnt baca` : "3 mnt baca"}</span>
-                  </div>
-
-                  <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2">
-                    {art.title}
-                  </h4>
-                  <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                    {art.excerpt || art.description}
-                  </p>
-                </div>
-
-                <Link
-                  to={`/dashboard/user?tab=blog-detail&slug=${art.slug}`}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#C9A24A] hover:text-[#b8923f] pt-2"
-                >
-                  <span>Baca Selengkapnya</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            ))}
+          {/* 3D Tier Badge Emblem */}
+          <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0">
+            <img
+              src={getTierEmblem(userTier)}
+              alt="Membership Emblem"
+              className="w-full h-full object-contain drop-shadow-md"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = "/dashboard/bronze.webp";
+              }}
+            />
           </div>
         </div>
-      )}
+
+        {/* 2 Info Cards: BERLAKU HINGGA & POIN SAAT INI */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#F0E6D3]">
+            <p className="text-[9px] font-bold uppercase text-[#8C8272] flex items-center gap-1">
+              <span>📅</span>
+              <span>BERLAKU HINGGA</span>
+            </p>
+            <p className="text-xs font-bold text-[#2C2416] mt-0.5">
+              Seumur Hidup
+            </p>
+          </div>
+
+          <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#F0E6D3]">
+            <p className="text-[9px] font-bold uppercase text-[#8C8272] flex items-center gap-1">
+              <span>🪙</span>
+              <span>POIN SAAT INI</span>
+            </p>
+            <p className="text-xs font-bold text-[#2C2416] mt-0.5">
+              {points} Pts
+            </p>
+          </div>
+        </div>
+
+        {/* Level Progress Box */}
+        <div className="bg-[#FAF8F5] rounded-2xl p-3.5 border border-[#F0E6D3] space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#C9A24A]">
+                <Award className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <p className="text-[9px] font-bold uppercase text-[#8C8272]">LEVEL BERIKUTNYA</p>
+                <p className="text-xs font-bold text-[#2C2416]">Gold Member</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/dashboard/user?tab=akun")}
+              className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white text-[10px] font-bold shadow-xs cursor-pointer transition-all"
+            >
+              Upgrade
+            </button>
+          </div>
+
+          {/* Progress Bar */}
+          <div>
+            <div className="w-full h-2 rounded-full bg-[#EADBBD]/70 overflow-hidden">
+              <div className="h-full rounded-full bg-gradient-to-r from-[#C9A24A] to-[#B8943F] w-[60%]" />
+            </div>
+            <span className="text-[10px] text-[#8C8272] text-right font-semibold block mt-1">
+              600 / 1.000 Pts
+            </span>
+          </div>
+        </div>
+
+        {/* Outline Button: Lihat Detail Membership */}
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/user?tab=akun")}
+          className="w-full py-2.5 rounded-xl border border-[#EADBBD] bg-white hover:bg-[#FAF8F5] text-[#8C6B1C] font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+        >
+          <span>Lihat Detail Membership</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 }

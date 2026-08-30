@@ -15,7 +15,8 @@ import {
 import ReservationTable from "../components/ReservationTable";
 import ReservationDetailModal from "../components/ReservationDetailModal";
 import AdminTreatmentManagement from "@/features/admin/treatments/pages/AdminTreatmentManagement";
-import type { ReservationItem } from "../services/reservationService";
+import { deleteAdminReservation, type ReservationItem } from "../services/reservationService";
+import { toast } from "@/shared/ui/toast";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
 
@@ -56,6 +57,32 @@ export default function ReservationPage({
 
   const handleModalUpdated = () => {
     if (onRefresh) onRefresh();
+  };
+
+  const handleDeleteReservation = async (item: ReservationItem) => {
+    if (!token) return;
+    const rCode = item.code || `RSV-${String(item.id).padStart(6, "0")}`;
+    const pName = item.name || "Pasien";
+    const confirmed = window.confirm(
+      `Apakah Anda yakin ingin menghapus data reservasi ${rCode} (${pName})? Tindakan ini akan menghapus data secara permanen.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteAdminReservation(token, item.id);
+      toast({
+        title: "Reservasi Dihapus",
+        message: `Data reservasi ${rCode} berhasil dihapus.`,
+        variant: "success",
+      });
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      toast({
+        title: "Gagal Menghapus",
+        message: err.message || "Gagal menghapus data reservasi.",
+        variant: "error",
+      });
+    }
   };
 
   // Quick stats calculation
@@ -110,75 +137,77 @@ export default function ReservationPage({
 
   return (
     <div className="space-y-6 text-left">
-      {/* Top Header & Sub-Tabs Switcher */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F0E6D3] shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-[#3D332A] tracking-tight flex items-center gap-2">
-              <Calendar className="w-6 h-6 text-[#C9A24A]" />
-              Manajemen Reservasi & Layanan Klinik
-            </h2>
-            <p className="text-sm text-[#7A6E60] mt-1">
-              Pusat kendali operasional janji temu pasien (Guest & Member) serta pengelolaan katalog layanan tindakan medis.
-            </p>
+      {/* Top Header & Sub-Tabs Switcher (Hidden during Detail View) */}
+      {!selected && (
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F0E6D3] shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-bold text-[#3D332A] tracking-tight flex items-center gap-2">
+                <Calendar className="w-6 h-6 text-[#C9A24A]" />
+                Manajemen Reservasi & Layanan Klinik
+              </h2>
+              <p className="text-sm text-[#7A6E60] mt-1">
+                Pusat kendali operasional janji temu pasien (Guest & Member) serta pengelolaan katalog layanan tindakan medis.
+              </p>
+            </div>
+
+            {activeSubTab === "reservations" && onRefresh && (
+              <button
+                onClick={onRefresh}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#FAF6EE] text-[#8A6B2B] rounded-xl border border-[#E8DFC8] text-xs font-semibold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Muat Ulang Reservasi
+              </button>
+            )}
           </div>
 
-          {activeSubTab === "reservations" && onRefresh && (
+          {/* Sub-Tabs Selector */}
+          <div className="flex items-center gap-2 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
             <button
-              onClick={onRefresh}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#FAF6EE] text-[#8A6B2B] rounded-xl border border-[#E8DFC8] text-xs font-semibold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Muat Ulang Reservasi
-            </button>
-          )}
-        </div>
-
-        {/* Sub-Tabs Selector */}
-        <div className="flex items-center gap-2 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
-          <button
-            onClick={() => setActiveSubTab("reservations")}
-            className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeSubTab === "reservations"
-                ? "bg-[#8C6B1C] text-white shadow-md"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
-            }`}
-          >
-            <Calendar className="w-4 h-4" />
-            <span>Janji Temu & Alur Reservasi</span>
-            <span
-              className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+              onClick={() => setActiveSubTab("reservations")}
+              className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeSubTab === "reservations"
-                  ? "bg-white/20 text-white"
-                  : "bg-[#EADBBD] text-[#4A3F35]"
+                  ? "bg-[#8C6B1C] text-white shadow-md"
+                  : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
               }`}
             >
-              {totalCount}
-            </span>
-          </button>
+              <Calendar className="w-4 h-4" />
+              <span>Janji Temu & Alur Reservasi</span>
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                  activeSubTab === "reservations"
+                    ? "bg-white/20 text-white"
+                    : "bg-[#EADBBD] text-[#4A3F35]"
+                }`}
+              >
+                {totalCount}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveSubTab("treatments")}
-            className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeSubTab === "treatments"
-                ? "bg-[#8C6B1C] text-white shadow-md"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span className="whitespace-nowrap">Layanan Klinik (Treatments)</span>
-            <span
-              className={`shrink-0 whitespace-nowrap text-[11px] px-2 py-0.5 rounded-full font-bold ${
+            <button
+              onClick={() => setActiveSubTab("treatments")}
+              className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
                 activeSubTab === "treatments"
-                  ? "bg-white/20 text-white"
-                  : "bg-emerald-100 text-emerald-800"
+                  ? "bg-[#8C6B1C] text-white shadow-md"
+                  : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
               }`}
             >
-              Tersedia
-            </span>
-          </button>
+              <Sparkles className="w-4 h-4" />
+              <span className="whitespace-nowrap">Layanan Klinik (Treatments)</span>
+              <span
+                className={`shrink-0 whitespace-nowrap text-[11px] px-2 py-0.5 rounded-full font-bold ${
+                  activeSubTab === "treatments"
+                    ? "bg-white/20 text-white"
+                    : "bg-emerald-100 text-emerald-800"
+                }`}
+              >
+                Tersedia
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* TAB 1: RESERVASI JANJI TEMU PASIEN */}
       {activeSubTab === "reservations" && (
@@ -326,6 +355,7 @@ export default function ReservationPage({
               <ReservationTable
                 reservations={filteredReservations}
                 onSelect={handleSelect}
+                onDelete={handleDeleteReservation}
                 token={token}
                 onRefresh={onRefresh}
               />

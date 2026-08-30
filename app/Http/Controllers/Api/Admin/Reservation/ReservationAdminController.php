@@ -399,4 +399,26 @@ class ReservationAdminController extends Controller
         ]);
     }
 
+    public function destroy(int|string $id): JsonResponse
+    {
+        $reservation = Reservation::find($id);
+        if (!$reservation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data reservasi tidak ditemukan.'
+            ], 404);
+        }
+
+        $code = $reservation->code ?: 'RSV-' . str_pad((string) $reservation->id, 6, '0', STR_PAD_LEFT);
+
+        // Also clean up associated audits
+        ReservationAudit::where('reservation_id', $reservation->id)->delete();
+
+        $reservation->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Data reservasi {$code} berhasil dihapus."
+        ]);
+    }
 }

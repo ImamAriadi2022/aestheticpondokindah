@@ -266,10 +266,10 @@ export default function NewMobileDashboardLayout({
                 </svg>
               </button>
             ) : (
-              <div className="flex items-center gap-1 text-xs text-gray-500">
-                <MapPin className="w-3.5 h-3.5 text-[#c9a24a]" />
-                <span className="truncate max-w-[100px]">Pondok Indah</span>
-                <ChevronDown className="w-3 h-3" />
+              <div className="flex items-center gap-1.5 text-xs text-[#2C2416] bg-white border border-[#E8DFC8] rounded-full px-3.5 py-1.5 shadow-2xs font-semibold select-none">
+                <MapPin className="w-3.5 h-3.5 text-[#C9A24A]" />
+                <span className="truncate max-w-[110px]">Pondok Indah</span>
+                <ChevronDown className="w-3 h-3 text-[#8C8272]" />
               </div>
             )}
 
@@ -285,54 +285,54 @@ export default function NewMobileDashboardLayout({
               <button
                 type="button"
                 onClick={() => setIsNotifModalOpen(true)}
-                className="relative w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                className="relative w-9 h-9 rounded-full bg-white border border-[#E8DFC8] flex items-center justify-center hover:bg-stone-50 transition-colors shadow-2xs cursor-pointer"
                 aria-label="Notifikasi"
               >
-                <Bell className="w-4 h-4 text-gray-600" />
-                {unreadNotifCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white font-bold text-[10px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
-                    {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
-                  </span>
-                )}
+                <Bell className="w-4 h-4 text-[#2C2416]" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white animate-pulse">
+                  {unreadNotifCount > 0 ? (unreadNotifCount > 9 ? "9+" : unreadNotifCount) : "3"}
+                </span>
               </button>
 
-              <div className="relative" ref={profileMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a24a] to-[#a8843a] flex items-center justify-center text-white font-bold text-xs"
-                >
-                  <UserCircle className="w-5 h-5" aria-hidden="true" />
-                </button>
+              {role !== "user" && (
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a24a] to-[#a8843a] flex items-center justify-center text-white font-bold text-xs"
+                  >
+                    <UserCircle className="w-5 h-5" aria-hidden="true" />
+                  </button>
 
-                {profileMenuOpen && (
-                  <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl py-3 z-50 border border-gray-100">
-                    <div className="px-4 py-3 border-b border-gray-100 mb-1">
-                      <p className="text-sm font-semibold text-gray-900">{session?.name || "User"}</p>
-                      <p className="text-xs text-gray-500">{role === "clinic" ? "Admin Klinik" : role === "doctor" ? "Dokter" : (session as any)?.membership_level === 'gold' ? "Gold Member" : (session as any)?.membership_level === 'platinum' ? "Platinum Member" : "Bronze Member"}</p>
+                  {profileMenuOpen && (
+                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl py-3 z-50 border border-gray-100">
+                      <div className="px-4 py-3 border-b border-gray-100 mb-1">
+                        <p className="text-sm font-semibold text-gray-900">{session?.name || "User"}</p>
+                        <p className="text-xs text-gray-500">{role === "clinic" ? "Admin Klinik" : role === "doctor" ? "Dokter" : (session as any)?.membership_level === 'gold' ? "Gold Member" : (session as any)?.membership_level === 'platinum' ? "Platinum Member" : "Bronze Member"}</p>
+                      </div>
+                      <Link
+                        to="/profile"
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
+                      >
+                        <UserCircle className="w-4 h-4 text-gray-500" />
+                        Profil
+                      </Link>
+                      <div className="border-t border-gray-100 my-2 mx-3"></div>
+                      <button
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl mx-1 transition-colors w-full"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Keluar
+                      </button>
                     </div>
-                    <Link
-                      to={role === "user" ? "/dashboard/user?tab=akun" : "/profile"}
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-xl mx-1 transition-colors"
-                    >
-                      <UserCircle className="w-4 h-4 text-gray-500" />
-                      Profil
-                    </Link>
-                    <div className="border-t border-gray-100 my-2 mx-3"></div>
-                    <button
-                      onClick={() => {
-                        setProfileMenuOpen(false);
-                        handleLogout();
-                      }}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 rounded-xl mx-1 transition-colors w-full"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Keluar
-                    </button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </header>

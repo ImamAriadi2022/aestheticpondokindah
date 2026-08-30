@@ -105,3 +105,23 @@ export async function confirmAdminReservationPayment(
 
   return res.json();
 }
+
+export async function deleteAdminReservation(
+  token: string,
+  id: string | number
+): Promise<{ success: boolean; message: string }> {
+  const res = await fetch(`${API_BASE}/admin/reservations/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `Gagal menghapus reservasi (${res.status})`);
+  }
+
+  return res.json();
+}
