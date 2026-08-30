@@ -4,7 +4,6 @@ import ScrollToTop from "@/core/router/ScrollToTop";
 import RouteTransition from "@/core/router/RouteTransition";
 import ErrorBoundary from "@/core/router/ErrorBoundary";
 import ProtectedRoute from "@/core/router/ProtectedRoute";
-import ChatBot from "@/features/guest/chatbot/components/ChatBot";
 import { ToastViewport } from "@/shared/ui/toast";
 import PushNotificationBanner from "@/core/components/PushNotificationBanner";
 import GlobalNotificationManager from "@/core/services/GlobalNotificationManager";
@@ -126,23 +125,6 @@ const MobileLoginPage = lazy(() => import("@/core/auth/pages/MobileLogin"));
 
 // Developer API Documentation
 const DocsApiPage = lazy(() => import("@/features/developer/pages/DocsApiPage"));
-
-// Wrapper component to conditionally show ChatBot
-function ChatBotWrapper() {
-  const location = useLocation();
-  const isDashboard = location.pathname.startsWith("/dashboard");
-  const isSettings = location.pathname === "/settings";
-  const isProfile = location.pathname.startsWith("/profile");
-  const isMembership = location.pathname === "/membership" || location.pathname === "/membership/upgrade";
-  const isSecurity = location.pathname === "/security";
-  const isHelp = location.pathname === "/help";
-  const isOnboarding = location.pathname === "/onboarding" || location.pathname === "/mobile-login";
-  const isGuestKonsultasi = location.pathname.startsWith("/konsultasi");
-  const isDocsApi = location.pathname === "/docs-api" || location.pathname === "/doc-api";
-
-  if (isDashboard || isSettings || isProfile || isMembership || isSecurity || isHelp || isOnboarding || isGuestKonsultasi || isDocsApi) return null;
-  return <ChatBot />;
-}
 
 // Role-aware wrappers: select doctor-specific pages when session role is doctor
 function isDoctorSession() {
@@ -447,7 +429,6 @@ export default function App() {
           </RouteTransition>
         </ErrorBoundary>
       </Suspense>
-      <ChatBotWrapper />
       <GlobalNotificationManager />
       <PushNotificationBanner />
       <ToastViewport />
