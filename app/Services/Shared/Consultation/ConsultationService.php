@@ -5,6 +5,7 @@ namespace App\Services\Shared\Consultation;
 use App\Services\Doctor\Visit\VisitService;
 use App\Services\Doctor\MedicalRecord\MedicalRecordService;
 use App\Services\Shared\Notification\NotificationService;
+use App\Services\Shared\WhatsApp\ZestaWhatsAppService;
 use App\Models\Shared\Consultation\Consultation;
 use App\Models\Shared\Consultation\ConsultationMessage;
 use App\Models\Doctor\MedicalRecord\MedicalRecord;
@@ -217,8 +218,43 @@ class ConsultationService
         ]);
 
         $this->notifyRecipients($consultation, $sender, $role, $body);
+        $this->dispatchZestaWhatsApp($consultation, $sender, $role, $body);
 
         return $message;
+    }
+
+    /**
+     * Dispatch WhatsApp message to patient via Zesta API when doctor/admin replies.
+     */
+    private function dispatchZestaWhatsApp(Consultation $consultation, ?User $sender, string $role, string $body): void
+    {
+        // Only trigger WhatsApp forwarding when admin or doctor sends a message to patient/guest
+        if (!in_array($role, ['admin', 'doctor'], true)) {
+            return;
+        }
+
+        try {
+            $patientPhone = $consultation->guest_phone 
+                ?: ($consultation->user?->whatsapp ?: ($consultation->user?->phone ?: $consultation->contact_number));
+
+            if (empty($patientPhone)) {
+                return;
+            }
+
+            $senderName = $sender?->name ?: ($role === 'doctor' ? 'Dokter Klinik' : 'Admin Klinik');
+            $patientName = $consultation->participant_name;
+            $preview = mb_substr($body, 0, 300);
+
+            $chatUrl = $consultation->access_token
+                ? url('/#/konsultasi/guest/' . $consultation->access_token)
+                : url('/#/dashboard/user?tab=konsultasi');
+
+            $waText = "Halo {$patientName},\n\n*{$senderName}* membalas pesan konsultasi Anda di Aesthetic Pondok Indah Dental:\n\n\"{$preview}\"\n\nSilakan klik tautan berikut untuk membuka ruang obrolan konsultasi:\n{$chatUrl}";
+
+            ZestaWhatsAppService::sendTextMessage($patientPhone, $waText, $patientName);
+        } catch (\Throwable $e) {
+            // Fail-safe: external API error must never disrupt chat delivery
+        }
     }
 
     /**

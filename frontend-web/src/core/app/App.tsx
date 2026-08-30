@@ -223,6 +223,7 @@ export default function App() {
               <Route path="/download" element={<RoleAwareDownload />} />
               <Route path="/login" element={<PublicRouteRedirect><LoginPage /></PublicRouteRedirect>} />
               <Route path="/klinik" element={<PublicRouteRedirect><LoginPage /></PublicRouteRedirect>} />
+              <Route path="/booking" element={<Navigate to="/booking/new" replace />} />
               <Route path="/booking/new" element={<BookingNewPage />} />
               <Route path="/booking/status" element={<BookingStatusPage />} />
               <Route path="/booking/proposal/:token" element={<BookingProposalPage />} />
@@ -247,6 +248,38 @@ export default function App() {
                 }
               />
               <Route
+                path="/dashboard/user/profile"
+                element={<Navigate to="/profile" replace />}
+              />
+              <Route
+                path="/dashboard/user/profile/edit"
+                element={<Navigate to="/profile/edit" replace />}
+              />
+              <Route
+                path="/dashboard/user/settings"
+                element={<Navigate to="/settings" replace />}
+              />
+              <Route
+                path="/dashboard/user/membership"
+                element={<Navigate to="/membership" replace />}
+              />
+              <Route
+                path="/dashboard/user/membership/upgrade"
+                element={<Navigate to="/membership/upgrade" replace />}
+              />
+              <Route
+                path="/dashboard/user/security"
+                element={<Navigate to="/security" replace />}
+              />
+              <Route
+                path="/dashboard/user/download"
+                element={<Navigate to="/download" replace />}
+              />
+              <Route
+                path="/dashboard/user/help"
+                element={<Navigate to="/help" replace />}
+              />
+              <Route
                 path="/dashboard/doctor"
                 element={
                   <ProtectedRoute allow={["doctor"]}>
@@ -268,6 +301,14 @@ export default function App() {
               />
               <Route
                 path="/dashboard/doctor/schedule/edit/:id"
+                element={
+                  <ProtectedRoute allow={["doctor"]}>
+                    <DoctorScheduleFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/doctor/schedule/:id/edit"
                 element={
                   <ProtectedRoute allow={["doctor"]}>
                     <DoctorScheduleFormPage />
@@ -300,6 +341,14 @@ export default function App() {
               />
               <Route
                 path="/dashboard/clinic/doctor/edit/:id"
+                element={
+                  <ProtectedRoute allow={["clinic"]}>
+                    <ClinicDoctorFormPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/clinic/doctor/:id/edit"
                 element={
                   <ProtectedRoute allow={["clinic"]}>
                     <ClinicDoctorFormPage />

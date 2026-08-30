@@ -63,11 +63,20 @@ class DatabaseSeeder extends Seeder
             if ($hasStatus) {
                 $updateData['status'] = $userData['status'];
             }
+            $user = User::query()
+                ->where('email', $userData['email'])
+                ->orWhere(function ($q) use ($hasWhatsapp, $userData) {
+                    if ($hasWhatsapp && !empty($userData['whatsapp'])) {
+                        $q->where('whatsapp', $userData['whatsapp']);
+                    }
+                })
+                ->first();
 
-            User::query()->updateOrCreate(
-                ['email' => $userData['email']],
-                $updateData
-            );
+            if ($user) {
+                $user->update(array_merge(['email' => $userData['email']], $updateData));
+            } else {
+                User::query()->create(array_merge(['email' => $userData['email']], $updateData));
+            }
         }
 
         $this->call(DoctorSeeder::class);
@@ -76,6 +85,9 @@ class DatabaseSeeder extends Seeder
         $this->call(ClinicServiceSeeder::class);
         $this->call(ContentSeeder::class);
         $this->call(PromoSeeder::class);
+        $this->call(BranchSeeder::class);
+        $this->call(WilayahSeeder::class);
+        $this->call(PublicInfoSeeder::class);
         $this->call(NormalizeDoctorSchedulesAndReservationsSeeder::class);
     }
 }

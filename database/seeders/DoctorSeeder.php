@@ -157,14 +157,20 @@ class DoctorSeeder extends Seeder
             if ($hasStatus) {
                 $updateData['status'] = $doctorData['status'];
             }
-            if ($hasJob) {
-                $updateData['job'] = $doctorData['job'];
-            }
+            $user = User::query()
+                ->where('email', $doctorData['email'])
+                ->orWhere(function ($q) use ($hasWhatsapp, $doctorData) {
+                    if ($hasWhatsapp && !empty($doctorData['whatsapp'])) {
+                        $q->where('whatsapp', $doctorData['whatsapp']);
+                    }
+                })
+                ->first();
 
-            User::query()->updateOrCreate(
-                ['email' => $doctorData['email']],
-                $updateData
-            );
+            if ($user) {
+                $user->update(array_merge(['email' => $doctorData['email']], $updateData));
+            } else {
+                User::query()->create(array_merge(['email' => $doctorData['email']], $updateData));
+            }
         }
     }
 }

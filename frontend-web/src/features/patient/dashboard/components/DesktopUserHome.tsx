@@ -526,7 +526,7 @@ export default function DesktopUserHome({
 
             <button
               type="button"
-              onClick={() => navigate("/dashboard/user?tab=akun")}
+              onClick={() => navigate("/membership/upgrade")}
               className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white text-[10px] font-bold shadow-xs cursor-pointer transition-all"
             >
               Upgrade
@@ -547,7 +547,7 @@ export default function DesktopUserHome({
         {/* Outline Button: Lihat Detail Membership */}
         <button
           type="button"
-          onClick={() => navigate("/dashboard/user?tab=akun")}
+          onClick={() => navigate("/membership")}
           className="w-full py-2.5 rounded-xl border border-[#EADBBD] bg-white hover:bg-[#FAF8F5] text-[#8C6B1C] font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
         >
           <span>Lihat Detail Membership</span>

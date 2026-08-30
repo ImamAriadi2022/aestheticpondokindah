@@ -1,11 +1,11 @@
 /**
  * Production Service Worker — Aesthetic Pondok Indah Dental Clinic PWA
- * Version: 1.0.0
+ * Version: 2.0.0
  */
 
-const CACHE_STATIC_NAME = 'apig-static-v1.0.0';
-const CACHE_DYNAMIC_NAME = 'apig-dynamic-v1.0.0';
-const CACHE_API_NAME = 'apig-api-v1.0.0';
+const CACHE_STATIC_NAME = 'apig-static-v2.0.0';
+const CACHE_DYNAMIC_NAME = 'apig-dynamic-v2.0.0';
+const CACHE_API_NAME = 'apig-api-v2.0.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -13,18 +13,15 @@ const STATIC_ASSETS = [
   '/offline.html',
   '/manifest.json',
   '/logo/logo.png',
+  '/logo/logo-vertikal.webp',
   '/robots.txt'
 ];
 
-// Security Exclusions - NEVER cache auth, private user data, or sensitive endpoints
+// Security Exclusions - NEVER cache auth, private user data, or payment transactions
 const EXCLUDED_PATTERNS = [
   /\/api\/auth\//,
-  /\/api\/user\//,
-  /\/api\/admin\//,
+  /\/api\/user\/profile/,
   /\/api\/membership\/payment\//,
-  /\/api\/auth\//,
-  /\/api\/user\//,
-  /\/api\/admin\//,
   /\/setup_backend\.php/,
   /\/data_setup\.php/
 ];
@@ -60,44 +57,50 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // 1. Bypass non-GET requests and security-sensitive URLs
+  // 1. Bypass non-GET requests
   if (request.method !== 'GET') return;
   if (EXCLUDED_PATTERNS.some((pattern) => pattern.test(url.pathname))) return;
 
-  // 2. Public API GET Requests: Network-First Strategy
+  // 2. Public API GET Requests: Stale-While-Revalidate Strategy (Ultra Fast & Seamless Offline)
   if (url.pathname.includes('/api/public/') || url.pathname.includes('/wilayah/')) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clonedResponse = response.clone();
-            caches.open(CACHE_API_NAME).then((cache) => {
-              cache.put(request, clonedResponse);
+      caches.open(CACHE_API_NAME).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          const fetchPromise = fetch(request)
+            .then((networkResponse) => {
+              if (networkResponse && networkResponse.status === 200) {
+                cache.put(request, networkResponse.clone());
+              }
+              return networkResponse;
+            })
+            .catch(() => {
+              // If network fails and cached response is available, return it
+              if (cachedResponse) return cachedResponse;
+              // Return silent empty payload instead of 503 error to prevent UI crashing
+              return new Response(JSON.stringify([]), {
+                headers: { 'Content-Type': 'application/json' },
+                status: 200
+              });
             });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            return new Response(JSON.stringify({ error: 'Offline Mode: Data API tidak tersedia' }), {
-              headers: { 'Content-Type': 'application/json' },
-              status: 503
-            });
-          });
-        })
+
+          return cachedResponse || fetchPromise;
+        });
+      })
     );
     return;
   }
 
-  // 3. Google Fonts & Static Assets: Stale-While-Revalidate / Cache-First Strategy
+  // 3. Static Assets, Images, Fonts, Scripts: Stale-While-Revalidate Strategy
   if (
     url.hostname.includes('fonts.googleapis.com') ||
     url.hostname.includes('fonts.gstatic.com') ||
     url.hostname.includes('cdn.jsdelivr.net') ||
     url.pathname.startsWith('/assets/') ||
+    url.pathname.startsWith('/layanan/') ||
+    url.pathname.startsWith('/logo/') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.webp') ||
     url.pathname.endsWith('.svg') ||
     url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.js')
@@ -120,7 +123,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 4. HTML Navigation Requests: Cache-First with Network Fallback & Offline Page
+  // 4. HTML Navigation Requests: Network-First with Cache Fallback
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(request)
@@ -134,7 +137,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() => {
           return caches.match(request).then((cachedResponse) => {
             if (cachedResponse) return cachedResponse;
-            return caches.match('/offline.html');
+            return caches.match('/index.html') || caches.match('/offline.html');
           });
         })
     );
@@ -142,12 +145,11 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-
 // =========================================================================
-// 5. NATIVE MULTI-OS CLOUD WEB PUSH ENGINE (Android, iOS, macOS, Windows)
+// 5. NATIVE MULTI-OS CLOUD WEB PUSH & BACKGROUND NOTIFICATIONS
 // =========================================================================
 
-// Handle Push Message received from Google FCM / Apple APNs / Mozilla Push Cloud
+// Handle Push Message received from FCM / Web Push in Background
 self.addEventListener('push', (event) => {
   let data = {
     title: '🔔 Aesthetic Pondok Indah',
@@ -164,16 +166,19 @@ self.addEventListener('push', (event) => {
   }
 
   const title = data.title || '🔔 Aesthetic Pondok Indah';
+  const tag = data.tag || (data.bookingCode ? `apig-${data.bookingCode}` : `apig-push-${Date.now()}`);
+  const targetUrl = data.url || (data.data && data.data.url) || '/';
+
   const options = {
     body: data.message || data.body || 'Pembaruan data reservasi pasien.',
-    icon: data.icon || '/logo/logo.png',
-    badge: data.badge || '/logo/logo.png',
+    icon: data.icon || '/logo/logo-vertikal.webp',
+    badge: data.badge || '/logo/logo-vertikal.webp',
     vibrate: data.vibrate || [200, 100, 200],
-    tag: data.tag || ('apig-push-' + Date.now()),
-    renotify: true,
-    requireInteraction: true,
+    tag: tag,
+    renotify: false,
+    requireInteraction: false,
     data: {
-      url: data.url || (data.data && data.data.url) || '/',
+      url: targetUrl,
       time: Date.now(),
       bookingCode: data.bookingCode || (data.data && data.data.bookingCode),
     },
@@ -181,7 +186,6 @@ self.addEventListener('push', (event) => {
       {
         action: 'open_url',
         title: 'Lihat Detail',
-        icon: '/logo/logo.png'
       }
     ]
   };
@@ -191,7 +195,7 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Handle user clicking the notification sitting in the OS / Mobile device bar
+// Handle clicking OS Notification
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
@@ -202,14 +206,12 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // 1. Focus existing open window if any
       for (const client of clientList) {
         if ('focus' in client) {
           client.navigate(fullTargetUrl);
           return client.focus();
         }
       }
-      // 2. Open new window if none is open
       if (clients.openWindow) {
         return clients.openWindow(fullTargetUrl);
       }
@@ -217,20 +219,14 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Direct client message dispatcher
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SHOW_DEVICE_NOTIFICATION') {
-    const { title, options } = event.data;
+// Handle Background Sync
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'apig-sync-reservations') {
     event.waitUntil(
-      self.registration.showNotification(title, {
-        body: options.body || '',
-        icon: options.icon || '/logo/logo.png',
-        badge: options.badge || '/logo/logo.png',
-        vibrate: options.vibrate || [200, 100, 200],
-        tag: options.tag || ('apig-notif-' + Date.now()),
-        renotify: true,
-        requireInteraction: true,
-        data: options.data || {},
+      clients.matchAll().then((clientList) => {
+        clientList.forEach((client) => {
+          client.postMessage({ type: 'BACKGROUND_SYNC_TRIGGER' });
+        });
       })
     );
   }

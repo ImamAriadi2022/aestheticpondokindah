@@ -474,7 +474,7 @@ export default function MembershipPage() {
 
               {/* Action Button */}
               <Button
-                onClick={() => navigate("/dashboard/user/profile")}
+                onClick={() => navigate("/profile/edit")}
                 className="w-full sm:w-auto h-12 px-8 bg-gradient-gold hover:opacity-90 text-white font-bold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer flex items-center justify-center gap-2 text-sm"
               >
                 <span>Lengkapi Profil Pengguna</span>

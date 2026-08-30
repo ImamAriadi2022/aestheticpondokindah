@@ -1,20 +1,5 @@
 {
     "0": {
-        "id": "act-383",
-        "timestamp": "2026-08-30T02:13:00.000Z",
-        "category": "Admin & UI/UX | Reservation Doctor & Schedule Editor",
-        "title": "Fitur Edit Dokter & Jam Reservasi dengan 2-3 Rekomendasi Cepat & Pencarian Manual",
-        "description": "Mengimplementasikan editor dokter & jadwal pada ReservationDetailModal.tsx: 1) Tombol 'Edit Dokter & Jam' untuk membuka/menutup formulir penyesuaian, 2) Menampilkan 2–3 rekomendasi dokter & jadwal aktif berkategori kuota tersedia yang dapat dipilih secara 1-klik, 3) Input pencarian dokter secara mandiri (Search Query) serta input tanggal & jam manual tanpa harus menggunakan rekomendasi, 4) Tombol 'Simpan Perubahan' yang terintegrasi dengan API update dan memperbarui data secara langsung.",
-        "details": [
-            "Fitur Edit Terintegrasi: Admin dapat mengubah dokter dan jam janji temu kapan saja.",
-            "2-3 Rekomendasi Cepat: Sistem otomatis merekomendasikan 2 sampai 3 jadwal dokter aktif dengan kuota tersedia.",
-            "Pencarian Manual: Admin dapat mencari dokter terdaftar lainnya dan menyesuaikan tanggal/jam secara bebas.",
-            "Zero Compilation Errors: npm run build sukses (Exit Code 0)."
-        ],
-        "author": "Antigravity Assistant",
-        "version": "1.0.0"
-    },
-    "1": {
         "id": "act-379",
         "timestamp": "2026-08-29T13:38:05.000Z",
         "category": "auth-google-oauth-sso-integration",

@@ -55,6 +55,19 @@ export default function LoginPage() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
 
+  // OTP State for WhatsApp Verification via Zesta
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => {
+      setResendTimer((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -123,14 +136,14 @@ export default function LoginPage() {
     }
   };
 
-  const onRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError(null);
     setSuccess(null);
 
     const phoneDigits = normalizePhoneInput(registerForm.phone);
-    if (!phoneDigits) {
-      setError("Nomor WhatsApp / telepon wajib diisi.");
+    if (!phoneDigits || phoneDigits.length < 8) {
+      setError("Nomor WhatsApp tidak valid. Masukkan nomor WhatsApp yang aktif.");
       return;
     }
 
@@ -147,6 +160,51 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
+      const response = await fetch(`${API_BASE}/auth/otp/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          whatsapp: getFullPhone(registerForm.phone),
+          type: "register",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors?.whatsapp) {
+          throw new Error(data.errors.whatsapp[0]);
+        }
+        throw new Error(data.message || "Gagal mengirim kode OTP");
+      }
+
+      setOtpStep(true);
+      setResendTimer(60);
+      setSuccess("Kode OTP 6-digit telah dikirimkan ke WhatsApp Anda.");
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan saat mengirim OTP.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const onRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const cleanOtp = otpCode.replace(/[^\d]/g, "").trim();
+    if (!cleanOtp || cleanOtp.length < 6) {
+      setError("Masukkan 6 digit kode OTP yang diterima di WhatsApp Anda.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: {
@@ -157,6 +215,7 @@ export default function LoginPage() {
           whatsapp: getFullPhone(registerForm.phone),
           password: registerForm.password,
           password_confirmation: registerForm.passwordConfirmation,
+          otp: cleanOtp,
         }),
       });
 
@@ -175,14 +234,14 @@ export default function LoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      setSuccess("Pendaftaran berhasil! Mengalihkan...");
+      setSuccess("Pendaftaran berhasil! Mengalihkan ke dashboard...");
       setTimeout(() => {
         const dest = getDefaultDashboardPath(data.user?.role);
         window.location.assign(dest);
       }, 400);
 
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan saat mendaftar.");
+      setError(err.message || "Terjadi kesalahan saat verifikasi pendaftaran.");
     } finally {
       setIsSubmitting(false);
     }
@@ -284,8 +343,97 @@ export default function LoginPage() {
   };
 
   const renderRegisterForm = () => {
+    if (otpStep) {
+      return (
+        <form className="mt-7 space-y-4" onSubmit={onRegister}>
+          <div className="flex items-center justify-between mb-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-xl px-2 text-[#7A6E60] hover:text-[#2C2416] text-xs cursor-pointer"
+              onClick={() => {
+                setError(null);
+                setSuccess(null);
+                setOtpStep(false);
+              }}
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Ubah Nomor
+            </Button>
+            <span className="text-xs font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2.5 py-1 rounded-full border border-[#EADBBD]">
+              Verifikasi WhatsApp
+            </span>
+          </div>
+
+          <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#E8DFC8] space-y-1">
+            <p className="text-xs font-bold text-[#4A3F35]">Masukkan Kode OTP</p>
+            <p className="text-[11px] text-[#8A7B6B] leading-relaxed">
+              Kode OTP 6-digit telah dikirimkan otomatis via WhatsApp ke nomor <strong className="text-[#2C2416]">{getFullPhone(registerForm.phone)}</strong>.
+            </p>
+          </div>
+
+          {/* Input OTP 6 Digit */}
+          <div className="space-y-2">
+            <Label htmlFor="register-otp">Kode OTP (6 Digit)</Label>
+            <input
+              id="register-otp"
+              type="tel"
+              inputMode="numeric"
+              maxLength={6}
+              autoFocus
+              placeholder="123456"
+              value={otpCode}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^\d]/g, "").slice(0, 6);
+                setOtpCode(val);
+              }}
+              className="w-full h-14 px-4 text-center tracking-[0.4em] font-mono text-2xl font-bold text-[#2C2416] bg-white border border-[#E8DFC8] rounded-xl focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all outline-none shadow-xs placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-gray-400 placeholder:font-normal"
+              required
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-xs text-[#8A7B6B]">Tidak menerima kode?</span>
+            {resendTimer > 0 ? (
+              <span className="text-xs text-[#A89F91] font-medium">
+                Kirim ulang ({resendTimer}s)
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={isSubmitting}
+                className="text-xs font-bold text-[#8C6B1C] hover:text-[#C9A24A] underline cursor-pointer"
+              >
+                Kirim Ulang OTP
+              </button>
+            )}
+          </div>
+
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || otpCode.length < 6}
+            className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white font-semibold rounded-xl font-body mt-2 cursor-pointer shadow-md shadow-[#C9A24A]/20"
+          >
+            {isSubmitting ? "Memverifikasi..." : "Verifikasi & Selesaikan Pendaftaran"}
+          </Button>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-body" role="alert">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 font-body" role="status">
+              {success}
+            </div>
+          )}
+        </form>
+      );
+    }
+
     return (
-      <form className="mt-7 space-y-4" onSubmit={onRegister}>
+      <form className="mt-7 space-y-4" onSubmit={handleSendOtp}>
         <div className="flex items-center gap-2 mb-2">
           <Button
             type="button"
@@ -380,7 +528,7 @@ export default function LoginPage() {
           disabled={isSubmitting}
           className="w-full h-12 bg-gradient-gold hover:opacity-90 text-white font-semibold rounded-xl font-body mt-2 cursor-pointer shadow-md shadow-[#C9A24A]/20"
         >
-          {isSubmitting ? "Mendaftar..." : "Daftar"}
+          {isSubmitting ? "Mengirim OTP..." : "Kirim OTP WhatsApp & Lanjutkan"}
         </Button>
 
         {error && (

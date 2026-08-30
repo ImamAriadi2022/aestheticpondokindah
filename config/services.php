@@ -47,4 +47,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', 'http://localhost:5173'),
     ],
 
+    'zesta' => [
+        'api_key' => env('ZESTA_API_KEY'),
+        'base_url' => env('ZESTA_BASE_URL', 'https://api.zesta.id'),
+    ],
+
 ];

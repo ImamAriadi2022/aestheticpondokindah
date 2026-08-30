@@ -42,7 +42,7 @@ class BranchSeeder extends Seeder
 
         foreach ($defaultBranches as $bData) {
             Branch::updateOrCreate(
-                ['name' => $bData['name']],
+                ['code' => $bData['code']],
                 $bData
             );
         }

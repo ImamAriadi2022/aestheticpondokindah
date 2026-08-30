@@ -217,9 +217,15 @@ export default function NewMobileDashboardLayout({
       if (tab === "konsultasi") return "Konsultasi";
       if (tab === "doctors") return "Dokter";
       if (tab === "users") return "Pengguna";
+      if (tab === "branches") return "Cabang Klinik";
       if (tab === "membership") return "Membership";
+      if (tab === "pengaduan") return "Pengaduan";
       if (tab === "settings") return "Pengaturan Klinik";
+      if (tab === "public-faqs") return "Pusat Bantuan & FAQ";
+      if (tab === "public-services") return "Katalog Layanan";
+      if (tab === "public-legal") return "Kebijakan & Legal";
       if (tab.startsWith("content")) return "Konten";
+      if (tab.startsWith("etalase")) return "Etalase Website";
       return "Dashboard Klinik";
     }
     if (path === "/dashboard/doctor") {

@@ -117,11 +117,26 @@ export function useSubmenuBadges(role?: "user" | "clinic" | "doctor"): SubmenuBa
     } catch {}
   }, [activeRole, reservations]);
 
-  // Initial & periodic refresh
+  // Initial & periodic refresh (only when tab is visible)
   useEffect(() => {
     refreshBadges();
-    const interval = setInterval(refreshBadges, 30000); // 30s background sync
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (typeof document === "undefined" || !document.hidden) {
+        refreshBadges();
+      }
+    }, 30000);
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        refreshBadges();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [refreshBadges]);
 
   // Instant refresh on incoming push notification

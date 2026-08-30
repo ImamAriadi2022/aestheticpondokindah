@@ -9,9 +9,22 @@ export interface RequestOptions extends RequestInit {
   retries?: number;
   skipAuth?: boolean;
   skipToast?: boolean;
+  silent?: boolean;
 }
 
-const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 30000;
+
+// Rate-limiting for network/timeout error toasts to prevent spamming
+let lastToastTime = 0;
+const TOAST_COOLDOWN_MS = 8000;
+
+function showThrottledToast(message: string) {
+  const now = Date.now();
+  if (now - lastToastTime > TOAST_COOLDOWN_MS) {
+    lastToastTime = now;
+    toast.error(message);
+  }
+}
 
 const getAuthToken = (): string | null => {
   const apidentToken = localStorage.getItem("apident:token");
@@ -33,20 +46,27 @@ const handleUnauthorized = () => {
   clearSessionStorage();
   
   if (typeof window !== "undefined" && !window.location.hash.includes("/login")) {
-    toast.error("Sesi Anda telah berakhir. Silakan login kembali.");
+    showThrottledToast("Sesi Anda telah berakhir. Silakan login kembali.");
     window.location.href = "/#/login";
   }
 };
 
 export const apiClient = {
   request: async <T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> => {
+    const method = (options.method || "GET").toUpperCase();
+    const isGet = method === "GET";
+
     const {
       timeoutMs = DEFAULT_TIMEOUT_MS,
-      retries = 0,
+      retries = isGet ? 1 : 0,
       skipAuth = false,
-      skipToast = false,
+      // Default to silent on GET requests to prevent background polling from spamming popups
+      skipToast = isGet || options.silent || false,
+      silent = false,
       ...fetchOptions
     } = options;
+
+    const shouldSuppressToast = skipToast || silent;
 
     const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
     const token = !skipAuth ? getAuthToken() : null;
@@ -73,11 +93,12 @@ export const apiClient = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-      logger.request(fetchOptions.method || "GET", url, fetchOptions.body);
+      logger.request(method, url, fetchOptions.body);
 
       try {
         const response = await fetch(url, {
           ...fetchOptions,
+          method,
           headers,
           signal: fetchOptions.signal || controller.signal,
         });
@@ -93,7 +114,7 @@ export const apiClient = {
           data = { message: text };
         }
 
-        logger.response(fetchOptions.method || "GET", url, response.status, data);
+        logger.response(method, url, response.status, data);
 
         if (response.ok) {
           touchSessionLastActive();
@@ -102,15 +123,15 @@ export const apiClient = {
 
         // Handle Status Codes
         if (response.status === 401) {
-          if (!skipToast && !skipAuth) {
+          if (!shouldSuppressToast && !skipAuth) {
             handleUnauthorized();
           }
           throw new ApiError("Sesi Anda telah berakhir.", 401);
         }
 
         const errorMessage = getErrorMessage(response.status, data?.message || data?.error);
-        if (!skipToast && response.status !== 401) {
-          toast.error(errorMessage);
+        if (!shouldSuppressToast && response.status !== 401 && !isGet) {
+          showThrottledToast(errorMessage);
         }
 
         throw new ApiError(errorMessage, response.status, data?.errors, data?.code);
@@ -118,8 +139,11 @@ export const apiClient = {
         clearTimeout(timeoutId);
 
         if (err.name === "AbortError") {
-          const timeoutMsg = "Waktu permintaan berakhir (Timeout). Silakan periksa koneksi Anda.";
-          if (!skipToast) toast.error(timeoutMsg);
+          const timeoutMsg = "Waktu permintaan berakhir. Silakan periksa koneksi Anda.";
+          // Only show toast if user explicitly initiated a non-GET write action and did not suppress toast
+          if (!shouldSuppressToast && !isGet && (typeof document === "undefined" || !document.hidden)) {
+            showThrottledToast(timeoutMsg);
+          }
           throw new ApiError(timeoutMsg, 408);
         }
 
@@ -127,17 +151,22 @@ export const apiClient = {
           throw err;
         }
 
-        // Network error retry logic
-        if (attempt <= retries) {
+        // Network error retry logic for GET requests
+        if (attempt <= retries && isGet) {
           logger.warn("ApiClient", `Retrying request to ${url} (Attempt ${attempt}/${retries})...`);
-          await new Promise((r) => setTimeout(r, 1000 * attempt));
+          await new Promise((r) => setTimeout(r, 800 * attempt));
           continue;
         }
 
-        const networkMsg = !navigator.onLine
-          ? "Koneksi internet Anda terputus. Menampilkan data cache lokal."
+        const networkMsg = typeof navigator !== "undefined" && !navigator.onLine
+          ? "Koneksi internet Anda terputus. Menggunakan data cache lokal."
           : "Gagal terhubung ke server. Silakan periksa koneksi internet Anda.";
-        if (!skipToast) toast.error(networkMsg);
+        
+        // Suppress network error toast for GET requests / background sync to avoid disruptive spam
+        if (!shouldSuppressToast && !isGet && (typeof document === "undefined" || !document.hidden)) {
+          showThrottledToast(networkMsg);
+        }
+
         throw new ApiError(networkMsg, 0);
       }
     }
@@ -146,7 +175,7 @@ export const apiClient = {
   },
 
   get: <T = any>(endpoint: string, options?: RequestOptions): Promise<T> => {
-    return apiClient.request<T>(endpoint, { ...options, method: "GET" });
+    return apiClient.request<T>(endpoint, { skipToast: true, ...options, method: "GET" });
   },
 
   post: <T = any>(endpoint: string, data?: any, options?: RequestOptions): Promise<T> => {

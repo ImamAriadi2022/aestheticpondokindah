@@ -35,6 +35,19 @@ export default function MobileLoginPage() {
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
   const [registerError, setRegisterError] = useState("");
 
+  // OTP State for Mobile WhatsApp Verification
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => {
+      setResendTimer((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
   useEffect(() => {
     const session = getSession();
     const storedUser = localStorage.getItem("apident:user");
@@ -117,13 +130,13 @@ export default function MobileLoginPage() {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setRegisterError("");
 
     const phoneDigits = normalizePhoneInput(registerForm.whatsapp);
-    if (!phoneDigits) {
-      setRegisterError("Nomor WhatsApp / telepon wajib diisi.");
+    if (!phoneDigits || phoneDigits.length < 8) {
+      setRegisterError("Nomor WhatsApp tidak valid. Masukkan nomor yang aktif.");
       return;
     }
 
@@ -140,6 +153,50 @@ export default function MobileLoginPage() {
     setIsLoading(true);
 
     try {
+      const response = await fetch(`${API_BASE}/auth/otp/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          whatsapp: getFullPhone(registerForm.whatsapp),
+          type: "register",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.errors?.whatsapp) {
+          throw new Error(data.errors.whatsapp[0]);
+        }
+        throw new Error(data.message || "Gagal mengirim kode OTP");
+      }
+
+      setOtpStep(true);
+      setResendTimer(60);
+      toast({ title: "OTP Terkirim", message: "Kode OTP telah dikirimkan ke WhatsApp Anda.", variant: "success" });
+    } catch (err: any) {
+      setRegisterError(err.message || "Terjadi kesalahan saat mengirim OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisterError("");
+
+    const cleanOtp = otpCode.replace(/[^\d]/g, "").trim();
+    if (!cleanOtp || cleanOtp.length < 6) {
+      setRegisterError("Masukkan 6 digit kode OTP yang diterima di WhatsApp Anda.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: {
@@ -150,6 +207,7 @@ export default function MobileLoginPage() {
           whatsapp: getFullPhone(registerForm.whatsapp),
           password: registerForm.password,
           password_confirmation: registerForm.passwordConfirmation,
+          otp: cleanOtp,
         }),
       });
 
@@ -167,7 +225,7 @@ export default function MobileLoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      toast({ title: "Pendaftaran Berhasil", message: "Selamat datang! Mengalihkan...", variant: "success" });
+      toast({ title: "Pendaftaran Berhasil", message: "Selamat datang! Mengalihkan ke dashboard...", variant: "success" });
       setTimeout(() => {
         const dest = getDefaultDashboardPath(data.user?.role);
         window.location.assign(dest);
@@ -385,102 +443,178 @@ export default function MobileLoginPage() {
 
         {/* Form */}
         <div className="flex-1 px-6 overflow-y-auto">
-          <form onSubmit={handleRegister} className="space-y-4 pb-8">
-            {/* WhatsApp */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Nomor Telepon / WhatsApp</label>
-              <div className="flex items-center w-full h-14 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#c9a24a]/30 focus-within:border-[#c9a24a] transition-all">
-                <div className="flex items-center gap-1 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
-                  <span className="text-base leading-none">🇮🇩</span>
-                  <span>+62</span>
+          {otpStep ? (
+            <form onSubmit={handleRegister} className="space-y-4 pb-8">
+              <div className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#E8DFC8] space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-[#4A3F35]">Verifikasi WhatsApp</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpStep(false);
+                      setRegisterError("");
+                    }}
+                    className="text-xs font-bold text-[#8C6B1C] hover:underline cursor-pointer"
+                  >
+                    Ubah Nomor
+                  </button>
                 </div>
+                <p className="text-xs text-[#8A7B6B] leading-relaxed">
+                  Kode OTP 6-digit telah dikirimkan ke WhatsApp: <strong className="text-[#2C2416]">{getFullPhone(registerForm.whatsapp)}</strong>.
+                </p>
+              </div>
+
+              {/* OTP Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Kode OTP (6 Digit)</label>
                 <input
                   type="tel"
                   inputMode="numeric"
-                  placeholder="857xxxxxxxx"
-                  value={registerForm.whatsapp}
-                  onChange={(e) => setRegisterForm({ ...registerForm, whatsapp: normalizePhoneInput(e.target.value) })}
-                  className="w-full h-full px-3.5 text-base font-semibold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal"
+                  maxLength={6}
+                  autoFocus
+                  placeholder="123456"
+                  value={otpCode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^\d]/g, "").slice(0, 6);
+                    setOtpCode(val);
+                  }}
+                  className="w-full h-14 text-center tracking-[0.4em] font-mono text-2xl font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#c9a24a]/30 focus:border-[#c9a24a] outline-none transition-all placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-gray-400 placeholder:font-normal"
                   required
                 />
               </div>
-            </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  type={showRegisterPassword ? "text" : "password"}
-                  placeholder="Minimal 6 karakter"
-                  value={registerForm.password}
-                  onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                  className="w-full h-14 pl-12 pr-12 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
-                >
-                  {showRegisterPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs text-gray-500">Tidak menerima kode?</span>
+                {resendTimer > 0 ? (
+                  <span className="text-xs text-gray-400 font-medium">
+                    Kirim ulang ({resendTimer}s)
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={isLoading}
+                    className="text-xs font-bold text-[#8C6B1C] hover:text-[#C9A24A] underline cursor-pointer"
+                  >
+                    Kirim Ulang OTP
+                  </button>
+                )}
               </div>
-            </div>
 
-            {/* Password Confirmation */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Konfirmasi Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  type={showRegisterConfirmPassword ? "text" : "password"}
-                  placeholder="Ulangi kata sandi"
-                  value={registerForm.passwordConfirmation}
-                  onChange={(e) => setRegisterForm({ ...registerForm, passwordConfirmation: e.target.value })}
-                  className="w-full h-14 pl-12 pr-12 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
-                >
-                  {showRegisterConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+              {/* Error Message */}
+              {registerError && (
+                <div className="p-3 bg-red-50 rounded-xl border border-red-200">
+                  <p className="text-sm text-red-600">{registerError}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isLoading || otpCode.length < 6}
+                className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-base rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all cursor-pointer mt-2"
+              >
+                {isLoading ? "Memverifikasi..." : "Verifikasi & Selesaikan Pendaftaran"}
+              </Button>
+            </form>
+          ) : (
+            <form onSubmit={handleSendOtp} className="space-y-4 pb-8">
+              {/* WhatsApp */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Nomor Telepon / WhatsApp</label>
+                <div className="flex items-center w-full h-14 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#c9a24a]/30 focus-within:border-[#c9a24a] transition-all">
+                  <div className="flex items-center gap-1 px-3 h-full bg-[#FAF5EA] border-r border-[#EADBBD] text-[#8C6B1C] font-bold text-xs sm:text-sm select-none shrink-0">
+                    <span className="text-base leading-none">🇮🇩</span>
+                    <span>+62</span>
+                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="857xxxxxxxx"
+                    value={registerForm.whatsapp}
+                    onChange={(e) => setRegisterForm({ ...registerForm, whatsapp: normalizePhoneInput(e.target.value) })}
+                    className="w-full h-full px-3.5 text-base font-semibold text-gray-900 bg-transparent outline-none placeholder:text-gray-400 placeholder:font-normal"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Error Message */}
-            {registerError && (
-              <div className="p-3 bg-red-50 rounded-xl border border-red-200">
-                <p className="text-sm text-red-600">{registerError}</p>
+              {/* Password */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    type={showRegisterPassword ? "text" : "password"}
+                    placeholder="Minimal 6 karakter"
+                    value={registerForm.password}
+                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                    className="w-full h-14 pl-12 pr-12 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                  >
+                    {showRegisterPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
-            )}
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-lg rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all cursor-pointer"
-            >
-              {isLoading ? "Memproses..." : "Daftar Sekarang"}
-            </Button>
-
-            <div className="relative flex items-center justify-center py-1">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E8DFC8]" />
+              {/* Password Confirmation */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Konfirmasi Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    type={showRegisterConfirmPassword ? "text" : "password"}
+                    placeholder="Ulangi kata sandi"
+                    value={registerForm.passwordConfirmation}
+                    onChange={(e) => setRegisterForm({ ...registerForm, passwordConfirmation: e.target.value })}
+                    className="w-full h-14 pl-12 pr-12 bg-gray-50 border-0 rounded-xl text-base focus:ring-2 focus:ring-[#c9a24a]/30"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                  >
+                    {showRegisterConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
-              <span className="relative bg-white px-3 text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">
-                atau daftar dengan
-              </span>
-            </div>
 
-            <GoogleAuthButton mode="register" className="h-14 !rounded-xl !text-sm !font-semibold" />
-          </form>
+              {/* Error Message */}
+              {registerError && (
+                <div className="p-3 bg-red-50 rounded-xl border border-red-200">
+                  <p className="text-sm text-red-600">{registerError}</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-14 bg-gradient-to-r from-[#c9a24a] to-[#a8843a] text-white font-semibold text-base rounded-xl shadow-lg shadow-[#c9a24a]/20 hover:opacity-90 transition-all cursor-pointer"
+              >
+                {isLoading ? "Mengirim OTP..." : "Kirim OTP WhatsApp & Lanjutkan"}
+              </Button>
+
+              <div className="relative flex items-center justify-center py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-[#E8DFC8]" />
+                </div>
+                <span className="relative bg-white px-3 text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">
+                  atau daftar dengan
+                </span>
+              </div>
+
+              <GoogleAuthButton mode="register" className="h-14 !rounded-xl !text-sm !font-semibold" />
+            </form>
+          )}
         </div>
 
         {/* Footer */}

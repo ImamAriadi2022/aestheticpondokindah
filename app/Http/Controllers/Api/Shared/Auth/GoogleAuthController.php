@@ -229,6 +229,7 @@ class GoogleAuthController extends Controller
             'data' => [
                 'has_google' => !empty($currentUser->google_id),
                 'google_id' => $currentUser->google_id,
+                'email' => $currentUser->email,
             ],
         ]);
     }

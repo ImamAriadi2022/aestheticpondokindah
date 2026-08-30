@@ -62,6 +62,35 @@ class RegistrationController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // WhatsApp OTP Verification Check
+        $otp = trim((string) $request->input('otp', ''));
+        $cacheKey = "otp:{$normalizedWa}";
+        $verifiedKey = "otp_verified:{$normalizedWa}";
+
+        $isOtpValid = false;
+        if (!empty($otp)) {
+            $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+            if ($cached && isset($cached['code']) && $cached['code'] === $otp) {
+                $isOtpValid = true;
+                \Illuminate\Support\Facades\Cache::forget($cacheKey);
+            } else {
+                return response()->json([
+                    'message' => 'Kode OTP yang Anda masukkan salah atau sudah kedaluwarsa.',
+                    'errors' => ['otp' => ['Kode OTP salah atau sudah kedaluwarsa.']],
+                ], 422);
+            }
+        } elseif (\Illuminate\Support\Facades\Cache::get($verifiedKey)) {
+            $isOtpValid = true;
+            \Illuminate\Support\Facades\Cache::forget($verifiedKey);
+        }
+
+        if (!$isOtpValid) {
+            return response()->json([
+                'message' => 'Nomor WhatsApp belum diverifikasi dengan kode OTP. Silakan verifikasi OTP terlebih dahulu.',
+                'errors' => ['otp' => ['Nomor WhatsApp belum diverifikasi dengan kode OTP.']],
+            ], 422);
+        }
+
         $user = User::create([
             'name' => $name,
             'email' => $request->email ?: null,

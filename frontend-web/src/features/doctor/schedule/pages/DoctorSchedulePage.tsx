@@ -190,7 +190,7 @@ export default function DoctorSchedulePage({
         deletingId={deletingScheduleId}
         searchQuery={searchQuery}
         onResetSearch={() => setSearchQuery("")}
-        onEdit={(id) => navigate(`/dashboard/doctor/schedule/${id}/edit`)}
+        onEdit={(id) => navigate(`/dashboard/doctor/schedule/edit/${id}`)}
         onDelete={handleDelete}
       />
     </div>

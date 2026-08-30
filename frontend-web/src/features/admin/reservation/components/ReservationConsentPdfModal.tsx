@@ -203,7 +203,7 @@ export default function ReservationConsentPdfModal({
       return;
     }
     if (!hasDrawn && !currentSignature) {
-      setErrorMessage("Harap bubuhkan tanda tangan digital Anda pada area tanda tangan.");
+      setErrorMessage("Harap bubuhkan tanda tangan digital Anda pada area tanda tangan di dalam dokumen.");
       return;
     }
 
@@ -339,7 +339,7 @@ export default function ReservationConsentPdfModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-2.5 sm:p-6 bg-black/75 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[250] flex items-center justify-center p-2.5 sm:p-6 bg-black/80 backdrop-blur-xs overflow-y-auto animate-in fade-in duration-200"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -372,7 +372,7 @@ export default function ReservationConsentPdfModal({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#ECEAE5]">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#ECEAE5] overscroll-contain">
           <div className="max-w-[680px] mx-auto bg-white p-6 sm:p-10 rounded-xl shadow-md border border-gray-300 text-black space-y-6 font-sans">
             {/* Formal Letterhead (Header Kop Surat) with Centered Clinic Logo */}
             <div className="border-b-2 border-black pb-3.5 text-center space-y-1" style={{ borderBottom: "3px double #000" }}>
@@ -545,7 +545,7 @@ export default function ReservationConsentPdfModal({
                     className="w-full h-11 rounded-xl bg-[#00A859] hover:bg-[#00914c] text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer touch-manipulation active:scale-95"
                   >
                     <Check className="w-4 h-4 stroke-[3]" />
-                    <span>Kirim & Simpan Tanda Tangan</span>
+                    <span>Simpan & Terapkan Tanda Tangan</span>
                   </Button>
                 </>
               )}

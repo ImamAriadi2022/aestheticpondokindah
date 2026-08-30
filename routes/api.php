@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Shared\Notification\WebPushSubscriptionController;
 use App\Http\Controllers\Api\Shared\Auth\AuthController;
 use App\Http\Controllers\Api\Shared\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\Shared\Auth\RegistrationController;
+use App\Http\Controllers\Api\Shared\Auth\OtpController;
 use App\Http\Controllers\Api\Shared\User\UserController;
 use App\Http\Controllers\Api\Shared\Branch\BranchController;
 use App\Http\Controllers\Api\Shared\Wilayah\WilayahController;
@@ -101,6 +102,8 @@ Route::get('/wilayah/kelurahan/{districtId}', [WilayahController::class, 'villag
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [RegistrationController::class, 'register']);
+    Route::post('/otp/send', [OtpController::class, 'sendOtp']);
+    Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
     Route::post('/google', [GoogleAuthController::class, 'handleGoogleAuth']);
     Route::middleware('auth:sanctum')->post('/google/link', [GoogleAuthController::class, 'linkGoogle']);
     Route::middleware('auth:sanctum')->post('/google/unlink', [GoogleAuthController::class, 'unlinkGoogle']);

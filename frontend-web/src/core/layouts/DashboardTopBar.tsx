@@ -24,6 +24,7 @@ import {
   subscribeToPushNotifications,
   type PushNotificationPayload,
   markNotificationAsRead,
+  markNotificationAsDelivered,
   clearNotificationHistory,
   isNotificationRead,
   triggerPushNotification,
@@ -265,23 +266,18 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         });
 
         const unreadItems = list.filter((item: any) => !item.read_at && !item.is_read);
-        if (unreadItems.length > 0) {
-          setUnreadCount(unreadItems.length);
+        setUnreadCount(unreadItems.length);
+        try {
           localStorage.setItem("apig_push_unread_count", String(unreadItems.length));
-
-          // Trigger native OS banner & in-app toast & chime for incoming unread items that haven't been delivered
-          mapped
-            .filter((item) => !item.isRead)
-            .forEach((item) => {
-              const notifKey = generateNotificationKey(item);
-              if (!isNotificationAlreadyDelivered(notifKey)) {
-                triggerPushNotification(item);
-              }
-            });
-        } else {
-          setUnreadCount(0);
-          localStorage.setItem("apig_push_unread_count", "0");
-        }
+          // Pre-seed seen keys so existing notifications won't spam popups on reload
+          mapped.forEach((item) => {
+            const notifKey = generateNotificationKey(item);
+            markNotificationAsDelivered(notifKey);
+            if (item.isRead) {
+              markNotificationAsRead(notifKey);
+            }
+          });
+        } catch {}
       }
     } catch {}
   };
@@ -289,9 +285,20 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   useEffect(() => {
     fetchDatabaseNotifications();
 
+    // 20s interval only when tab is visible
     const interval = setInterval(() => {
-      fetchDatabaseNotifications();
-    }, 10000);
+      if (typeof document === "undefined" || !document.hidden) {
+        fetchDatabaseNotifications();
+      }
+    }, 20000);
+
+    // Re-fetch immediately when user returns to tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchDatabaseNotifications();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     const unsubscribe = subscribeToPushNotifications((payload: PushNotificationPayload) => {
       const timeStamp = payload.receivedAt || payload.createdAt || new Date().toISOString();
@@ -321,6 +328,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
     return () => {
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       unsubscribe();
     };
   }, [role]);

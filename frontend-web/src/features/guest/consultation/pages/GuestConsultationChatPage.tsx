@@ -317,7 +317,7 @@ export default function GuestConsultationChatPage() {
                 </div>
               </div>
               <Button
-                onClick={() => navigate("/booking")}
+                onClick={() => navigate("/booking/new")}
                 className="w-full sm:w-auto h-9 px-4 text-xs font-bold bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] text-white rounded-xl shadow-2xs shrink-0 cursor-pointer flex items-center justify-center gap-1"
               >
                 Booking Janji Temu

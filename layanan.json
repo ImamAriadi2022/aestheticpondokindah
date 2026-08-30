@@ -1,0 +1,731 @@
+{
+  "nama_file": "layanan.json",
+  "sumber": "Data Layanan Treatment AESPI.pdf",
+  "total_layanan": 181,
+  "layanan": [
+    {
+      "nama_prosedur": "Windowing For Orto",
+      "total_harga": 1700000
+    },
+    {
+      "nama_prosedur": "Vestibuloplasty",
+      "total_harga": 1800000
+    },
+    {
+      "nama_prosedur": "Veneer Zirconia Kelas 4",
+      "total_harga": 10000000
+    },
+    {
+      "nama_prosedur": "Veneer Zirconia Kelas 3",
+      "total_harga": 9000000
+    },
+    {
+      "nama_prosedur": "Veneer Zirconia Kelas 2",
+      "total_harga": 8000000
+    },
+    {
+      "nama_prosedur": "Veneer Zirconia Kelas 1",
+      "total_harga": 7000000
+    },
+    {
+      "nama_prosedur": "Veneer Sementara",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Twin Block",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Ties Application",
+      "total_harga": 200000
+    },
+    {
+      "nama_prosedur": "Tambalan Sementara",
+      "total_harga": 400000
+    },
+    {
+      "nama_prosedur": "Splinting Wire Per Rahang",
+      "total_harga": 3000000
+    },
+    {
+      "nama_prosedur": "Splinting Fiber Per Regio",
+      "total_harga": 2500000
+    },
+    {
+      "nama_prosedur": "Splint",
+      "total_harga": 5000000
+    },
+    {
+      "nama_prosedur": "Sp BM Pencabutan gigi",
+      "total_harga": 1000000
+    },
+    {
+      "nama_prosedur": "Sp BM Pencabutan Gigi Komplikasi",
+      "total_harga": 3500000
+    },
+    {
+      "nama_prosedur": "Socket preservation",
+      "total_harga": 2300000
+    },
+    {
+      "nama_prosedur": "Sinus Lifting Lateral",
+      "total_harga": 14500000
+    },
+    {
+      "nama_prosedur": "Sinus Lifting Crestal",
+      "total_harga": 7800000
+    },
+    {
+      "nama_prosedur": "Self Ligating Orto",
+      "total_harga": 19000000
+    },
+    {
+      "nama_prosedur": "Scalling Anak",
+      "total_harga": 750000
+    },
+    {
+      "nama_prosedur": "Scaling Kelas 2",
+      "total_harga": 1250000
+    },
+    {
+      "nama_prosedur": "Scaling Kelas 1",
+      "total_harga": 1000000
+    },
+    {
+      "nama_prosedur": "Scaling Aquacare",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Scaling Airflow Kelas 2",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Scaling Airflow Kelas 1",
+      "total_harga": 1800000
+    },
+    {
+      "nama_prosedur": "Sapphire Braces",
+      "total_harga": 22000000
+    },
+    {
+      "nama_prosedur": "Rontgen Dental",
+      "total_harga": 350000
+    },
+    {
+      "nama_prosedur": "Ridge Augmentation",
+      "total_harga": 14600000
+    },
+    {
+      "nama_prosedur": "Rewaling 2",
+      "total_harga": 1400000
+    },
+    {
+      "nama_prosedur": "Rewaling 1",
+      "total_harga": 750000
+    },
+    {
+      "nama_prosedur": "Retreatment Per Saluran Akar",
+      "total_harga": 1450000
+    },
+    {
+      "nama_prosedur": "Retainer RA RB",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Retainer After Ortho",
+      "total_harga": 5500000
+    },
+    {
+      "nama_prosedur": "Retainer",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Restorative Crown Lengthening Per Gigi",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Re-Sementasi Veener / Crown",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Rapid Palatal Expander",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Pulp Capping",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Prostodontic Onlay PFM",
+      "total_harga": 4500000
+    },
+    {
+      "nama_prosedur": "Prostodontic Onlay Composite Endocrown)",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Polishing RA RB",
+      "total_harga": 400000
+    },
+    {
+      "nama_prosedur": "Periodontic Gingivektomi Gigi",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Perfor",
+      "total_harga": 1100000
+    },
+    {
+      "nama_prosedur": "Perawatan 5 Saluran Akar SpKG",
+      "total_harga": 12000000
+    },
+    {
+      "nama_prosedur": "Perawatan 4 Saluran Akar SpKG",
+      "total_harga": 10000000
+    },
+    {
+      "nama_prosedur": "Perawatan 3 Saluran Akar SpKG",
+      "total_harga": 8000000
+    },
+    {
+      "nama_prosedur": "Perawatan 3 Saluran Akar",
+      "total_harga": 5000000
+    },
+    {
+      "nama_prosedur": "Perawatan 2 Saluran Akar SpKG",
+      "total_harga": 6000000
+    },
+    {
+      "nama_prosedur": "Perawatan 2 Saluran Akar",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Perawatan 1 Saluran Akar",
+      "total_harga": 3000000
+    },
+    {
+      "nama_prosedur": "Perawatan 1 Saluan Akar SPKG",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Penyulit Implant",
+      "total_harga": 2500000
+    },
+    {
+      "nama_prosedur": "Pencabutan Gigi Komplikasi",
+      "total_harga": 1600000
+    },
+    {
+      "nama_prosedur": "Pencabutan Gigi GP",
+      "total_harga": 1000000
+    },
+    {
+      "nama_prosedur": "Penambalan Gigi Depan Sedang",
+      "total_harga": 1750000
+    },
+    {
+      "nama_prosedur": "Penambalan Gigi Depan Besar",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Penambalan Gigi Belakang Sedang",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Penambalan Gigi Belakang Besar",
+      "total_harga": 1750000
+    },
+    {
+      "nama_prosedur": "Penambalan GIC Sedang",
+      "total_harga": 800000
+    },
+    {
+      "nama_prosedur": "Penambalan GIC Besar",
+      "total_harga": 1000000
+    },
+    {
+      "nama_prosedur": "Pedodontic Perawatan Saluran Akar Anak 3 Visit",
+      "total_harga": 3000000
+    },
+    {
+      "nama_prosedur": "Pedodontic Perawatan Saluran Akar Anak 2 Visit",
+      "total_harga": 2500000
+    },
+    {
+      "nama_prosedur": "Pedodontic Perawatan Saluran Akar Anak 1 Visit",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Pedodontic Pencabutan Gigi Anak",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Pedodontic Penambalan Gigi Komposit Sedang",
+      "total_harga": 700000
+    },
+    {
+      "nama_prosedur": "Pedodontic Penambalan Gigi Komposit Besar",
+      "total_harga": 800000
+    },
+    {
+      "nama_prosedur": "Pedodontic Penambalan Gigi GIC Sedang",
+      "total_harga": 600000
+    },
+    {
+      "nama_prosedur": "Pedodontic Penambalan Gigi GIC Besar",
+      "total_harga": 700000
+    },
+    {
+      "nama_prosedur": "Pasak Fiber",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Orto Lepasan",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Orthodontic Biaya Pindah Perawatan Ortho",
+      "total_harga": 5000000
+    },
+    {
+      "nama_prosedur": "Operculectomy",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Open Flap Debridement",
+      "total_harga": 4800000
+    },
+    {
+      "nama_prosedur": "Open Access",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Odontektomi RB Kelas 3",
+      "total_harga": 7500000
+    },
+    {
+      "nama_prosedur": "Odontektomi RB Kelas 2",
+      "total_harga": 6500000
+    },
+    {
+      "nama_prosedur": "Odontektomi RB Kelas 1",
+      "total_harga": 5500000
+    },
+    {
+      "nama_prosedur": "Odontektomi RA Kelas 3",
+      "total_harga": 5500000
+    },
+    {
+      "nama_prosedur": "Odontektomi RA Kelas 2",
+      "total_harga": 4500000
+    },
+    {
+      "nama_prosedur": "Odontektomi RA Kelas 1",
+      "total_harga": 3500000
+    },
+    {
+      "nama_prosedur": "Occlusal Adjustment",
+      "total_harga": 300000
+    },
+    {
+      "nama_prosedur": "Obtruksi Kanal / Obliterasi",
+      "total_harga": 1450000
+    },
+    {
+      "nama_prosedur": "Night Guard Per Rahang",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Night Guard",
+      "total_harga": 3500000
+    },
+    {
+      "nama_prosedur": "Metal Braces",
+      "total_harga": 15000000
+    },
+    {
+      "nama_prosedur": "Membrane",
+      "total_harga": 5000000
+    },
+    {
+      "nama_prosedur": "Magnet Attachment Per Gigi",
+      "total_harga": 4500000
+    },
+    {
+      "nama_prosedur": "Lepas ortho",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Lepas Orto / Off Bracket",
+      "total_harga": 1700000
+    },
+    {
+      "nama_prosedur": "Ledge",
+      "total_harga": 1450000
+    },
+    {
+      "nama_prosedur": "Landasan Metal Frame",
+      "total_harga": 6500000
+    },
+    {
+      "nama_prosedur": "Landasan Gigi Valplast",
+      "total_harga": 4500000
+    },
+    {
+      "nama_prosedur": "Landasan Gigi Metal + Valplast",
+      "total_harga": 6500000
+    },
+    {
+      "nama_prosedur": "Landasan Gigi Flexible Denture / Valplast",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Landasan Gigi Akrilik",
+      "total_harga": 3000000
+    },
+    {
+      "nama_prosedur": "Landasan Gigi Metal + Akrilik",
+      "total_harga": 5500000
+    },
+    {
+      "nama_prosedur": "Kuretase Per Regio",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Kontrol Ortho OS Luar",
+      "total_harga": 1000000
+    },
+    {
+      "nama_prosedur": "Kontrol Ortho",
+      "total_harga": 700000
+    },
+    {
+      "nama_prosedur": "Kontrol Invisalign",
+      "total_harga": 1000000
+    },
+    {
+      "nama_prosedur": "Kontrol",
+      "total_harga": 450000
+    },
+    {
+      "nama_prosedur": "Konsultasi Dokter Spesialis Ortho",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Konsultasi keluhan dan rencana perawatan gigi",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Konsultasi Dokter Spesialis",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Konsultasi perawatan estetika wajah dan tubuh",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Konsultasi Dokter GP",
+      "total_harga": 350000
+    },
+    {
+      "nama_prosedur": "Konsul Veneer",
+      "total_harga": 350000
+    },
+    {
+      "nama_prosedur": "Klar Kids Plus",
+      "total_harga": 16000000
+    },
+    {
+      "nama_prosedur": "Klar Kids",
+      "total_harga": 10000000
+    },
+    {
+      "nama_prosedur": "Klar Bassic",
+      "total_harga": 22500000
+    },
+    {
+      "nama_prosedur": "Klar Advance",
+      "total_harga": 27500000
+    },
+    {
+      "nama_prosedur": "Ionoseal",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Invisalign Unlimited",
+      "total_harga": 85000000
+    },
+    {
+      "nama_prosedur": "Invisalign Moderaze 26 Aligner",
+      "total_harga": 75000000
+    },
+    {
+      "nama_prosedur": "Invisalign Lite 14 Aligner",
+      "total_harga": 68000000
+    },
+    {
+      "nama_prosedur": "Invisalign Express 7 Aligner",
+      "total_harga": 55000000
+    },
+    {
+      "nama_prosedur": "Internal Bleaching",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Implant Straumann",
+      "total_harga": 26000000
+    },
+    {
+      "nama_prosedur": "Implant Korea",
+      "total_harga": 19000000
+    },
+    {
+      "nama_prosedur": "Gigi Tiruan Lengkap Per Rahang",
+      "total_harga": 8000000
+    },
+    {
+      "nama_prosedur": "Gigi Acrilic",
+      "total_harga": 3500000
+    },
+    {
+      "nama_prosedur": "Ganti Kawat Metal",
+      "total_harga": 150000
+    },
+    {
+      "nama_prosedur": "Ganti Kawat Damon",
+      "total_harga": 200000
+    },
+    {
+      "nama_prosedur": "Frenectomy Lingual",
+      "total_harga": 3000000
+    },
+    {
+      "nama_prosedur": "Frenectomy Labial",
+      "total_harga": 3000000
+    },
+    {
+      "nama_prosedur": "Free Gingival Graft",
+      "total_harga": 6000000
+    },
+    {
+      "nama_prosedur": "Fixed Retainer RA RB",
+      "total_harga": 4000000
+    },
+    {
+      "nama_prosedur": "Fixed Retainer Per Rahang",
+      "total_harga": 2000000
+    },
+    {
+      "nama_prosedur": "Fissure Sealant",
+      "total_harga": 600000
+    },
+    {
+      "nama_prosedur": "File Patah",
+      "total_harga": 1800000
+    },
+    {
+      "nama_prosedur": "Face Mask",
+      "total_harga": 5000000
+    },
+    {
+      "nama_prosedur": "Exo Gigi Anak Dengan Anastesi",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Emergency For Periodontal Abcess",
+      "total_harga": 800000
+    },
+    {
+      "nama_prosedur": "Element Per Gigi",
+      "total_harga": 600000
+    },
+    {
+      "nama_prosedur": "Elastik Intra Oral",
+      "total_harga": 100000
+    },
+    {
+      "nama_prosedur": "Direct Veneer - Composite",
+      "total_harga": 2500000
+    },
+    {
+      "nama_prosedur": "Depigmentasi Gusi / Rahang",
+      "total_harga": 2500000
+    },
+    {
+      "nama_prosedur": "Dental Whitening",
+      "total_harga": 4500000
+    },
+    {
+      "nama_prosedur": "Dental Scan RA",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Dental Scan",
+      "total_harga": 1000000
+    },
+    {
+      "nama_prosedur": "Dental Check Up",
+      "total_harga": 1500000
+    },
+    {
+      "nama_prosedur": "Defit",
+      "total_harga": 800000
+    },
+    {
+      "nama_prosedur": "Deep Scaling Sp Perio",
+      "total_harga": 2500000
+    },
+    {
+      "nama_prosedur": "Damon Quantum Braces",
+      "total_harga": 26000000
+    },
+    {
+      "nama_prosedur": "Damon Metal",
+      "total_harga": 15000000
+    },
+    {
+      "nama_prosedur": "Damon Clear Braces",
+      "total_harga": 35000000
+    },
+    {
+      "nama_prosedur": "Damon Braces Per Rahang",
+      "total_harga": 15000000
+    },
+    {
+      "nama_prosedur": "Crown Zirconia Kelas 3",
+      "total_harga": 15000000
+    },
+    {
+      "nama_prosedur": "Crown Zirconia Kelas 2",
+      "total_harga": 10500000
+    },
+    {
+      "nama_prosedur": "Crown Zirconia Kelas 1",
+      "total_harga": 9500000
+    },
+    {
+      "nama_prosedur": "Crown Sementara",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Crown PFM",
+      "total_harga": 7000000
+    },
+    {
+      "nama_prosedur": "Crown Implant Zirconia",
+      "total_harga": 10500000
+    },
+    {
+      "nama_prosedur": "Crown Implant PFM",
+      "total_harga": 9000000
+    },
+    {
+      "nama_prosedur": "Crown Emax",
+      "total_harga": 6500000
+    },
+    {
+      "nama_prosedur": "Coronoplasty",
+      "total_harga": 300000
+    },
+    {
+      "nama_prosedur": "Coronally Advance Flap",
+      "total_harga": 5000000
+    },
+    {
+      "nama_prosedur": "Cetak Double Impression",
+      "total_harga": 500000
+    },
+    {
+      "nama_prosedur": "Cetak Alginat",
+      "total_harga": 400000
+    },
+    {
+      "nama_prosedur": "Cauter",
+      "total_harga": 600000
+    },
+    {
+      "nama_prosedur": "Buka Jahitan",
+      "total_harga": 300000
+    },
+    {
+      "nama_prosedur": "Buccal Fat",
+      "total_harga": 8000000
+    },
+    {
+      "nama_prosedur": "Bucal Tube / Satuan",
+      "total_harga": 250000
+    },
+    {
+      "nama_prosedur": "Bridge Zirconia Kelas 3",
+      "total_harga": 45000000
+    },
+    {
+      "nama_prosedur": "Bridge Zirconia Kelas 2",
+      "total_harga": 31000000
+    },
+    {
+      "nama_prosedur": "Bridge Zirconia Kelas 1",
+      "total_harga": 28000000
+    },
+    {
+      "nama_prosedur": "Bridge PFM",
+      "total_harga": 21000000
+    },
+    {
+      "nama_prosedur": "Bracket Lepas",
+      "total_harga": 300000
+    },
+    {
+      "nama_prosedur": "Bracket Konvensional / Satuan",
+      "total_harga": 150000
+    },
+    {
+      "nama_prosedur": "Bracket Damon / Satuan",
+      "total_harga": 350000
+    },
+    {
+      "nama_prosedur": "Bongkar Veneer",
+      "total_harga": 300000
+    },
+    {
+      "nama_prosedur": "Bongkar Tambalan",
+      "total_harga": 200000
+    },
+    {
+      "nama_prosedur": "Bone Graft",
+      "total_harga": 7000000
+    },
+    {
+      "nama_prosedur": "Atabilization Appirance",
+      "total_harga": 5000000
+    },
+    {
+      "nama_prosedur": "Aplikasi Ties",
+      "total_harga": 700000
+    },
+    {
+      "nama_prosedur": "Aplikasi Fluoride",
+      "total_harga": 250000
+    },
+    {
+      "nama_prosedur": "Akar Bengkok",
+      "total_harga": 1450000
+    },
+    {
+      "nama_prosedur": "Aesthetic Crown Lengthening Per Rahang",
+      "total_harga": 5500000
+    },
+    {
+      "nama_prosedur": "Administrasi Pasien Baru",
+      "total_harga": 50000
+    },
+    {
+      "nama_prosedur": "Add On Composite",
+      "total_harga": 800000
+    },
+    {
+      "nama_prosedur": "Ablasi Per Rahang",
+      "total_harga": 2500000
+    }
+  ]
+}

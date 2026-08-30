@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Bell,
   X,
@@ -14,31 +14,53 @@ import {
 import {
   subscribeToPushNotifications,
   type PushNotificationPayload,
+  markNotificationAsRead,
+  generateNotificationKey,
 } from "@/core/services/pushNotificationService";
 
 export default function PushNotificationBanner() {
   const [currentNotif, setCurrentNotif] = useState<PushNotificationPayload | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToPushNotifications((payload) => {
+      // Clear any pending timer
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
       setCurrentNotif(payload);
       setIsVisible(true);
 
-      // Auto dismiss after 7 seconds
-      const timer = setTimeout(() => {
+      // Auto dismiss after 6 seconds
+      timerRef.current = setTimeout(() => {
         setIsVisible(false);
-      }, 7000);
-
-      return () => clearTimeout(timer);
+      }, 6000);
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      unsubscribe();
+    };
   }, []);
 
   if (!currentNotif || !isVisible) return null;
 
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const key = generateNotificationKey(currentNotif);
+    markNotificationAsRead(key);
+    setIsVisible(false);
+  };
+
   const handleClick = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const key = generateNotificationKey(currentNotif);
+    markNotificationAsRead(key);
     if (currentNotif.onClick) {
       currentNotif.onClick();
     } else if (currentNotif.url) {
@@ -100,10 +122,7 @@ export default function PushNotificationBanner() {
           {/* Close Button */}
           <button
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsVisible(false);
-            }}
+            onClick={handleDismiss}
             className="w-7 h-7 rounded-full bg-[#FAF8F5] hover:bg-[#EDE5D6] text-[#7C7365] flex items-center justify-center transition-colors cursor-pointer shrink-0"
           >
             <X className="w-3.5 h-3.5" />

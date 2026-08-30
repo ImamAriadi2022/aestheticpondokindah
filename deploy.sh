@@ -143,6 +143,7 @@ echo "[INFO] Menjalankan Database Migrations..."
 
 # 6. Auto-seed Essential Clinic & Membership Data (Idempotent)
 echo "[INFO] Menjalankan Seeder Data Inti Aplikasi..."
+"$PHP_BIN" artisan db:seed --class=DatabaseSeeder --force || echo "[INFO] DatabaseSeeder selesai."
 "$PHP_BIN" artisan db:seed --class=DoctorSeeder --force || echo "[INFO] DoctorSeeder selesai."
 "$PHP_BIN" artisan db:seed --class=DoctorProfileSeeder --force || echo "[INFO] DoctorProfileSeeder selesai."
 "$PHP_BIN" artisan db:seed --class=DoctorScheduleSeeder --force || echo "[INFO] DoctorScheduleSeeder selesai."
@@ -151,6 +152,7 @@ echo "[INFO] Menjalankan Seeder Data Inti Aplikasi..."
 "$PHP_BIN" artisan db:seed --class=PromoSeeder --force || echo "[INFO] PromoSeeder selesai."
 "$PHP_BIN" artisan db:seed --class=BranchSeeder --force || echo "[INFO] BranchSeeder selesai."
 "$PHP_BIN" artisan db:seed --class=WilayahSeeder --force || echo "[INFO] WilayahSeeder selesai."
+"$PHP_BIN" artisan db:seed --class=PublicInfoSeeder --force || echo "[INFO] PublicInfoSeeder selesai."
 "$PHP_BIN" artisan db:seed --class=NormalizeDoctorSchedulesAndReservationsSeeder --force || echo "[INFO] Normalisasi jadwal selesai."
 
 # Seed Download Apps default if empty
@@ -182,13 +184,33 @@ if [ ! -e public/storage ] && [ ! -L public/storage ]; then
 fi
 
 # Synchronize member card assets & ribbon badges
-echo "[INFO] Menyelaraskan aset kartu member digital (card bronze/gold/platinum & pita badge)..."
+echo "[INFO] Menyelaraskan aset media & layanan..."
 if [ -d "public/dashboard" ]; then
     cp -rf public/dashboard/* storage/app/public/dashboard/ 2>/dev/null || true
     cp -rf public/dashboard/* public/storage/dashboard/ 2>/dev/null || true
 fi
 
 # Synchronize media assets across public/ and storage/
+if [ -d "public/layanan" ]; then
+    cp -rf public/layanan/* storage/app/public/layanan/ 2>/dev/null || true
+    cp -rf public/layanan/* public/storage/layanan/ 2>/dev/null || true
+fi
+
+if [ -d "public/dokter" ]; then
+    cp -rf public/dokter/* storage/app/public/dokter/ 2>/dev/null || true
+    cp -rf public/dokter/* public/storage/dokter/ 2>/dev/null || true
+fi
+
+if [ -d "public/hero" ]; then
+    cp -rf public/hero/* storage/app/public/hero/ 2>/dev/null || true
+    cp -rf public/hero/* public/storage/hero/ 2>/dev/null || true
+fi
+
+if [ -d "public/logo" ]; then
+    cp -rf public/logo/* storage/app/public/logo/ 2>/dev/null || true
+    cp -rf public/logo/* public/storage/logo/ 2>/dev/null || true
+fi
+
 if [ -d "storage/app/public/promos" ]; then
     cp -rf storage/app/public/promos/* public/storage/promos/ 2>/dev/null || true
 fi

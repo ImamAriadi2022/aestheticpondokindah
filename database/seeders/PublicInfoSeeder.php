@@ -443,6 +443,7 @@ class PublicInfoSeeder extends Seeder
         ];
 
         foreach ($services as $srv) {
+            unset($srv['id']);
             ClinicService::updateOrCreate(
                 ['slug' => $srv['slug']],
                 $srv

@@ -311,7 +311,9 @@ export function triggerPushNotification(payload: PushNotificationPayload) {
   if (!payload.receivedAt) {
     payload.receivedAt = new Date().toISOString();
   }
-  payload.isRead = false;
+  if (payload.isRead || isNotificationRead(payload)) {
+    return;
+  }
   const notifKey = generateNotificationKey(payload);
 
   // 1. Anti-Spam Check: If already seen/read, DO NOT re-trigger!
@@ -327,7 +329,9 @@ export function triggerPushNotification(payload: PushNotificationPayload) {
   playNotificationChime(chimeType);
 
   // 4. Dispatch to OS Desktop / Mobile Notification Bar
-  // 5. Notify in-app TopBar UI / Bell Icon listeners (No in-app toast popup banner)
+  dispatchDeviceSystemNotification(payload, notifKey);
+
+  // 5. Notify in-app TopBar UI / Bell Icon listeners
   listeners.forEach((listener) => listener(payload));
 }
 

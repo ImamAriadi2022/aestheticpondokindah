@@ -194,8 +194,8 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
     const frameDoc = printFrame.contentWindow?.document;
     if (!frameDoc) return;
 
-    const w = termsSettings.kop.logoWidth || 75;
-    const h = termsSettings.kop.logoHeight || 75;
+    const w = termsSettings.kop.logoWidth || 60;
+    const h = termsSettings.kop.logoHeight || 60;
     const bodyHtml = getTermsBodyHtml(termsSettings);
     const baseSize = termsSettings.baseFontSize || "9.5pt";
 
@@ -206,44 +206,40 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
           <meta charset="utf-8" />
           <title>${termsSettings.docTitle} - Aesthetic Pondok Indah</title>
           <style>
-            @page { size: A4 portrait; margin: 16mm 14mm; }
-            body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; line-height: 1.5; margin: 0; padding: 15px; font-size: ${baseSize}; background: #fff; }
-            .kop-header { display: flex; align-items: center; justify-content: center; gap: 18px; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 3px double #111; }
-            .kop-logo { flex-shrink: 0; }
-            .kop-logo img { width: ${w}px; height: ${h}px; object-fit: contain; }
-            .kop-details { text-align: center; flex: 1; }
-            .kop-title { font-size: 1.35em; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
-            .kop-contact { font-size: 0.9em; font-weight: 500; color: #222; margin-bottom: 2px; }
-            .kop-contact a { color: #0056b3; text-decoration: underline; }
-            .kop-address { font-size: 0.85em; color: #333; line-height: 1.3; }
-            .doc-heading { text-align: center; margin: 12px 0 16px; }
-            .doc-title { font-size: 1.15em; font-weight: 800; color: #111; text-transform: uppercase; letter-spacing: 0.5px; }
-            .doc-sub { font-size: 0.9em; color: #555; font-style: italic; margin-top: 1px; }
+            @page { size: A4 portrait; margin: 15mm 15mm; }
+            * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; line-height: 1.5; margin: 0; padding: 0; font-size: ${baseSize}; background: #fff; }
+            .kop-header { text-align: center; border-bottom: 3px double #000; padding-bottom: 12px; margin-bottom: 16px; }
+            .kop-logo { height: ${h}px; max-width: 140px; width: auto; object-fit: contain; margin: 0 auto 6px auto; display: block; }
+            .kop-title { font-size: 13pt; font-weight: 800; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
+            .kop-address { font-size: 8pt; color: #333; margin-top: 4px; line-height: 1.35; }
+            .doc-heading { text-align: center; margin: 14px 0 16px; }
+            .doc-title { font-size: 12pt; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+            .doc-sub { font-size: 8.5pt; color: #555; margin-top: 3px; }
             .doc-body { text-align: justify; }
-            .doc-body h1, .doc-body h2, .doc-body h3, .doc-body h4 { color: #111; margin-top: 12px; margin-bottom: 3px; font-weight: 700; }
-            .doc-body h1 { font-size: 1.35em; }
-            .doc-body h2 { font-size: 1.2em; }
-            .doc-body h3 { font-size: 1.05em; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+            .doc-body h1, .doc-body h2, .doc-body h3, .doc-body h4 { color: #000; margin-top: 12px; margin-bottom: 4px; font-weight: 700; }
+            .doc-body h1 { font-size: 1.25em; }
+            .doc-body h2 { font-size: 1.15em; }
+            .doc-body h3 { font-size: 1.05em; }
             .doc-body h4 { font-size: 0.95em; }
-            .doc-body p { font-size: 1em; color: #333; line-height: 1.45; margin-top: 2px; margin-bottom: 6px; }
-            .doc-body ul, .doc-body ol { margin: 4px 0 8px 20px; padding: 0; font-size: 1em; color: #333; }
-            .doc-body li { margin-bottom: 3px; line-height: 1.4; }
-            .doc-body strong { color: #111; }
-            .doc-body blockquote { border-left: 3px solid #8C6B1C; padding-left: 10px; margin: 8px 0; color: #555; font-style: italic; }
-            .footer-note { margin-top: 22px; border-top: 1px dashed #bbb; padding-top: 8px; font-size: 0.8em; color: #666; text-align: center; }
+            .doc-body p { font-size: 1em; color: #222; line-height: 1.5; margin-top: 2px; margin-bottom: 8px; }
+            .doc-body ul, .doc-body ol { margin: 4px 0 8px 20px; padding: 0; font-size: 1em; color: #222; }
+            .doc-body li { margin-bottom: 3px; line-height: 1.45; }
+            .doc-body strong { color: #000; }
+            .footer-note { margin-top: 24px; border-top: 1px dashed #bbb; padding-top: 8px; font-size: 8pt; color: #666; text-align: center; }
           </style>
         </head>
         <body>
           <div class="kop-header">
-            ${termsSettings.kop.logoUrl ? `<div class="kop-logo"><img src="${termsSettings.kop.logoUrl}" alt="Logo" /></div>` : ''}
-            <div class="kop-details">
-              <div class="kop-title">${termsSettings.kop.clinicName}</div>
-              <div class="kop-contact">Phone: ${termsSettings.kop.phone} &nbsp; E-mail: <a href="mailto:${termsSettings.kop.email}">${termsSettings.kop.email}</a></div>
-              <div class="kop-address">${termsSettings.kop.address}</div>
+            ${termsSettings.kop.logoUrl ? `<img src="${termsSettings.kop.logoUrl}" class="kop-logo" alt="Logo" />` : ''}
+            <div class="kop-title">${termsSettings.kop.clinicName}</div>
+            <div class="kop-address">
+              ${termsSettings.kop.address}<br />
+              Telepon: ${termsSettings.kop.phone} | Email: ${termsSettings.kop.email}
             </div>
           </div>
           <div class="doc-heading">
-            <div class="doc-title">${termsSettings.docTitle}</div>
+            <h1 class="doc-title">${termsSettings.docTitle}</h1>
             <div class="doc-sub">${termsSettings.docSubtitle} (${termsSettings.docVersion})</div>
           </div>
           <div class="doc-body">
@@ -274,8 +270,8 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
     const frameDoc = printFrame.contentWindow?.document;
     if (!frameDoc) return;
 
-    const w = consentSettings.kop.logoWidth || 75;
-    const h = consentSettings.kop.logoHeight || 75;
+    const w = consentSettings.kop.logoWidth || 60;
+    const h = consentSettings.kop.logoHeight || 60;
     const bodyHtml = getConsentBodyHtml(consentSettings);
     const baseSize = consentSettings.baseFontSize || "9.5pt";
 
@@ -286,68 +282,74 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
           <meta charset="utf-8" />
           <title>${consentSettings.docTitle} - Aesthetic Pondok Indah</title>
           <style>
-            @page { size: A4 portrait; margin: 16mm 14mm; }
-            body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; line-height: 1.5; margin: 0; padding: 15px; font-size: ${baseSize}; background: #fff; }
-            .kop-header { display: flex; align-items: center; justify-content: center; gap: 18px; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 3px double #111; }
-            .kop-logo { flex-shrink: 0; }
-            .kop-logo img { width: ${w}px; height: ${h}px; object-fit: contain; }
-            .kop-details { text-align: center; flex: 1; }
-            .kop-title { font-size: 1.35em; font-weight: 900; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 2px; }
-            .kop-contact { font-size: 0.9em; font-weight: 500; color: #222; margin-bottom: 2px; }
-            .kop-contact a { color: #0056b3; text-decoration: underline; }
-            .kop-address { font-size: 0.85em; color: #333; line-height: 1.3; }
-            .doc-heading { text-align: center; margin: 12px 0 16px; }
-            .doc-title { font-size: 1.15em; font-weight: 800; color: #111; text-transform: uppercase; letter-spacing: 0.5px; }
-            .doc-sub { font-size: 0.9em; color: #555; font-style: italic; margin-top: 1px; }
+            @page { size: A4 portrait; margin: 15mm 15mm; }
+            * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; line-height: 1.5; margin: 0; padding: 0; font-size: ${baseSize}; background: #fff; }
+            .kop-header { text-align: center; border-bottom: 3px double #000; padding-bottom: 12px; margin-bottom: 16px; }
+            .kop-logo { height: ${h}px; max-width: 140px; width: auto; object-fit: contain; margin: 0 auto 6px auto; display: block; }
+            .kop-title { font-size: 13pt; font-weight: 800; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
+            .kop-address { font-size: 8pt; color: #333; margin-top: 4px; line-height: 1.35; }
+            .doc-heading { text-align: center; margin: 14px 0 16px; }
+            .doc-title { font-size: 12pt; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+            .doc-sub { font-size: 8.5pt; color: #555; margin-top: 3px; }
+            .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 8.5pt; border: 1px solid #333; }
+            .meta-table td { padding: 5px 8px; border: 1px solid #333; }
             .doc-body { text-align: justify; }
-            .doc-body h1, .doc-body h2, .doc-body h3, .doc-body h4 { color: #111; margin-top: 12px; margin-bottom: 3px; font-weight: 700; }
-            .doc-body h1 { font-size: 1.35em; }
-            .doc-body h2 { font-size: 1.2em; }
-            .doc-body h3 { font-size: 1.05em; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+            .doc-body h1, .doc-body h2, .doc-body h3, .doc-body h4 { color: #000; margin-top: 12px; margin-bottom: 4px; font-weight: 700; }
+            .doc-body h1 { font-size: 1.25em; }
+            .doc-body h2 { font-size: 1.15em; }
+            .doc-body h3 { font-size: 1.05em; }
             .doc-body h4 { font-size: 0.95em; }
-            .doc-body p { font-size: 1em; color: #333; line-height: 1.45; margin-top: 2px; margin-bottom: 6px; }
-            .doc-body ul, .doc-body ol { margin: 4px 0 8px 20px; padding: 0; font-size: 1em; color: #333; }
-            .doc-body li { margin-bottom: 3px; line-height: 1.4; }
-            .doc-body strong { color: #111; }
-            .doc-body blockquote { border-left: 3px solid #8C6B1C; padding-left: 10px; margin: 8px 0; color: #555; font-style: italic; }
-            .statement { margin: 16px 0; padding: 10px 14px; background: #fbfbfb; border-left: 3px solid #111; font-size: 0.9em; font-style: italic; }
-            .footer-grid { margin-top: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
-            .seal-box { font-size: 0.85em; color: #555; }
-            .seal-badge { display: inline-block; padding: 3px 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; border-radius: 4px; font-weight: bold; margin-bottom: 4px; }
-            .sig-box { width: 220px; text-align: center; border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px; background: #fafafa; }
-            .sig-title { font-size: 0.85em; font-weight: bold; color: #8C6B1C; text-transform: uppercase; margin-bottom: 4px; }
-            .sig-status { font-size: 0.9em; font-weight: bold; color: #047857; padding: 8px 0; }
-            .sig-name { font-size: 0.95em; font-weight: bold; text-decoration: underline; margin-top: 4px; }
-            .sig-sub { font-size: 0.8em; color: #777; }
+            .doc-body p { font-size: 1em; color: #222; line-height: 1.5; margin-top: 2px; margin-bottom: 8px; }
+            .statement { margin: 16px 0; padding: 10px 14px; background: #fbfbfb; border-left: 3px solid #111; font-size: 8.5pt; font-style: italic; }
+            .footer-grid { margin-top: 24px; padding-top: 14px; border-top: 1px solid #ccc; display: flex; justify-content: space-between; align-items: flex-end; }
+            .seal-box { font-size: 8pt; color: #444; }
+            .sig-box { width: 220px; text-align: center; }
+            .sig-title { font-size: 8pt; font-weight: bold; color: #222; }
+            .sig-img-placeholder { height: 45px; display: flex; align-items: center; justify-content: center; font-size: 8pt; color: #047857; font-weight: bold; }
+            .sig-name { font-size: 9pt; font-weight: 700; text-decoration: underline; margin-top: 6px; }
           </style>
         </head>
         <body>
           <div class="kop-header">
-            ${consentSettings.kop.logoUrl ? `<div class="kop-logo"><img src="${consentSettings.kop.logoUrl}" alt="Logo" /></div>` : ''}
-            <div class="kop-details">
-              <div class="kop-title">${consentSettings.kop.clinicName}</div>
-              <div class="kop-contact">Phone: ${consentSettings.kop.phone} &nbsp; E-mail: <a href="mailto:${consentSettings.kop.email}">${consentSettings.kop.email}</a></div>
-              <div class="kop-address">${consentSettings.kop.address}</div>
+            ${consentSettings.kop.logoUrl ? `<img src="${consentSettings.kop.logoUrl}" class="kop-logo" alt="Logo" />` : ''}
+            <div class="kop-title">${consentSettings.kop.clinicName}</div>
+            <div class="kop-address">
+              ${consentSettings.kop.address}<br />
+              Telepon: ${consentSettings.kop.phone} | Email: ${consentSettings.kop.email}
             </div>
           </div>
           <div class="doc-heading">
-            <div class="doc-title">${consentSettings.docTitle}</div>
-            <div class="doc-sub">${consentSettings.docSubtitle} (Kode: ${consentSettings.docCode})</div>
+            <h1 class="doc-title">${consentSettings.docTitle}</h1>
+            <div class="doc-sub">No. Registrasi: API-CONSENT-SAMPLE (Kode: ${consentSettings.docCode})</div>
           </div>
+          <table class="meta-table">
+            <tr>
+              <td style="width: 20%; font-weight: bold; background: #f8f8f8;">Nama Pasien</td>
+              <td style="width: 30%;">Pasien Terdaftar / Contoh</td>
+              <td style="width: 20%; font-weight: bold; background: #f8f8f8;">Layanan</td>
+              <td style="width: 30%;">Pemeriksaan & Konsultasi Gigi</td>
+            </tr>
+            <tr>
+              <td style="font-weight: bold; background: #f8f8f8;">No. WhatsApp</td>
+              <td>0812-XXXX-XXXX</td>
+              <td style="font-weight: bold; background: #f8f8f8;">Dokter</td>
+              <td>Dokter Gigi Spesialis</td>
+            </tr>
+          </table>
           <div class="doc-body">
             ${bodyHtml}
           </div>
           <div class="statement">${consentSettings.closingStatement}</div>
           <div class="footer-grid">
             <div class="seal-box">
-              <div class="seal-badge">E-SIGNATURE & DIGITAL AUDIT TRAIL</div>
-              <p>Dokumen ini tervalidasi secara elektronik dan memiliki kekuatan hukum resmi.</p>
+              Status: <strong>✓ Disetujui Secara Digital</strong><br />
+              Waktu: ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} WIB
             </div>
             <div class="sig-box">
-              <div class="sig-title">Pemberi Persetujuan</div>
-              <div class="sig-status">[ Tanda Tangan Digital Terverifikasi ]</div>
+              <div class="sig-title">Tanda Tangan Pasien / Wali:</div>
+              <div class="sig-img-placeholder">[ Tanda Tangan Digital Terverifikasi ]</div>
               <div class="sig-name">Nama Pasien / Wali Sah</div>
-              <div class="sig-sub">Identitas Pasien Terdaftar</div>
             </div>
           </div>
         </body>
@@ -454,30 +456,28 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
 
             {/* Visual Kop Surat Live Preview Box */}
             <div className="p-4 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5]">
-              <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider mb-2">Live Preview Kop Surat S&K:</p>
-              <div className="bg-white p-4 rounded-lg border border-[#E8DFC8] flex items-center justify-center gap-4 pb-3" style={{ borderBottom: "3px double #111" }}>
+              <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider mb-2">Live Preview Kop Surat S&K (Sesuai PDF Pasien):</p>
+              <div className="bg-white p-5 rounded-lg border border-[#E8DFC8] text-center space-y-1.5 pb-4" style={{ borderBottom: "3px double #111" }}>
                 {termsSettings.kop.logoUrl ? (
                   <div
-                    className="flex-shrink-0 flex items-center justify-center border border-gray-200 rounded-lg p-1 bg-white shadow-2xs overflow-hidden"
+                    className="mx-auto flex items-center justify-center overflow-hidden mb-1"
                     style={{
-                      width: `${termsSettings.kop.logoWidth || 75}px`,
-                      height: `${termsSettings.kop.logoHeight || 75}px`,
+                      height: `${termsSettings.kop.logoHeight || 60}px`,
+                      maxWidth: "140px",
                     }}
                   >
-                    <img src={termsSettings.kop.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                    <img src={termsSettings.kop.logoUrl} alt="Logo" className="h-full w-auto object-contain" />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 text-center p-1">
+                  <div className="w-14 h-14 mx-auto mb-1 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 text-center p-1">
                     Tanpa Logo
                   </div>
                 )}
-                <div className="text-center flex-1">
-                  <h4 className="text-xs sm:text-sm font-black text-black tracking-wide uppercase">{termsSettings.kop.clinicName || "NAMA INSTANSI / KLINIK"}</h4>
-                  <p className="text-[10px] text-gray-800 font-medium mt-0.5">
-                    Phone: {termsSettings.kop.phone || "-"} &nbsp; E-mail: <span className="text-blue-600 underline">{termsSettings.kop.email || "-"}</span>
-                  </p>
-                  <p className="text-[9px] text-gray-600 mt-0.5 leading-tight">{termsSettings.kop.address || "Alamat lengkap instansi..."}</p>
-                </div>
+                <h4 className="text-sm sm:text-base font-black text-black tracking-wide uppercase">{termsSettings.kop.clinicName || "NAMA INSTANSI / KLINIK"}</h4>
+                <p className="text-[10px] sm:text-[11px] text-gray-700 leading-snug">
+                  {termsSettings.kop.address || "Alamat lengkap instansi..."}<br />
+                  Telepon: {termsSettings.kop.phone || "-"} | Email: {termsSettings.kop.email || "-"}
+                </p>
               </div>
             </div>
 
@@ -794,30 +794,28 @@ export default function SettingsPage({ settings, onSaveSettings }: SettingsPageP
 
             {/* Visual Kop Surat Live Preview Box */}
             <div className="p-4 rounded-xl border border-[#E8DFC8] bg-[#FAF8F5]">
-              <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider mb-2">Live Preview Kop Surat Perjanjian:</p>
-              <div className="bg-white p-4 rounded-lg border border-[#E8DFC8] flex items-center justify-center gap-4 pb-3" style={{ borderBottom: "3px double #111" }}>
+              <p className="text-[10px] font-bold text-[#8C8272] uppercase tracking-wider mb-2">Live Preview Kop Surat Perjanjian (Sesuai PDF Informed Consent Pasien):</p>
+              <div className="bg-white p-5 rounded-lg border border-[#E8DFC8] text-center space-y-1.5 pb-4" style={{ borderBottom: "3px double #111" }}>
                 {consentSettings.kop.logoUrl ? (
                   <div
-                    className="flex-shrink-0 flex items-center justify-center border border-gray-200 rounded-lg p-1 bg-white shadow-2xs overflow-hidden"
+                    className="mx-auto flex items-center justify-center overflow-hidden mb-1"
                     style={{
-                      width: `${consentSettings.kop.logoWidth || 75}px`,
-                      height: `${consentSettings.kop.logoHeight || 75}px`,
+                      height: `${consentSettings.kop.logoHeight || 60}px`,
+                      maxWidth: "140px",
                     }}
                   >
-                    <img src={consentSettings.kop.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+                    <img src={consentSettings.kop.logoUrl} alt="Logo" className="h-full w-auto object-contain" />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 flex-shrink-0 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 text-center p-1">
+                  <div className="w-14 h-14 mx-auto mb-1 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-[10px] text-gray-400 text-center p-1">
                     Tanpa Logo
                   </div>
                 )}
-                <div className="text-center flex-1">
-                  <h4 className="text-xs sm:text-sm font-black text-black tracking-wide uppercase">{consentSettings.kop.clinicName || "NAMA INSTANSI / KLINIK"}</h4>
-                  <p className="text-[10px] text-gray-800 font-medium mt-0.5">
-                    Phone: {consentSettings.kop.phone || "-"} &nbsp; E-mail: <span className="text-blue-600 underline">{consentSettings.kop.email || "-"}</span>
-                  </p>
-                  <p className="text-[9px] text-gray-600 mt-0.5 leading-tight">{consentSettings.kop.address || "Alamat lengkap instansi..."}</p>
-                </div>
+                <h4 className="text-sm sm:text-base font-black text-black tracking-wide uppercase">{consentSettings.kop.clinicName || "NAMA INSTANSI / KLINIK"}</h4>
+                <p className="text-[10px] sm:text-[11px] text-gray-700 leading-snug">
+                  {consentSettings.kop.address || "Alamat lengkap instansi..."}<br />
+                  Telepon: {consentSettings.kop.phone || "-"} | Email: {consentSettings.kop.email || "-"}
+                </p>
               </div>
             </div>
 
