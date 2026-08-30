@@ -34,6 +34,7 @@ import TermsPdfModal from "@/features/patient/reservation/components/TermsPdfMod
 import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
+import { updateZestaReservationContext } from "@/core/services/zestaService";
 
 interface ServiceItem {
   id: string | number;
@@ -492,6 +493,18 @@ export default function GuestBookingFlow() {
       };
 
       setActiveTicket(newTicket);
+
+      // Sinkronisasi metadata tiket ke Zesta Live Chat
+      updateZestaReservationContext({
+        bookingCode: ticketCode,
+        serviceName: selectedService.name,
+        doctorName: selectedDoctor.name,
+        date: selectedDate,
+        timeSlot: selectedTimeSlot,
+        patientName: patientName.trim(),
+        patientPhone: patientPhone.trim(),
+        patientEmail: patientEmail.trim(),
+      });
 
       // Otomatis teruskan pesan ke WhatsApp Admin Klinik
       const waMessage = [

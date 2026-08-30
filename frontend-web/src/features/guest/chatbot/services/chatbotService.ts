@@ -1,5 +1,5 @@
-export const WHATSAPP_NUMBER = "+6281990114949";
-export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=Halo%20Aesthetic%20Pondok%20Indah%20Dental,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda.`;
+export const WHATSAPP_NUMBER = "+62 819-9011-4949";
+export const WHATSAPP_LINK = `https://wa.me/6281990114949?text=Halo%20Aesthetic%20Pondok%20Indah%20Dental,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda.`;
 
 export interface ChatMessage {
   id: string;

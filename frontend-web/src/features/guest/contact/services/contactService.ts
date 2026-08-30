@@ -30,7 +30,7 @@ export const CLINIC_CONTACT_ITEMS: ContactItem[] = [
   {
     iconName: "Phone",
     title: "WhatsApp",
-    details: ["0819-9011-4949 (hanya menerima pesan)"],
+    details: ["+62 819-9011-4949 (WhatsApp Resmi)"],
     link: "https://wa.me/6281990114949",
   },
   {

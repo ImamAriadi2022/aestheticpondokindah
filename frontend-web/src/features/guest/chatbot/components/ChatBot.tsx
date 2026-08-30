@@ -3,8 +3,8 @@ import { X, Send, Bot, User, Phone } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
-const WHATSAPP_NUMBER = "+6281990114949";
-const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=Halo%20Aesthetic%20Pondok%20Indah%20Dental,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda.`;
+const WHATSAPP_NUMBER = "+62 819-9011-4949";
+const WHATSAPP_LINK = `https://wa.me/6281990114949?text=Halo%20Aesthetic%20Pondok%20Indah%20Dental,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda.`;
 
 interface Message {
   id: string;

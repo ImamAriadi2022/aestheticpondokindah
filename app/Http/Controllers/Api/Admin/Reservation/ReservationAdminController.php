@@ -7,6 +7,7 @@ use App\Models\Doctor\Schedule\DoctorSchedule;
 use App\Models\Shared\Reservation\Reservation;
 use App\Models\Shared\Reservation\ReservationAudit;
 use App\Services\Shared\Notification\NotificationService;
+use App\Services\Shared\WhatsApp\ZestaWhatsAppService;
 use App\Models\Shared\User\User;
 use App\Services\Patient\Membership\MembershipService;
 use Illuminate\Http\JsonResponse;
@@ -271,6 +272,23 @@ class ReservationAdminController extends Controller
                     '/#/dashboard/doctor?tab=reservasi',
                     ['reservation_id' => $reservation->id, 'code' => $code]
                 );
+            }
+
+            // 3. Dispatch Official WhatsApp Status Update to Patient via Zesta
+            if (!empty($reservation->phone)) {
+                $docName = $reservation->doctor?->name ?? 'Dokter Spesialis';
+                $pName = $reservation->name ?? 'Bapak/Ibu';
+                $treatment = $reservation->treatment_interest ?? 'Perawatan Gigi';
+                $formattedDate = optional($reservation->date)->format('d/m/Y') ?? (string) $reservation->date;
+                $timeSlot = $reservation->preferred_time ?? '10:00 WIB';
+
+                if ($targetStatus === 'Dikonfirmasi') {
+                    $waText = "Halo *{$pName}*,\n\nKabar baik! Janji temu perawatan gigi Anda di *Aesthetic Pondok Indah Dental Clinic* telah *TERKONFIRMASI* oleh tim klinik.\n\n📋 *Kode Booking:* {$code}\n🩺 *Layanan:* {$treatment}\n👨‍⚕️ *Dokter:* {$docName}\n📅 *Tanggal:* {$formattedDate}\n⏰ *Waktu:* {$timeSlot}\n📍 *Lokasi:* Aesthetic Pondok Indah Dental Clinic\n\nMohon hadir 10-15 menit lebih awal untuk proses registrasi di meja resepsionis. Terima kasih!";
+                    ZestaWhatsAppService::sendTextMessage($reservation->phone, $waText, $pName);
+                } elseif ($targetStatus === 'Selesai') {
+                    $waText = "Halo *{$pName}*,\n\nTerima kasih telah mempercayakan senyum sehat Anda kepada tim dokter spesialis *Aesthetic Pondok Indah Dental Clinic*.\n\nPerawatan untuk kode reservasi *{$code}* telah selesai dilaksanakan. Semoga lekas pulih dan senyum Anda semakin percaya diri! ✨\n\nJangan ragu untuk menghubungi kami jika ada keluhan pasca perawatan.";
+                    ZestaWhatsAppService::sendTextMessage($reservation->phone, $waText, $pName);
+                }
             }
         } catch (\Throwable $e) {
             // Non-blocking

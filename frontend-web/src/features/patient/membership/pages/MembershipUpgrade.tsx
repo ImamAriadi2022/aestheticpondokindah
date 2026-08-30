@@ -95,7 +95,7 @@ export default function MembershipUpgradePage() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [clinicPhone, setClinicPhone] = useState<string>("081234567890");
+  const [clinicPhone, setClinicPhone] = useState<string>("081990114949");
 
   const [unmetRequirements, setUnmetRequirements] = useState<Array<{ message: string; action: string }>>([]);
   const [showRequirementsDialog, setShowRequirementsDialog] = useState(false);
@@ -231,7 +231,7 @@ export default function MembershipUpgradePage() {
         "Mohon petunjuk nomor rekening / QRIS pembayaran klinik untuk menyelesaikan upgrade membership. Terima kasih!",
       ].join("\n");
 
-      const whatsappUrl = `https://wa.me/${cleanPhone || "6281234567890"}?text=${encodeURIComponent(waMessage)}`;
+      const whatsappUrl = `https://wa.me/${cleanPhone || "6281990114949"}?text=${encodeURIComponent(waMessage)}`;
 
       setManualPayment({
         orderId,

@@ -43,6 +43,7 @@ import { PageTransition } from "@/core/router/RouteTransition";
 import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 import BookingSuccessModal from "./BookingSuccessModal";
 import ETicketModal from "./ETicketModal";
+import { updateZestaReservationContext } from "@/core/services/zestaService";
 import BookingHistoryList, { resolveDoctorPhotoUrl } from "./BookingHistoryList";
 
 // Branch Catalog Interface
@@ -1023,6 +1024,17 @@ export default function NewBookingFlow({
       };
 
       setActiveTicket(newTicket);
+
+      // Sinkronisasi metadata tiket ke Zesta Live Chat
+      updateZestaReservationContext({
+        bookingCode: ticketCode,
+        serviceName: selectedService.name,
+        doctorName: selectedDoctor.name,
+        date: selectedDate,
+        timeSlot: selectedTimeSlot,
+        patientName: patientName,
+        patientPhone: patientPhone,
+      });
       broadcastRealtimeReservationEvent({
         type: "patient_booked",
         bookingCode: newTicket.code,

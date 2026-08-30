@@ -191,6 +191,8 @@ function VisitTracker() {
   return null;
 }
 
+import ZestaLiveChat from "@/core/components/ZestaLiveChat";
+
 export default function App() {
   return (
     <GuestSessionProvider>
@@ -198,6 +200,7 @@ export default function App() {
       <SessionManager />
       <VisitTracker />
       <ScrollToTop />
+      <ZestaLiveChat />
       <Suspense
         fallback={
           <div className="flex flex-col items-center justify-center min-h-[60vh] py-16 gap-3 animate-fade-in">

@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Admin Klinik',
                 'email' => 'clinic@aestheticpondokindah.local',
-                'whatsapp' => '+62887437525303',
+                'whatsapp' => '+6281990114949',
                 'password' => 'admin123',
                 'role' => 'clinic_admin',
                 'status' => 'active',

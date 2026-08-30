@@ -206,7 +206,7 @@ export default function HelpPage() {
               Tim Customer Care Aesthetic Pondok Indah siap memberikan panduan dan bantuan langsung setiap hari pukul 09:00 - 20:00 WIB.
             </p>
             <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-2">
-              <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer">
+              <a href="https://wa.me/6281990114949" target="_blank" rel="noreferrer">
                 <Button className="h-10 px-5 rounded-xl bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-bold text-xs shadow-md shadow-[#C9A24A]/20 cursor-pointer flex items-center gap-2">
                   <Droplets className="w-4 h-4" /> Hubungi WhatsApp
                 </Button>
@@ -222,8 +222,8 @@ export default function HelpPage() {
           <div className="grid grid-cols-2 gap-3 shrink-0">
             <div className="bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm min-w-[130px] text-center">
               <Phone className="w-4 h-4 text-[#C9A24A] mb-1.5 mx-auto" />
-              <p className="text-[9px] text-[#D9D0BC] font-bold uppercase tracking-wider mb-0.5">Telepon</p>
-              <p className="font-bold text-xs text-white">021-7695948</p>
+              <p className="text-[9px] text-[#D9D0BC] font-bold uppercase tracking-wider mb-0.5">WhatsApp / CS</p>
+              <p className="font-bold text-xs text-white">+62 819-9011-4949</p>
             </div>
             <div className="bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-sm min-w-[130px] text-center">
               <Clock className="w-4 h-4 text-[#C9A24A] mb-1.5 mx-auto" />

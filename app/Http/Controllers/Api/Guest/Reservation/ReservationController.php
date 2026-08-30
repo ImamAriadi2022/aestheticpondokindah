@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Doctor\Schedule\DoctorSchedule;
 use App\Models\Shared\Reservation\Reservation;
 use App\Models\Shared\User\User;
+use App\Services\Shared\Notification\NotificationService;
+use App\Services\Shared\WhatsApp\ZestaWhatsAppService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -110,6 +112,19 @@ class ReservationController extends Controller
                     '/#/dashboard/doctor?tab=reservasi',
                     ['reservation_id' => $reservation->id, 'code' => $code]
                 );
+            }
+
+            // Dispatch Official WhatsApp Notification to Patient via Zesta Gateway
+            if (!empty($reservation->phone)) {
+                $docName = $reservation->doctor?->name ?? 'Dokter Spesialis';
+                $formattedDate = optional($reservation->date)->format('d/m/Y') ?? (string) $reservation->date;
+                $timeSlot = $reservation->preferred_time ?? '10:00 WIB';
+                $treatment = $reservation->treatment_interest ?? 'Pemeriksaan Gigi';
+                $pName = $reservation->name ?? 'Bapak/Ibu';
+
+                $waText = "Halo *{$pName}*,\n\nTerima kasih telah melakukan reservasi di *Aesthetic Pondok Indah Dental Clinic*.\n\nBerikut rincian jadwal janji temu Anda:\n📋 *Kode Booking:* {$code}\n🩺 *Layanan:* {$treatment}\n👨‍⚕️ *Dokter:* {$docName}\n📅 *Tanggal:* {$formattedDate}\n⏰ *Waktu:* {$timeSlot}\n📍 *Lokasi:* Aesthetic Pondok Indah Dental Clinic\n\n📌 *Status:* Menunggu Konfirmasi Tim Klinik\n\nSilakan tunjukkan kode booking ini kepada staf resepsionis saat kedatangan di klinik. Sampai jumpa!";
+
+                ZestaWhatsAppService::sendTextMessage($reservation->phone, $waText, $pName);
             }
         } catch (\Throwable $e) {
             // Non-blocking notification dispatch
