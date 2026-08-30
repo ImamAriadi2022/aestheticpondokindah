@@ -204,9 +204,13 @@ export function DoctorDeleteAccountModal({
             </Button>
             <Button
               type="button"
-              disabled={deleteConfirmText !== "HAPUS"}
+              disabled={deleteConfirmText.trim() !== "HAPUS"}
               onClick={onConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-xs"
+              className={`rounded-xl text-xs font-semibold transition-all ${
+                deleteConfirmText.trim() === "HAPUS"
+                  ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/25 cursor-pointer"
+                  : "bg-stone-200 text-stone-400 border border-stone-300 cursor-not-allowed opacity-60"
+              }`}
             >
               Hapus Akun Permanen
             </Button>

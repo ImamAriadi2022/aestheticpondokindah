@@ -7,6 +7,7 @@ import { apiClient } from "@/core/api/apiClient";
 import { toast } from "@/shared/ui/toast";
 import {
   CheckCircle2,
+  Check,
   Clock,
   Crown,
   History,
@@ -27,6 +28,7 @@ import {
   Sliders,
   Phone,
   Mail,
+  MessageSquare,
   FileSpreadsheet,
   ArrowRight,
   ShieldAlert,
@@ -523,6 +525,77 @@ export default function AdminMembershipPage() {
     }
   };
 
+  const [processingTrxId, setProcessingTrxId] = useState<number | null>(null);
+
+  const handleApproveUpgrade = async (trx: MembershipTransactionItem) => {
+    const targetLevel = (trx.metadata?.target_level || "gold").toUpperCase();
+    const userName = trx.user?.name || "Pasien";
+    if (!window.confirm(`Konfirmasi pembayaran manual & naikkan membership ${userName} ke tier ${targetLevel}?`)) return;
+
+    setProcessingTrxId(trx.id);
+    try {
+      await apiClient.post(`/admin/membership/upgrade-requests/${trx.id}/confirm-payment`, {
+        note: "Dikonfirmasi via WhatsApp oleh Admin",
+      });
+      toast({
+        title: "Upgrade Disetujui & Aktif",
+        message: `Membership ${userName} berhasil dinaikkan ke ${targetLevel} dan status pembayaran lunas.`,
+        variant: "success",
+      });
+      await loadData(true);
+    } catch (err: any) {
+      toast({
+        title: "Gagal Mengonfirmasi Upgrade",
+        message: err?.message || "Terjadi kendala saat mengonfirmasi permohonan upgrade.",
+        variant: "error",
+      });
+    } finally {
+      setProcessingTrxId(null);
+    }
+  };
+
+  const handleRejectUpgrade = async (trx: MembershipTransactionItem) => {
+    const userName = trx.user?.name || "Pasien";
+    if (!window.confirm(`Tolak permohonan upgrade untuk ${userName}?`)) return;
+
+    setProcessingTrxId(trx.id);
+    try {
+      await apiClient.post(`/admin/membership/upgrade-requests/${trx.id}/reject`, {});
+      toast({
+        title: "Permohonan Ditolak",
+        message: `Permohonan upgrade ${userName} telah ditolak.`,
+        variant: "success",
+      });
+      await loadData(true);
+    } catch (err: any) {
+      toast({
+        title: "Gagal Menolak Permohonan",
+        message: err?.message || "Terjadi kendala saat menolak permohonan upgrade.",
+        variant: "error",
+      });
+    } finally {
+      setProcessingTrxId(null);
+    }
+  };
+
+  const handleChatMemberWhatsApp = (trx: MembershipTransactionItem) => {
+    const phone = trx.user?.whatsapp || "";
+    const cleanPhone = phone.replace(/\D/g, "").replace(/^0/, "62");
+    if (!cleanPhone) {
+      toast({
+        title: "Nomor WhatsApp Tidak Ditemukan",
+        message: "Pasien belum mencantumkan nomor WhatsApp di profil akun.",
+        variant: "warning",
+      });
+      return;
+    }
+    const targetLevel = (trx.metadata?.target_level || "gold").toUpperCase();
+    const msg = encodeURIComponent(
+      `Halo ${trx.user?.name || "Kak"}, kami dari Admin Klinik Aesthetic Pondok Indah terkait permohonan upgrade membership Anda ke tier *${targetLevel}* (Order: ${trx.metadata?.order_id || `UPG-#${trx.id}`}). Apakah ada yang bisa kami bantu mengenai pembayarannya?`
+    );
+    window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank", "noopener,noreferrer");
+  };
+
   const filteredTransactions = useMemo(() => {
     return transactions.filter((trx) => {
       const isPaid = ["paid", "approved", "completed", "settlement", "success"].includes((trx.status || "").toLowerCase());
@@ -581,6 +654,7 @@ export default function AdminMembershipPage() {
     const validMembers = members.filter((m) => !m.role || m.role === "patient");
     const totalPoints = validMembers.reduce((sum, m) => sum + (Number(m.membership_points) || 0), 0);
     const paidTrx = transactions.filter((t) => ["paid", "approved", "completed", "settlement", "success"].includes((t.status || "").toLowerCase()));
+    const pendingTrx = transactions.filter((t) => (t.status || "").toLowerCase() === "pending");
     const totalRevenue = paidTrx.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     const activeRulesCount = rules.filter((r) => r.is_active).length;
 
@@ -591,6 +665,7 @@ export default function AdminMembershipPage() {
       bronzeCount: validMembers.filter((m) => !m.membership_level || m.membership_level === "bronze").length,
       totalTransactions: transactions.length,
       paidTransactionsCount: paidTrx.length,
+      pendingUpgradeCount: pendingTrx.length,
       totalRevenue,
       totalPoints,
       totalRules: rules.length,
@@ -607,7 +682,7 @@ export default function AdminMembershipPage() {
             <p className="text-xs font-bold text-[#8C6B1C] uppercase tracking-wider">Admin Klinik</p>
             <h1 className="text-xl sm:text-2xl font-black text-[#2C2416] mt-0.5">Kelola Membership & Poin</h1>
             <p className="text-xs text-[#8C8272] mt-1">
-              Sistem perolehan poin otomatis berbasis aturan, verifikasi transaksi Midtrans, dan ledger audit mutasi poin.
+              Sistem perolehan poin otomatis berbasis aturan, verifikasi permohonan upgrade manual via WhatsApp, dan ledger audit mutasi poin.
             </p>
           </div>
           <Button
@@ -669,12 +744,18 @@ export default function AdminMembershipPage() {
             }`}
           >
             <Receipt className="w-4 h-4" />
-            <span>Riwayat Transaksi Member</span>
-            <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activeTab === "transaksi" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
-            }`}>
-              {metrics.totalTransactions}
-            </span>
+            <span>Permohonan & Transaksi Upgrade</span>
+            {metrics.pendingUpgradeCount > 0 ? (
+              <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
+                {metrics.pendingUpgradeCount} Perlu Konfirmasi
+              </span>
+            ) : (
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                activeTab === "transaksi" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+              }`}>
+                {metrics.totalTransactions}
+              </span>
+            )}
           </button>
         </div>
 
@@ -1434,20 +1515,21 @@ export default function AdminMembershipPage() {
                       <th className="px-5 py-3.5">Pasien</th>
                       <th className="px-5 py-3.5">Upgrade Ke</th>
                       <th className="px-5 py-3.5">Nominal</th>
-                      <th className="px-5 py-3.5">Status Verifikasi Midtrans</th>
+                      <th className="px-5 py-3.5">Status Pembayaran</th>
+                      <th className="px-5 py-3.5 text-right">Aksi Admin</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F5EFE6]">
                     {loading && transactions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-5 py-10 text-center text-[#8C8272]">
+                        <td colSpan={6} className="px-5 py-10 text-center text-[#8C8272]">
                           <Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin text-[#C9A24A]" />
-                          Memuat riwayat transaksi Midtrans...
+                          Memuat riwayat transaksi & permohonan upgrade...
                         </td>
                       </tr>
                     ) : filteredTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-5 py-12 text-center text-[#8C8272]">
+                        <td colSpan={6} className="px-5 py-12 text-center text-[#8C8272]">
                           <Receipt className="w-8 h-8 text-[#C9A24A]/40 mx-auto mb-2" />
                           <p className="font-bold text-[#2C2416]">Tidak Ada Riwayat Transaksi</p>
                           <p className="text-[11px] mt-0.5">Belum ada transaksi pembayaran membership yang sesuai dengan filter.</p>
@@ -1460,9 +1542,17 @@ export default function AdminMembershipPage() {
                         const targetLevel = trx.metadata?.target_level || "gold";
                         const targetTierInfo = tierPresentation[targetLevel] || tierPresentation.gold;
                         const TargetIcon = targetTierInfo.Icon;
+                        const isBusy = processingTrxId === trx.id;
 
                         return (
-                          <tr key={trx.id} className="hover:bg-[#FAF8F5]/80 transition-colors">
+                          <tr
+                            key={trx.id}
+                            className={`transition-colors ${
+                              isPending
+                                ? "bg-amber-50/30 hover:bg-amber-50/60 border-l-3 border-l-amber-500"
+                                : "hover:bg-[#FAF8F5]/80"
+                            }`}
+                          >
                             <td className="px-5 py-3.5">
                               <p className="font-mono font-bold text-[#2C2416]">{trx.metadata?.order_id || `UPG-#${trx.id}`}</p>
                               <p className="text-[10px] text-[#8C8272] mt-0.5">
@@ -1477,6 +1567,12 @@ export default function AdminMembershipPage() {
                                 <Mail className="w-3 h-3 text-[#8C6B1C]" />
                                 {trx.user?.email || "-"}
                               </p>
+                              {trx.user?.whatsapp && (
+                                <p className="text-[10px] text-[#8C8272] flex items-center gap-1 mt-0.5">
+                                  <Phone className="w-3 h-3 text-emerald-600" />
+                                  {trx.user.whatsapp}
+                                </p>
+                              )}
                             </td>
                             <td className="px-5 py-3.5">
                               <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${targetTierInfo.className}`}>
@@ -1490,16 +1586,68 @@ export default function AdminMembershipPage() {
                             <td className="px-5 py-3.5">
                               {isPaid ? (
                                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Terverifikasi Midtrans (Lunas)
+                                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Disetujui & Lunas
                                 </span>
                               ) : isPending ? (
-                                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
-                                  <Clock className="h-3.5 w-3.5 text-amber-600" /> Menunggu Pembayaran
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 animate-pulse">
+                                  <Clock className="h-3.5 w-3.5 text-amber-600" /> Menunggu Konfirmasi WA
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-700">
                                   <XCircle className="h-3.5 w-3.5 text-rose-600" /> {trx.status}
                                 </span>
+                              )}
+                            </td>
+                            <td className="px-5 py-3.5 text-right">
+                              {isPending ? (
+                                <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                                  {/* Setujui & Naikkan Tier */}
+                                  <Button
+                                    size="sm"
+                                    disabled={isBusy}
+                                    onClick={() => handleApproveUpgrade(trx)}
+                                    className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-[11px] shadow-xs cursor-pointer active:scale-95 transition-all flex items-center gap-1"
+                                    title="Konfirmasi pembayaran transfer manual & naikkan membership pasien"
+                                  >
+                                    {isBusy ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <Check className="w-3.5 h-3.5" />
+                                    )}
+                                    <span>Setujui</span>
+                                  </Button>
+
+                                  {/* Chat WhatsApp */}
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleChatMemberWhatsApp(trx)}
+                                    className="h-8 px-2.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-semibold rounded-xl text-[11px] cursor-pointer flex items-center gap-1"
+                                    title="Hubungi pasien via WhatsApp untuk verifikasi bukti transfer"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Chat WA</span>
+                                  </Button>
+
+                                  {/* Tolak */}
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    disabled={isBusy}
+                                    onClick={() => handleRejectUpgrade(trx)}
+                                    className="h-8 px-2 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-semibold rounded-xl text-[11px] cursor-pointer"
+                                    title="Tolak permohonan upgrade ini"
+                                  >
+                                    <XCircle className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              ) : isPaid ? (
+                                <span className="text-[11px] font-bold text-emerald-700 inline-flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  Tier Aktif
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-[#8C8272]">-</span>
                               )}
                             </td>
                           </tr>

@@ -7,6 +7,7 @@ import { getDefaultDashboardPath, getSession } from "@/core/auth/services/sessio
 import { API_BASE } from "@/core/api/apiConfig";
 import { touchSessionLastActive } from "@/core/auth/services/sessionTtl";
 import { toast } from "@/shared/ui/toast";
+import GoogleAuthButton from "@/shared/components/GoogleAuthButton";
 
 type AuthMode = "welcome" | "login" | "register" | "forgot";
 
@@ -103,10 +104,12 @@ export default function MobileLoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      toast({ title: "Login Berhasil", message: "Selamat datang kembali!", variant: "success" });
+      toast({ title: "Login Berhasil", message: "Selamat datang kembali! Mengalihkan...", variant: "success" });
       
-      const dest = getDefaultDashboardPath(data.user?.role) || "/";
-      navigate(dest, { replace: true });
+      setTimeout(() => {
+        const dest = getDefaultDashboardPath(data.user?.role);
+        window.location.assign(dest);
+      }, 400);
     } catch (err: any) {
       setLoginError(err.message || "Terjadi kesalahan saat login");
     } finally {
@@ -164,9 +167,11 @@ export default function MobileLoginPage() {
       localStorage.setItem("apident:user", JSON.stringify(data.user));
       touchSessionLastActive();
 
-      toast({ title: "Pendaftaran Berhasil", message: "Selamat datang!", variant: "success" });
-      const dest = getDefaultDashboardPath(data.user?.role) || "/dashboard/user";
-      navigate(dest, { replace: true });
+      toast({ title: "Pendaftaran Berhasil", message: "Selamat datang! Mengalihkan...", variant: "success" });
+      setTimeout(() => {
+        const dest = getDefaultDashboardPath(data.user?.role);
+        window.location.assign(dest);
+      }, 400);
     } catch (err: any) {
       setRegisterError(err.message || "Terjadi kesalahan saat mendaftar");
     } finally {
@@ -210,6 +215,17 @@ export default function MobileLoginPage() {
               Masuk dengan WhatsApp
               <ChevronRight className="w-5 h-5 ml-auto" />
             </Button>
+
+            <div className="relative flex items-center justify-center py-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#E8DFC8]" />
+              </div>
+              <span className="relative bg-[#FAF8F5] px-3 text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">
+                atau
+              </span>
+            </div>
+
+            <GoogleAuthButton mode="login" className="h-14 !rounded-xl !text-sm !font-semibold" />
           </div>
         </div>
 
@@ -316,6 +332,17 @@ export default function MobileLoginPage() {
             >
               {isLoading ? "Memuat..." : "Masuk"}
             </Button>
+
+            <div className="relative flex items-center justify-center py-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#E8DFC8]" />
+              </div>
+              <span className="relative bg-white px-3 text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">
+                atau masuk dengan
+              </span>
+            </div>
+
+            <GoogleAuthButton mode="login" className="h-14 !rounded-xl !text-sm !font-semibold" />
           </form>
         </div>
 
@@ -442,6 +469,17 @@ export default function MobileLoginPage() {
             >
               {isLoading ? "Memproses..." : "Daftar Sekarang"}
             </Button>
+
+            <div className="relative flex items-center justify-center py-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#E8DFC8]" />
+              </div>
+              <span className="relative bg-white px-3 text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">
+                atau daftar dengan
+              </span>
+            </div>
+
+            <GoogleAuthButton mode="register" className="h-14 !rounded-xl !text-sm !font-semibold" />
           </form>
         </div>
 

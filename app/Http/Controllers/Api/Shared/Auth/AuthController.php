@@ -119,7 +119,7 @@ class AuthController extends Controller
         ]);
     }
 
-    private function serializeUser(User $user): array
+    public function serializeUser(User $user): array
     {
         if ($user->role === 'doctor') {
             return [
@@ -158,6 +158,9 @@ class AuthController extends Controller
             'id' => (string) $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'google_id' => $user->google_id,
+            'has_google' => !empty($user->google_id),
+            'avatar' => $user->avatar,
             'whatsapp' => $user->whatsapp,
             'role' => $user->role,
             'status' => $user->status,

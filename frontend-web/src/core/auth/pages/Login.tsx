@@ -9,12 +9,13 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/shared/ui/input-group";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
-import { getDefaultDashboardPath } from "@/core/auth/services/session";
+import { getDefaultDashboardPath, getSession } from "@/core/auth/services/session";
 import { touchSessionLastActive } from "@/core/auth/services/sessionTtl";
 import { API_BASE } from "@/core/api/apiConfig";
+import GoogleAuthButton from "@/shared/components/GoogleAuthButton";
 
 type LoginRole = "user" | "clinic" | "doctor";
 type UserMode = "login" | "register";
@@ -22,6 +23,14 @@ type UserMode = "login" | "register";
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const session = getSession();
+    if (session && session.role && (session.role as string) !== "guest") {
+      const dest = getDefaultDashboardPath(session.role) || "/dashboard/user";
+      navigate(dest, { replace: true });
+    }
+  }, [navigate]);
 
   const isClinicLogin = location.pathname === "/klinik";
 
@@ -103,9 +112,9 @@ export default function LoginPage() {
       setSuccess("Login berhasil! Mengalihkan...");
       
       setTimeout(() => {
-        const dest = getDefaultDashboardPath(data.user?.role) || "/";
-        navigate(dest, { replace: true });
-      }, 500);
+        const dest = getDefaultDashboardPath(data.user?.role);
+        window.location.assign(dest);
+      }, 400);
 
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat login.");
@@ -168,9 +177,9 @@ export default function LoginPage() {
 
       setSuccess("Pendaftaran berhasil! Mengalihkan...");
       setTimeout(() => {
-        const dest = getDefaultDashboardPath(data.user?.role) || "/dashboard/user";
-        navigate(dest, { replace: true });
-      }, 500);
+        const dest = getDefaultDashboardPath(data.user?.role);
+        window.location.assign(dest);
+      }, 400);
 
     } catch (err: any) {
       setError(err.message || "Terjadi kesalahan saat mendaftar.");
@@ -239,20 +248,35 @@ export default function LoginPage() {
             {success}
           </div>
         )}
-        {role === "user" && (
-          <div className="text-xs text-brand-warm-gray font-body">
-            Belum punya akun?{" "}
-            <button
-              type="button"
-              className="text-brand-gold hover:opacity-80 underline underline-offset-4"
-              onClick={() => {
-                setError(null);
-                setSuccess(null);
-                setUserMode("register");
-              }}
-            >
-              Daftar
-            </button>
+        {(role === "user" || role === "doctor") && (
+          <div className="space-y-4 pt-2">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#E8DFC8]" />
+              </div>
+              <span className="relative bg-white px-3 text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">
+                atau masuk dengan
+              </span>
+            </div>
+
+            <GoogleAuthButton mode="login" />
+
+            {role === "user" && (
+              <div className="text-xs text-center text-brand-warm-gray font-body pt-1">
+                Belum punya akun?{" "}
+                <button
+                  type="button"
+                  className="text-brand-gold font-bold hover:opacity-80 underline underline-offset-4 cursor-pointer"
+                  onClick={() => {
+                    setError(null);
+                    setSuccess(null);
+                    setUserMode("register");
+                  }}
+                >
+                  Daftar Sekarang
+                </button>
+              </div>
+            )}
           </div>
         )}
       </form>
@@ -369,6 +393,19 @@ export default function LoginPage() {
             {success}
           </div>
         )}
+
+        <div className="space-y-4 pt-2">
+          <div className="relative flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#E8DFC8]" />
+            </div>
+            <span className="relative bg-white px-3 text-[10px] text-[#8C8272] uppercase font-bold tracking-wider">
+              atau daftar dengan
+            </span>
+          </div>
+
+          <GoogleAuthButton mode="register" />
+        </div>
       </form>
     );
   };

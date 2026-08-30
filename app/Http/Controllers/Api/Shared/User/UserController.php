@@ -1050,12 +1050,13 @@ class UserController extends Controller
 
         if ($user) {
             $user->tokens()->delete();
-            $user->status = 'inactive';
-            $user->save();
             $user->delete();
         }
 
-        return response()->json(['message' => 'Akun berhasil dihapus.']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Akun berhasil dihapus permanen dari sistem.',
+        ]);
     }
 
     public function updatePreferences(Request $request): JsonResponse

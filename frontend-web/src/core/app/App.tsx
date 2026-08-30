@@ -22,7 +22,7 @@ import { apiClient } from "@/core/api/apiClient";
 function PublicRouteRedirect({ children }: { children: React.ReactNode }) {
   const session = getSession();
   if (session && session.role && (session.role as string) !== "guest") {
-    return <Navigate to="/" replace />;
+    return <Navigate to={getDefaultDashboardPath(session.role) || "/dashboard/user"} replace />;
   }
   return <>{children}</>;
 }

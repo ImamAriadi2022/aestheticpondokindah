@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Shared\Notification\WebPushSubscriptionController;
 // 1. SHARED CONTROLLERS (Multi-Actor Interaction)
 // =========================================================================
 use App\Http\Controllers\Api\Shared\Auth\AuthController;
+use App\Http\Controllers\Api\Shared\Auth\GoogleAuthController;
 use App\Http\Controllers\Api\Shared\Auth\RegistrationController;
 use App\Http\Controllers\Api\Shared\User\UserController;
 use App\Http\Controllers\Api\Shared\Branch\BranchController;
@@ -100,6 +101,10 @@ Route::get('/wilayah/kelurahan/{districtId}', [WilayahController::class, 'villag
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/register', [RegistrationController::class, 'register']);
+    Route::post('/google', [GoogleAuthController::class, 'handleGoogleAuth']);
+    Route::middleware('auth:sanctum')->post('/google/link', [GoogleAuthController::class, 'linkGoogle']);
+    Route::middleware('auth:sanctum')->post('/google/unlink', [GoogleAuthController::class, 'unlinkGoogle']);
+    Route::middleware('auth:sanctum')->get('/google/status', [GoogleAuthController::class, 'getGoogleStatus']);
     Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
     Route::middleware('auth:sanctum')->post('/refresh', [AuthController::class, 'refresh']);
     Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
@@ -145,6 +150,7 @@ Route::prefix('admin')->group(function () {
         // Reservations (Admin)
         Route::get('/reservations', [ReservationAdminController::class, 'index']);
         Route::put('/reservations/{reservation}', [ReservationAdminController::class, 'update']);
+        Route::delete('/reservations/{id}', [ReservationAdminController::class, 'destroy']);
         Route::post('/reservations/{id}/confirm-payment', [ReservationAdminController::class, 'confirmPayment']);
 
         // Clinic Settings (T&C, WA number, etc.)

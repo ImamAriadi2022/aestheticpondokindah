@@ -90,6 +90,9 @@ export const MENU: AppMenu = {
       { label: "Jadwal Praktik", icon: Calendar, href: "/dashboard/doctor?tab=jadwal" },
       { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi" },
     ],
+    [ROLES.DEVELOPER]: [
+      { label: "REST API Docs", icon: FileText, href: "/docs-api" },
+    ],
   },
 };
 

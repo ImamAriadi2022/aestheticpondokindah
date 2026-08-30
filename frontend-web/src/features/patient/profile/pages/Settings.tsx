@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/shared/ui/dialog";
 import { playNotificationChime, dispatchDeviceSystemNotification } from "@/core/services/pushNotificationService";
+import { API_BASE } from "@/core/api/apiConfig";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -279,7 +280,9 @@ export default function SettingsPage() {
     navigate("/login");
   };
 
-  const handleDeleteAccount = () => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
     if (deleteConfirmText !== "HAPUS") {
       toast({
         title: "Konfirmasi Gagal",
@@ -288,14 +291,49 @@ export default function SettingsPage() {
       });
       return;
     }
-    clearSession();
-    clearSessionStorage();
-    toast({
-      title: "Akun Dihapus",
-      message: "Akun Anda telah dinonaktifkan.",
-      variant: "error",
-    });
-    navigate("/");
+
+    const token = localStorage.getItem("apident:token") || localStorage.getItem("auth_token");
+    if (!token) {
+      clearSession();
+      clearSessionStorage();
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const res = await fetch(`${API_BASE}/user/account`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || "Gagal menghapus akun.");
+      }
+
+      clearSession();
+      clearSessionStorage();
+      toast({
+        title: "Akun Berhasil Dihapus",
+        message: "Akun Anda telah dihapus secara permanen dari sistem.",
+        variant: "success",
+      });
+      setDeleteAccountOpen(false);
+      navigate("/login", { replace: true });
+    } catch (err: any) {
+      toast({
+        title: "Gagal Menghapus Akun",
+        message: err.message || "Terjadi kesalahan saat menghapus akun.",
+        variant: "error",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const session = getSession();
@@ -788,8 +826,17 @@ export default function SettingsPage() {
             <Button type="button" variant="outline" onClick={() => setDeleteAccountOpen(false)} className="rounded-xl cursor-pointer">
               Batal
             </Button>
-            <Button type="button" variant="destructive" onClick={handleDeleteAccount} className="rounded-xl text-white cursor-pointer">
-              Hapus Permanen
+            <Button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={isDeleting || deleteConfirmText.trim() !== "HAPUS"}
+              className={`rounded-xl font-bold transition-all ${
+                deleteConfirmText.trim() === "HAPUS"
+                  ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/25 cursor-pointer"
+                  : "bg-stone-200 text-stone-400 border border-stone-300 cursor-not-allowed opacity-60"
+              }`}
+            >
+              {isDeleting ? "Menghapus..." : "Hapus Permanen"}
             </Button>
           </DialogFooter>
         </DialogContent>
