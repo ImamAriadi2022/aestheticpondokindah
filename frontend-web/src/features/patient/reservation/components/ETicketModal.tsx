@@ -211,15 +211,51 @@ export default function ETicketModal({
     frameDoc.write(printContent);
     frameDoc.close();
 
-    setTimeout(() => {
-      printFrame.contentWindow?.focus();
-      printFrame.contentWindow?.print();
+    const images = Array.from(frameDoc.querySelectorAll("img"));
+    let hasPrinted = false;
+
+    const executePrint = () => {
+      if (hasPrinted) return;
+      hasPrinted = true;
       setTimeout(() => {
-        if (document.body.contains(printFrame)) {
-          document.body.removeChild(printFrame);
+        try {
+          printFrame.contentWindow?.focus();
+          printFrame.contentWindow?.print();
+        } catch {
+          window.print();
         }
-      }, 1500);
-    }, 300);
+        setTimeout(() => {
+          if (document.body.contains(printFrame)) {
+            document.body.removeChild(printFrame);
+          }
+        }, 3000);
+      }, 200);
+    };
+
+    if (images.length === 0) {
+      executePrint();
+    } else {
+      let loadedCount = 0;
+      const onImageLoaded = () => {
+        loadedCount++;
+        if (loadedCount >= images.length) {
+          executePrint();
+        }
+      };
+
+      images.forEach((img) => {
+        if (img.complete && img.naturalHeight !== 0) {
+          onImageLoaded();
+        } else {
+          img.onload = onImageLoaded;
+          img.onerror = onImageLoaded;
+        }
+      });
+
+      setTimeout(() => {
+        executePrint();
+      }, 1200);
+    }
   };
 
   return createPortal(

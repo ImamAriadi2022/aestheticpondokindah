@@ -65,19 +65,19 @@ export default function ZestaLiveChat() {
     }, 150);
   };
 
-  // Exclude on full-screen admin / consultation views where floating chat might obstruct work
+  // AESPI Bot is strictly for public visitors without login (guest web)
+  // Hide completely for all logged-in actors (patient, doctor, clinic admin) and dashboard paths
+  const isLoggedIn = Boolean(session) || Boolean(localStorage.getItem("apident:token"));
   const isDashboard = location.pathname.startsWith("/dashboard");
-  const isSettings = location.pathname === "/settings";
-  const isProfile = location.pathname.startsWith("/profile");
-  const isGuestKonsultasi = location.pathname.startsWith("/konsultasi");
+  const isConsultation = location.pathname.startsWith("/konsultasi");
   const isDocsApi = location.pathname === "/docs-api" || location.pathname === "/doc-api";
 
-  if (isDashboard || isSettings || isProfile || isGuestKonsultasi || isDocsApi) {
+  if (isLoggedIn || isDashboard || isConsultation || isDocsApi) {
     return null;
   }
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-end gap-1.5 sm:gap-2">
+    <div className="fixed bottom-20 right-3.5 sm:bottom-6 sm:right-6 z-50 flex items-end gap-1.5 sm:gap-2">
       {/* Speech Bubble Tooltip - Slides from button */}
       {!isOpen && (
         <div
@@ -100,7 +100,7 @@ export default function ZestaLiveChat() {
       <button
         type="button"
         onClick={handleToggle}
-        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#C9A24A] via-[#B8943F] to-[#A67F3A] hover:brightness-105 text-white rounded-full px-3 py-2.5 sm:px-4 sm:py-3 shadow-xl shadow-[#C9A24A]/30 border border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
+        className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#C9A24A] via-[#B8943F] to-[#A67F3A] hover:brightness-105 active:brightness-95 text-white rounded-full px-3 py-2 sm:px-4 sm:py-3 shadow-xl shadow-[#C9A24A]/30 border border-white/20 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer touch-manipulation"
         title="Buka Chat Bantuan & Reservasi"
       >
         <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-xs">

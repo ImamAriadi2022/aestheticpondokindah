@@ -61,31 +61,79 @@ export function hideDefaultZestaButton(): boolean {
         #zesta-chat-window {
           bottom: 5.5rem !important;
           right: 1.25rem !important;
+          height: 520px !important;
+          max-height: calc(100vh - 110px) !important;
+          display: flex !important;
+          flex-direction: column !important;
           border-radius: 1.25rem !important;
+          overflow: hidden !important;
           box-shadow: 0 25px 50px -12px rgba(201, 162, 74, 0.25), 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+          z-index: 999999 !important;
         }
-        /* Remove Powered by Zesta footer */
-        #zesta-chat-window a[href*="zesta.id"],
-        #zesta-chat-window a[href*="zesta.id"] *,
-        #zesta-chat-window .zw-py-1\\.5,
-        #zesta-chat-window > div:last-child {
+        /* Make message list scrollable smoothly */
+        #zesta-chat-window .zw-flex-1,
+        #zesta-chat-window > div:nth-child(2) {
+          flex: 1 1 auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          overscroll-behavior: contain !important;
+        }
+        /* Ensure input area is visible, interactive and properly pinned at the bottom */
+        #zesta-input-area {
+          display: block !important;
+          flex-shrink: 0 !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          border-top: 1px solid #f1f5f9 !important;
+          background: #ffffff !important;
+          padding: 0.5rem 0.75rem !important;
+          z-index: 20 !important;
+        }
+        #zesta-input-area form {
+          padding: 0 !important;
+        }
+        #zesta-chat-input {
+          caret-color: #C9A24A !important;
+          color: #1f2937 !important;
+          font-family: inherit !important;
+          font-size: 0.875rem !important;
+        }
+        /* Luxury styling for Reset / Continue button if bot auto-resolves conversation */
+        #zesta-input-area button {
+          cursor: pointer !important;
+          transition: all 0.2s ease !important;
+        }
+        #zesta-input-area button:hover {
+          opacity: 0.9 !important;
+          transform: translateY(-1px) !important;
+        }
+        /* Hide ONLY the Powered by Zesta branding footer without affecting input bar */
+        #zesta-chat-window a[href*="zesta.id"] {
           display: none !important;
+          height: 0 !important;
           opacity: 0 !important;
           visibility: hidden !important;
+          pointer-events: none !important;
+        }
+        #zesta-chat-window .zw-py-1\\.5 {
+          display: none !important;
           height: 0 !important;
           max-height: 0 !important;
           padding: 0 !important;
           margin: 0 !important;
           overflow: hidden !important;
-          pointer-events: none !important;
         }
         @media (max-width: 640px) {
           #zesta-chat-window {
-            bottom: 4.75rem !important;
+            bottom: 5.75rem !important;
             right: 0.75rem !important;
             left: 0.75rem !important;
             width: auto !important;
             max-width: calc(100vw - 1.5rem) !important;
+            height: calc(100dvh - 7.5rem) !important;
+            max-height: calc(100dvh - 7.5rem) !important;
           }
         }
       `;
@@ -96,8 +144,8 @@ export function hideDefaultZestaButton(): boolean {
     try {
       const brandingLinks = root.shadowRoot.querySelectorAll('a[href*="zesta.id"]');
       brandingLinks.forEach((link) => {
-        const parentDiv = link.closest("div");
-        if (parentDiv) {
+        const parentDiv = (link.closest(".zw-py-1\\.5") || link.parentElement) as HTMLElement | null;
+        if (parentDiv && parentDiv.id !== "zesta-input-area") {
           parentDiv.style.display = "none";
           parentDiv.style.height = "0px";
           parentDiv.style.padding = "0px";

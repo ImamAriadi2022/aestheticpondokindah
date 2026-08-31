@@ -239,6 +239,18 @@ export default function ReservationConsentPdfModal({
       return;
     }
 
+    // Safely determine the highest-fidelity signature source
+    let sigImageSource = "";
+    if (canvasRef.current && hasDrawn && typeof canvasRef.current.toDataURL === "function") {
+      try {
+        sigImageSource = canvasRef.current.toDataURL("image/png");
+      } catch {
+        sigImageSource = currentSignature || initialSignatureData || "";
+      }
+    } else {
+      sigImageSource = currentSignature || initialSignatureData || "";
+    }
+
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -246,30 +258,31 @@ export default function ReservationConsentPdfModal({
           <meta charset="utf-8" />
           <title>Surat Persetujuan Pasien (Informed Consent) - Aesthetic Pondok Indah</title>
           <style>
-            @page { size: letter portrait; margin: 15mm 15mm; }
+            @page { size: letter portrait; margin: 12mm 14mm; }
             * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .kop-header { text-align: center; border-bottom: 2.5px solid #000; padding-bottom: 12px; margin-bottom: 16px; }
-            .kop-logo { height: 48px; width: auto; margin: 0 auto 6px auto; display: block; }
+            body { font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; color: #111; line-height: 1.45; margin: 0; padding: 0; font-size: 9pt; background: #fff; }
+            .kop-header { text-align: center; border-bottom: 2.5px solid #000; padding-bottom: 10px; margin-bottom: 14px; }
+            .kop-logo { height: 48px; width: auto; margin: 0 auto 6px auto; display: block; object-fit: contain; }
             .kop-title { font-size: 13pt; font-weight: 800; color: #000; letter-spacing: 0.5px; text-transform: uppercase; margin: 0; }
             .kop-address { font-size: 7.5pt; color: #333; margin-top: 4px; line-height: 1.35; }
-            .doc-header { text-align: center; margin-bottom: 16px; }
-            .doc-title { font-size: 12pt; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
-            .doc-sub { font-size: 8.5pt; color: #555; margin-top: 4px; }
-            .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 8.5pt; border: 1px solid #333; }
-            .meta-table td { padding: 5px 8px; border: 1px solid #333; }
-            .clause { margin-bottom: 11px; }
-            .clause-title { font-size: 9.5pt; font-weight: 700; color: #000; margin-bottom: 3px; }
-            .clause-text { font-size: 9pt; color: #222; line-height: 1.45; text-align: justify; margin: 0; }
-            .signature-section { margin-top: 24px; padding-top: 14px; border-top: 1px solid #ccc; }
+            .doc-header { text-align: center; margin-bottom: 14px; }
+            .doc-title { font-size: 11.5pt; font-weight: 800; color: #000; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; }
+            .doc-sub { font-size: 8.5pt; color: #555; margin-top: 3px; font-weight: 600; }
+            .meta-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 8.5pt; border: 1px solid #333; }
+            .meta-table td { padding: 4.5px 8px; border: 1px solid #333; }
+            .clause { margin-bottom: 9px; }
+            .clause-title { font-size: 9pt; font-weight: 700; color: #000; margin-bottom: 2px; }
+            .clause-text { font-size: 8.5pt; color: #222; line-height: 1.4; text-align: justify; margin: 0; }
+            .signature-section { margin-top: 18px; padding-top: 12px; border-top: 1px solid #ccc; }
             .sig-row { display: flex; justify-content: space-between; align-items: flex-end; }
             .sig-box { text-align: center; width: 220px; }
-            .sig-img { max-height: 60px; max-width: 180px; object-fit: contain; margin: 6px auto; display: block; }
-            .sig-name { font-weight: 700; text-decoration: underline; margin-top: 6px; font-size: 9pt; }
+            .sig-img { max-height: 65px; max-width: 180px; width: auto; height: auto; object-fit: contain; margin: 4px auto; display: block; background: transparent; }
+            .sig-name { font-weight: 700; text-decoration: underline; margin-top: 4px; font-size: 9pt; color: #000; }
           </style>
         </head>
         <body>
           <div class="kop-header">
-            <img src="/logo/logo-vertikal.webp" class="kop-logo" alt="Logo" />
+            <img src="/logo/logo-vertikal.webp" class="kop-logo" alt="Logo Aesthetic Pondok Indah" onerror="this.src='/logo/Logo-vertikal.png'" />
             <div class="kop-title">Aesthetic Pondok Indah</div>
             <div class="kop-address">
               Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310<br/>
@@ -283,9 +296,9 @@ export default function ReservationConsentPdfModal({
           <table class="meta-table">
             <tr>
               <td style="width: 20%; font-weight: bold; background: #f8f8f8;">Nama Pasien</td>
-              <td style="width: 30%;">${patientName}</td>
+              <td style="width: 30%; font-weight: 600;">${patientName}</td>
               <td style="width: 20%; font-weight: bold; background: #f8f8f8;">Layanan</td>
-              <td style="width: 30%;">${serviceName}</td>
+              <td style="width: 30%; font-weight: 600;">${serviceName}</td>
             </tr>
             <tr>
               <td style="font-weight: bold; background: #f8f8f8;">No. WhatsApp</td>
@@ -306,15 +319,19 @@ export default function ReservationConsentPdfModal({
             <div class="clause-title">3. Kerahasiaan Data & Rekam Medis Elektronik</div>
             <p class="clause-text">Seluruh data rekam medis, dokumentasi intraoral, dan hasil rontgen dilindungi kerahasiaannya sesuai peraturan perundang-undangan kesehatan RI.</p>
           </div>
+          <div class="clause">
+            <div class="clause-title">4. Kebijakan Pembayaran & Pembatalan</div>
+            <p class="clause-text">Saya bersedia menyelesaikan kewajiban pembayaran tindakan sesuai tarif resmi yang disetujui sebelum tindakan dilakukan.</p>
+          </div>
           <div class="signature-section">
             <div class="sig-row">
-              <div style="font-size: 8.5pt; color: #444;">
-                Status: <strong>✓ Disetujui Secara Digital</strong><br/>
+              <div style="font-size: 8.5pt; color: #444; line-height: 1.45;">
+                Status: <strong style="color: #047857;">✓ Disetujui Secara Digital</strong><br/>
                 Waktu: ${formattedDate}
               </div>
               <div class="sig-box">
                 <div style="font-size: 8pt; font-weight: bold; color: #222;">Tanda Tangan Pasien:</div>
-                ${hasDrawn ? `<img src="${canvasRef.current?.toDataURL("image/png")}" class="sig-img" alt="Tanda Tangan" />` : (initialSignatureData ? `<img src="${initialSignatureData}" class="sig-img" alt="Tanda Tangan" />` : '<div style="height: 45px;"></div>')}
+                ${sigImageSource ? `<img src="${sigImageSource}" class="sig-img" alt="Tanda Tangan Pasien" />` : '<div style="height: 45px; border-bottom: 1px dashed #bbb; width: 140px; margin: 6px auto;"></div>'}
                 <div class="sig-name">${fullName || patientName}</div>
               </div>
             </div>
@@ -323,18 +340,57 @@ export default function ReservationConsentPdfModal({
       </html>
     `;
 
+    frameDoc.open();
     frameDoc.write(printContent);
     frameDoc.close();
 
-    setTimeout(() => {
-      printFrame.contentWindow?.focus();
-      printFrame.contentWindow?.print();
+    // Ensure all images (logo + base64 signature) are fully loaded before firing print dialog
+    const images = Array.from(frameDoc.querySelectorAll("img"));
+    let hasPrinted = false;
+
+    const executePrint = () => {
+      if (hasPrinted) return;
+      hasPrinted = true;
       setTimeout(() => {
-        if (document.body.contains(printFrame)) {
-          document.body.removeChild(printFrame);
+        try {
+          printFrame.contentWindow?.focus();
+          printFrame.contentWindow?.print();
+        } catch {
+          window.print();
         }
-      }, 1500);
-    }, 350);
+        setTimeout(() => {
+          if (document.body.contains(printFrame)) {
+            document.body.removeChild(printFrame);
+          }
+        }, 3000);
+      }, 200);
+    };
+
+    if (images.length === 0) {
+      executePrint();
+    } else {
+      let loadedCount = 0;
+      const onImageLoaded = () => {
+        loadedCount++;
+        if (loadedCount >= images.length) {
+          executePrint();
+        }
+      };
+
+      images.forEach((img) => {
+        if (img.complete && img.naturalHeight !== 0) {
+          onImageLoaded();
+        } else {
+          img.onload = onImageLoaded;
+          img.onerror = onImageLoaded;
+        }
+      });
+
+      // Safety timeout in case image events are delayed
+      setTimeout(() => {
+        executePrint();
+      }, 1200);
+    }
   };
 
   return createPortal(

@@ -56,6 +56,13 @@ class ConsultationService
             $this->seedGreeting($consultation, $guestIdentity['name'] ?? 'Bapak/Ibu');
         }
 
+        // Generate instant AI Dental Health Assessment & Service Recommendation
+        try {
+            DentalAiConsultantService::generateInitialAssessment($consultation);
+        } catch (\Throwable $e) {
+            // Non-blocking
+        }
+
         try {
             NotificationService::sendToAdmins(
                 'Konsultasi Baru Menunggu',
@@ -219,6 +226,15 @@ class ConsultationService
 
         $this->notifyRecipients($consultation, $sender, $role, $body);
         $this->dispatchZestaWhatsApp($consultation, $sender, $role, $body);
+
+        // If message is sent by patient/guest, trigger AI Dental Consultant reply
+        if ($role === 'patient') {
+            try {
+                DentalAiConsultantService::generateChatReply($consultation, $body);
+            } catch (\Throwable $e) {
+                // Non-blocking
+            }
+        }
 
         return $message;
     }

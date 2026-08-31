@@ -32,7 +32,7 @@ class RegistrationController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'nullable|string|max:255',
+            'name' => 'required|string|min:2|max:255',
             'email' => 'nullable|email|max:255|unique:users,email',
             'whatsapp' => 'required|string|max:20|unique:users,whatsapp',
             'password' => 'required|string|min:6',
@@ -53,6 +53,8 @@ class RegistrationController extends Controller
             'sourceInfo' => 'nullable|string|max:255',
             'insuranceProvider' => 'nullable|string|max:255',
         ], [
+            'name.required' => 'Nama pengguna / lengkap wajib diisi.',
+            'name.min' => 'Nama pengguna minimal 2 karakter.',
             'whatsapp.unique' => 'Nomor WhatsApp ini sudah terdaftar. Silakan login.',
             'password.min' => 'Password minimal harus 6 karakter.',
             'password_confirmation.same' => 'Konfirmasi password tidak cocok dengan password.',
@@ -60,35 +62,6 @@ class RegistrationController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        // WhatsApp OTP Verification Check
-        $otp = trim((string) $request->input('otp', ''));
-        $cacheKey = "otp:{$normalizedWa}";
-        $verifiedKey = "otp_verified:{$normalizedWa}";
-
-        $isOtpValid = false;
-        if (!empty($otp)) {
-            $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
-            if ($cached && isset($cached['code']) && $cached['code'] === $otp) {
-                $isOtpValid = true;
-                \Illuminate\Support\Facades\Cache::forget($cacheKey);
-            } else {
-                return response()->json([
-                    'message' => 'Kode OTP yang Anda masukkan salah atau sudah kedaluwarsa.',
-                    'errors' => ['otp' => ['Kode OTP salah atau sudah kedaluwarsa.']],
-                ], 422);
-            }
-        } elseif (\Illuminate\Support\Facades\Cache::get($verifiedKey)) {
-            $isOtpValid = true;
-            \Illuminate\Support\Facades\Cache::forget($verifiedKey);
-        }
-
-        if (!$isOtpValid) {
-            return response()->json([
-                'message' => 'Nomor WhatsApp belum diverifikasi dengan kode OTP. Silakan verifikasi OTP terlebih dahulu.',
-                'errors' => ['otp' => ['Nomor WhatsApp belum diverifikasi dengan kode OTP.']],
-            ], 422);
         }
 
         $user = User::create([

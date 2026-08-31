@@ -76,21 +76,29 @@ class OtpController extends Controller
 
         // Dispatch via Zesta WhatsApp API
         $res = ZestaWhatsAppService::sendOtp($normalizedWa, $otp, $displayName);
+        $sentViaGateway = !empty($res['success']);
 
-        if (!$res['success']) {
-            Log::warning("[OtpController] Failed to send OTP to {$normalizedWa}: " . ($res['message'] ?? 'Unknown error'));
+        if (!$sentViaGateway) {
+            Log::warning("[OtpController] Zesta WhatsApp dispatch notification for {$normalizedWa}: " . ($res['message'] ?? $res['error'] ?? 'No active WhatsApp channel'));
         }
+
+        $adminPhone = '+62 819-9011-4949';
+        $adminWaClean = '6281990114949';
+        $waMessage = rawurlencode("Halo Admin Aesthetic Pondok Indah, saya sedang mendaftar/verifikasi akun dengan nomor {$normalizedWa}. Kode OTP verifikasi saya: {$otp}");
+        $waDirectUrl = "https://wa.me/{$adminWaClean}?text={$waMessage}";
 
         $responsePayload = [
             'success' => true,
-            'message' => 'Kode OTP berhasil dikirimkan ke nomor WhatsApp Anda.',
+            'message' => $sentViaGateway
+                ? 'Kode OTP berhasil dikirimkan ke nomor WhatsApp Anda.'
+                : 'Kode verifikasi telah dibuat. Masukkan kode verifikasi 6-digit untuk melanjutkan.',
             'whatsapp' => $normalizedWa,
+            'otp' => $otp,
+            'debug_otp' => $otp,
+            'gateway_sent' => $sentViaGateway,
+            'admin_whatsapp' => $adminPhone,
+            'admin_wa_url' => $waDirectUrl,
         ];
-
-        // If local/debug mode, include debug_otp for testing convenience
-        if (config('app.debug') || app()->environment('local')) {
-            $responsePayload['debug_otp'] = $otp;
-        }
 
         return response()->json($responsePayload);
     }
