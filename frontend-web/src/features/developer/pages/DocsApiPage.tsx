@@ -57,10 +57,22 @@ export default function DocsApiPage() {
       document.head.appendChild(link);
     }
 
-    const initSwagger = () => {
+    const initSwagger = async () => {
       if (!window.SwaggerUIBundle) return;
 
-      const spec = getOpenApiSpec(API_BASE);
+      let spec: any = null;
+      try {
+        const res = await fetch(`${API_BASE}/openapi.json`);
+        if (res.ok) {
+          spec = await res.json();
+        }
+      } catch {
+        // Fallback to local spec
+      }
+
+      if (!spec) {
+        spec = getOpenApiSpec(API_BASE);
+      }
 
       window.ui = window.SwaggerUIBundle({
         spec: spec,

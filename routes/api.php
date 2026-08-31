@@ -522,3 +522,10 @@ Route::post('/push/subscribe', [WebPushSubscriptionController::class, 'subscribe
 Route::post('/push/unsubscribe', [WebPushSubscriptionController::class, 'unsubscribe']);
 Route::post('/push/test', [WebPushSubscriptionController::class, 'testPush']);
 
+// =========================================================================
+// 8. OPENAPI & SWAGGER SPECIFICATION ENDPOINTS
+// =========================================================================
+Route::get('/openapi.json', [\App\Http\Controllers\Api\Shared\Docs\OpenApiController::class, 'schema']);
+Route::get('/docs/schema', [\App\Http\Controllers\Api\Shared\Docs\OpenApiController::class, 'schema']);
+
+
