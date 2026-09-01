@@ -69,18 +69,22 @@ export interface GalleryItem {
 export interface Promo {
   id: number;
   title: string;
-  slug: string;
-  description: string;
-  discount_text: string | null;
-  thumbnail_url: string | null;
-  valid_until: string | null;
+  slug?: string;
+  headline?: string | null;
+  description?: string | null;
+  discount_text?: string | null;
+  category?: string | null;
+  image_url?: string | null;
+  thumbnail_url?: string | null;
+  valid_until?: string | null;
 }
 
 export interface Popup {
   id: number;
-  title: string | null;
-  headline: string | null;
-  message: string | null;
-  button_label: string | null;
-  image_url: string | null;
+  title?: string | null;
+  headline?: string | null;
+  message?: string | null;
+  button_label?: string | null;
+  cta_text?: string | null;
+  image_url?: string | null;
 }

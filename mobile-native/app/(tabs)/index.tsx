@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  RefreshControl, Image, ActivityIndicator,
+  RefreshControl, Image, ActivityIndicator, Modal, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -10,10 +10,12 @@ import { contentService } from '@/services/contentService';
 import { bookingService } from '@/services/bookingService';
 import { consultationService, ConsultationSession } from '@/services/consultationService';
 import { notificationService } from '@/services/notificationService';
-import { colors, spacing, radius } from '@/theme/colors';
+import { colors, spacing, radius, fonts } from '@/theme/colors';
 import { getStorageUrl } from '@/constants/api';
 import { Ionicons } from '@expo/vector-icons';
-import type { Post, Reservation } from '@/types/booking';
+import type { Post, Reservation, Promo, Popup } from '@/types/booking';
+
+const { width } = Dimensions.get('window');
 
 const TIER_COLORS: Record<string, string> = {
   bronze: '#CD7F32',
@@ -24,6 +26,9 @@ const TIER_COLORS: Record<string, string> = {
 export default function HomeScreen() {
   const { user, refreshUser } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [promos, setPromos] = useState<Promo[]>([]);
+  const [activePopup, setActivePopup] = useState<Popup | null>(null);
+  const [showPopupModal, setShowPopupModal] = useState<boolean>(false);
   const [activeReservation, setActiveReservation] = useState<Reservation | null>(null);
   const [activeConsultation, setActiveConsultation] = useState<ConsultationSession | null>(null);
   const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
@@ -32,34 +37,48 @@ export default function HomeScreen() {
 
   const loadData = useCallback(async (force = false) => {
     try {
-      const [postsRes, bookingsRes, consultsRes, notifsRes] = await Promise.allSettled([
+      const [postsRes, promosRes, popupRes, bookingsRes, consultsRes, notifsRes] = await Promise.allSettled([
         contentService.getPosts(force),
+        contentService.getPromos(force),
+        contentService.getActivePopup(),
         bookingService.getReservations(force),
         consultationService.getConsultations(),
         notificationService.getNotifications(),
       ]);
 
-      // 1. Posts / Articles from Production Backend API
+      // 1. Posts from Production API
       if (postsRes.status === 'fulfilled') {
-        const pList = postsRes.value?.posts || [];
-        setPosts(pList);
+        setPosts(postsRes.value?.posts || []);
       }
 
-      // 2. Active Reservation (pending / confirmed / in_progress)
+      // 2. Promos from Production API
+      if (promosRes.status === 'fulfilled') {
+        setPromos(promosRes.value?.promos || []);
+      }
+
+      // 3. Active Popup from Production API
+      if (popupRes.status === 'fulfilled' && popupRes.value && (popupRes.value as any).id) {
+        setActivePopup(popupRes.value);
+        if (!force) {
+          setShowPopupModal(true);
+        }
+      }
+
+      // 4. Active Reservation from Production API
       if (bookingsRes.status === 'fulfilled') {
         const rList = bookingsRes.value?.reservations || [];
         const active = rList.find((r) => r.status === 'confirmed' || r.status === 'pending' || r.status === 'in_progress');
         setActiveReservation(active || null);
       }
 
-      // 3. Active Consultation (not finished / recent)
+      // 5. Active Consultation from Production API
       if (consultsRes.status === 'fulfilled') {
         const cList = consultsRes.value || [];
         const activeC = cList.find((c) => c.status !== 'Selesai') || (cList.length > 0 ? cList[0] : null);
         setActiveConsultation(activeC || null);
       }
 
-      // 4. Notifications unread count
+      // 6. Notifications unread count
       if (notifsRes.status === 'fulfilled') {
         const notifList = notifsRes.value?.notifications || [];
         const unreadDirect = notifsRes.value?.unread_count;
@@ -74,7 +93,7 @@ export default function HomeScreen() {
   useEffect(() => {
     loadData();
     refreshUser();
-  }, []);
+  }, [loadData, refreshUser]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -85,13 +104,13 @@ export default function HomeScreen() {
     setIsRefreshing(false);
   }, [loadData, refreshUser]);
 
-  const tier = user?.membership_level ?? 'bronze';
+  const tier = (user?.membership_level || 'bronze').toLowerCase();
   const tierColor = TIER_COLORS[tier] || colors.gold;
   const tierName = tier.toUpperCase();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      {/* 1. FIXED TOP NAVBAR */}
+      {/* 1. TOP NAVBAR */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image
@@ -146,7 +165,7 @@ export default function HomeScreen() {
         {/* Greeting Section */}
         <View style={styles.greetingWrap}>
           <Text style={styles.greeting}>Halo, {user?.name?.split(' ')[0] ?? 'Pasien'}</Text>
-          <Text style={styles.subGreeting}>Selamat datang di Aesthetic Pondok Indah</Text>
+          <Text style={styles.subGreeting}>Selamat datang di Aesthetic Pondok Indah Dental Clinic</Text>
         </View>
 
         {/* Membership & Loyalty Card */}
@@ -179,7 +198,104 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* 3. DATA RESERVASI AKTIF */}
+        {/* 3. QUICK ACTION MENU */}
+        <View style={styles.quickMenuWrap}>
+          <TouchableOpacity
+            style={styles.quickMenuItem}
+            onPress={() => router.push('/booking/new')}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.quickMenuIcon, { backgroundColor: '#FAF5EA' }]}>
+              <Ionicons name="calendar" size={22} color={colors.goldDark} />
+            </View>
+            <Text style={styles.quickMenuLabel}>Buat Janji</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickMenuItem}
+            onPress={() => router.push('/consultation/new' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.quickMenuIcon, { backgroundColor: '#ECFDF5' }]}>
+              <Ionicons name="chatbubbles" size={22} color="#059669" />
+            </View>
+            <Text style={styles.quickMenuLabel}>Konsultasi</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickMenuItem}
+            onPress={() => router.push('/(tabs)/membership')}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.quickMenuIcon, { backgroundColor: '#FEF3C7' }]}>
+              <Ionicons name="gift" size={22} color="#D97706" />
+            </View>
+            <Text style={styles.quickMenuLabel}>Membership</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickMenuItem}
+            onPress={() => router.push('/gallery' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.quickMenuIcon, { backgroundColor: '#EFF6FF' }]}>
+              <Ionicons name="images" size={22} color="#2563EB" />
+            </View>
+            <Text style={styles.quickMenuLabel}>Galeri Klinik</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 4. PROMO SPESIAL KLINIK (API PRODUCTION) */}
+        {promos.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <View style={styles.sectionTitleWrap}>
+                <Ionicons name="pricetag-outline" size={18} color={colors.goldDark} />
+                <Text style={styles.sectionTitle}>Promo Spesial</Text>
+              </View>
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.promoScrollContent}
+            >
+              {promos.map((promo) => (
+                <TouchableOpacity
+                  key={String(promo.id)}
+                  style={styles.promoCard}
+                  onPress={() => router.push('/booking/new')}
+                  activeOpacity={0.88}
+                >
+                  {promo.image_url ? (
+                    <Image
+                      source={{ uri: getStorageUrl(promo.image_url) ?? '' }}
+                      style={styles.promoImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.promoImageFallback}>
+                      <Ionicons name="sparkles" size={28} color={colors.gold} />
+                    </View>
+                  )}
+                  <View style={styles.promoBody}>
+                    <View style={styles.promoBadgeRow}>
+                      <Text style={styles.promoBadgeText}>
+                        {(promo as any).discount_text || (promo as any).category || 'Spesial'}
+                      </Text>
+                    </View>
+                    <Text style={styles.promoTitle} numberOfLines={2}>{promo.title}</Text>
+                    <Text style={styles.promoDesc} numberOfLines={2}>
+                      {promo.description || (promo as any).headline || 'Penawaran istimewa untuk perawatan gigi Anda.'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* 5. DATA RESERVASI AKTIF */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionTitleWrap}>
@@ -246,7 +362,7 @@ export default function HomeScreen() {
           ) : (
             <View style={styles.emptyCard}>
               <View style={styles.emptyCardIconWrap}>
-                <Ionicons name="calendar-outline" size={28} color={colors.gold} />
+                <Ionicons name="calendar-outline" size={26} color={colors.gold} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.emptyCardTitle}>Belum Ada Reservasi Aktif</Text>
@@ -263,7 +379,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* 4. DATA KONSULTASI AKTIF */}
+        {/* 6. DATA KONSULTASI AKTIF */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionTitleWrap}>
@@ -327,7 +443,7 @@ export default function HomeScreen() {
           ) : (
             <View style={styles.emptyCard}>
               <View style={[styles.emptyCardIconWrap, { backgroundColor: '#ECFDF5', borderColor: '#D1FAE5' }]}>
-                <Ionicons name="chatbubbles-outline" size={28} color="#059669" />
+                <Ionicons name="chatbubbles-outline" size={26} color="#059669" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.emptyCardTitle}>Belum Ada Konsultasi Aktif</Text>
@@ -335,7 +451,7 @@ export default function HomeScreen() {
               </View>
               <TouchableOpacity
                 style={[styles.emptyActionBtn, { backgroundColor: '#059669' }]}
-                onPress={() => router.push('/consultation/new')}
+                onPress={() => router.push('/consultation/new' as any)}
                 activeOpacity={0.85}
               >
                 <Text style={styles.emptyActionBtnText}>Tanya Dokter</Text>
@@ -344,7 +460,7 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* 5. EDUKASI & ARTIKEL GIGI (DARI API PRODUCTION) */}
+        {/* 7. EDUKASI & ARTIKEL GIGI (DARI API PRODUCTION) */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionTitleWrap}>
@@ -395,168 +511,314 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* 8. POPUP PROMO MODAL (JIKA ADA DARI BACKEND) */}
+      {activePopup && (
+        <Modal
+          visible={showPopupModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowPopupModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity
+                style={styles.modalCloseBtn}
+                onPress={() => setShowPopupModal(false)}
+              >
+                <Ionicons name="close" size={20} color={colors.charcoal} />
+              </TouchableOpacity>
+
+              {activePopup.image_url ? (
+                <Image
+                  source={{ uri: getStorageUrl(activePopup.image_url) ?? '' }}
+                  style={styles.modalImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.modalImageFallback}>
+                  <Ionicons name="sparkles" size={42} color={colors.gold} />
+                </View>
+              )}
+
+              <View style={styles.modalBody}>
+                <Text style={styles.modalTitle}>{activePopup.title}</Text>
+                <Text style={styles.modalMessage}>
+                  {(activePopup as any).headline || activePopup.message || 'Dapatkan promo eksklusif untuk perawatan gigi Anda hari ini.'}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.modalActionBtn}
+                  onPress={() => {
+                    setShowPopupModal(false);
+                    router.push('/booking/new');
+                  }}
+                  activeOpacity={0.88}
+                >
+                  <Text style={styles.modalActionBtnText}>
+                    {activePopup.cta_text || 'Klaim Promo Sekarang'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
-  scroll: { paddingBottom: spacing.xxl },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    shadowColor: colors.charcoal,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 3,
-    zIndex: 100,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },
-  logoImage: { width: 135, height: 38 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoImage: { width: 140, height: 38 },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   tierBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: radius.full,
     paddingHorizontal: 10,
     paddingVertical: 5,
+    borderRadius: radius.full,
+    borderWidth: 1,
   },
   tierText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   notifBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.full,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.cream,
-    borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   notifBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: '#DC2626',
-    borderRadius: 8,
+    top: -2,
+    right: -2,
+    backgroundColor: '#EF4444',
+    borderRadius: 9,
     minWidth: 16,
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
-  notifBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
+  notifBadgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '800' },
+  scroll: { paddingBottom: spacing.xxl },
   greetingWrap: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xs,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
-  greeting: { fontSize: 22, fontWeight: '700', color: colors.charcoal },
-  subGreeting: { fontSize: 13, color: colors.charcoalMedium, marginTop: 2 },
-  doctorBanner: {
-    backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#C9A24A',
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-    flexDirection: 'row',
-    alignItems: 'center',
+  greeting: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.charcoal,
+    fontFamily: fonts.heading,
   },
-  doctorBannerIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(201, 162, 74, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  subGreeting: {
+    fontSize: 13,
+    color: colors.charcoalMedium,
+    marginTop: 2,
   },
-  doctorBannerTitle: { fontSize: 13, fontWeight: '700', color: colors.goldDark },
-  doctorBannerDesc: { fontSize: 11, color: colors.charcoalMedium, marginTop: 1 },
-  doctorBannerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.gold,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.full,
-    gap: 2,
-  },
-  doctorBannerBtnText: { fontSize: 11, fontWeight: '700', color: '#fff' },
   memberCard: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
-    borderRadius: radius.xl,
-    backgroundColor: '#2C2416',
-    overflow: 'hidden',
+    backgroundColor: '#1E1B18',
+    borderRadius: radius.xxl,
     padding: spacing.lg,
-    marginBottom: spacing.md,
-    shadowColor: '#2C2416',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(201, 162, 74, 0.3)',
+    overflow: 'hidden',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
   },
   memberCardBgCircle: {
     position: 'absolute',
-    top: -20,
-    right: -20,
+    right: -40,
+    top: -40,
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(201, 162, 74, 0.12)',
+    backgroundColor: colors.gold + '1A',
   },
   memberCardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
-  memberCardLabel: { fontSize: 12, color: 'rgba(255,255,255,0.65)', marginBottom: 4 },
-  memberCardPoints: { fontSize: 34, fontWeight: '800', color: '#C9A24A' },
-  memberCardPts: { fontSize: 16, color: 'rgba(201,162,74,0.8)', fontWeight: '600' },
+  memberCardLabel: {
+    fontSize: 12,
+    color: '#A89E90',
+    fontWeight: '500',
+  },
+  memberCardPoints: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#F5EBD7',
+    marginTop: 2,
+  },
+  memberCardPts: {
+    fontSize: 14,
+    color: colors.gold,
+    fontWeight: '600',
+  },
   tierStatusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderRadius: radius.full,
+    backgroundColor: '#2A2520',
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+    borderWidth: 1,
   },
-  tierStatusText: { fontSize: 11, color: '#FAF8F5', fontWeight: '600' },
+  tierStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#E8DFC8',
+  },
   memberCardBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#C9A24A',
-    borderRadius: radius.full,
+    backgroundColor: colors.gold,
+    borderRadius: radius.lg,
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
   },
-  memberCardBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  section: { marginHorizontal: spacing.lg, marginBottom: spacing.lg },
+  memberCardBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  quickMenuWrap: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+  },
+  quickMenuItem: {
+    alignItems: 'center',
+    gap: 6,
+    width: (width - 48) / 4,
+  },
+  quickMenuIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  quickMenuLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.charcoal,
+    textAlign: 'center',
+  },
+  section: {
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
-  sectionTitleWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.charcoal },
-  sectionActionText: { fontSize: 12, fontWeight: '700', color: colors.goldDark },
+  sectionTitleWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  sectionActionText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.goldDark,
+  },
+  promoScrollContent: {
+    gap: 12,
+    paddingRight: spacing.lg,
+  },
+  promoCard: {
+    width: 240,
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.charcoal,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  promoImage: {
+    width: '100%',
+    height: 120,
+  },
+  promoImageFallback: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#FAF5EA',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  promoBody: {
+    padding: spacing.md,
+  },
+  promoBadgeRow: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FAF5EA',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+    marginBottom: 6,
+  },
+  promoBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.goldDark,
+  },
+  promoTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.charcoal,
+    marginBottom: 3,
+  },
+  promoDesc: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    lineHeight: 16,
+  },
   activeCard: {
     backgroundColor: colors.white,
     borderRadius: radius.xl,
@@ -569,114 +831,243 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  activeCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: spacing.sm },
+  activeCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
   iconCircleGold: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     borderRadius: radius.md,
     backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#F0E6D3',
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconCircleGreen: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     borderRadius: radius.md,
     backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  activeCardTitle: { fontSize: 14, fontWeight: '700', color: colors.charcoal },
-  activeCardSub: { fontSize: 12, color: colors.charcoalMedium },
-  activeCardComplaint: { fontSize: 12, color: colors.charcoalMedium, marginTop: 2 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  statusBadge: { borderRadius: radius.full, paddingHorizontal: 9, paddingVertical: 4 },
-  statusBadgeText: { fontSize: 10, fontWeight: '700' },
+  activeCardTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  activeCardSub: {
+    fontSize: 12,
+    color: colors.charcoalMedium,
+    marginLeft: 3,
+  },
+  activeCardComplaint: {
+    fontSize: 12,
+    color: colors.charcoalMedium,
+    marginTop: 2,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
   activeCardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
     paddingTop: spacing.sm,
-    marginTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
   },
-  footerInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  footerDateText: { fontSize: 12, fontWeight: '600', color: colors.charcoal },
+  footerInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  footerDateText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.charcoalMedium,
+  },
   emptyCard: {
-    backgroundColor: colors.white,
-    borderRadius: radius.xl,
-    padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
   emptyCardIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: radius.md,
+    borderRadius: 22,
     backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#F0E6D3',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyCardTitle: { fontSize: 13, fontWeight: '700', color: colors.charcoal },
-  emptyCardDesc: { fontSize: 11, color: colors.charcoalMedium, marginTop: 2 },
+  emptyCardTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  emptyCardDesc: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    marginTop: 1,
+  },
   emptyActionBtn: {
     backgroundColor: colors.gold,
-    borderRadius: radius.full,
     paddingHorizontal: 12,
     paddingVertical: 7,
+    borderRadius: radius.md,
   },
-  emptyActionBtnText: { fontSize: 11, fontWeight: '700', color: '#fff' },
-  emptyArticleWrap: {
-    backgroundColor: colors.white,
-    borderRadius: radius.xl,
-    padding: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: colors.border,
+  emptyActionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
-  emptyArticleText: { fontSize: 12, color: colors.charcoalMedium, textAlign: 'center' },
   articleCard: {
+    flexDirection: 'row',
     backgroundColor: colors.white,
     borderRadius: radius.xl,
     padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: spacing.sm,
-    shadowColor: colors.charcoal,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    gap: spacing.md,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
     backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#F0E6D3',
-    borderRadius: radius.full,
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 2,
+    borderRadius: radius.sm,
     marginBottom: 4,
   },
-  categoryBadgeText: { fontSize: 9, fontWeight: '700', color: colors.goldDark },
-  articleTitle: { fontSize: 13, fontWeight: '700', color: colors.charcoal, lineHeight: 18 },
-  articleExcerpt: { fontSize: 11, color: colors.charcoalMedium, marginTop: 3, lineHeight: 16 },
-  articleMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  articleMetaText: { fontSize: 10, color: colors.charcoalMedium, fontWeight: '500' },
-  articleThumb: { width: 72, height: 72, borderRadius: radius.md },
+  categoryBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.goldDark,
+  },
+  articleTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.charcoal,
+    lineHeight: 18,
+    marginBottom: 3,
+  },
+  articleExcerpt: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    lineHeight: 16,
+    marginBottom: 6,
+  },
+  articleMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  articleMetaText: {
+    fontSize: 10,
+    color: colors.charcoalMedium,
+  },
+  articleThumb: {
+    width: 76,
+    height: 76,
+    borderRadius: radius.lg,
+    backgroundColor: '#FAF5EA',
+  },
+  emptyArticleWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+    gap: 6,
+  },
+  emptyArticleText: {
+    fontSize: 12,
+    color: colors.charcoalMedium,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: colors.white,
+    borderRadius: radius.xxl,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  modalCloseBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalImage: {
+    width: '100%',
+    height: 160,
+  },
+  modalImageFallback: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#FAF5EA',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalBody: {
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.charcoal,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  modalMessage: {
+    fontSize: 12,
+    color: colors.charcoalMedium,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: spacing.lg,
+  },
+  modalActionBtn: {
+    width: '100%',
+    height: 44,
+    backgroundColor: colors.gold,
+    borderRadius: radius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalActionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });
