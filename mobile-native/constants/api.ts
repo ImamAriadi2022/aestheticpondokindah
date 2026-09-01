@@ -31,12 +31,17 @@ export const ENDPOINTS = {
   // Membership
   MEMBERSHIP: '/membership',
   MEMBERSHIP_TIERS: '/membership/tiers',
+  PUBLIC_MEMBERSHIP_TIERS: '/public/membership/tiers',
+  MEMBERSHIP_PROFILE: '/membership/profile',
   MEMBERSHIP_UPGRADE: '/membership/upgrade',
+  MEMBERSHIP_REQUEST_UPGRADE: '/membership/request-upgrade',
   MEMBERSHIP_RENEW: '/membership/renew',
   MEMBERSHIP_CANCEL: '/membership/cancel',
   MEMBERSHIP_HISTORY: '/membership/history',
   MEMBERSHIP_POINTS: '/membership/points',
+  MEMBERSHIP_TRANSACTIONS: '/membership/transactions',
   MEMBERSHIP_REDEEM: '/membership/redeem-points',
+  MEMBERSHIP_PAYMENT_OPTIONS: '/membership/payment/options',
   MEMBERSHIP_PAYMENT_CREATE: '/membership/payment/create',
   MEMBERSHIP_PAYMENT_SIMULATE: (id: string) => `/membership/payment/simulate/${id}`,
 
@@ -45,6 +50,14 @@ export const ENDPOINTS = {
   PUBLIC_DOCTOR_SCHEDULES: '/public/doctor-schedules',
   RESERVATIONS: '/user/reservations',
   RESERVATION_CREATE: '/user/reservations',
+
+  // Consultations (Patient)
+  CONSULTATIONS: '/user/consultations',
+  CONSULTATION_DETAIL: (id: string | number) => `/user/consultations/${id}`,
+  CONSULTATION_MESSAGES: (id: string | number) => `/user/consultations/${id}/messages`,
+  CONSULTATION_READ: (id: string | number) => `/user/consultations/${id}/read`,
+  CONSULTATION_CLOSE: (id: string | number) => `/user/consultations/${id}/close`,
+  CONSULTATION_MEETINGS: (id: string | number) => `/user/consultations/${id}/meetings`,
 
   // Notifications (User Scoped)
   NOTIFICATIONS: '/user/notifications',

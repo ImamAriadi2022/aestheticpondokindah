@@ -1,22 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator,
+  RefreshControl, ActivityIndicator, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 import { consultationService, ConsultationSession } from '@/services/consultationService';
 import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ConsultationTabScreen() {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState<ConsultationSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filterTab, setFilterTab] = useState<'all' | 'active' | 'completed'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (force = false) => {
     try {
-      const res = await consultationService.getConsultations();
+      const res = await consultationService.getConsultations(force);
       setSessions(res || []);
     } catch {
       // handled
@@ -25,19 +29,103 @@ export default function ConsultationTabScreen() {
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadData();
+    await loadData(true);
     setIsRefreshing(false);
   }, [loadData]);
 
+  const activeConsultations = useMemo(() => {
+    return sessions.filter((s) => ['Menunggu', 'Dibuka', 'Dijadwalkan'].includes(s.status));
+  }, [sessions]);
+
+  const completedConsultations = useMemo(() => {
+    return sessions.filter((s) => ['Selesai', 'Ditolak'].includes(s.status));
+  }, [sessions]);
+
+  const filteredSessions = useMemo(() => {
+    let list = sessions;
+    if (filterTab === 'active') list = activeConsultations;
+    if (filterTab === 'completed') list = completedConsultations;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((c) =>
+        (c.topic && c.topic.toLowerCase().includes(q)) ||
+        (c.chief_complaint && c.chief_complaint.toLowerCase().includes(q)) ||
+        (c.doctor_name && c.doctor_name.toLowerCase().includes(q)) ||
+        (c.status && c.status.toLowerCase().includes(q))
+      );
+    }
+    return list;
+  }, [sessions, filterTab, activeConsultations, completedConsultations, searchQuery]);
+
+  const renderHeader = () => (
+    <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
+      {/* 1. FILTER TABS (PARITY WITH WEB) */}
+      <View style={styles.filterTabsRow}>
+        <TouchableOpacity
+          style={[styles.filterPill, filterTab === 'all' ? styles.filterPillActive : null]}
+          onPress={() => setFilterTab('all')}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.filterPillText, filterTab === 'all' ? styles.filterPillTextActive : null]}>
+            Semua ({sessions.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterPill, filterTab === 'active' ? styles.filterPillActive : null]}
+          onPress={() => setFilterTab('active')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="time-outline" size={13} color={filterTab === 'active' ? '#fff' : '#D97706'} />
+          <Text style={[styles.filterPillText, filterTab === 'active' ? styles.filterPillTextActive : null]}>
+            Berjalan ({activeConsultations.length})
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.filterPill, filterTab === 'completed' ? styles.filterPillActive : null]}
+          onPress={() => setFilterTab('completed')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="checkmark-circle-outline" size={13} color={filterTab === 'completed' ? '#fff' : '#059669'} />
+          <Text style={[styles.filterPillText, filterTab === 'completed' ? styles.filterPillTextActive : null]}>
+            Selesai ({completedConsultations.length})
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 3. SEARCH BAR */}
+      <View style={styles.searchWrap}>
+        <Ionicons name="search" size={16} color={colors.charcoalMedium} style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Cari topik atau dokter..."
+          placeholderTextColor="#9CA3AF"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    </View>
+  );
+
   const renderItem = ({ item }: { item: ConsultationSession }) => {
     const isCompleted = item.status === 'Selesai';
+    const isRejected = item.status === 'Ditolak';
     const dateStr = item.created_at
       ? new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
-      : '';
+      : (item.date || 'Hari ini');
 
     return (
       <TouchableOpacity
@@ -47,17 +135,23 @@ export default function ConsultationTabScreen() {
       >
         <View style={styles.cardHeader}>
           <View style={styles.avatar}>
-            <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.gold} />
+            <Ionicons name="chatbubble-ellipses-outline" size={18} color={colors.goldDark} />
           </View>
           <View style={styles.cardInfo}>
-            <Text style={styles.topic} numberOfLines={1}>{item.topic || 'Konsultasi Kesehatan Gigi'}</Text>
+            <Text style={styles.topic} numberOfLines={1}>{item.topic || 'Konsultasi Gigi'}</Text>
             <View style={styles.metaRow}>
-              <Ionicons name="time-outline" size={12} color={colors.charcoalMedium} />
+              <Ionicons name="calendar-outline" size={11} color={colors.charcoalMedium} />
               <Text style={styles.date}>{dateStr}</Text>
             </View>
           </View>
-          <View style={[styles.badge, isCompleted ? styles.badgeSuccess : styles.badgeActive]}>
-            <Text style={[styles.badgeText, isCompleted ? styles.badgeTextSuccess : styles.badgeTextActive]}>
+          <View style={[
+            styles.badge,
+            isCompleted ? styles.badgeSuccess : isRejected ? styles.badgeRejected : styles.badgeActive,
+          ]}>
+            <Text style={[
+              styles.badgeText,
+              isCompleted ? styles.badgeTextSuccess : isRejected ? styles.badgeTextRejected : styles.badgeTextActive,
+            ]}>
               {item.status || 'Aktif'}
             </Text>
           </View>
@@ -67,84 +161,91 @@ export default function ConsultationTabScreen() {
           {item.chief_complaint || 'Tidak ada catatan keluhan tambahan.'}
         </Text>
 
-        <View style={styles.cardFooter}>
-          <View style={styles.chatAction}>
-            <Ionicons name="chatbubbles-outline" size={15} color={colors.goldDark} />
-            <Text style={styles.actionText}>Buka Percakapan Chat</Text>
+        {item.doctor_name ? (
+          <View style={styles.doctorInfoRow}>
+            <Ionicons name="medkit-outline" size={12} color={colors.goldDark} />
+            <Text style={styles.doctorInfoText} numberOfLines={1}>
+              Dokter: <Text style={{ fontWeight: '700' }}>drg. {item.doctor_name}</Text>
+            </Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color={colors.gold} />
+        ) : null}
+
+        <View style={styles.cardFooter}>
+          <Text style={styles.ticketIdText}>ID: #{String(item.id).padStart(5, '0')}</Text>
+          <View style={styles.chatAction}>
+            <Text style={styles.actionText}>{isCompleted ? 'Lihat Percakapan' : 'Buka Chat'}</Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.goldDark} />
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
 
+  const renderEmpty = () => (
+    <View style={styles.emptyWrap}>
+      <View style={styles.emptyIconCircle}>
+        <Ionicons name="chatbubble-ellipses-outline" size={32} color={colors.goldDark} />
+      </View>
+      <Text style={styles.emptyTitle}>
+        {filterTab === 'completed'
+          ? 'Belum Ada Konsultasi Selesai'
+          : filterTab === 'active'
+          ? 'Tidak Ada Konsultasi Berjalan'
+          : 'Belum Ada Sesi Konsultasi'}
+      </Text>
+      <Text style={styles.emptySub}>
+        Konsultasikan keluhan gigi Anda langsung dengan tim dokter spesialis secara online atau tanya Zesta AI 24/7.
+      </Text>
+      <TouchableOpacity
+        style={styles.emptyActionBtn}
+        onPress={() => router.push('/consultation/new')}
+        activeOpacity={0.88}
+      >
+        <Ionicons name="add" size={16} color="#FFFFFF" style={{ marginRight: 4 }} />
+        <Text style={styles.emptyActionBtnText}>Mulai Konsultasi Baru</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Top Header */}
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      {/* COMPACT & BALANCED TOP HEADER (PARITY WITH BOOKING HEADER) */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Konsultasi Gigi</Text>
-          <Text style={styles.headerSubtitle}>Tanya dokter spesialis & asisten klinis</Text>
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.headerTitle} numberOfLines={1}>Konsultasi Gigi</Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>Tanya dokter spesialis & AI assistant</Text>
         </View>
         <TouchableOpacity
           style={styles.newBtn}
           onPress={() => router.push('/consultation/new')}
           activeOpacity={0.85}
         >
-          <Ionicons name="add" size={18} color="#fff" />
+          <Ionicons name="add" size={14} color="#fff" />
           <Text style={styles.newBtnText}>Konsultasi Baru</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Banner / Info Card */}
-      <View style={styles.bannerCard}>
-        <View style={styles.bannerIconWrap}>
-          <Ionicons name="sparkles" size={20} color={colors.gold} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.bannerTitle}>Konsultasi Online Fleksibel</Text>
-          <Text style={styles.bannerDesc}>
-            Dapatkan saran awal dan rekomendasi perawatan sebelum kunjungan klinik langsung.
-          </Text>
-        </View>
-      </View>
-
-      {isLoading ? (
+      {isLoading && !isRefreshing ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.gold} />
+          <ActivityIndicator color={colors.gold} size="large" />
         </View>
       ) : (
         <FlatList
-          data={sessions}
+          data={filteredSessions}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={styles.list}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={renderEmpty}
+          contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={onRefresh}
+              colors={[colors.gold]}
               tintColor={colors.gold}
             />
           }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconWrap}>
-                <Ionicons name="chatbubbles-outline" size={42} color={colors.gold} />
-              </View>
-              <Text style={styles.emptyTitle}>Belum Ada Riwayat Konsultasi</Text>
-              <Text style={styles.emptyText}>
-                Mulai konsultasi online dengan dokter spesialis kami untuk diagnosis awal keluhan gigi Anda.
-              </Text>
-              <TouchableOpacity
-                style={styles.emptyBtn}
-                onPress={() => router.push('/consultation/new')}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="chatbubble-ellipses-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={styles.emptyBtnText}>Mulai Konsultasi Pertama</Text>
-              </TouchableOpacity>
-            </View>
-          }
+          showsVerticalScrollIndicator={false}
         />
       )}
     </SafeAreaView>
@@ -155,127 +256,252 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    gap: spacing.sm,
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: colors.charcoal },
-  headerSubtitle: { fontSize: 12, color: colors.charcoalMedium, marginTop: 2 },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    marginTop: 1,
+  },
   newBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.gold,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     borderRadius: radius.full,
     gap: 4,
-    shadowColor: colors.gold,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    flexShrink: 0,
   },
-  newBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  bannerCard: {
+  newBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  listContent: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
+  filterTabsRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  filterPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF5EA',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.xl,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#F0E6D3',
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-    gap: 12,
+    borderColor: colors.border,
   },
-  bannerIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(201, 162, 74, 0.15)',
+  filterPillActive: {
+    backgroundColor: colors.gold,
+    borderColor: colors.gold,
+  },
+  filterPillText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.charcoalMedium,
+  },
+  filterPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  searchWrap: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.md,
+    height: 40,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  bannerTitle: { fontSize: 13, fontWeight: '700', color: colors.goldDark },
-  bannerDesc: { fontSize: 11, color: colors.charcoalMedium, marginTop: 2, lineHeight: 16 },
-  list: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  searchInput: {
+    flex: 1,
+    fontSize: 12.5,
+    color: colors.charcoal,
+  },
   card: {
     backgroundColor: colors.white,
     borderRadius: radius.xl,
     padding: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.charcoal,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    gap: 8,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: spacing.sm },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
+    width: 36,
+    height: 36,
+    borderRadius: radius.lg,
     backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#F0E6D3',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
   },
-  cardInfo: { flex: 1 },
-  topic: { fontSize: 14, fontWeight: '700', color: colors.charcoal },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  date: { fontSize: 11, color: colors.charcoalMedium },
-  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
-  badgeActive: { backgroundColor: '#FEF3C7' },
-  badgeSuccess: { backgroundColor: '#D1FAE5' },
-  badgeText: { fontSize: 10, fontWeight: '700' },
-  badgeTextActive: { color: '#92400E' },
-  badgeTextSuccess: { color: '#065F46' },
-  complaint: { fontSize: 12, color: colors.charcoalMedium, lineHeight: 18, marginBottom: spacing.sm },
+  cardInfo: {
+    flex: 1,
+  },
+  topic: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  date: {
+    fontSize: 10.5,
+    color: colors.charcoalMedium,
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.full,
+  },
+  badgeActive: {
+    backgroundColor: '#FEF3C7',
+  },
+  badgeSuccess: {
+    backgroundColor: '#ECFDF5',
+  },
+  badgeRejected: {
+    backgroundColor: '#FEE2E2',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  badgeTextActive: {
+    color: '#D97706',
+  },
+  badgeTextSuccess: {
+    color: '#059669',
+  },
+  badgeTextRejected: {
+    color: '#DC2626',
+  },
+  complaint: {
+    fontSize: 11.5,
+    color: colors.charcoalMedium,
+    lineHeight: 16,
+  },
+  doctorInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FCFAF6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+  },
+  doctorInfoText: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+  },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
+    borderTopColor: '#F5EFE6',
   },
-  chatAction: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  actionText: { fontSize: 12, fontWeight: '600', color: colors.goldDark },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
-  emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#F0E6D3',
+  ticketIdText: {
+    fontSize: 10,
+    color: '#9CA3AF',
+  },
+  chatAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  actionText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: colors.goldDark,
+  },
+  center: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.md,
   },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.charcoal, marginBottom: spacing.xs, textAlign: 'center' },
-  emptyText: { fontSize: 12, color: colors.charcoalMedium, textAlign: 'center', lineHeight: 18, marginBottom: spacing.lg, maxWidth: 280 },
-  emptyBtn: {
+  emptyWrap: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xxl,
+    padding: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.md,
+    gap: 6,
+  },
+  emptyIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FAF5EA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  emptyTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.charcoal,
+    textAlign: 'center',
+  },
+  emptySub: {
+    fontSize: 11.5,
+    color: colors.charcoalMedium,
+    textAlign: 'center',
+    lineHeight: 16,
+    maxWidth: 280,
+  },
+  emptyActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.gold,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: radius.full,
-    shadowColor: colors.gold,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: radius.xl,
+    marginTop: 8,
   },
-  emptyBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  emptyActionBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });

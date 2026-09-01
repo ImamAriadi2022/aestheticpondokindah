@@ -85,7 +85,9 @@ export default function NewConsultationScreen() {
     try {
       const res = await consultationService.createConsultation({
         topic: selectedTopic,
+        chiefComplaint: complaint.trim(),
         chief_complaint: complaint.trim(),
+        painScale: painScale,
         pain_scale: painScale,
       });
 

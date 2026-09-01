@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
-  KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator,
+  KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { consultationService, ConsultationMessage, ConsultationSession } from '@/services/consultationService';
-import { colors, spacing, radius, fonts } from '@/theme/colors';
+import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ConsultationChatScreen() {
@@ -40,9 +40,11 @@ export default function ConsultationChatScreen() {
     return () => clearInterval(interval);
   }, [loadData]);
 
+  const isClosed = consultation?.status === 'Selesai' || consultation?.status === 'Ditolak';
+
   const handleSend = async () => {
     const text = inputText.trim();
-    if (!text || !id || isSending) return;
+    if (!text || !id || isSending || isClosed) return;
 
     setInputText('');
     setIsSending(true);
@@ -72,16 +74,14 @@ export default function ConsultationChatScreen() {
     }
   };
 
-  const handleHandoff = async () => {
-    setInputText('Saya ingin berbicara langsung dengan Admin Klinik');
+  const handleOpenMeeting = (url: string) => {
+    if (url) Linking.openURL(url);
   };
-
-  const isHandedOver = consultation?.notes === 'connected_to_human_admin';
 
   const renderItem = ({ item }: { item: ConsultationMessage }) => {
     const isPatient = item.sender_role === 'patient';
+    const isDoctor = item.sender_role === 'doctor';
     const rec = item.attachments?.type === 'ai_recommendation' ? item.attachments : null;
-    const isHandoff = item.attachments?.type === 'handoff_confirmed';
 
     const timeStr = item.created_at
       ? new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
@@ -91,24 +91,26 @@ export default function ConsultationChatScreen() {
       <View style={[styles.bubbleWrap, isPatient ? styles.bubbleWrapPatient : styles.bubbleWrapOther]}>
         <View style={[
           styles.bubble,
-          isPatient ? styles.bubblePatient : (isHandoff ? styles.bubbleHandoff : styles.bubbleOther),
+          isPatient ? styles.bubblePatient : (isDoctor ? styles.bubbleDoctor : styles.bubbleOther),
         ]}>
           {!isPatient && (
             <View style={styles.senderHeader}>
-              <Ionicons name="sparkles" size={12} color={colors.gold} />
+              <Ionicons name={isDoctor ? 'medkit' : 'sparkles'} size={12} color={colors.goldDark} />
               <Text style={styles.senderLabel}>
-                {isHandoff ? 'Admin Klinik • Sesi Dialihkan' : (isHandedOver ? 'Tim Admin Klinik' : 'AESPI AI Dental Advisor')}
+                {isDoctor ? (`drg. ${consultation?.doctor_name || 'Dokter Spesialis'}`) : 'AESPI AI Dental Assistant'}
               </Text>
             </View>
           )}
 
-          <Text style={styles.messageText}>{item.body}</Text>
+          <Text style={[styles.messageText, isPatient ? { color: '#FFFFFF' } : null]}>
+            {item.body}
+          </Text>
 
           {/* Interactive Recommendation Card */}
           {rec && (
             <View style={styles.recCard}>
               <View style={styles.recHeader}>
-                <Text style={styles.recTag}>⭐ Rekomendasi Klinik</Text>
+                <Text style={styles.recTag}>⭐ Rekomendasi Perawatan</Text>
               </View>
               <Text style={styles.recService}>{rec.service_name}</Text>
               {rec.doctor_name ? (
@@ -116,28 +118,22 @@ export default function ConsultationChatScreen() {
               ) : null}
               <TouchableOpacity
                 style={styles.recBtn}
-                onPress={() => router.push('/(tabs)/booking')}
+                onPress={() => router.push('/booking/new')}
                 activeOpacity={0.85}
               >
-                <Ionicons name="calendar" size={14} color="#fff" />
-                <Text style={styles.recBtnText}>Booking Layanan Ini</Text>
+                <Ionicons name="calendar" size={13} color="#fff" />
+                <Text style={styles.recBtnText}>Buat Janji Temu</Text>
               </TouchableOpacity>
             </View>
           )}
 
-          {/* Handoff Button inside AI bubble */}
-          {!isPatient && !isHandedOver && item.attachments?.can_handoff ? (
-            <TouchableOpacity style={styles.handoffBtn} onPress={handleHandoff} activeOpacity={0.85}>
-              <Ionicons name="person" size={12} color={colors.gold} />
-              <Text style={styles.handoffBtnText}>Bicara dengan Admin Langsung</Text>
-            </TouchableOpacity>
-          ) : null}
-
           {/* Timestamp */}
           <View style={styles.timeRow}>
-            <Text style={styles.timeText}>{timeStr}</Text>
+            <Text style={[styles.timeText, isPatient ? { color: 'rgba(255,255,255,0.75)' } : null]}>
+              {timeStr}
+            </Text>
             {isPatient && (
-              <Ionicons name="checkmark-done" size={14} color={colors.gold} style={{ marginLeft: 3 }} />
+              <Ionicons name="checkmark-done" size={13} color="#FFFFFF" style={{ marginLeft: 3 }} />
             )}
           </View>
         </View>
@@ -147,28 +143,59 @@ export default function ConsultationChatScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      {/* WhatsApp-Style Dark Header */}
+      {/* Top Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.white} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.8}>
+          <Ionicons name="chevron-back" size={22} color={colors.charcoal} />
         </TouchableOpacity>
 
-        <View style={styles.avatar}>
-          <Ionicons name="medkit" size={16} color={colors.gold} />
+        <View style={styles.avatarWrap}>
+          <Ionicons name="chatbubbles" size={16} color={colors.goldDark} />
         </View>
 
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {isHandedOver ? 'Admin & Dokter Klinik' : 'AESPI AI Dental Assistant'}
+            {consultation?.doctor_name ? `drg. ${consultation.doctor_name}` : (consultation?.topic || 'Konsultasi Gigi')}
           </Text>
           <View style={styles.statusRow}>
-            <View style={styles.onlineDot} />
+            <View style={[
+              styles.statusDot,
+              isClosed ? styles.statusDotClosed : styles.statusDotActive,
+            ]} />
             <Text style={styles.headerSubtitle}>
-              {isHandedOver ? 'Live Chat Terhubung' : 'Konsultasi Interaktif AI'}
+              {consultation?.status || 'Aktif'} · {consultation?.category || 'Umum'}
             </Text>
           </View>
         </View>
       </View>
+
+      {/* Video Meeting Banner if Scheduled */}
+      {consultation?.meetings && consultation.meetings.length > 0 && (
+        <View style={styles.meetingBanner}>
+          <Ionicons name="videocam" size={18} color="#059669" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.meetingTitle}>Sesi Video Call Terjadwal</Text>
+            <Text style={styles.meetingSub}>{consultation.meetings[0].start_time}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.meetingBtn}
+            onPress={() => handleOpenMeeting(consultation.meetings![0].meeting_url)}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.meetingBtnText}>Masuk Room</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Closed Notice if Finished */}
+      {isClosed && (
+        <View style={styles.closedNotice}>
+          <Ionicons name="lock-closed-outline" size={14} color="#6B7280" />
+          <Text style={styles.closedNoticeText}>
+            Sesi konsultasi ini telah ditutup ({consultation?.status}). Anda dapat melihat riwayat pesan di bawah.
+          </Text>
+        </View>
+      )}
 
       {/* Chat Messages */}
       <KeyboardAvoidingView
@@ -192,28 +219,30 @@ export default function ConsultationChatScreen() {
         )}
 
         {/* Input Bar */}
-        <View style={styles.inputBar}>
-          <TextInput
-            style={styles.input}
-            placeholder="Tulis keluhan atau pertanyaan..."
-            placeholderTextColor={colors.muted}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-          />
-          <TouchableOpacity
-            style={[styles.sendBtn, (!inputText.trim() || isSending) ? styles.sendBtnDisabled : null]}
-            onPress={handleSend}
-            disabled={!inputText.trim() || isSending}
-            activeOpacity={0.85}
-          >
-            {isSending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Ionicons name="send" size={18} color="#fff" />
-            )}
-          </TouchableOpacity>
-        </View>
+        {!isClosed ? (
+          <View style={styles.inputBar}>
+            <TextInput
+              style={styles.input}
+              placeholder="Tulis balasan pesan..."
+              placeholderTextColor="#9CA3AF"
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+            />
+            <TouchableOpacity
+              style={[styles.sendBtn, (!inputText.trim() || isSending) ? styles.sendBtnDisabled : null]}
+              onPress={handleSend}
+              disabled={!inputText.trim() || isSending}
+              activeOpacity={0.85}
+            >
+              {isSending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="send" size={16} color="#fff" />
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -224,133 +253,251 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2C2416',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
+    paddingVertical: spacing.sm + 2,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(201, 162, 74, 0.3)',
+    borderBottomColor: colors.border,
+    gap: spacing.sm,
   },
-  backBtn: { padding: 4, marginRight: 6 },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(201, 162, 74, 0.15)',
-    borderWidth: 1,
-    borderColor: colors.gold,
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: radius.full,
+    backgroundColor: '#FAF5EA',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
-  headerInfo: { flex: 1 },
-  headerTitle: { fontSize: 14, fontWeight: '700', color: colors.white },
-  statusRow: { flexDirection: 'row', alignItems: 'center', marginTop: 1 },
-  onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#10B981', marginRight: 5 },
-  headerSubtitle: { fontSize: 11, color: '#D4AF37' },
-  listContent: { padding: spacing.md, paddingBottom: spacing.lg },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  bubbleWrap: { marginVertical: 4, flexDirection: 'row' },
-  bubbleWrapPatient: { justifyContent: 'flex-end' },
-  bubbleWrapOther: { justifyContent: 'flex-start' },
+  avatarWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: '#FAF5EA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 1,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusDotActive: {
+    backgroundColor: '#10B981',
+  },
+  statusDotClosed: {
+    backgroundColor: '#9CA3AF',
+  },
+  headerSubtitle: {
+    fontSize: 10.5,
+    color: colors.charcoalMedium,
+  },
+  meetingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#A7F3D0',
+    gap: spacing.sm,
+  },
+  meetingTitle: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#065F46',
+  },
+  meetingSub: {
+    fontSize: 10,
+    color: '#047857',
+  },
+  meetingBtn: {
+    backgroundColor: '#059669',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.md,
+  },
+  meetingBtnText: {
+    color: '#FFFFFF',
+    fontSize: 10.5,
+    fontWeight: '700',
+  },
+  closedNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  closedNoticeText: {
+    fontSize: 10.5,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  listContent: {
+    padding: spacing.md,
+    paddingBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  bubbleWrap: {
+    flexDirection: 'row',
+    marginVertical: 2,
+  },
+  bubbleWrapPatient: {
+    justifyContent: 'flex-end',
+  },
+  bubbleWrapOther: {
+    justifyContent: 'flex-start',
+  },
   bubble: {
     maxWidth: '82%',
-    borderRadius: radius.lg,
-    padding: spacing.sm + 4,
+    borderRadius: radius.xl,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowRadius: 2,
     elevation: 1,
   },
   bubblePatient: {
-    backgroundColor: '#FAF3DF',
+    backgroundColor: colors.gold,
+    borderBottomRightRadius: 4,
+  },
+  bubbleDoctor: {
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#ECD9A8',
-    borderTopRightRadius: 2,
+    borderColor: '#F0E6D3',
+    borderBottomLeftRadius: 4,
   },
   bubbleOther: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#E8DFC8',
-    borderTopLeftRadius: 2,
+    borderColor: '#F0E6D3',
+    borderBottomLeftRadius: 4,
   },
-  bubbleHandoff: {
-    backgroundColor: '#ECFDF5',
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-    borderTopLeftRadius: 2,
+  senderHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
   },
-  senderHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 4, gap: 4 },
-  senderLabel: { fontSize: 11, fontWeight: '700', color: colors.goldDark },
-  messageText: { fontSize: 13, color: '#2C2416', lineHeight: 19 },
+  senderLabel: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: colors.goldDark,
+  },
+  messageText: {
+    fontSize: 13,
+    color: colors.charcoal,
+    lineHeight: 18,
+  },
   recCard: {
-    marginTop: 8,
-    padding: 10,
     backgroundColor: '#FAF5EA',
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    padding: spacing.sm,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: '#EADBBD',
+    gap: 4,
   },
-  recHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  recTag: { fontSize: 10, fontWeight: '700', color: colors.goldDark, textTransform: 'uppercase' },
-  recService: { fontSize: 12, fontWeight: '700', color: '#2C2416' },
-  recDoctor: { fontSize: 11, color: '#6B5E4F', marginTop: 2 },
+  recHeader: {
+    flexDirection: 'row',
+  },
+  recTag: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    color: colors.goldDark,
+  },
+  recService: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  recDoctor: {
+    fontSize: 10.5,
+    color: colors.charcoalMedium,
+  },
   recBtn: {
-    marginTop: 8,
-    backgroundColor: colors.gold,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.gold,
     paddingVertical: 6,
     borderRadius: radius.md,
-    gap: 6,
+    gap: 4,
+    marginTop: 4,
   },
-  recBtnText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  handoffBtn: {
-    marginTop: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: radius.md,
-    backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#EADBBD',
+  recBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 5,
+    justifyContent: 'flex-end',
+    marginTop: 4,
   },
-  handoffBtnText: { fontSize: 11, fontWeight: '700', color: colors.goldDark },
-  timeRow: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 4 },
-  timeText: { fontSize: 10, color: '#8C8272' },
+  timeText: {
+    fontSize: 9.5,
+    color: colors.charcoalMedium,
+  },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#EADBBD',
+    backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
     gap: spacing.sm,
   },
   input: {
     flex: 1,
     backgroundColor: '#FAF8F5',
-    borderWidth: 1,
-    borderColor: '#EADBBD',
-    borderRadius: radius.full,
-    paddingHorizontal: 16,
+    borderRadius: radius.xl,
+    paddingHorizontal: spacing.md,
     paddingVertical: 8,
     fontSize: 13,
-    color: '#2C2416',
-    maxHeight: 100,
+    color: colors.charcoal,
+    maxHeight: 90,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   sendBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendBtnDisabled: { opacity: 0.5 },
+  sendBtnDisabled: {
+    backgroundColor: '#D1C4A5',
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

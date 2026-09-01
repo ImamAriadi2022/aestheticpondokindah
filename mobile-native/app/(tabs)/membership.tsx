@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator, ImageBackground, Image, Alert,
+  RefreshControl, ActivityIndicator, ImageBackground, Image, Alert, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { membershipService } from '@/services/membershipService';
 import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
-import type { MembershipPoint, MembershipTier } from '@/types/membership';
+import type { MembershipPoint, MembershipTier, MembershipData } from '@/types/membership';
 
 const TIER_COLORS: Record<string, { bg: string; text: string; border: string; accent: string }> = {
   bronze: { bg: '#FDF4E8', text: '#92400E', border: '#CD7F32', accent: '#A0522D' },
@@ -19,16 +19,23 @@ const TIER_COLORS: Record<string, { bg: string; text: string; border: string; ac
   platinum: { bg: '#F9FAFB', text: '#374151', border: '#8B9DAF', accent: '#4B5563' },
 };
 
-const TIER_IMAGES: Record<string, any> = {
+const TIER_CARD_BGS: Record<string, any> = {
   bronze: require('@/assets/dashboard/cardbronze.webp'),
   gold: require('@/assets/dashboard/cardgold.webp'),
   platinum: require('@/assets/dashboard/cardplatinum.webp'),
 };
 
+const TIER_RIBBONS: Record<string, any> = {
+  bronze: require('@/assets/dashboard/bronze.webp'),
+  gold: require('@/assets/dashboard/gold.webp'),
+  platinum: require('@/assets/dashboard/platinum.webp'),
+};
+
 export default function MembershipScreen() {
   const { user, refreshUser } = useAuth();
-  const [membership, setMembership] = useState<any>(null);
+  const [membership, setMembership] = useState<MembershipData | null>(null);
   const [pointsHistory, setPointsHistory] = useState<MembershipPoint[]>([]);
+  const [pointsBalance, setPointsBalance] = useState<number>(0);
   const [tiers, setTiers] = useState<MembershipTier[]>([]);
   const [activeTab, setActiveTab] = useState<'benefits' | 'history'>('benefits');
   const [isLoading, setIsLoading] = useState(true);
@@ -42,11 +49,16 @@ export default function MembershipScreen() {
         membershipService.getTiers(),
         membershipService.getPoints(),
       ]);
-      if (memberRes.status === 'fulfilled') setMembership(memberRes.value);
-      if (tiersRes.status === 'fulfilled') setTiers(tiersRes.value?.tiers ?? []);
-      if (pointsRes.status === 'fulfilled') {
-        const pList = pointsRes.value?.points || pointsRes.value || [];
-        setPointsHistory(Array.isArray(pList) ? pList : []);
+
+      if (memberRes.status === 'fulfilled' && memberRes.value) {
+        setMembership(memberRes.value);
+      }
+      if (tiersRes.status === 'fulfilled' && tiersRes.value?.tiers) {
+        setTiers(tiersRes.value.tiers);
+      }
+      if (pointsRes.status === 'fulfilled' && pointsRes.value) {
+        setPointsBalance(pointsRes.value.current_balance || 0);
+        setPointsHistory(pointsRes.value.points || []);
       }
     } catch {
       // handled
@@ -55,7 +67,9 @@ export default function MembershipScreen() {
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -66,12 +80,17 @@ export default function MembershipScreen() {
     setIsRefreshing(false);
   }, [loadData, refreshUser]);
 
-  const tier = user?.membership_level ?? 'bronze';
+  const tier = (membership?.membership?.level || user?.membership_level || 'bronze').toLowerCase();
   const tierStyle = TIER_COLORS[tier] || TIER_COLORS.bronze;
   const tierName = tier.charAt(0).toUpperCase() + tier.slice(1);
-  const isActive = user?.membership_status === 'active';
-  const totalPoints = Number(membership?.membership?.total_points ?? (user as any)?.total_points ?? (user as any)?.points ?? 0);
-  const memberId = `#API-${String(user?.id || '001').padStart(3, '0')}`;
+  const isActive = (membership?.membership?.status || user?.membership_status || 'active') === 'active';
+  const totalPoints = pointsBalance || Number(membership?.membership?.points ?? (user as any)?.points ?? 0);
+  const memberId = (user as any)?.membership_id || (user as any)?.member_id || `MEM-AESPI_${user?.id || '22'}`;
+  const membershipExpiry = membership?.membership?.expires_at
+    ? new Date(membership.membership.expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'Seumur Hidup';
+
+  const autoProgress = membership?.progress;
 
   const handleExportCardPdf = async () => {
     if (isExportingPdf) return;
@@ -93,10 +112,7 @@ export default function MembershipScreen() {
           <meta charset="utf-8">
           <title>AESPI Digital Membership Card</title>
           <style>
-            @page {
-              size: A4 portrait;
-              margin: 20mm;
-            }
+            @page { size: A4 portrait; margin: 20mm; }
             body {
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
               color: #2C2416;
@@ -150,7 +166,7 @@ export default function MembershipScreen() {
               font-size: 10px;
               font-weight: 700;
               letter-spacing: 2px;
-              color: rgba(255, 255, 255, 0.7);
+              color: rgba(255, 255, 255, 0.75);
               text-transform: uppercase;
             }
             .brand-main {
@@ -189,7 +205,7 @@ export default function MembershipScreen() {
             .meta-label {
               font-size: 9px;
               font-weight: 700;
-              color: rgba(255, 255, 255, 0.6);
+              color: rgba(255, 255, 255, 0.65);
               letter-spacing: 1px;
             }
             .meta-value {
@@ -243,7 +259,7 @@ export default function MembershipScreen() {
         <body>
           <div class="header">
             <div class="clinic-title">Aesthetic Pondok Indah Dental Clinic</div>
-            <div class="clinic-subtitle">Jl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310 | WA: +62 819-9011-4949</div>
+            <div class="clinic-subtitle">Jl. Metro Pondok Indah Blok TB No. 12, Jakarta Selatan | WA: +62 819-9011-4949</div>
           </div>
 
           <div style="text-align: center; margin-bottom: 10px;">
@@ -314,10 +330,7 @@ export default function MembershipScreen() {
         </html>
       `;
 
-      const { uri } = await Print.printToFileAsync({
-        html: htmlContent,
-        base64: false,
-      });
+      const { uri } = await Print.printToFileAsync({ html: htmlContent, base64: false });
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, {
@@ -335,13 +348,17 @@ export default function MembershipScreen() {
     }
   };
 
+  const formatCurrency = (amount: number) => {
+    return 'Rp ' + (Number(amount) || 0).toLocaleString('id-ID');
+  };
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      {/* Header */}
+      {/* COMPACT TOP HEADER (IDENTICAL TO BOOKING & CONSULTATION) */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Membership & Loyalty</Text>
-          <Text style={styles.subtitle}>Kartu digital & keistimewaan eksklusif pasien</Text>
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.title} numberOfLines={1}>Membership & Loyalty</Text>
+          <Text style={styles.subtitle} numberOfLines={1}>Kartu digital & privilese pasien</Text>
         </View>
         <TouchableOpacity
           style={[styles.exportBtn, isExportingPdf ? { opacity: 0.7 } : null]}
@@ -352,9 +369,9 @@ export default function MembershipScreen() {
           {isExportingPdf ? (
             <ActivityIndicator size="small" color="#fff" style={{ marginRight: 4 }} />
           ) : (
-            <Ionicons name="document-text-outline" size={15} color="#fff" style={{ marginRight: 4 }} />
+            <Ionicons name="document-text-outline" size={14} color="#fff" style={{ marginRight: 4 }} />
           )}
-          <Text style={styles.exportBtnText}>{isExportingPdf ? 'Membuat PDF...' : 'Export PDF'}</Text>
+          <Text style={styles.exportBtnText}>{isExportingPdf ? 'Membuat...' : 'Export PDF'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -367,16 +384,16 @@ export default function MembershipScreen() {
           <ActivityIndicator color={colors.gold} style={{ marginTop: spacing.xl }} />
         ) : (
           <>
-            {/* 1. SINGLE UNIFIED DIGITAL MEMBERSHIP CARD (ImageBackground with Typography) */}
+            {/* 1. SEAMLESS DIGITAL MEMBERSHIP CARD (EXACT MATCH TO WEB PREVIEW) */}
             <View style={styles.cardContainer}>
-              <View style={styles.cardImageWrapper}>
+              <View style={styles.membershipCardWrap}>
                 <ImageBackground
-                  source={TIER_IMAGES[tier] ?? TIER_IMAGES.bronze}
-                  style={styles.unifiedCard}
-                  imageStyle={styles.cardBgImage}
+                  source={TIER_CARD_BGS[tier] ?? TIER_CARD_BGS.bronze}
+                  style={styles.membershipCardBg}
+                  imageStyle={styles.membershipCardImageStyle}
                   resizeMode="cover"
                 >
-                  {/* Top Row: Brand & Vertical Logo */}
+                  {/* Top Row: Brand & Logo */}
                   <View style={styles.cardTopRow}>
                     <View>
                       <Text style={styles.cardBrandSub}>AESPI DIGITAL</Text>
@@ -389,67 +406,96 @@ export default function MembershipScreen() {
                     />
                   </View>
 
-                  {/* Middle Row: Tier Pill & Member Name */}
+                  {/* Middle Row: Tier Subtitle & Patient Full Name */}
                   <View style={styles.cardMidRow}>
-                    <View style={styles.cardTierBadge}>
-                      <Ionicons name="sparkles" size={11} color="#C9A24A" style={{ marginRight: 3 }} />
-                      <Text style={styles.cardTierText}>{tierName.toUpperCase()} MEMBER</Text>
-                    </View>
+                    <Text style={styles.cardTierSubText}>{tierName.toUpperCase()} MEMBER</Text>
                     <Text style={styles.cardHolderName} numberOfLines={1}>
                       {user?.name?.toUpperCase() || 'PASIEN MEMBER'}
                     </Text>
                   </View>
 
-                  {/* Bottom Row: Member ID & Status */}
+                  {/* Bottom Row: Member ID & Gold Medal Ribbon */}
                   <View style={styles.cardBottomRow}>
                     <View>
                       <Text style={styles.cardMetaLabel}>MEMBER ID</Text>
                       <Text style={styles.cardMetaValue}>{memberId}</Text>
                     </View>
-                    <View style={styles.cardStatusPill}>
-                      <View style={[styles.cardStatusDot, { backgroundColor: isActive ? '#10B981' : '#EF4444' }]} />
-                      <Text style={styles.cardStatusText}>{isActive ? 'AKTIF' : 'NON-AKTIF'}</Text>
-                    </View>
+                    <Image
+                      source={TIER_RIBBONS[tier] ?? TIER_RIBBONS.bronze}
+                      style={styles.cardRibbon}
+                      resizeMode="contain"
+                    />
                   </View>
                 </ImageBackground>
               </View>
 
-              {/* Card Meta Stats (Points & Validity) */}
+              {/* Card Meta Stats (Expiry & Current Points) */}
               <View style={styles.cardStatsWrap}>
                 <View style={styles.statBox}>
-                  <Text style={styles.statBoxLabel}>TOTAL POIN LOYALTY</Text>
-                  <Text style={styles.statBoxValue}>{totalPoints} <Text style={styles.statBoxSuffix}>Pts</Text></Text>
+                  <Text style={styles.statBoxLabel}>BERLAKU HINGGA</Text>
+                  <Text style={styles.statBoxValueSmall}>{membershipExpiry}</Text>
                 </View>
                 <View style={styles.statBox}>
-                  <Text style={styles.statBoxLabel}>STATUS KEANGGOTAAN</Text>
-                  <Text style={[styles.statBoxValue, { color: isActive ? '#10B981' : '#EF4444', fontSize: 13 }]}>
-                    {isActive ? 'Tier Aktif' : 'Non-aktif'}
+                  <Text style={styles.statBoxLabel}>POIN SAAT INI</Text>
+                  <Text style={styles.statBoxValueGold}>
+                    {totalPoints.toLocaleString('id-ID')} <Text style={styles.statBoxSuffix}>Pts</Text>
                   </Text>
                 </View>
               </View>
             </View>
 
-            {/* 2. UPGRADE TIER BUTTON */}
+            {/* 2. AUTO UPGRADE PROGRESS BAR IF APPLICABLE */}
+            {autoProgress && autoProgress.next_level && (
+              <View style={styles.progressCard}>
+                <View style={styles.progressHeader}>
+                  <Ionicons name="trending-up" size={16} color={colors.goldDark} />
+                  <Text style={styles.progressTitle}>
+                    Akumulasi Perawatan ke {autoProgress.next_level.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.progressDesc}>
+                  Tier Anda naik otomatis dari total transaksi tindakan medis di klinik.
+                </Text>
+                <View style={styles.progressBarWrap}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      { width: `${Math.min(100, autoProgress.percentage || 0)}%` },
+                    ]}
+                  />
+                </View>
+                <View style={styles.progressMetaRow}>
+                  <Text style={styles.progressPercent}>
+                    {(autoProgress.percentage || 0).toFixed(0)}% tercapai ({formatCurrency(autoProgress.current_amount)})
+                  </Text>
+                  <Text style={styles.progressRemaining}>
+                    {formatCurrency(autoProgress.remaining)} lagi
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* 3. UPGRADE TIER BUTTON */}
             {tier !== 'platinum' && (
               <TouchableOpacity
                 style={styles.upgradeBtn}
                 onPress={() => router.push('/membership/upgrade' as any)}
                 activeOpacity={0.85}
               >
-                <Ionicons name="sparkles" size={18} color="#fff" style={{ marginRight: 8 }} />
+                <Ionicons name="sparkles" size={16} color="#fff" style={{ marginRight: 6 }} />
                 <Text style={styles.upgradeBtnText}>Upgrade ke Tier {tier === 'bronze' ? 'GOLD' : 'PLATINUM'}</Text>
-                <Ionicons name="arrow-forward" size={16} color="#fff" style={{ marginLeft: 'auto' }} />
+                <Ionicons name="arrow-forward" size={15} color="#fff" style={{ marginLeft: 'auto' }} />
               </TouchableOpacity>
             )}
 
-            {/* 3. SEGMENTED TABS (Benefit Tier & Riwayat Poin) */}
+            {/* 4. SEGMENTED TABS (2 Tabs Only: Benefit Tier & Riwayat Poin) */}
             <View style={styles.tabsContainer}>
               <TouchableOpacity
                 style={[styles.tabBtn, activeTab === 'benefits' ? styles.tabBtnActive : null]}
                 onPress={() => setActiveTab('benefits')}
                 activeOpacity={0.8}
               >
-                <Ionicons name="ribbon-outline" size={15} color={activeTab === 'benefits' ? colors.goldDark : colors.charcoalMedium} />
+                <Ionicons name="ribbon-outline" size={14} color={activeTab === 'benefits' ? colors.goldDark : colors.charcoalMedium} />
                 <Text style={[styles.tabBtnText, activeTab === 'benefits' ? styles.tabBtnTextActive : null]}>
                   Benefit Tier
                 </Text>
@@ -460,7 +506,7 @@ export default function MembershipScreen() {
                 onPress={() => setActiveTab('history')}
                 activeOpacity={0.8}
               >
-                <Ionicons name="receipt-outline" size={15} color={activeTab === 'history' ? colors.goldDark : colors.charcoalMedium} />
+                <Ionicons name="receipt-outline" size={14} color={activeTab === 'history' ? colors.goldDark : colors.charcoalMedium} />
                 <Text style={[styles.tabBtnText, activeTab === 'history' ? styles.tabBtnTextActive : null]}>
                   Riwayat Poin
                 </Text>
@@ -474,6 +520,8 @@ export default function MembershipScreen() {
                   tiers.map((t) => {
                     const ts = TIER_COLORS[t.level] ?? TIER_COLORS.bronze;
                     const isCurrent = t.level === tier;
+                    const b = (typeof t.benefits === 'object' && !Array.isArray(t.benefits)) ? t.benefits : {};
+
                     return (
                       <View
                         key={t.level}
@@ -487,7 +535,7 @@ export default function MembershipScreen() {
                           <View style={styles.tierNameWrap}>
                             <Ionicons name="ribbon-outline" size={18} color={ts.border} />
                             <Text style={[styles.tierCardName, { color: ts.border }]}>
-                              {t.name ?? t.level.toUpperCase()}
+                              {t.label || t.name || t.level.toUpperCase()}
                             </Text>
                           </View>
                           {isCurrent && (
@@ -498,67 +546,105 @@ export default function MembershipScreen() {
                           )}
                         </View>
 
-                        {Array.isArray(t.benefits) && t.benefits.map((b, i) => (
-                          <View key={i} style={styles.benefitRow}>
-                            <Ionicons name="checkmark-circle" size={14} color={colors.goldDark} style={{ marginTop: 2 }} />
-                            <Text style={styles.benefitText}>{b}</Text>
-                          </View>
-                        ))}
+                        <Text style={styles.tierPriceText}>
+                          {t.price > 0 ? `${t.price_formatted} / tahun` : 'Gratis untuk Pasien Terdaftar'}
+                        </Text>
+
+                        <View style={styles.benefitList}>
+                          {b.discount_percentage > 0 ? (
+                            <View style={styles.benefitItem}>
+                              <Ionicons name="checkmark" size={14} color="#059669" />
+                              <Text style={styles.benefitItemText}>
+                                Diskon <Text style={{ fontWeight: '700' }}>{b.discount_percentage}%</Text> seluruh perawatan medis
+                              </Text>
+                            </View>
+                          ) : null}
+
+                          {b.point_multiplier > 0 ? (
+                            <View style={styles.benefitItem}>
+                              <Ionicons name="checkmark" size={14} color="#059669" />
+                              <Text style={styles.benefitItemText}>
+                                Kelipatan <Text style={{ fontWeight: '700' }}>{b.point_multiplier}x</Text> Poin Reward Loyalty
+                              </Text>
+                            </View>
+                          ) : null}
+
+                          {b.priority_booking ? (
+                            <View style={styles.benefitItem}>
+                              <Ionicons name="checkmark" size={14} color="#059669" />
+                              <Text style={styles.benefitItemText}>Prioritas penentuan jadwal dokter spesialis</Text>
+                            </View>
+                          ) : null}
+
+                          {b.free_scaling_per_year > 0 ? (
+                            <View style={styles.benefitItem}>
+                              <Ionicons name="checkmark" size={14} color="#059669" />
+                              <Text style={styles.benefitItemText}>
+                                Gratis Scaling <Text style={{ fontWeight: '700' }}>{b.free_scaling_per_year}x/tahun</Text>
+                              </Text>
+                            </View>
+                          ) : null}
+
+                          {b.free_consultation ? (
+                            <View style={styles.benefitItem}>
+                              <Ionicons name="checkmark" size={14} color="#059669" />
+                              <Text style={styles.benefitItemText}>Konsultasi dokter gigi & asisten online</Text>
+                            </View>
+                          ) : null}
+
+                          {b.birthday_voucher ? (
+                            <View style={styles.benefitItem}>
+                              <Ionicons name="checkmark" size={14} color="#059669" />
+                              <Text style={styles.benefitItemText}>Birthday Special Voucher Treatment</Text>
+                            </View>
+                          ) : null}
+                        </View>
                       </View>
                     );
                   })
                 ) : (
-                  <View style={styles.tierCard}>
-                    <Text style={styles.tierCardName}>Benefit Keanggotaan Klinik</Text>
-                    <View style={styles.benefitRow}>
-                      <Ionicons name="checkmark-circle" size={14} color={colors.goldDark} />
-                      <Text style={styles.benefitText}>Diskon perawatan berkala hingga 20%</Text>
-                    </View>
-                    <View style={styles.benefitRow}>
-                      <Ionicons name="checkmark-circle" size={14} color={colors.goldDark} />
-                      <Text style={styles.benefitText}>Kumpulkan poin setiap reservasi dan pembayaran</Text>
-                    </View>
-                    <View style={styles.benefitRow}>
-                      <Ionicons name="checkmark-circle" size={14} color={colors.goldDark} />
-                      <Text style={styles.benefitText}>Prioritas antrean & jadwal dokter spesialis</Text>
-                    </View>
-                  </View>
+                  <ActivityIndicator color={colors.gold} />
                 )}
               </View>
             )}
 
-            {/* TAB 2: RIWAYAT POIN */}
+            {/* TAB 2: RIWAYAT POIN MUTATION */}
             {activeTab === 'history' && (
               <View style={styles.tabContent}>
                 {pointsHistory.length === 0 ? (
                   <View style={styles.emptyHistory}>
-                    <Ionicons name="receipt-outline" size={36} color={colors.charcoalMedium} />
-                    <Text style={styles.emptyHistoryTitle}>Belum Ada Riwayat Poin</Text>
-                    <Text style={styles.emptyHistoryText}>
-                      Poin reward akan bertambah secara otomatis setiap kali Anda menyelesaikan perawatan di klinik kami.
+                    <Ionicons name="receipt-outline" size={40} color={colors.charcoalMedium} />
+                    <Text style={styles.emptyHistoryTitle}>Belum Ada Mutasi Poin</Text>
+                    <Text style={styles.emptyHistorySub}>
+                      Poin akan diperoleh setiap kali Anda menyelesaikan transaksi tindakan medis atau upgrade tier.
                     </Text>
                   </View>
                 ) : (
-                  pointsHistory.map((item, idx) => (
-                    <View key={item.id || idx} style={styles.historyCard}>
-                      <View style={styles.historyIconWrap}>
-                        <Ionicons
-                          name={(item as any).type === 'redeem' ? 'gift-outline' : 'sparkles-outline'}
-                          size={18}
-                          color={colors.goldDark}
-                        />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.historyTitle}>{item.description || 'Poin Perawatan Dental'}</Text>
-                        <Text style={styles.historyDate}>
-                          {item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                  pointsHistory.map((p, idx) => {
+                    const isEarned = p.type === 'earned';
+                    const dateStr = p.created_at
+                      ? new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : '-';
+
+                    return (
+                      <View key={p.id || idx} style={styles.historyCard}>
+                        <View style={[styles.historyIconWrap, { backgroundColor: isEarned ? '#ECFDF5' : '#FEF2F2' }]}>
+                          <Ionicons
+                            name={isEarned ? 'arrow-down' : 'arrow-up'}
+                            size={16}
+                            color={isEarned ? '#059669' : '#DC2626'}
+                          />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.historyDesc}>{p.description || 'Poin Loyalty Treatment'}</Text>
+                          <Text style={styles.historyDate}>{dateStr}</Text>
+                        </View>
+                        <Text style={[styles.historyPoints, { color: isEarned ? '#059669' : '#DC2626' }]}>
+                          {isEarned ? '+' : '-'}{p.points} Pts
                         </Text>
                       </View>
-                      <Text style={[styles.historyPoints, { color: (item as any).type === 'redeem' ? '#DC2626' : '#10B981' }]}>
-                        {(item as any).type === 'redeem' ? '-' : '+'}{item.points || 0} Pts
-                      </Text>
-                    </View>
-                  ))
+                    );
+                  })
                 )}
               </View>
             )}
@@ -571,187 +657,342 @@ export default function MembershipScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
-  scroll: { paddingBottom: spacing.xxl },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    gap: spacing.sm,
   },
-  title: { fontSize: 20, fontWeight: '700', color: colors.charcoal },
-  subtitle: { fontSize: 12, color: colors.charcoalMedium, marginTop: 2 },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  subtitle: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    marginTop: 1,
+  },
   exportBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.gold,
-    borderRadius: radius.full,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 7,
+    borderRadius: radius.full,
+    gap: 4,
+    flexShrink: 0,
   },
-  exportBtnText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  exportBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  scroll: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxl,
+    gap: spacing.md,
+  },
   cardContainer: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  membershipCardWrap: {
+    width: '100%',
+    aspectRatio: 1.586,
     borderRadius: radius.xl,
-    backgroundColor: '#1C1814',
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(201, 162, 74, 0.3)',
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    backgroundColor: '#1C1814',
     shadowColor: '#2C2416',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
-    elevation: 6,
-    overflow: 'hidden',
+    elevation: 5,
   },
-  cardImageWrapper: {
+  membershipCardBg: {
     width: '100%',
-    overflow: 'hidden',
-    borderTopLeftRadius: radius.xl,
-    borderTopRightRadius: radius.xl,
-    backgroundColor: '#1C1814',
-  },
-  unifiedCard: {
-    width: '100%',
-    aspectRatio: 1.586,
-    padding: spacing.lg,
+    height: '100%',
+    padding: 16,
     justifyContent: 'space-between',
     overflow: 'hidden',
   },
-  cardBgImage: {
-    transform: [{ scaleX: 1.36 }, { scaleY: 1.25 }],
+  membershipCardImageStyle: {
+    width: '128%',
+    height: '110%',
+    left: '-6%',
+    top: '-5%',
+    resizeMode: 'cover',
   },
   cardTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  cardBrandSub: { fontSize: 9, fontWeight: '700', letterSpacing: 1.5, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' },
-  cardBrandMain: { fontSize: 11, fontWeight: '800', letterSpacing: 0.8, color: '#FFFFFF' },
-  cardLogo: { width: 28, height: 28, tintColor: '#FFFFFF', opacity: 0.9 },
+  cardBrandSub: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    color: 'rgba(255, 255, 255, 0.85)',
+    textTransform: 'uppercase',
+  },
+  cardBrandMain: {
+    fontSize: 12.5,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    marginTop: 1,
+  },
+  cardLogo: {
+    width: 28,
+    height: 28,
+  },
   cardMidRow: {
     marginVertical: 'auto',
   },
-  cardTierBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(201, 162, 74, 0.5)',
-    borderRadius: radius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginBottom: 4,
+  cardTierSubText: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: '#EADBBD',
+    textTransform: 'uppercase',
+    marginBottom: 2,
   },
-  cardTierText: { fontSize: 9, fontWeight: '700', color: '#EADBBD', letterSpacing: 0.5 },
-  cardHolderName: { fontSize: 17, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.5 },
+  cardHolderName: {
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
   cardBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
-  cardMetaLabel: { fontSize: 8, fontWeight: '700', color: 'rgba(255,255,255,0.6)', letterSpacing: 0.5 },
-  cardMetaValue: { fontSize: 12, fontWeight: '800', color: '#FAF5EA', letterSpacing: 1 },
-  cardStatusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    borderRadius: radius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    gap: 4,
+  cardMetaLabel: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textTransform: 'uppercase',
   },
-  cardStatusDot: { width: 6, height: 6, borderRadius: 3 },
-  cardStatusText: { fontSize: 9, fontWeight: '700', color: '#FAF5EA' },
+  cardMetaValue: {
+    fontSize: 13.5,
+    fontWeight: '900',
+    letterSpacing: 1.2,
+    color: '#FAF5EA',
+    marginTop: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  cardRibbon: {
+    width: 44,
+    height: 44,
+  },
   cardStatsWrap: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#3A3228',
-    padding: spacing.md,
-    backgroundColor: '#1C1814',
+    gap: spacing.sm,
   },
-  statBox: { flex: 1 },
-  statBoxLabel: { fontSize: 9, color: 'rgba(255,255,255,0.6)', fontWeight: '600', letterSpacing: 0.5 },
-  statBoxValue: { fontSize: 17, fontWeight: '800', color: colors.gold, marginTop: 2 },
-  statBoxSuffix: { fontSize: 12, color: 'rgba(201,162,74,0.8)' },
+  statBox: {
+    flex: 1,
+    backgroundColor: '#26211B',
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#3A3228',
+  },
+  statBoxLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: 'rgba(255, 255, 255, 0.6)',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  statBoxValueSmall: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginTop: 3,
+  },
+  statBoxValueGold: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#E8C547',
+    marginTop: 2,
+  },
+  statBoxSuffix: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.6)',
+  },
+  progressCard: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 4,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  progressTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  progressDesc: {
+    fontSize: 10.5,
+    color: colors.charcoalMedium,
+  },
+  progressBarWrap: {
+    height: 6,
+    backgroundColor: '#F0E6D3',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.gold,
+    borderRadius: 3,
+  },
+  progressMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  progressPercent: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.goldDark,
+  },
+  progressRemaining: {
+    fontSize: 10,
+    color: colors.charcoalMedium,
+  },
   upgradeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
     backgroundColor: colors.gold,
-    borderRadius: radius.full,
-    paddingVertical: 13,
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    borderRadius: radius.xl,
     shadowColor: colors.gold,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  upgradeBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  upgradeBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: colors.white,
-    marginHorizontal: spacing.lg,
-    borderRadius: radius.lg,
-    padding: 4,
+    borderRadius: radius.xl,
+    padding: 3,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: spacing.md,
-    gap: 4,
   },
   tabBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
     paddingVertical: 8,
-    borderRadius: radius.md,
-    gap: 5,
+    borderRadius: radius.lg,
   },
   tabBtnActive: {
     backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#F0E6D3',
   },
-  tabBtnText: { fontSize: 12, fontWeight: '600', color: colors.charcoalMedium },
-  tabBtnTextActive: { color: colors.goldDark, fontWeight: '700' },
-  tabContent: { paddingHorizontal: spacing.lg },
+  tabBtnText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: colors.charcoalMedium,
+  },
+  tabBtnTextActive: {
+    color: colors.goldDark,
+    fontWeight: '700',
+  },
+  tabContent: {
+    gap: spacing.sm,
+  },
   tierCard: {
     backgroundColor: colors.white,
     borderRadius: radius.xl,
     padding: spacing.md,
     borderWidth: 1,
-    marginBottom: spacing.sm,
-    shadowColor: colors.charcoal,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
+    gap: 6,
   },
-  tierCardActive: { backgroundColor: '#FAF8F5' },
-  tierCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  tierNameWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  tierCardName: { fontSize: 15, fontWeight: '700' },
+  tierCardActive: {
+    borderWidth: 2,
+  },
+  tierCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  tierNameWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tierCardName: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
   currentBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: radius.full,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2.5,
+    borderRadius: radius.full,
+    borderWidth: 1,
   },
-  currentBadgeText: { fontSize: 10, fontWeight: '700' },
-  benefitRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginTop: 5 },
-  benefitText: { fontSize: 12, color: colors.charcoalMedium, flex: 1, lineHeight: 18 },
+  currentBadgeText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+  },
+  tierPriceText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.charcoalMedium,
+  },
+  benefitList: {
+    gap: 4,
+    marginTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#F5EFE6',
+    paddingTop: 6,
+  },
+  benefitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  benefitItemText: {
+    fontSize: 11,
+    color: '#4A3F35',
+  },
   emptyHistory: {
     backgroundColor: colors.white,
     borderRadius: radius.xl,
@@ -760,30 +1001,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    marginTop: spacing.sm,
+    gap: 6,
   },
-  emptyHistoryTitle: { fontSize: 15, fontWeight: '700', color: colors.charcoal, marginTop: spacing.sm },
-  emptyHistoryText: { fontSize: 12, color: colors.charcoalMedium, textAlign: 'center', marginTop: 4, lineHeight: 18 },
+  emptyHistoryTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  emptyHistorySub: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    textAlign: 'center',
+    maxWidth: 240,
+  },
   historyCard: {
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
-    padding: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: spacing.xs,
-    gap: 10,
+    gap: spacing.sm,
   },
   historyIconWrap: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: radius.md,
-    backgroundColor: '#FAF5EA',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  historyTitle: { fontSize: 13, fontWeight: '600', color: colors.charcoal },
-  historyDate: { fontSize: 11, color: colors.charcoalMedium, marginTop: 2 },
-  historyPoints: { fontSize: 13, fontWeight: '700' },
+  historyDesc: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  historyDate: {
+    fontSize: 10,
+    color: colors.charcoalMedium,
+    marginTop: 1,
+  },
+  historyPoints: {
+    fontSize: 13,
+    fontWeight: '800',
+  },
 });
