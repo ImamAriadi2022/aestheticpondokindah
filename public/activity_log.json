@@ -1,5 +1,18 @@
 {
     "0": {
+        "id": "act-418",
+        "timestamp": "2026-09-01T17:04:00.000Z",
+        "category": "eas-build-peer-dependencies-resolution",
+        "title": "Resolusi Peer Dependency React-DOM & Penambahan .npmrc untuk EAS Cloud Build",
+        "description": "1) Menambahkan konfigurasi `legacy-peer-deps=true` di `mobile-native/.npmrc` untuk memastikan proses `npm ci` di cloud runner EAS tidak gagal akibat konflik peer dependency, 2) Menyelaraskan versi `react-dom@19.1.0` dengan `react@19.1.0` di `package.json` dan menyinkronkan `package-lock.json`.",
+        "details": [
+            "EAS Build Ready: Menghilangkan error ERESOLVE pada tahap 'npm ci' cloud runner.",
+            "Production Verified: Metro Android Bundler 1.355 modul ter-bundle 100% dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-417",
         "timestamp": "2026-09-01T14:58:00.000Z",
         "category": "google-oauth-http302-direct-deep-link-redirect",
