@@ -73,25 +73,7 @@ class GoogleAuthController extends Controller
             }
         }
 
-        // Mode LOGIN: Tolak jika akun belum terdaftar
-        if ($mode === 'login' && !$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Email belum terdaftar. Silakan lakukan pendaftaran akun terlebih dahulu melalui tab Daftar.',
-                'code' => 'EMAIL_NOT_REGISTERED',
-            ], 404);
-        }
-
-        // Mode REGISTER: Tolak jika akun sudah terdaftar
-        if ($mode === 'register' && $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Email sudah terdaftar. Silakan masuk melalui halaman login.',
-                'code' => 'EMAIL_ALREADY_REGISTERED',
-            ], 409);
-        }
-
-        // 3. Register new patient jika mode register dan user belum ada
+        // 3. Seamless SSO: Otomatis daftarkan sebagai pasien jika akun belum ada
         if (!$user) {
             $isNewUser = true;
             $user = User::create([
@@ -104,7 +86,7 @@ class GoogleAuthController extends Controller
                 'membership_level' => 'bronze',
                 'membership_status' => 'active',
                 'membership_points' => 0,
-                'email_verified_at' => $emailVerified ? now() : null,
+                'email_verified_at' => $emailVerified ? now() : now(),
                 'avatar' => $avatar,
             ]);
         }
@@ -318,6 +300,10 @@ class GoogleAuthController extends Controller
     {
         $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
         $redirectUri = url('/api/auth/google/callback');
+        if (!str_starts_with($redirectUri, 'https://') && !str_contains($redirectUri, 'localhost')) {
+            $redirectUri = preg_replace('/^http:/', 'https:', $redirectUri);
+        }
+
         $returnTo = $request->input('return_to', 'aestheticpondokindah://oauth2redirect');
         $mode = $request->input('mode', 'login');
 
@@ -359,6 +345,9 @@ class GoogleAuthController extends Controller
         $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
         $clientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
         $redirectUri = url('/api/auth/google/callback');
+        if (!str_starts_with($redirectUri, 'https://') && !str_contains($redirectUri, 'localhost')) {
+            $redirectUri = preg_replace('/^http:/', 'https:', $redirectUri);
+        }
 
         // Exchange code for token
         $tokenRes = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', [
@@ -406,27 +395,37 @@ class GoogleAuthController extends Controller
         $separator = str_contains($returnTo, '?') ? '&' : '?';
         $fullRedirectUrl = $returnTo . $separator . $queryString;
 
+        $hasError = !empty($params['error']);
+        $errorMsg = htmlspecialchars($params['error'] ?? '', ENT_QUOTES, 'UTF-8');
+        $title = $hasError ? 'Informasi Autentikasi' : 'Autentikasi Berhasil';
+        $desc = $hasError ? $errorMsg : 'Sedang mengalihkan kembali ke aplikasi Aesthetic Pondok Indah...';
+        $btnText = $hasError ? 'Kembali ke Aplikasi' : 'Buka Aplikasi';
+        $iconHtml = $hasError
+            ? '<div style="width: 48px; height: 48px; background: #FEE2E2; color: #DC2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; margin: 0 auto 16px;">!</div>'
+            : '<div class="spinner"></div>';
+
         $html = <<<HTML
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mengalihkan ke Aplikasi...</title>
+    <title>{$title}</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #FAF8F5; color: #2C2416; }
-        .card { background: white; padding: 32px; border-radius: 20px; border: 1px solid #E8DFC8; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 360px; margin: 16px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background-color: #FAF8F5; color: #2C2416; }
+        .card { background: white; padding: 32px; border-radius: 20px; border: 1px solid #E8DFC8; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.06); max-width: 360px; margin: 16px; box-sizing: border-box; }
         .spinner { width: 40px; height: 40px; border: 3px solid #E8DFC8; border-top: 3px solid #C9A24A; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .btn { display: inline-block; margin-top: 16px; padding: 12px 24px; background: #C9A24A; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px; }
+        .btn { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #C9A24A; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="spinner"></div>
-        <h3 style="margin: 0 0 8px;">Autentikasi Selesai</h3>
-        <p style="font-size: 13px; color: #8C8272; margin: 0;">Sedang mengalihkan kembali ke aplikasi Aesthetic Pondok Indah...</p>
-        <a id="redirectLink" href="{$fullRedirectUrl}" class="btn">Buka Aplikasi</a>
+        {$iconHtml}
+        <h3 style="margin: 0 0 10px; font-size: 18px; color: #2C2416;">{$title}</h3>
+        <p style="font-size: 13px; color: #6B6152; margin: 0; line-height: 1.5;">{$desc}</p>
+        <a id="redirectLink" href="{$fullRedirectUrl}" class="btn">{$btnText}</a>
     </div>
     <script>
         const targetUrl = "{$fullRedirectUrl}";
