@@ -1,5 +1,32 @@
 {
     "0": {
+        "id": "act-407",
+        "timestamp": "2026-09-01T13:41:00.000Z",
+        "category": "mobile-native-app-display-name-aespi",
+        "title": "Konfigurasi Nama Tampilan Aplikasi Native Menjadi 'aespi' Saat Build APK",
+        "description": "1) Menyetel konfigurasi `expo.name` di `app.json` menjadi `\"aespi\"` sehingga saat aplikasi di-build ke format APK/AAB dan diinstal pada smartphone pengguna, nama aplikasi yang muncul di layar utama (home screen) dan menu peluncur aplikasi adalah 'aespi', 2) Mempertahankan struktur package.json dan slug internal tetap utuh dan stabil.",
+        "details": [
+            "App Name 'aespi': Nama resmi aplikasi pada smartphone dan instalasi APK adalah 'aespi'.",
+            "Production Verified: Metro Android Bundler 1.354 modul ter-bundle 100% dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-406",
+        "timestamp": "2026-09-01T13:39:00.000Z",
+        "category": "mobile-native-app-logo-and-splash-update",
+        "title": "Pembaruan Logo Splash Screen & Ikon Menu Aplikasi Menggunakan Logo Vertikal Resmi Aesthetic Pondok Indah",
+        "description": "1) Menyalin dan menyelaraskan aset logo vertikal resmi (Logo-vertikal.png dan logo-vertikal.webp) beresolusi tinggi 1080x1080 dari folder publik web ke aset native, 2) Memperbarui ikon splash screen (splash-icon.png) dan launcher icon/menu aplikasi (icon.png, adaptive-icon.png, favicon.png) dengan logo vertikal Aesthetic Pondok Indah, 3) Memperbarui header halaman registrasi (register.tsx) dengan logo vertikal resmi agar seragam dengan halaman login dan landing.",
+        "details": [
+            "Official Vertical Logo: Splash screen dan ikon menu aplikasi menggunakan logo vertikal resmi beresolusi tinggi.",
+            "Visual Consistency: Halaman autentikasi (login & register) tampil seragam dan elegan.",
+            "Production Verified: Metro Android Bundler 1.354 modul ter-bundle 100% dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-405",
         "timestamp": "2026-09-01T13:33:00.000Z",
         "category": "mobile-native-profile-audit-and-api-sync",

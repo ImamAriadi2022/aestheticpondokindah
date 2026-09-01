@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet,
+  KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet, Image,
 } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { colors, spacing, radius, fonts } from '@/theme/colors';
@@ -78,10 +78,11 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoWrap}>
-              <Text style={styles.logoIcon}>✦</Text>
-            </View>
-            <Text style={styles.brandName}>Aesthetic Pondok Indah</Text>
+            <Image
+              source={require('@/assets/logo/logo-vertikal.webp')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <Text style={styles.subtitle}>Pendaftaran Pasien Baru</Text>
           </View>
 
@@ -212,15 +213,11 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
   scroll: { flexGrow: 1, justifyContent: 'center', padding: spacing.lg },
   header: { alignItems: 'center', marginBottom: spacing.lg },
-  logoWrap: {
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: colors.goldMuted,
-    borderWidth: 2, borderColor: colors.gold,
-    alignItems: 'center', justifyContent: 'center',
+  logoImage: {
+    width: 140,
+    height: 70,
     marginBottom: spacing.xs,
   },
-  logoIcon: { fontSize: 24, color: colors.gold },
-  brandName: { fontSize: 18, fontWeight: '700', color: colors.charcoal, fontFamily: fonts.heading },
   subtitle: { fontSize: 12, color: colors.charcoalMedium, marginTop: 2 },
   card: {
     backgroundColor: colors.white,
