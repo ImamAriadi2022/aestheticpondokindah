@@ -1,0 +1,14 @@
+# Monorepo Exclusions for EAS
+/public/
+/resources/
+/storage/
+/vendor/
+/app/
+/bootstrap/
+/config/
+/database/
+/routes/
+/frontend-web/
+/node_modules/
+/.git/
+/dist/
