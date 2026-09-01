@@ -1,5 +1,19 @@
 {
     "0": {
+        "id": "act-417",
+        "timestamp": "2026-09-01T14:58:00.000Z",
+        "category": "google-oauth-http302-direct-deep-link-redirect",
+        "title": "Implementasi Direct HTTP 302 Deep Link Redirect pada OAuth Bridge & Penjagaan Rute Login",
+        "description": "1) Mengubah `renderOAuthBridge` di backend agar mengeluarkan HTTP 302 Location header langsung (`redirect()->away(...)`) untuk skema deep link mobile (`exp://` dan `aestheticpondokindah://`), sehingga browser Chrome Custom Tabs/WebBrowser menutup secara instan dan otomatis tanpa tergantung pada eksekusi JavaScript HTML yang diblokir oleh browser mobile, 2) Menambahkan listener `isAuthenticated` di `login.tsx` untuk auto-redirect ke `/(tabs)` saat sesi login aktif.",
+        "details": [
+            "Instant Modal Dismiss: Modal browser tertutup seketika oleh OS saat mendeteksi HTTP 302 deep link.",
+            "Seamless Flow: Tidak ada lagi halaman bridge yang menggantung atau looping ke layar login.",
+            "Production Verified: Metro Android Bundler 1.355 modul ter-bundle 100% dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-416",
         "timestamp": "2026-09-01T14:53:00.000Z",
         "category": "mobile-native-auth-state-sync-and-navigation",

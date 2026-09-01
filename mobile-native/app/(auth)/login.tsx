@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
+import { router } from 'expo-router';
 import { colors, spacing, radius, fonts } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import GoogleAuthButtonNative from '@/components/GoogleAuthButtonNative';
@@ -12,9 +13,15 @@ import GoogleAuthButtonNative from '@/components/GoogleAuthButtonNative';
 type AuthMode = 'welcome' | 'login' | 'register';
 
 export default function MobileLoginScreen() {
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const [mode, setMode] = useState<AuthMode>('welcome');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated]);
 
   // Login Form
   const [phone, setPhone] = useState('');

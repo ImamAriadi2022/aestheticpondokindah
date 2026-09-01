@@ -441,6 +441,13 @@ class GoogleAuthController extends Controller
         $separator = str_contains($returnTo, '?') ? '&' : '?';
         $fullRedirectUrl = $returnTo . $separator . $queryString;
 
+        // For mobile app deep links (Expo Go exp:// or standalone aestheticpondokindah://),
+        // issue a direct HTTP 302 redirect so Chrome Custom Tabs / ASWebAuthenticationSession
+        // intercepts it immediately and closes the browser modal automatically.
+        if (str_starts_with($returnTo, 'aestheticpondokindah://') || str_starts_with($returnTo, 'exp://')) {
+            return redirect()->away($fullRedirectUrl);
+        }
+
         $hasError = !empty($params['error']);
         $errorMsg = htmlspecialchars($params['error'] ?? '', ENT_QUOTES, 'UTF-8');
         $title = $hasError ? 'Informasi Autentikasi' : 'Autentikasi Berhasil';
