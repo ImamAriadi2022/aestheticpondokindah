@@ -1,5 +1,19 @@
 {
     "0": {
+        "id": "act-387",
+        "timestamp": "2026-09-01T10:40:00.000Z",
+        "category": "mobile-native-notification-production-audit",
+        "title": "Audit & Koneksi Lengkap Fitur Notifikasi Mobile Native ke API Production",
+        "description": "1) Menyelaraskan seluruh endpoint notifikasi backend production (GET /api/user/notifications, GET /api/user/notifications/unread-count, POST /api/user/notifications/{id}/read, POST /api/user/notifications/read-all, DELETE /api/user/notifications/{id}, DELETE /api/user/notifications, POST /api/user/device-token, DELETE /api/user/device-token), 2) Memperbaiki payload pendaftaran token (device_token & platform), 3) Mengimplementasikan integrasi push notification otomatis saat login (expo-notifications), 4) Memperbarui UI Pusat Notifikasi dengan filter (Semua & Belum Dibaca), hapus notifikasi, pembersihan riwayat notifikasi, deep link navigasi, dan sinkronisasi badge lonceng di dashboard.",
+        "details": [
+            "Production Endpoint Synchronization: 100% endpoint notifikasi backend terhubung secara akurat.",
+            "Device Token Auto-Registration: Registrasi push token perangkat otomatis ke tabel user_device_tokens.",
+            "Complete Notification Management: Fitur tandai dibaca, tandai semua dibaca, hapus per item, dan bersihkan semua riwayat."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-379",
         "timestamp": "2026-08-29T13:38:05.000Z",
         "category": "auth-google-oauth-sso-integration",

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { registerForPushNotifications } from '@/services/pushNotificationService';
 import { authStorage } from '@/storage/authStorage';
 import { authService } from '@/services/authService';
 import { router } from 'expo-router';

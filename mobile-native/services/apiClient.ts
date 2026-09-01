@@ -136,8 +136,8 @@ export const apiClient = {
   patch: <T = any>(endpoint: string, body?: any, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(endpoint, { ...opts, method: 'PATCH', body }),
 
-  delete: <T = any>(endpoint: string, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
-    request<T>(endpoint, { ...opts, method: 'DELETE' }),
+  delete: <T = any>(endpoint: string, body?: any, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
+    request<T>(endpoint, { ...opts, method: 'DELETE', body }),
 
   upload: <T = any>(endpoint: string, formData: FormData, opts?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(endpoint, { ...opts, method: 'POST', body: formData }),

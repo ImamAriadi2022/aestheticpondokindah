@@ -54,7 +54,7 @@ export const ENDPOINTS = {
   NOTIFICATIONS_DELETE: (id: string) => `/user/notifications/${id}`,
   NOTIFICATIONS_CLEAR: '/user/notifications',
   DEVICE_TOKENS: '/user/device-token',
-  DEVICE_TOKENS_DELETE: (token: string) => `/user/device-token/${token}`,
+  DEVICE_TOKENS_DELETE: '/user/device-token',
 
   // Content (Public)
   POSTS: '/public/posts',

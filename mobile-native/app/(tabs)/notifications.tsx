@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator,
+  RefreshControl, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -10,8 +10,11 @@ import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import type { Notification } from '@/types/booking';
 
+type FilterType = 'all' | 'unread';
+
 export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filter, setFilter] = useState<FilterType>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -26,7 +29,7 @@ export default function NotificationsScreen() {
     }
   }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -34,49 +37,151 @@ export default function NotificationsScreen() {
     setIsRefreshing(false);
   }, [loadData]);
 
-  const handleMarkRead = async (id: number) => {
+  const isRead = (item: Notification) => Boolean(item.read_at || (item as any).is_read);
+
+  const handleMarkRead = async (item: Notification) => {
+    if (isRead(item)) {
+      handleNavigateNotification(item);
+      return;
+    }
+
     try {
-      await notificationService.markAsRead(id);
+      await notificationService.markAsRead(item.id);
       setNotifications((prev) =>
-        prev.map((n) => n.id === id ? { ...n, is_read: true } : n)
+        prev.map((n) => n.id === item.id ? { ...n, read_at: new Date().toISOString(), is_read: true } : n)
       );
+      handleNavigateNotification(item);
     } catch {}
+  };
+
+  const handleNavigateNotification = (item: Notification) => {
+    if ((item as any).deep_link) {
+      router.push((item as any).deep_link as any);
+      return;
+    }
+
+    const type = item.type?.toLowerCase() || '';
+    if (type.includes('booking') || type.includes('reservation')) {
+      router.push('/(tabs)/appointments' as any);
+    } else if (type.includes('membership') || type.includes('tier') || type.includes('point')) {
+      router.push('/(tabs)/membership' as any);
+    } else if (type.includes('consultation') || type.includes('chat')) {
+      router.push('/consultation' as any);
+    }
   };
 
   const handleMarkAll = async () => {
     try {
       await notificationService.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    } catch {}
+      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: new Date().toISOString(), is_read: true })));
+    } catch {
+      Alert.alert('Gagal', 'Tidak dapat menandai semua notifikasi dibaca.');
+    }
   };
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const handleDeleteItem = (id: number) => {
+    Alert.alert(
+      'Hapus Notifikasi',
+      'Apakah Anda yakin ingin menghapus notifikasi ini?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await notificationService.deleteNotification(id);
+              setNotifications((prev) => prev.filter((n) => n.id !== id));
+            } catch {
+              Alert.alert('Gagal', 'Gagal menghapus notifikasi.');
+            }
+          },
+        },
+      ]
+    );
+  };
 
-  const renderItem = ({ item }: { item: Notification }) => (
-    <TouchableOpacity
-      style={[styles.card, !item.is_read ? styles.cardUnread : null]}
-      onPress={() => handleMarkRead(item.id)}
-      activeOpacity={0.8}
-    >
-      <View style={[styles.dot, !item.is_read ? styles.dotUnread : null]} />
-      <View style={{ flex: 1 }}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.notifTitle}>{item.title}</Text>
-          <View style={styles.timeWrap}>
-            <Ionicons name="time-outline" size={11} color={colors.charcoalMedium} />
-            <Text style={styles.notifTime}>
-              {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-            </Text>
-          </View>
+  const handleClearAll = () => {
+    if (notifications.length === 0) return;
+    Alert.alert(
+      'Bersihkan Semua Notifikasi',
+      'Apakah Anda yakin ingin menghapus seluruh riwayat notifikasi?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Bersihkan',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await notificationService.clearAll();
+              setNotifications([]);
+            } catch {
+              Alert.alert('Gagal', 'Gagal membersihkan riwayat notifikasi.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const unreadCount = notifications.filter((n) => !isRead(n)).length;
+  const filteredList = filter === 'unread' ? notifications.filter((n) => !isRead(n)) : notifications;
+
+  const getTypeIcon = (type = '') => {
+    const t = type.toLowerCase();
+    if (t.includes('booking') || t.includes('reservation')) return { name: 'calendar', bg: '#FAF5EA', color: colors.goldDark };
+    if (t.includes('membership') || t.includes('tier')) return { name: 'ribbon', bg: '#FDF4E8', color: '#B8943F' };
+    if (t.includes('point')) return { name: 'sparkles', bg: '#FEF3C7', color: '#D97706' };
+    if (t.includes('promo')) return { name: 'pricetag', bg: '#ECFDF5', color: '#059669' };
+    if (t.includes('consultation')) return { name: 'chatbubbles', bg: '#EFF6FF', color: '#2563EB' };
+    return { name: 'notifications', bg: '#FAF5EA', color: colors.goldDark };
+  };
+
+  const renderItem = ({ item }: { item: Notification }) => {
+    const itemRead = isRead(item);
+    const iconMeta = getTypeIcon(item.type);
+
+    return (
+      <TouchableOpacity
+        style={[styles.card, !itemRead ? styles.cardUnread : null]}
+        onPress={() => handleMarkRead(item)}
+        activeOpacity={0.85}
+      >
+        <View style={[styles.typeIconWrap, { backgroundColor: iconMeta.bg }]}>
+          <Ionicons name={iconMeta.name as any} size={18} color={iconMeta.color} />
         </View>
-        <Text style={styles.notifBody} numberOfLines={3}>{item.body}</Text>
-      </View>
-    </TouchableOpacity>
-  );
+
+        <View style={{ flex: 1 }}>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.notifTitle, !itemRead ? styles.notifTitleUnread : null]} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <View style={styles.timeWrap}>
+              <Text style={styles.notifTime}>
+                {item.created_at
+                  ? new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                  : '-'}
+              </Text>
+              {!itemRead && <View style={styles.unreadDot} />}
+            </View>
+          </View>
+          <Text style={styles.notifBody} numberOfLines={3}>{item.body}</Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.deleteIconBtn}
+          onPress={() => handleDeleteItem(item.id)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="trash-outline" size={16} color="#9CA3AF" />
+        </TouchableOpacity>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header with Back Button */}
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      {/* Header with Back Button & Actions */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity
@@ -84,28 +189,56 @@ export default function NotificationsScreen() {
             onPress={() => router.back()}
             activeOpacity={0.8}
           >
-            <Ionicons name="arrow-back" size={22} color={colors.charcoal} />
+            <Ionicons name="arrow-back" size={20} color={colors.charcoal} />
           </TouchableOpacity>
           <View>
             <Text style={styles.title}>Pusat Notifikasi</Text>
-            {unreadCount > 0 && (
-              <Text style={styles.unreadText}>{unreadCount} pesan belum dibaca</Text>
-            )}
+            <Text style={styles.unreadText}>
+              {unreadCount > 0 ? `${unreadCount} pesan belum dibaca` : 'Semua pesan sudah dibaca'}
+            </Text>
           </View>
         </View>
-        {unreadCount > 0 && (
-          <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAll} activeOpacity={0.8}>
-            <Ionicons name="checkmark-done" size={14} color={colors.goldDark} style={{ marginRight: 4 }} />
-            <Text style={styles.markAllText}>Tandai Semua</Text>
-          </TouchableOpacity>
-        )}
+
+        <View style={styles.headerActions}>
+          {unreadCount > 0 && (
+            <TouchableOpacity style={styles.headerActionBtn} onPress={handleMarkAll} activeOpacity={0.8}>
+              <Ionicons name="checkmark-done" size={14} color={colors.goldDark} style={{ marginRight: 3 }} />
+              <Text style={styles.headerActionText}>Tandai Baca</Text>
+            </TouchableOpacity>
+          )}
+          {notifications.length > 0 && (
+            <TouchableOpacity style={styles.clearBtn} onPress={handleClearAll} activeOpacity={0.8}>
+              <Ionicons name="trash-outline" size={14} color="#EF4444" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* Filter Tabs (Semua / Belum Dibaca) */}
+      <View style={styles.filterBar}>
+        <TouchableOpacity
+          style={[styles.filterTab, filter === 'all' ? styles.filterTabActive : null]}
+          onPress={() => setFilter('all')}
+        >
+          <Text style={[styles.filterTabText, filter === 'all' ? styles.filterTabTextActive : null]}>
+            Semua ({notifications.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterTab, filter === 'unread' ? styles.filterTabActive : null]}
+          onPress={() => setFilter('unread')}
+        >
+          <Text style={[styles.filterTabText, filter === 'unread' ? styles.filterTabTextActive : null]}>
+            Belum Dibaca ({unreadCount})
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {isLoading ? (
         <ActivityIndicator color={colors.gold} style={{ marginTop: spacing.xl }} />
       ) : (
         <FlatList
-          data={notifications}
+          data={filteredList}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
@@ -113,11 +246,15 @@ export default function NotificationsScreen() {
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconWrap}>
-                <Ionicons name="notifications-off-outline" size={42} color={colors.gold} />
+                <Ionicons name="notifications-off-outline" size={40} color={colors.gold} />
               </View>
-              <Text style={styles.emptyTitle}>Belum Ada Notifikasi</Text>
+              <Text style={styles.emptyTitle}>
+                {filter === 'unread' ? 'Tidak Ada Pesan Baru' : 'Belum Ada Notifikasi'}
+              </Text>
               <Text style={styles.emptyText}>
-                Pengingat janji temu, konfirmasi reservasi, dan update promo membership Anda akan muncul di sini.
+                {filter === 'unread'
+                  ? 'Seluruh notifikasi Anda telah ditandai sebagai dibaca.'
+                  : 'Pengingat janji temu dokter, konfirmasi reservasi, dan update membership akan muncul di sini.'}
               </Text>
             </View>
           }
@@ -148,9 +285,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { fontSize: 18, fontWeight: '700', color: colors.charcoal },
-  unreadText: { fontSize: 11, color: colors.goldDark, fontWeight: '600', marginTop: 1 },
-  markAllBtn: {
+  title: { fontSize: 17, fontWeight: '700', color: colors.charcoal },
+  unreadText: { fontSize: 11, color: colors.charcoalMedium, marginTop: 1 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  headerActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FAF5EA',
@@ -160,7 +298,37 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: radius.full,
   },
-  markAllText: { fontSize: 11, color: colors.goldDark, fontWeight: '700' },
+  headerActionText: { fontSize: 11, color: colors.goldDark, fontWeight: '700' },
+  clearBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: radius.full,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterBar: {
+    flexDirection: 'row',
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    gap: 8,
+  },
+  filterTab: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+    backgroundColor: colors.cream,
+  },
+  filterTabActive: {
+    backgroundColor: '#FAF5EA',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+  },
+  filterTabText: { fontSize: 11, fontWeight: '600', color: colors.charcoalMedium },
+  filterTabTextActive: { color: colors.goldDark, fontWeight: '700' },
   list: { padding: spacing.lg, paddingBottom: spacing.xxl },
   card: {
     backgroundColor: colors.white,
@@ -178,19 +346,36 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  cardUnread: { backgroundColor: '#FDFBF7', borderColor: '#E8DFC8' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'transparent', marginTop: 6 },
-  dotUnread: { backgroundColor: colors.gold },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  notifTitle: { fontSize: 14, fontWeight: '700', color: colors.charcoal, flex: 1, marginRight: 8 },
-  timeWrap: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  cardUnread: {
+    backgroundColor: '#FCFAF6',
+    borderColor: '#E8DFC8',
+    borderLeftWidth: 3,
+    borderLeftColor: colors.gold,
+  },
+  typeIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 },
+  notifTitle: { fontSize: 13, fontWeight: '600', color: colors.charcoal, flex: 1, marginRight: 6 },
+  notifTitleUnread: { fontWeight: '700', color: '#1C1814' },
+  timeWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   notifTime: { fontSize: 10, color: colors.charcoalMedium },
+  unreadDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.gold },
   notifBody: { fontSize: 12, color: colors.charcoalMedium, lineHeight: 18 },
+  deleteIconBtn: {
+    padding: 4,
+    marginLeft: 4,
+    alignSelf: 'center',
+  },
   emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
   emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#FAF5EA',
     borderWidth: 1,
     borderColor: '#F0E6D3',
@@ -198,6 +383,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.md,
   },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.charcoal, marginBottom: spacing.xs },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: colors.charcoal, marginBottom: spacing.xs },
   emptyText: { fontSize: 12, color: colors.charcoalMedium, textAlign: 'center', lineHeight: 18, maxWidth: 280 },
 });

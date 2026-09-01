@@ -62,7 +62,9 @@ export default function HomeScreen() {
       // 4. Notifications unread count
       if (notifsRes.status === 'fulfilled') {
         const notifList = notifsRes.value?.notifications || [];
-        setUnreadNotifCount(notifList.filter((n: any) => !n.is_read).length);
+        const unreadDirect = notifsRes.value?.unread_count;
+        const unreadCalc = notifList.filter((n: any) => !n.read_at && !n.is_read).length;
+        setUnreadNotifCount(typeof unreadDirect === 'number' ? unreadDirect : unreadCalc);
       }
     } finally {
       setIsLoading(false);
