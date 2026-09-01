@@ -1,5 +1,19 @@
 {
     "0": {
+        "id": "act-388",
+        "timestamp": "2026-09-01T10:48:00.000Z",
+        "category": "mobile-native-auth-patient-audit",
+        "title": "Audit Lengkap Fitur Autentikasi (Login & Register) Pasien & Penghapusan Login Dokter di Mobile Native",
+        "description": "1) Menyelaraskan seluruh skenario login (WhatsApp/No HP + Password, Email + Password, Google Sign-In Single Sign-On, dan Registrasi Pasien Baru) ke endpoint production backend (POST /api/auth/login, POST /api/auth/register, POST /api/auth/google), 2) Menghapus seluruh opsi dan akses portal dokter di mobile native (memastikan aplikasi 100% khusus pasien), 3) Menerapkan proteksi peran pengguna sehingga akun dokter/admin diarahkan ke portal web klinik, 4) Menyimpan sesi token Sanctum dan user profile secara persisten di storage lokal.",
+        "details": [
+            "All Login Scenarios Verified: Mendukung login WhatsApp, Nomor HP (+62/08), Email, dan Google SSO.",
+            "Exclusive Patient App: Menghapus portal dokter dan memvalidasi akses hanya untuk pasien.",
+            "Auto Token & Push Sync: Otomatis mendaftarkan push notification dan menyimpan sesi login aman."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-387",
         "timestamp": "2026-09-01T10:40:00.000Z",
         "category": "mobile-native-notification-production-audit",

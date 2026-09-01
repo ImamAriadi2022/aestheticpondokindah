@@ -44,32 +44,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const routeByRole = (role?: string) => {
-    if (role === 'doctor') {
-      router.replace('/doctor');
-    } else {
-      router.replace('/(tabs)');
+    if (role === 'doctor' || role === 'clinic_admin' || role === 'admin') {
+      throw new Error('Aplikasi mobile ini khusus untuk Pasien. Akun Dokter dan Admin silakan login melalui portal web klinik.');
     }
+    router.replace('/(tabs)');
   };
 
   const login = useCallback(async (phoneOrEmail: string, password: string) => {
     const res = await authService.login({ login: phoneOrEmail, password });
+    if (res.user?.role === 'doctor' || res.user?.role === 'clinic_admin' || res.user?.role === 'admin') {
+      await authStorage.clearAll();
+      throw new Error('Aplikasi mobile ini khusus untuk Pasien. Akun Dokter dan Admin silakan login melalui portal web klinik.');
+    }
     setToken(res.token);
     setUser(res.user);
-    routeByRole(res.user?.role);
+    registerForPushNotifications();
+    router.replace('/(tabs)');
   }, []);
 
   const register = useCallback(async (payload: RegisterPayload) => {
     const res = await authService.register(payload);
     setToken(res.token);
     setUser(res.user);
-    routeByRole(res.user?.role);
+    registerForPushNotifications();
+    router.replace('/(tabs)');
   }, []);
 
   const loginGoogle = useCallback(async (payload: { credential?: string; access_token?: string; code?: string; mode?: 'login' | 'register' }) => {
     const res = await authService.loginGoogle(payload);
+    if (res.user?.role === 'doctor' || res.user?.role === 'clinic_admin' || res.user?.role === 'admin') {
+      await authStorage.clearAll();
+      throw new Error('Aplikasi mobile ini khusus untuk Pasien. Akun Dokter dan Admin silakan login melalui portal web klinik.');
+    }
     setToken(res.token);
     setUser(res.user);
-    routeByRole(res.user?.role);
+    registerForPushNotifications();
+    router.replace('/(tabs)');
   }, []);
 
   const logout = useCallback(async () => {

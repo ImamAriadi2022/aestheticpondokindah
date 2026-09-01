@@ -66,11 +66,12 @@ export default function GoogleAuthButtonNative({
           await authStorage.saveUser(user);
           await refreshUser();
 
-          if (user.role === 'doctor') {
-            router.replace('/doctor');
-          } else {
-            router.replace('/(tabs)');
+          if (user.role === 'doctor' || user.role === 'clinic_admin' || user.role === 'admin') {
+            await authStorage.clearAll();
+            throw new Error('Aplikasi mobile ini khusus untuk Pasien. Akun Dokter dan Admin silakan login melalui portal web.');
           }
+
+          router.replace('/(tabs)');
           onSuccess?.();
         } else {
           throw new Error('Gagal mendapatkan sesi login dari Google.');

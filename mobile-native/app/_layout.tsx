@@ -9,7 +9,6 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="doctor" />
         <Stack.Screen name="consultation" />
         <Stack.Screen name="article/[id]" options={{ headerShown: true, title: 'Artikel', headerStyle: { backgroundColor: '#FAF8F5' }, headerTintColor: '#2C2416' }} />
         <Stack.Screen name="gallery" options={{ headerShown: true, title: 'Galeri Klinik', headerStyle: { backgroundColor: '#FAF8F5' }, headerTintColor: '#2C2416' }} />

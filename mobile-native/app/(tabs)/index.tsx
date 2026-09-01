@@ -149,27 +149,6 @@ export default function HomeScreen() {
           <Text style={styles.subGreeting}>Selamat datang di Aesthetic Pondok Indah</Text>
         </View>
 
-        {/* Doctor Portal Switch Banner (If Doctor) */}
-        {user?.role === 'doctor' && (
-          <TouchableOpacity
-            style={styles.doctorBanner}
-            onPress={() => router.push('/doctor')}
-            activeOpacity={0.85}
-          >
-            <View style={styles.doctorBannerIcon}>
-              <Ionicons name="medkit-outline" size={22} color={colors.goldDark} />
-            </View>
-            <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={styles.doctorBannerTitle}>Portal Dokter Aktif</Text>
-              <Text style={styles.doctorBannerDesc}>Buka antrean pasien & kelola rekam medis</Text>
-            </View>
-            <View style={styles.doctorBannerBtn}>
-              <Text style={styles.doctorBannerBtnText}>Buka</Text>
-              <Ionicons name="chevron-forward" size={14} color="#fff" />
-            </View>
-          </TouchableOpacity>
-        )}
-
         {/* Membership & Loyalty Card */}
         <View style={styles.memberCard}>
           <View style={styles.memberCardBgCircle} />
