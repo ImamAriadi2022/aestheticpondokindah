@@ -8,15 +8,25 @@ export const contentService = {
     const KEY = 'posts';
     if (!forceRefresh) {
       const cached = await cacheStorage.get<{ posts: Post[] }>(KEY);
-      if (cached) return cached;
+      if (cached && Array.isArray(cached.posts) && cached.posts.length > 0) {
+        return cached;
+      }
     }
-    const res = await apiClient.get<any>(ENDPOINTS.POSTS, { skipAuth: true });
-    const postsList: Post[] = Array.isArray(res)
-      ? res
-      : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.posts) ? res.posts : []));
-    const normalized = { posts: postsList };
-    await cacheStorage.set(KEY, normalized, 10 * 60 * 1000);
-    return normalized;
+    try {
+      const res: any = await apiClient.get(ENDPOINTS.POSTS);
+      const postsList: Post[] = Array.isArray(res)
+        ? res
+        : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.posts) ? res.posts : []));
+
+      const normalized = { posts: postsList || [] };
+      if (postsList && postsList.length > 0) {
+        await cacheStorage.set(KEY, normalized, 10 * 60 * 1000);
+      }
+      return normalized;
+    } catch (e) {
+      console.warn('Failed to fetch posts from API:', e);
+      return { posts: [] };
+    }
   },
 
   async getPost(slug: string): Promise<{ post: Post }> {

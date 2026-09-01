@@ -26,7 +26,7 @@ export const ENDPOINTS = {
   // User
   PROFILE: '/user/profile',
   PROFILE_UPDATE: '/user/profile',
-  CHANGE_PASSWORD: '/user/change-password',
+  CHANGE_PASSWORD: '/user/password',
 
   // Membership
   MEMBERSHIP: '/membership',
@@ -46,15 +46,15 @@ export const ENDPOINTS = {
   RESERVATIONS: '/user/reservations',
   RESERVATION_CREATE: '/user/reservations',
 
-  // Notifications
-  NOTIFICATIONS: '/notifications',
-  NOTIFICATIONS_UNREAD: '/notifications/unread-count',
-  NOTIFICATIONS_READ: (id: string) => `/notifications/${id}/read`,
-  NOTIFICATIONS_READ_ALL: '/notifications/read-all',
-  NOTIFICATIONS_DELETE: (id: string) => `/notifications/${id}`,
-  NOTIFICATIONS_CLEAR: '/notifications/clear',
-  DEVICE_TOKENS: '/notifications/device-token',
-  DEVICE_TOKENS_DELETE: (token: string) => `/notifications/device-token/${token}`,
+  // Notifications (User Scoped)
+  NOTIFICATIONS: '/user/notifications',
+  NOTIFICATIONS_UNREAD: '/user/notifications/unread-count',
+  NOTIFICATIONS_READ: (id: string) => `/user/notifications/${id}/read`,
+  NOTIFICATIONS_READ_ALL: '/user/notifications/read-all',
+  NOTIFICATIONS_DELETE: (id: string) => `/user/notifications/${id}`,
+  NOTIFICATIONS_CLEAR: '/user/notifications',
+  DEVICE_TOKENS: '/user/device-token',
+  DEVICE_TOKENS_DELETE: (token: string) => `/user/device-token/${token}`,
 
   // Content (Public)
   POSTS: '/public/posts',

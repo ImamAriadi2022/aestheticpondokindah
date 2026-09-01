@@ -57,13 +57,15 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
   } = options;
 
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
-  const token = !skipAuth ? await authStorage.getToken() : null;
+  const token = await authStorage.getToken();
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
     'X-App-Version': '1.0.0',
     'X-Client': 'android-native',
+    Origin: 'https://aestheticpondokindah.com',
+    Referer: 'https://aestheticpondokindah.com/',
     ...extraHeaders,
   };
 
@@ -97,7 +99,7 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
 
       if (response.ok) return data as T;
 
-      if (response.status === 401) {
+      if (response.status === 401 && !skipAuth) {
         await handleUnauthorized();
         throw new ApiError('Sesi berakhir.', 401);
       }

@@ -384,7 +384,7 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={String(post.id)}
                 style={styles.articleCard}
-                onPress={() => router.push(`/article/${post.id}` as any)}
+                onPress={() => router.push(`/article/${post.slug || post.id}` as any)}
                 activeOpacity={0.85}
               >
                 <View style={{ flex: 1 }}>

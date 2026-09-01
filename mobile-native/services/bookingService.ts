@@ -16,12 +16,18 @@ export interface PublicReservationResponse {
   status: string;
 }
 
+export interface CreateUserReservationPayload {
+  treatment_interest: string;
+  doctor_id?: number | string | null;
+  branch_id?: number | string;
+  date?: string | null;
+  preferred_time?: string | null;
+  complaint?: string;
+  source?: string;
+  service_price?: number;
+}
+
 export const bookingService = {
-  /**
-   * The current Laravel booking contract is public and is also used by the PWA.
-   * Do not substitute this with the member-only reservation endpoints: those are
-   * not available in the backend route registry.
-   */
   async submitPublicReservation(payload: PublicReservationPayload): Promise<PublicReservationResponse> {
     return apiClient.post<PublicReservationResponse>(ENDPOINTS.PUBLIC_RESERVATIONS, {
       ...payload,
@@ -46,15 +52,21 @@ export const bookingService = {
       const cached = await cacheStorage.get<{ reservations: Reservation[] }>(KEY);
       if (cached) return cached;
     }
-    const res = await apiClient.get<{ reservations: Reservation[] }>(ENDPOINTS.RESERVATIONS);
-    await cacheStorage.set(KEY, res, 2 * 60 * 1000); // 2 min TTL
-    return res;
+    const res = await apiClient.get<any>(ENDPOINTS.RESERVATIONS);
+    const list = Array.isArray(res) ? res : (Array.isArray(res?.reservations) ? res.reservations : (Array.isArray(res?.data) ? res.data : []));
+    const normalized = { reservations: list };
+    await cacheStorage.set(KEY, normalized, 2 * 60 * 1000);
+    return normalized;
   },
 
-  async createReservation(payload: Pick<PublicReservationPayload, 'complaint' | 'date'>): Promise<{ reservation: Reservation }> {
-    const res = await apiClient.post<{ reservation: Reservation }>(ENDPOINTS.RESERVATION_CREATE, payload);
+  async createReservation(payload: CreateUserReservationPayload): Promise<{ reservation: Reservation; code?: string; message?: string }> {
+    const res = await apiClient.post<any>(ENDPOINTS.RESERVATION_CREATE, {
+      ...payload,
+      source: payload.source ?? 'mobile_app',
+    });
     await cacheStorage.invalidate('reservations');
-    return res;
+    const r = res?.reservation || res?.data || res;
+    return { reservation: r, code: r?.code || res?.code, message: res?.message };
   },
 
   async getDoctorSchedules(): Promise<any> {

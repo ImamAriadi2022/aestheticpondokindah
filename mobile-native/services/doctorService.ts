@@ -104,4 +104,14 @@ export const doctorService = {
   async sendMeetingLink(id: number, meetingUrl: string, topic?: string): Promise<any> {
     return await apiClient.post(`/doctor/consultations/${id}/meetings`, { meeting_url: meetingUrl, topic });
   },
+
+  async getPublicDoctors(): Promise<any[]> {
+    try {
+      const res = await apiClient.get<any>('/public/doctors', { skipAuth: true });
+      const list = Array.isArray(res) ? res : (Array.isArray(res?.doctors) ? res.doctors : (Array.isArray(res?.data) ? res.data : []));
+      return list;
+    } catch {
+      return [];
+    }
+  },
 };

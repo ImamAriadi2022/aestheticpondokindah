@@ -43,9 +43,9 @@ export default function ArticleDetailScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {post.thumbnail_url && (
+        {(post.cover_image_url || post.thumbnail_url) && (
           <Image
-            source={{ uri: getStorageUrl(post.thumbnail_url) ?? '' }}
+            source={{ uri: getStorageUrl(post.cover_image_url || post.thumbnail_url) ?? '' }}
             style={styles.thumbnail}
             resizeMode="cover"
           />
@@ -61,7 +61,7 @@ export default function ArticleDetailScreen() {
             </Text>
           )}
           <View style={styles.divider} />
-          <Text style={styles.body}>{post.content}</Text>
+          <Text style={styles.body}>{post.content || (post as any).content_html?.replace(/<[^>]*>?/gm, '') || post.excerpt || ''}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

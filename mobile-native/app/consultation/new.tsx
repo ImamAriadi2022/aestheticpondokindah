@@ -9,27 +9,75 @@ import { consultationService } from '@/services/consultationService';
 import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 
-const TOPIC_OPTIONS = [
-  'Gusi Berdarah / Radang Gusi',
-  'Gigi Sensitif / Ngilu Saat Minum Es',
-  'Gigi Berlubang / Sakit Berdenyut',
-  'Bau Mulut (Halitosis)',
-  'Gigi Goyang / Masalah Penyangga',
-  'Gigi Bungsu / Impaksi Geraham',
-  'Estetika Gigi / Pemutihan Whitening',
-  'Pemasangan Behel / Aligner',
-  'Pemeriksaan Umum Gigi & Mulut',
+interface TopicItem {
+  id: string;
+  title: string;
+  desc: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  bg: string;
+}
+
+const TOPIC_ITEMS: TopicItem[] = [
+  {
+    id: 'Gigi Berlubang / Sakit Berdenyut',
+    title: 'Gigi Berlubang & Nyeri',
+    desc: 'Rasa sakit berdenyut atau ngilu saat mengunyah makanan',
+    icon: 'medkit-outline',
+    color: '#DC2626',
+    bg: '#FEF2F2',
+  },
+  {
+    id: 'Gigi Sensitif / Ngilu Saat Minum Es',
+    title: 'Gigi Sensitif & Ngilu',
+    desc: 'Sensasi ngilu tajam saat minum dingin, asam, atau manis',
+    icon: 'snow-outline',
+    color: '#2563EB',
+    bg: '#EFF6FF',
+  },
+  {
+    id: 'Gusi Berdarah / Radang Gusi',
+    title: 'Gusi Berdarah & Radang',
+    desc: 'Gusi bengkak, kemerahan, atau berdarah saat sikat gigi',
+    icon: 'water-outline',
+    color: '#D97706',
+    bg: '#FFFBEB',
+  },
+  {
+    id: 'Estetika Gigi / Pemutihan Whitening',
+    title: 'Estetika & Whitening',
+    desc: 'Pembersihan karang gigi, noda, veneer & pemutihan',
+    icon: 'sparkles-outline',
+    color: '#C9A24A',
+    bg: '#FAF5EA',
+  },
+  {
+    id: 'Pemasangan Behel / Aligner',
+    title: 'Behel & Aligner (Ortodonti)',
+    desc: 'Perataan susunan gigi & konsultasi kawat gigi transparan',
+    icon: 'grid-outline',
+    color: '#7C3AED',
+    bg: '#F5F3FF',
+  },
+  {
+    id: 'Pemeriksaan Umum Gigi & Mulut',
+    title: 'Pemeriksaan Rutin / Lainnya',
+    desc: 'Check-up berkala, bau mulut, atau keluhan gigi lainnya',
+    icon: 'search-outline',
+    color: '#059669',
+    bg: '#ECFDF5',
+  },
 ];
 
 export default function NewConsultationScreen() {
-  const [selectedTopic, setSelectedTopic] = useState(TOPIC_OPTIONS[0]);
+  const [selectedTopic, setSelectedTopic] = useState<string>(TOPIC_ITEMS[0].id);
   const [complaint, setComplaint] = useState('');
-  const [painScale, setPainScale] = useState(3);
+  const [painScale, setPainScale] = useState<number>(3);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!complaint.trim()) {
-      Alert.alert('Perhatian', 'Mohon jelaskan gejala atau keluhan yang Anda rasakan.');
+      Alert.alert('Perhatian', 'Mohon ceritakan gejala atau keluhan yang Anda rasakan secara singkat.');
       return;
     }
 
@@ -43,95 +91,159 @@ export default function NewConsultationScreen() {
 
       router.replace({ pathname: '/consultation/[id]', params: { id: res.id } });
     } catch (err: any) {
-      Alert.alert('Gagal', err?.message || 'Gagal memulai sesi konsultasi.');
+      Alert.alert('Gagal', err?.message || 'Gagal memulai sesi konsultasi. Silakan coba lagi.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const getPainLevelMeta = (scale: number) => {
+    if (scale <= 3) return { label: 'Ringan (Masih bisa beraktivitas)', color: '#10B981', bg: '#D1FAE5' };
+    if (scale <= 6) return { label: 'Sedang (Mengganggu kenyamanan)', color: '#D97706', bg: '#FEF3C7' };
+    return { label: 'Berat (Sangat nyeri / butuh tindakan)', color: '#DC2626', bg: '#FEE2E2' };
+  };
+
+  const painMeta = getPainLevelMeta(painScale);
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      {/* Header Bar */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={colors.charcoal} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.8}>
+          <Ionicons name="arrow-back" size={22} color={colors.charcoal} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mulai Konsultasi Baru</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.headerTitle}>Mulai Konsultasi Baru</Text>
+          <Text style={styles.headerSubtitle}>Ceritakan keluhan Anda ke tim dokter & AI</Text>
+        </View>
+        <View style={{ width: 36 }} />
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Pilih Topik Keluhan</Text>
-            <View style={styles.chipGrid}>
-              {TOPIC_OPTIONS.map((item) => {
-                const isSelected = selectedTopic === item;
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {/* Section 1: Pilih Topik Keluhan */}
+          <View style={styles.section}>
+            <View style={styles.sectionLabelRow}>
+              <View style={styles.stepBadge}>
+                <Text style={styles.stepText}>1</Text>
+              </View>
+              <Text style={styles.sectionHeading}>Pilih Kategori Keluhan</Text>
+            </View>
+            <Text style={styles.sectionDesc}>Pilih salah satu kondisi yang paling sesuai dengan apa yang Anda rasakan.</Text>
+
+            <View style={styles.topicList}>
+              {TOPIC_ITEMS.map((item) => {
+                const isSelected = selectedTopic === item.id;
                 return (
                   <TouchableOpacity
-                    key={item}
-                    style={[styles.chip, isSelected ? styles.chipSelected : null]}
-                    onPress={() => setSelectedTopic(item)}
-                    activeOpacity={0.8}
+                    key={item.id}
+                    style={[styles.topicCard, isSelected ? styles.topicCardActive : null]}
+                    onPress={() => setSelectedTopic(item.id)}
+                    activeOpacity={0.85}
                   >
-                    <Text style={[styles.chipText, isSelected ? styles.chipTextSelected : null]}>
-                      {item}
-                    </Text>
+                    <View style={[styles.topicIconWrap, { backgroundColor: item.bg }]}>
+                      <Ionicons name={item.icon} size={20} color={item.color} />
+                    </View>
+                    <View style={styles.topicInfo}>
+                      <Text style={[styles.topicTitle, isSelected ? { color: colors.goldDark } : null]}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.topicDesc} numberOfLines={2}>
+                        {item.desc}
+                      </Text>
+                    </View>
+                    <View style={[styles.radioCircle, isSelected ? styles.radioCircleActive : null]}>
+                      {isSelected ? <View style={styles.radioDot} /> : null}
+                    </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
+          </View>
 
-            {/* Complaint details */}
-            <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Ceritakan Keluhan Anda</Text>
-            <TextInput
-              style={styles.textArea}
-              placeholder="Jelaskan detail rasa sakit, sudah berapa lama, atau bagian gigi mana yang bermasalah..."
-              placeholderTextColor={colors.muted}
-              multiline
-              numberOfLines={4}
-              value={complaint}
-              onChangeText={setComplaint}
-            />
+          {/* Section 2: Detail Keluhan */}
+          <View style={styles.section}>
+            <View style={styles.sectionLabelRow}>
+              <View style={styles.stepBadge}>
+                <Text style={styles.stepText}>2</Text>
+              </View>
+              <Text style={styles.sectionHeading}>Ceritakan Gejala Anda</Text>
+            </View>
+            <Text style={styles.sectionDesc}>Tuliskan detail rasa sakit, sejak kapan, atau lokasi gigi yang bermasalah.</Text>
 
-            {/* Pain Scale */}
-            <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Tingkat Rasa Sakit (0 - 10)</Text>
-            <View style={styles.painScaleRow}>
+            <View style={styles.textAreaWrap}>
+              <TextInput
+                style={styles.textArea}
+                placeholder="Contoh: Gigi geraham bawah kanan sakit berdenyut sejak 2 hari lalu, terutama saat mengunyah makanan keras..."
+                placeholderTextColor="#9CA3AF"
+                multiline
+                numberOfLines={4}
+                value={complaint}
+                onChangeText={setComplaint}
+                textAlignVertical="top"
+              />
+              <Text style={styles.charCount}>{complaint.length} karakter</Text>
+            </View>
+          </View>
+
+          {/* Section 3: Tingkat Rasa Sakit */}
+          <View style={styles.section}>
+            <View style={styles.sectionLabelRow}>
+              <View style={styles.stepBadge}>
+                <Text style={styles.stepText}>3</Text>
+              </View>
+              <Text style={styles.sectionHeading}>Skala Rasa Sakit (1 - 10)</Text>
+            </View>
+
+            <View style={[styles.painBadge, { backgroundColor: painMeta.bg }]}>
+              <Text style={[styles.painBadgeText, { color: painMeta.color }]}>
+                Level {painScale} : {painMeta.label}
+              </Text>
+            </View>
+
+            <View style={styles.painRow}>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => {
                 const isSelected = painScale === num;
+                const isHigh = num >= 7;
+                const isMedium = num >= 4 && num < 7;
+                const activeBg = isHigh ? '#DC2626' : isMedium ? '#D97706' : colors.gold;
+
                 return (
                   <TouchableOpacity
                     key={num}
-                    style={[styles.painBtn, isSelected ? styles.painBtnSelected : null]}
+                    style={[
+                      styles.painBtn,
+                      isSelected ? { backgroundColor: activeBg, borderColor: activeBg } : null,
+                    ]}
                     onPress={() => setPainScale(num)}
+                    activeOpacity={0.8}
                   >
-                    <Text style={[styles.painBtnText, isSelected ? styles.painBtnTextSelected : null]}>
+                    <Text style={[styles.painBtnText, isSelected ? { color: '#fff', fontWeight: '800' } : null]}>
                       {num}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-            <Text style={styles.painHint}>
-              Skala {painScale}: {painScale <= 3 ? 'Ringan' : painScale <= 6 ? 'Sedang' : 'Berat / Mengganggu'}
-            </Text>
-
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={[styles.submitBtn, isLoading ? styles.submitBtnDisabled : null]}
-              onPress={handleSubmit}
-              disabled={isLoading}
-              activeOpacity={0.85}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Ionicons name="chatbubbles" size={18} color="#fff" />
-                  <Text style={styles.submitBtnText}>Mulai Chat Konsultasi</Text>
-                </>
-              )}
-            </TouchableOpacity>
           </View>
+
+          {/* Submit Action */}
+          <TouchableOpacity
+            style={[styles.submitBtn, isLoading ? { opacity: 0.7 } : null]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+            activeOpacity={0.85}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="chatbubble-ellipses" size={18} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.submitBtnText}>Kirim & Buka Ruang Konsultasi</Text>
+                <Ionicons name="arrow-forward" size={16} color="#fff" style={{ marginLeft: 6 }} />
+              </>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -144,77 +256,139 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  backBtn: { padding: 4 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleWrap: { alignItems: 'center' },
   headerTitle: { fontSize: 16, fontWeight: '700', color: colors.charcoal },
-  scroll: { padding: spacing.md },
-  card: {
+  headerSubtitle: { fontSize: 11, color: colors.charcoalMedium, marginTop: 1 },
+  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  section: {
     backgroundColor: colors.white,
     borderRadius: radius.xl,
-    padding: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    shadowColor: colors.charcoal,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: colors.charcoal, marginBottom: 8 },
-  chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radius.md,
+  sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  stepBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: colors.gold,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  sectionHeading: { fontSize: 15, fontWeight: '700', color: colors.charcoal },
+  sectionDesc: { fontSize: 12, color: colors.charcoalMedium, lineHeight: 18, marginBottom: spacing.md },
+  topicList: { gap: spacing.sm },
+  topicCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FAF8F5',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#F0E6D3',
+    borderRadius: radius.lg,
+    padding: 12,
+    gap: 12,
   },
-  chipSelected: {
+  topicCardActive: {
     backgroundColor: '#FAF5EA',
     borderColor: colors.gold,
+    borderWidth: 1.5,
   },
-  chipText: { fontSize: 11, color: colors.charcoalMedium },
-  chipTextSelected: { color: colors.goldDark, fontWeight: '700' },
-  textArea: {
+  topicIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topicInfo: { flex: 1 },
+  topicTitle: { fontSize: 13, fontWeight: '700', color: colors.charcoal },
+  topicDesc: { fontSize: 11, color: colors.charcoalMedium, marginTop: 2, lineHeight: 16 },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioCircleActive: { borderColor: colors.gold },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.gold,
+  },
+  textAreaWrap: {
     backgroundColor: '#FAF8F5',
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderColor: '#E8DFC8',
+    borderRadius: radius.lg,
+    padding: spacing.sm,
+  },
+  textArea: {
     fontSize: 13,
     color: colors.charcoal,
     minHeight: 90,
-    textAlignVertical: 'top',
+    lineHeight: 20,
   },
-  painScaleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  charCount: { fontSize: 10, color: colors.charcoalMedium, textAlign: 'right', marginTop: 4 },
+  painBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.md,
+    alignSelf: 'flex-start',
+    marginBottom: spacing.md,
+  },
+  painBadgeText: { fontSize: 12, fontWeight: '700' },
+  painRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 4 },
   painBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    flex: 1,
+    height: 38,
+    borderRadius: radius.md,
     backgroundColor: '#FAF8F5',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#E8DFC8',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  painBtnSelected: {
-    backgroundColor: colors.gold,
-    borderColor: colors.gold,
-  },
-  painBtnText: { fontSize: 11, fontWeight: '700', color: colors.charcoal },
-  painBtnTextSelected: { color: '#fff' },
-  painHint: { fontSize: 11, color: colors.goldDark, marginTop: 6, fontWeight: '600' },
+  painBtnText: { fontSize: 12, fontWeight: '600', color: colors.charcoal },
   submitBtn: {
-    marginTop: 20,
-    backgroundColor: colors.gold,
-    borderRadius: radius.full,
-    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    backgroundColor: colors.gold,
+    borderRadius: radius.full,
+    paddingVertical: 14,
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+    shadowColor: colors.gold,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
