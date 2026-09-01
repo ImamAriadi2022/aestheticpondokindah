@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
   Modal, TextInput, ActivityIndicator, Linking, KeyboardAvoidingView, Platform,
+  Image, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { userService, UserProfileData } from '@/services/userService';
+import { getStorageUrl } from '@/constants/api';
 import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,6 +18,8 @@ export default function ProfileScreen() {
   const { user, logout, refreshUser } = useAuth();
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   // Edit Profile Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -43,7 +47,7 @@ export default function ProfileScreen() {
     confirm_password: '',
   });
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     setIsLoadingProfile(true);
     try {
       const data = await userService.getProfile();
@@ -57,14 +61,14 @@ export default function ProfileScreen() {
     } finally {
       setIsLoadingProfile(false);
     }
-  };
+  }, [user]);
 
   const populateForm = (data: any) => {
     setEditForm({
       name: data.name || '',
       email: data.email || '',
       phone: data.phone || data.whatsapp || '',
-      gender: data.gender || 'Laki-laki',
+      gender: data.gender === 'female' ? 'Perempuan' : data.gender === 'male' ? 'Laki-laki' : (data.gender || 'Laki-laki'),
       birthDate: data.birthDate || data.birth_date || '',
       bloodType: data.bloodType || data.blood_type || 'Tidak Tahu',
       job: data.job || data.occupation || '',
@@ -77,7 +81,16 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     loadProfile();
-  }, [user]);
+  }, [loadProfile]);
+
+  const onRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await Promise.allSettled([
+      refreshUser(),
+      loadProfile(),
+    ]);
+    setIsRefreshing(false);
+  }, [loadProfile, refreshUser]);
 
   const handleOpenEdit = () => {
     if (profileData) populateForm(profileData);
@@ -93,11 +106,14 @@ export default function ProfileScreen() {
 
     setIsSaving(true);
     try {
+      const normalizedGender = editForm.gender === 'Perempuan' ? 'female' : 'male';
+
       await userService.updateProfile({
         name: editForm.name.trim(),
         email: editForm.email.trim(),
         phone: editForm.phone.trim(),
-        gender: editForm.gender,
+        whatsapp: editForm.phone.trim(),
+        gender: normalizedGender,
         birthDate: editForm.birthDate.trim(),
         bloodType: editForm.bloodType,
         job: editForm.job.trim(),
@@ -110,9 +126,9 @@ export default function ProfileScreen() {
       await refreshUser();
       await loadProfile();
       setIsEditModalOpen(false);
-      Alert.alert('Berhasil', 'Data profil Anda telah berhasil diperbarui.');
+      Alert.alert('Berhasil', 'Data profil Anda telah berhasil diperbarui di server.');
     } catch (err: any) {
-      Alert.alert('Gagal', err?.message || 'Gagal memperbarui profil.');
+      Alert.alert('Gagal Memperbarui Profil', err?.message || 'Gagal memperbarui profil. Periksa koneksi internet Anda.');
     } finally {
       setIsSaving(false);
     }
@@ -136,14 +152,16 @@ export default function ProfileScreen() {
     try {
       await userService.changePassword({
         current_password: passForm.current_password,
+        password: passForm.new_password,
         new_password: passForm.new_password,
+        password_confirmation: passForm.confirm_password,
         new_password_confirmation: passForm.confirm_password,
       });
       setIsPasswordModalOpen(false);
       setPassForm({ current_password: '', new_password: '', confirm_password: '' });
-      Alert.alert('Berhasil', 'Kata sandi Anda berhasil diperbarui.');
+      Alert.alert('Berhasil', 'Kata sandi akun Anda berhasil diperbarui.');
     } catch (err: any) {
-      Alert.alert('Gagal', err?.message || 'Gagal mengubah kata sandi. Pastikan kata sandi lama benar.');
+      Alert.alert('Gagal Mengubah Kata Sandi', err?.message || 'Gagal mengubah kata sandi. Pastikan kata sandi lama benar.');
     } finally {
       setIsChangingPass(false);
     }
@@ -165,16 +183,16 @@ export default function ProfileScreen() {
   };
 
   const activeUser = profileData || (user as any);
-  const tier = (activeUser?.membership_level ?? 'bronze').toUpperCase();
-  const roleLabel = activeUser?.role === 'doctor' ? 'Dokter Spesialis' : activeUser?.role === 'clinic_admin' ? 'Administrator' : 'Pasien Terdaftar';
+  const rawAvatar = activeUser?.avatar_url || activeUser?.avatar || activeUser?.photo_url || activeUser?.picture || (user as any)?.avatar_url || (user as any)?.avatar || (user as any)?.photo_url;
+  const fullAvatarUri = rawAvatar ? getStorageUrl(rawAvatar) : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      {/* Header */}
+      {/* COMPACT TOP HEADER (IDENTICAL TO MEMBERSHIP, CONSULTATION, BOOKING) */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Profil Pasien</Text>
-          <Text style={styles.subtitle}>Informasi data pribadi & rekam medis klinik</Text>
+        <View style={styles.headerTextWrap}>
+          <Text style={styles.title} numberOfLines={1}>Profil Pasien</Text>
+          <Text style={styles.subtitle} numberOfLines={1}>Data diri & keamanan akun</Text>
         </View>
         <TouchableOpacity style={styles.editHeaderBtn} onPress={handleOpenEdit} activeOpacity={0.85}>
           <Ionicons name="pencil-outline" size={14} color="#fff" style={{ marginRight: 4 }} />
@@ -182,11 +200,23 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* Profile Card Summary */}
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Card Summary (Google Avatar + No "Pasien Terdaftar" text) */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{activeUser?.name?.[0]?.toUpperCase() ?? 'P'}</Text>
+            {fullAvatarUri && !avatarError ? (
+              <Image
+                source={{ uri: fullAvatarUri }}
+                style={styles.avatarImage}
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              <Text style={styles.avatarText}>{activeUser?.name?.[0]?.toUpperCase() ?? 'P'}</Text>
+            )}
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName} numberOfLines={1}>{activeUser?.name ?? 'Pasien'}</Text>
@@ -201,18 +231,9 @@ export default function ProfileScreen() {
               </View>
             ) : null}
           </View>
-          <View style={styles.roleBadge}>
-            <Ionicons
-              name={activeUser?.role === 'doctor' ? 'medkit' : activeUser?.role === 'clinic_admin' ? 'shield-checkmark' : 'person'}
-              size={12}
-              color={colors.goldDark}
-              style={{ marginRight: 4 }}
-            />
-            <Text style={styles.roleText}>{roleLabel}</Text>
-          </View>
         </View>
 
-        {/* 1. INFORMASI DATA DIRI PASIEN (Attributes from Website) */}
+        {/* 1. INFORMASI DATA DIRI PASIEN (Synced from API) */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
             <View style={styles.sectionHeaderLeft}>
@@ -239,7 +260,9 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.attributeRow}>
               <Text style={styles.attributeLabel}>Jenis Kelamin</Text>
-              <Text style={styles.attributeValue}>{activeUser?.gender || '-'}</Text>
+              <Text style={styles.attributeValue}>
+                {activeUser?.gender === 'female' ? 'Perempuan' : activeUser?.gender === 'male' ? 'Laki-laki' : (activeUser?.gender || '-')}
+              </Text>
             </View>
             <View style={styles.attributeRow}>
               <Text style={styles.attributeLabel}>Tanggal Lahir</Text>
@@ -451,33 +474,33 @@ export default function ProfileScreen() {
                 placeholderTextColor="#9CA3AF"
               />
 
-              {/* Kebiasaan */}
-              <Text style={styles.inputLabel}>Kebiasaan Konsumsi</Text>
-              <TouchableOpacity
-                style={styles.checkboxRow}
-                onPress={() => setEditForm((p) => ({ ...p, isCoffeeDrinker: !p.isCoffeeDrinker }))}
-              >
-                <Ionicons
-                  name={editForm.isCoffeeDrinker ? "checkbox" : "square-outline"}
-                  size={20}
-                  color={editForm.isCoffeeDrinker ? colors.goldDark : "#9CA3AF"}
-                />
-                <Text style={styles.checkboxText}>Rutin minum Kopi / Teh</Text>
-              </TouchableOpacity>
+              {/* Gaya Hidup: Kopi & Rokok */}
+              <Text style={[styles.inputLabel, { marginTop: spacing.sm }]}>Gaya Hidup & Kebiasaan</Text>
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Rutin Mengonsumsi Kopi / Teh</Text>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, editForm.isCoffeeDrinker ? styles.toggleBtnActive : null]}
+                  onPress={() => setEditForm((p) => ({ ...p, isCoffeeDrinker: !p.isCoffeeDrinker }))}
+                >
+                  <Text style={[styles.toggleBtnText, editForm.isCoffeeDrinker ? styles.toggleBtnTextActive : null]}>
+                    {editForm.isCoffeeDrinker ? 'Ya' : 'Tidak'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-              <TouchableOpacity
-                style={styles.checkboxRow}
-                onPress={() => setEditForm((p) => ({ ...p, isSmoker: !p.isSmoker }))}
-              >
-                <Ionicons
-                  name={editForm.isSmoker ? "checkbox" : "square-outline"}
-                  size={20}
-                  color={editForm.isSmoker ? colors.goldDark : "#9CA3AF"}
-                />
-                <Text style={styles.checkboxText}>Merokok / Vaping</Text>
-              </TouchableOpacity>
+              <View style={styles.switchRow}>
+                <Text style={styles.switchLabel}>Riwayat Merokok</Text>
+                <TouchableOpacity
+                  style={[styles.toggleBtn, editForm.isSmoker ? styles.toggleBtnActive : null]}
+                  onPress={() => setEditForm((p) => ({ ...p, isSmoker: !p.isSmoker }))}
+                >
+                  <Text style={[styles.toggleBtnText, editForm.isSmoker ? styles.toggleBtnTextActive : null]}>
+                    {editForm.isSmoker ? 'Ya' : 'Tidak'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-              {/* Save Button */}
+              {/* Tombol Simpan */}
               <TouchableOpacity
                 style={[styles.modalSaveBtn, isSaving ? { opacity: 0.7 } : null]}
                 onPress={handleSaveProfile}
@@ -485,9 +508,9 @@ export default function ProfileScreen() {
                 activeOpacity={0.85}
               >
                 {isSaving ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.modalSaveBtnText}>Simpan Perubahan Profil</Text>
+                  <Text style={styles.modalSaveBtnText}>Simpan Perubahan</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -495,7 +518,7 @@ export default function ProfileScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* MODAL: CHANGE PASSWORD */}
+      {/* MODAL: UBAH KATA SANDI */}
       <Modal visible={isPasswordModalOpen} animationType="slide" transparent>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalBackdrop}>
           <View style={styles.modalContent}>
@@ -506,7 +529,12 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.lg }}>
+              <Text style={styles.inputHelper}>
+                Gunakan kata sandi yang aman dengan kombinasi huruf dan angka minimal 6 karakter.
+              </Text>
+
+              {/* Password Lama */}
               <Text style={styles.inputLabel}>Kata Sandi Saat Ini</Text>
               <TextInput
                 style={styles.textInput}
@@ -517,6 +545,7 @@ export default function ProfileScreen() {
                 placeholderTextColor="#9CA3AF"
               />
 
+              {/* Password Baru */}
               <Text style={styles.inputLabel}>Kata Sandi Baru</Text>
               <TextInput
                 style={styles.textInput}
@@ -527,6 +556,7 @@ export default function ProfileScreen() {
                 placeholderTextColor="#9CA3AF"
               />
 
+              {/* Konfirmasi Password Baru */}
               <Text style={styles.inputLabel}>Konfirmasi Kata Sandi Baru</Text>
               <TextInput
                 style={styles.textInput}
@@ -537,6 +567,7 @@ export default function ProfileScreen() {
                 placeholderTextColor="#9CA3AF"
               />
 
+              {/* Tombol Simpan Password */}
               <TouchableOpacity
                 style={[styles.modalSaveBtn, isChangingPass ? { opacity: 0.7 } : null]}
                 onPress={handleChangePassword}
@@ -544,9 +575,9 @@ export default function ProfileScreen() {
                 activeOpacity={0.85}
               >
                 {isChangingPass ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.modalSaveBtnText}>Simpan Kata Sandi Baru</Text>
+                  <Text style={styles.modalSaveBtnText}>Ubah Kata Sandi Sekarang</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -559,151 +590,228 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
-  scroll: { paddingBottom: spacing.xxl },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    gap: spacing.sm,
   },
-  title: { fontSize: 20, fontWeight: '700', color: colors.charcoal },
-  subtitle: { fontSize: 12, color: colors.charcoalMedium, marginTop: 2 },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  subtitle: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    marginTop: 1,
+  },
   editHeaderBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.gold,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
     borderRadius: radius.full,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: 4,
+    flexShrink: 0,
   },
-  editHeaderBtnText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  profileCard: {
-    backgroundColor: colors.white,
-    borderRadius: radius.xl,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
+  editHeaderBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  scroll: {
     padding: spacing.md,
+    paddingBottom: spacing.xxl,
+    gap: spacing.md,
+  },
+  profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.charcoal,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
     gap: spacing.md,
+    shadowColor: '#2C2416',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   avatar: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#2C2416',
-    borderWidth: 2,
-    borderColor: colors.gold,
+    backgroundColor: '#FAF5EA',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: colors.gold,
+    overflow: 'hidden',
   },
-  avatarText: { fontSize: 22, fontWeight: '800', color: colors.gold },
-  profileInfo: { flex: 1 },
-  profileName: { fontSize: 16, fontWeight: '700', color: colors.charcoal },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  profileMeta: { fontSize: 12, color: colors.charcoalMedium },
-  roleBadge: {
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 26,
+  },
+  avatarText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.goldDark,
+  },
+  profileInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  profileName: {
+    fontSize: 15.5,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF5EA',
-    borderWidth: 1,
-    borderColor: '#F0E6D3',
-    borderRadius: radius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: 5,
   },
-  roleText: { fontSize: 10, fontWeight: '700', color: colors.goldDark },
+  profileMeta: {
+    fontSize: 11.5,
+    color: colors.charcoalMedium,
+  },
   sectionCard: {
     backgroundColor: colors.white,
     borderRadius: radius.xl,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
+    gap: spacing.sm + 2,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
   },
-  sectionHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.xs },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: colors.charcoal },
-  sectionEditLink: { fontSize: 12, fontWeight: '700', color: colors.goldDark },
-  attributeList: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: spacing.xs },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sectionTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  sectionEditLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.goldDark,
+  },
+  attributeList: {
+    borderTopWidth: 1,
+    borderTopColor: '#F5EFE6',
+    paddingTop: spacing.xs,
+  },
   attributeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 7,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5EFE6',
+    borderBottomColor: '#FAF8F5',
   },
-  attributeLabel: { fontSize: 12, color: colors.charcoalMedium },
-  attributeValue: { fontSize: 12, fontWeight: '600', color: colors.charcoal },
-  habitGrid: { gap: 10, marginTop: spacing.xs },
+  attributeLabel: {
+    fontSize: 11.5,
+    color: colors.charcoalMedium,
+  },
+  attributeValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  habitGrid: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
   habitItem: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FAF8F5',
     borderRadius: radius.lg,
-    padding: 10,
-    gap: 12,
+    padding: spacing.sm,
     borderWidth: 1,
     borderColor: '#F0E6D3',
+    gap: spacing.xs + 2,
   },
   habitIconWrap: {
-    width: 38,
-    height: 38,
+    width: 32,
+    height: 32,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  habitTitle: { fontSize: 12, fontWeight: '700', color: colors.charcoal },
-  habitStatus: { fontSize: 11, color: colors.charcoalMedium, marginTop: 1 },
+  habitTitle: {
+    fontSize: 10,
+    color: colors.charcoalMedium,
+    fontWeight: '600',
+  },
+  habitStatus: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.charcoal,
+    marginTop: 1,
+  },
   actionMenuRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    gap: 10,
+    paddingVertical: spacing.xs + 2,
     borderTopWidth: 1,
     borderTopColor: '#F5EFE6',
+    gap: spacing.sm,
   },
   menuIconWrap: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  actionMenuTitle: { fontSize: 13, fontWeight: '700', color: colors.charcoal },
-  actionMenuDesc: { fontSize: 11, color: colors.charcoalMedium, marginTop: 1 },
+  actionMenuTitle: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: colors.charcoal,
+  },
+  actionMenuDesc: {
+    fontSize: 10.5,
+    color: colors.charcoalMedium,
+    marginTop: 1,
+  },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FEF2F2',
+    borderRadius: radius.xl,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: '#FECACA',
-    borderRadius: radius.xl,
-    marginHorizontal: spacing.lg,
-    paddingVertical: 13,
-    marginTop: spacing.xs,
   },
-  logoutBtnText: { color: '#DC2626', fontSize: 13, fontWeight: '700' },
+  logoutBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#DC2626',
+  },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -711,10 +819,10 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: colors.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
     padding: spacing.lg,
-    maxHeight: '90%',
+    maxHeight: '85%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -725,57 +833,111 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     paddingBottom: spacing.sm,
   },
-  modalTitle: { fontSize: 16, fontWeight: '700', color: colors.charcoal },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.full,
-    backgroundColor: colors.cream,
-    alignItems: 'center',
-    justifyContent: 'center',
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.charcoal,
   },
-  inputLabel: { fontSize: 12, fontWeight: '700', color: colors.charcoal, marginTop: spacing.sm, marginBottom: 4 },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  inputHelper: {
+    fontSize: 11.5,
+    color: colors.charcoalMedium,
+    marginBottom: spacing.md,
+    lineHeight: 16,
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.charcoal,
+    marginBottom: 4,
+    marginTop: spacing.sm,
+  },
   textInput: {
     backgroundColor: '#FAF8F5',
     borderWidth: 1,
-    borderColor: '#E8DFC8',
+    borderColor: colors.border,
     borderRadius: radius.lg,
     paddingHorizontal: 12,
     paddingVertical: 9,
-    fontSize: 13,
+    fontSize: 12.5,
     color: colors.charcoal,
   },
-  radioGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 },
+  radioGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
   radioPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: radius.full,
-    backgroundColor: '#FAF8F5',
     borderWidth: 1,
-    borderColor: '#E8DFC8',
+    borderColor: colors.border,
+    backgroundColor: '#FAF8F5',
   },
   radioPillActive: {
     backgroundColor: '#FAF5EA',
     borderColor: colors.gold,
-    borderWidth: 1.5,
   },
-  radioPillText: { fontSize: 11, fontWeight: '600', color: colors.charcoalMedium },
-  radioPillTextActive: { color: colors.goldDark, fontWeight: '700' },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
-  checkboxText: { fontSize: 12, color: colors.charcoal },
+  radioPillText: {
+    fontSize: 11,
+    color: colors.charcoalMedium,
+    fontWeight: '600',
+  },
+  radioPillTextActive: {
+    color: colors.goldDark,
+    fontWeight: '700',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5EFE6',
+  },
+  switchLabel: {
+    fontSize: 11.5,
+    color: colors.charcoal,
+  },
+  toggleBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#FAF8F5',
+  },
+  toggleBtnActive: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#10B981',
+  },
+  toggleBtnText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: colors.charcoalMedium,
+  },
+  toggleBtnTextActive: {
+    color: '#059669',
+  },
   modalSaveBtn: {
     backgroundColor: colors.gold,
-    borderRadius: radius.full,
-    paddingVertical: 13,
+    borderRadius: radius.xl,
+    paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.lg,
-    marginBottom: spacing.md,
     shadowColor: colors.gold,
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 3,
   },
-  modalSaveBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  modalSaveBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 });

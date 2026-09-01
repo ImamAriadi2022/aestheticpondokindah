@@ -1,5 +1,21 @@
 {
     "0": {
+        "id": "act-405",
+        "timestamp": "2026-09-01T13:33:00.000Z",
+        "category": "mobile-native-profile-audit-and-api-sync",
+        "title": "Audit Menyeluruh Fitur Profil Mobile Native: Header Compact, Dukungan Foto Google, & Integrasi API Production",
+        "description": "1) Menyelaraskan header tab Profil agar compact, proporsional, dan tombol 'Edit Profil' tidak terpotong (menggunakan flex: 1, minWidth: 0, paddingHorizontal: 10, paddingVertical: 7, flexShrink: 0 identik dengan header membership, konsultasi, dan booking), 2) Menambahkan dukungan pemuatan foto profil avatar akun Google dan foto server via getStorageUrl dengan fallback inisial huruf yang rapi, 3) Menghapus badge/tulisan 'Pasien Terdaftar' pada kartu ringkasan profil sesuai permintaan, 4) Menghubungkan pemuatan profil ke GET /api/user/profile, 5) Menghubungkan formulir edit data diri ke PUT /api/user/profile, 6) Menghubungkan formulir ubah kata sandi ke PUT /api/user/password lengkap dengan validasi dan penanganan error dari server production.",
+        "details": [
+            "Compact Header: Header profil seragam dengan desain seluruh tab utama aplikasi.",
+            "Google Avatar Support: Foto profil Google ditarik otomatis dan ditampilkan secara melingkar resolusi tajam.",
+            "Clean Summary Card: Tulisan 'Pasien Terdaftar' dihilangkan untuk tampilan kartu profil yang lebih bersih dan fokus.",
+            "Production API Sync: Get profil, edit profil, dan ubah password 100% terhubung ke backend API production tanpa hardcoding.",
+            "Zero Errors: Build TypeScript 0 error dan Metro Android Bundler 1.354 modul ter-bundle 100% clean."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-404",
         "timestamp": "2026-09-01T13:23:00.000Z",
         "category": "mobile-native-membership-left-bleed-fix",
