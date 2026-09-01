@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Shared\User\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -347,6 +348,13 @@ class GoogleAuthController extends Controller
             return $this->renderOAuthBridge($returnTo, ['error' => $errorMsg]);
         }
 
+        // Check if this exact code was already exchanged by a parallel prefetch request
+        $cacheKey = 'gauth_code_' . md5((string)$code);
+        $cachedPayload = Cache::get($cacheKey);
+        if ($cachedPayload && is_array($cachedPayload)) {
+            return $this->renderOAuthBridge($returnTo, $cachedPayload);
+        }
+
         $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
         $clientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
         
@@ -413,11 +421,15 @@ class GoogleAuthController extends Controller
             return $this->renderOAuthBridge($returnTo, ['error' => $authData['message'] ?? 'Login Google gagal.']);
         }
 
-        return $this->renderOAuthBridge($returnTo, [
+        $payload = [
             'token' => $authData['token'] ?? '',
             'user' => json_encode($authData['user'] ?? []),
             'message' => $authData['message'] ?? 'Login berhasil',
-        ]);
+        ];
+
+        Cache::put($cacheKey, $payload, now()->addMinutes(2));
+
+        return $this->renderOAuthBridge($returnTo, $payload);
     }
 
     /**

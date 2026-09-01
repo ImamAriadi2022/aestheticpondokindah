@@ -1,5 +1,19 @@
 {
     "0": {
+        "id": "act-415",
+        "timestamp": "2026-09-01T14:42:00.000Z",
+        "category": "google-oauth-prefetch-and-duplicate-protection",
+        "title": "Implementasi Proteksi Cache Callback Google OAuth untuk Mencegah Invalid Grant Akibat Duplicate Prefetch",
+        "description": "1) Menambahkan mekanisme caching instan (`Cache::put`/`Cache::get` berdasar hash kode otorisasi) pada `GoogleAuthController::handleGoogleCallback` untuk menangani duplikasi request callback otomatis dari fitur prefetch Chrome Mobile, 2) Menjaga agar kode otorisasi Google yang bersifat *single-use* tidak memicu error 'Bad Request / invalid_grant' saat terjadi request paralel dari browser mobile.",
+        "details": [
+            "Single-Use Code Safeguard: Menghindari penolakan Google karena kode otorisasi terpakai ganda.",
+            "Instant Session Replay: Request duplikat langsung menerima sesi login valid tanpa memanggil Google ulang.",
+            "Production Verified: Metro Android Bundler 1.355 modul ter-bundle 100% dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-414",
         "timestamp": "2026-09-01T14:31:00.000Z",
         "category": "mobile-native-oauth2-redirect-route",
