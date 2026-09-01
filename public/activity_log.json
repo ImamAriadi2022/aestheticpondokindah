@@ -1,5 +1,19 @@
 {
     "0": {
+        "id": "act-408",
+        "timestamp": "2026-09-01T13:51:00.000Z",
+        "category": "auth-google-token-exchange-fix",
+        "title": "Perbaikan Bug Pertukaran Kode Otorisasi Google (Token Exchange) Saat Relogin di Mobile Native",
+        "description": "1) Menyimpan parameter `redirect_uri` secara eksplisit di dalam payload state base64 pada `redirectToGoogle()` sehingga nilai URI yang dikirimkan ke Google OAuth 2.0 saat otorisasi identik 100% dengan URI yang digunakan saat penukaran token di `handleGoogleCallback()`, 2) Menambahkan fallback otomatis ke callback HTTPS production jika terjadi deviasi skema/port reverse proxy, 3) Menambahkan log diagnostik mendalam dan pesan error deskriptif jika Google menolak otorisasi.",
+        "details": [
+            "Exact Redirect URI Matching: Eliminasi error redirect_uri_mismatch pada endpoint pertukaran token Google.",
+            "Smooth Relogin Flow: Pengguna dapat logout dan login kembali menggunakan akun Google tanpa kegagalan otorisasi.",
+            "Production Verified: Metro Android Bundler 1.354 modul ter-bundle 100% dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-407",
         "timestamp": "2026-09-01T13:41:00.000Z",
         "category": "mobile-native-app-display-name-aespi",

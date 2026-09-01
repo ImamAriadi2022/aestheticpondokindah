@@ -310,6 +310,7 @@ class GoogleAuthController extends Controller
         $state = base64_encode(json_encode([
             'return_to' => $returnTo,
             'mode' => $mode,
+            'redirect_uri' => $redirectUri,
             'time' => time(),
         ]));
 
@@ -344,7 +345,7 @@ class GoogleAuthController extends Controller
 
         $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
         $clientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
-        $redirectUri = url('/api/auth/google/callback');
+        $redirectUri = $state['redirect_uri'] ?? url('/api/auth/google/callback');
         if (!str_starts_with($redirectUri, 'https://') && !str_contains($redirectUri, 'localhost')) {
             $redirectUri = preg_replace('/^http:/', 'https:', $redirectUri);
         }
@@ -359,7 +360,31 @@ class GoogleAuthController extends Controller
         ]);
 
         if (!$tokenRes->successful()) {
-            return $this->renderOAuthBridge($returnTo, ['error' => 'Gagal menukarkan kode otorisasi Google.']);
+            // Try standard production callback URI fallback if state had http or localhost
+            $prodUri = 'https://aestheticpondokindah.com/api/auth/google/callback';
+            if ($redirectUri !== $prodUri) {
+                $retryRes = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', [
+                    'code' => $code,
+                    'client_id' => $clientId,
+                    'client_secret' => $clientSecret,
+                    'redirect_uri' => $prodUri,
+                    'grant_type' => 'authorization_code',
+                ]);
+                if ($retryRes->successful()) {
+                    $tokenRes = $retryRes;
+                }
+            }
+        }
+
+        if (!$tokenRes->successful()) {
+            Log::error('Google OAuth token exchange failed', [
+                'status' => $tokenRes->status(),
+                'body' => $tokenRes->body(),
+                'redirect_uri' => $redirectUri,
+            ]);
+            $errJson = $tokenRes->json();
+            $errDetail = $errJson['error_description'] ?? $errJson['error'] ?? 'Gagal menukarkan kode otorisasi Google.';
+            return $this->renderOAuthBridge($returnTo, ['error' => 'Gagal menukarkan kode otorisasi Google: ' . $errDetail]);
         }
 
         $accessToken = $tokenRes->json('access_token');
