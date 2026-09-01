@@ -82,6 +82,8 @@ class ReservationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'name' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
             'doctor_id' => ['nullable', 'integer', 'exists:users,id'],
             'doctor_schedule_id' => ['nullable', 'integer', 'exists:doctor_schedules,id'],
             'date' => ['nullable', 'date'],
@@ -95,6 +97,16 @@ class ReservationController extends Controller
         ]);
 
         $user = $request->user();
+        $patientPhone = $validated['phone'] ?? ($user->whatsapp ?? $user->phone);
+        $patientName = $validated['name'] ?? $user->name;
+
+        // If user registered via Google / has empty phone, update user profile
+        if (!empty($patientPhone) && (empty($user->whatsapp) || empty($user->phone))) {
+            $user->whatsapp = $user->whatsapp ?: $patientPhone;
+            $user->phone = $user->phone ?: $patientPhone;
+            $user->save();
+        }
+
         $scheduleId = $validated['doctor_schedule_id'] ?? null;
         $doctorId = $validated['doctor_id'] ?? null;
         $date = $validated['date'] ?? null;
@@ -174,8 +186,8 @@ class ReservationController extends Controller
             'user_id' => $user->id,
             'doctor_id' => $doctorId,
             'doctor_schedule_id' => $scheduleId,
-            'name' => $user->name,
-            'phone' => $user->whatsapp ?? $user->phone,
+            'name' => $patientName,
+            'phone' => $patientPhone,
             'email' => $user->email,
             'gender' => $user->gender,
             'birth_date' => $user->birth_date,

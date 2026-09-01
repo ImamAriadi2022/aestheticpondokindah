@@ -68,6 +68,9 @@ export const ENDPOINTS = {
   // Doctor Schedules
   DOCTOR_SCHEDULES: '/doctor-schedules',
 
-  // Services
+  // Services & Settings
   SERVICES: '/services',
+  PUBLIC_SERVICES: '/public/services',
+  BRANCHES: '/public/branches',
+  SETTINGS: '/public/settings',
 } as const;

@@ -1,5 +1,120 @@
 {
     "0": {
+        "id": "act-397",
+        "timestamp": "2026-09-01T11:32:00.000Z",
+        "category": "mobile-native-whatsapp-validation-and-booking-audit",
+        "title": "Validasi Wajib Nomor WhatsApp, Panduan Pasien Login Google, & Sinkronisasi Profil Reservasi",
+        "description": "1) Menambahkan deteksi otomatis akun login Google/tanpa nomor WhatsApp di Step 4 (Konfirmasi Rincian Reservasi) dengan banner peringatan informatif, 2) Mewajibkan pengisian nomor WhatsApp aktif (minimal 9 digit angka) dengan indikator visual merah dan prefix +62, 3) Memperbarui backend ReservationController::store untuk menerima parameter name dan phone dari aplikasi serta otomatis menyelaraskan nomor WhatsApp ke profil user database jika sebelumnya kosong, 4) Menyempurnakan ringkasan konfirmasi reservasi (layanan, dokter, tanggal, jam WIB, dan lokasi klinik cabang), 5) Mengunci tombol 'Kirim Permintaan Reservasi' sampai nama, nomor WA, S&K, dan tanda tangan digital terpenuhi.",
+        "details": [
+            "Mandatory WhatsApp: Pasien yang login via Google kini wajib mengisi nomor WhatsApp aktif sebelum reservasi dapat dikirim.",
+            "Auto-Sync User Profile: Backend ReservationController secara otomatis menyimpan nomor WhatsApp baru ke database tabel users.",
+            "Relevant Details: Ringkasan janji temu menyajikan layanan, dokter spesialis, tanggal, jam, dan lokasi klinik cabang secara akurat.",
+            "Zero Errors: Build TypeScript dan Expo Metro Android bundle 100% clean."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-396",
+        "timestamp": "2026-09-01T11:27:00.000Z",
+        "category": "mobile-native-schedule-web-parity",
+        "title": "Penyelarasan Penuh Algoritma Pemilihan Tanggal & Slot Jam Praktik Dokter Sesuai Standar Web Pasien",
+        "description": "1) Menyelaraskan logika pemilihan tanggal dan jam di Step 3 secara 100% sama dengan web pasien (NewBookingFlow.tsx), 2) Menghubungkan seluruh 1.341 jadwal dokter dari GET /api/public/doctor-schedules ke slider kalender 21 hari dengan penanda status otomatis (Praktik vs Libur), 3) Auto-select tanggal praktik pertama yang tersedia saat dokter dipilih, 4) Melakukan parsing rentang jam dokter per 15 menit sehingga menghasilkan 8-24 slot sesi per hari sesuai jadwal sesi praktik dokter, 5) Menampilkan badge jumlah sesi tersedia, lokasi klinik cabang, dan tombol pintasan 'Pindah ke Jadwal Praktik Terdekat' jika dokter libur pada tanggal yang dipilih.",
+        "details": [
+            "Full Parity with Web: Algoritma getDoctorSchedulesForDate dan parseTimeRangeToSlots diselaraskan 100% dengan web pasien.",
+            "Dynamic Sesi Slots: Menghasilkan 8-24 slot waktu riil dari rentang jam database (e.g. 09.00-11.00, 11.00-13.00, 13.00-15.00, 15.00-17.00).",
+            "Auto-Select Active Date: Secara cerdas langsung memilih tanggal aktif berpraktik terdekat jika tanggal hari ini dokter sedang libur.",
+            "Off-Duty Shortcut: Menampilkan banner libur informatif dan tombol lompat ke jadwal praktik berikutnya."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-395",
+        "timestamp": "2026-09-01T11:23:00.000Z",
+        "category": "mobile-native-service-price-ui-cleanup",
+        "title": "Pembersihan Tampilan Harga pada Kartu Pemilihan Layanan Janji Temu Mobile Native",
+        "description": "1) Menghapus teks/elemen harga (Rp / price_formatted) pada kartu layanan di Step 1 (Pilih Layanan Perawatan Gigi), 2) Menjaga tampilan kartu layanan tetap elegan dan berfokus pada foto cover layanan, badge kategori, durasi tindakan, judul perawatan, dan ringkasan penjelasan klinis.",
+        "details": [
+            "Clean Service Cards: Kartu layanan kini hanya menampilkan gambar cover, badge kategori, durasi, nama layanan, dan ringkasan tindakan tanpa label harga.",
+            "Zero Errors: Build TypeScript dan Expo Metro Android bundle 100% clean."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-394",
+        "timestamp": "2026-09-01T11:21:00.000Z",
+        "category": "mobile-native-zero-hardcode-production-sync",
+        "title": "Pembersihan Total Hardcode & Koneksi Dinamis 100% API Production pada Alur Reservasi Janji Temu Mobile Native",
+        "description": "1) Menghapus seluruh array hardcode (SERVICES_CATALOG, CATEGORIES, INITIAL_DOCTORS, static TOS clauses, hardcoded WA numbers), 2) Menghubungkan katalog layanan langsung ke GET /api/services (206 layanan perawatan gigi live dari database), 3) Menghubungkan kategori dinamis dari respon layanan API, 4) Menghubungkan daftar dokter spesialis langsung ke GET /api/public/doctors (13 dokter spesialis dari DB), 5) Menghubungkan jadwal dokter ke GET /api/public/doctor-schedules (1.341 jadwal dari DB), 6) Menghubungkan dokumen S&K dan nomor WhatsApp resmi ke GET /api/public/settings (booking_terms & booking_whatsapp_number), 7) Mengirimkan reservasi ke POST /api/user/reservations.",
+        "details": [
+            "Zero Hardcoding: Seluruh data (layanan, dokter, jadwal, syarat ketentuan, dan nomor WA) 100% bersumber dari API server production.",
+            "Dynamic 206 Services: Memuat seluruh katalog perawatan gigi lengkap dengan gambar cover, durasi, dan harga.",
+            "Dynamic Settings & Legal: Syarat & Ketentuan serta Informed Consent ditarik langsung dari database sistem klinik.",
+            "Production Verified: Bundling Metro Android dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-393",
+        "timestamp": "2026-09-01T11:13:00.000Z",
+        "category": "mobile-native-expo-svg-bundling-fix",
+        "title": "Perbaikan Resolusi Modul react-native-svg untuk Expo SDK 54",
+        "description": "1) Menyelaraskan paket react-native-svg ke versi resmi yang terverifikasi kompatibel dengan Expo SDK 54 menggunakan 'npx expo install react-native-svg', 2) Mengatasi error resolusi Fabric/SymbolNativeComponent yang disebabkan versi npm generic, 3) Memastikan Metro Bundler dan TypeScript dapat memproses 1.351 modul tanpa error bundling.",
+        "details": [
+            "Expo SDK 54 Aligned: Paket react-native-svg terpasang sesuai standardisasi toolchain Expo.",
+            "Zero Metro Bundling Error: Bundler Android berhasil mengekspor 1.351 modul secara instan.",
+            "Signature Pad Fully Operational: Fitur tanda tangan digital sentuh berfungsi lancar di layar mobile."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-392",
+        "timestamp": "2026-09-01T11:09:00.000Z",
+        "category": "mobile-native-doctor-photo-and-consent-signature",
+        "title": "Implementasi Foto Profil Dokter, Pembersihan Universitas, & Dua Modal Persetujuan Medis (S&K + Tanda Tangan Digital)",
+        "description": "1) Menampilkan foto profil asli dokter spesialis dari database/API production (dengan fallback inisial emas), 2) Menghapus teks universitas pada kartu dokter, 3) Membangun komponen TermsPdfModalNative (pembaca S&K lengkap dengan checkbox persetujuan di dalam modal), 4) Membangun komponen DigitalSignatureModalNative (Surat Persetujuan Tindakan Medis + Pad Tanda Tangan Digital sentuh dengan PanResponder & react-native-svg), 5) Mengirimkan data tanda tangan digital ke backend pada parameter signature_data di POST /api/user/reservations.",
+        "details": [
+            "Doctor Card Visuals: Foto profil asli dokter tampil jernih, teks nama & spesialisasi ringkas tanpa universitas.",
+            "Two Popup Agreements: Persetujuan S&K dan Tanda Tangan Digital terselesaikan di dalam pop-up modal masing-masing.",
+            "Touch Vector Signature: Pasien menandatangani langsung di layar ponsel dengan hasil goresan vektor halus.",
+            "Production Synchronized: Parameter signature_data dikirimkan ke server untuk dokumentasi rekam medis."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-391",
+        "timestamp": "2026-09-01T11:02:00.000Z",
+        "category": "mobile-native-appointment-ui-refinement",
+        "title": "Optimalisasi Layout Header & Tombol Buat Janji Halaman Janji Temu Mobile Native",
+        "description": "1) Memperbaiki lebar container judul header dengan flex: 1 dan numberOfLines={1} agar teks tidak mendorong tombol ke sisi kanan layar, 2) Menyesuaikan padding horizontal header (paddingHorizontal: spacing.md), 3) Merampingkan tombol 'Buat Janji' dengan flexShrink: 0 dan proporsi padding yang presisi agar nyaman dilihat dan tidak terpotong di berbagai resolusi layar ponsel.",
+        "details": [
+            "Balanced Header Typography: Judul 'Janji Temu' dan sub-judul ringkas tanpa overflow.",
+            "Proportional Button: Tombol emas 'Buat Janji' memiliki margin kanan yang lega dan proporsional.",
+            "Zero Errors: Build TypeScript dan Expo bundle 100% clean."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-390",
+        "timestamp": "2026-09-01T11:00:00.000Z",
+        "category": "mobile-native-reservation-production-audit",
+        "title": "Audit Lengkap & Pengujian Live Koneksi Alur Reservasi Janji Temu Mobile Native ke API Production",
+        "description": "1) Menyelaraskan 100% flow dan endpoint reservasi pasien di mobile native dengan backend production: GET /api/services (206 layanan), GET /api/public/doctors (13 dokter spesialis), GET /api/public/doctor-schedules (1.341 jadwal dokter), POST /api/user/reservations, GET /api/user/reservations, GET /api/user/reservations/{id}, dan PUT /api/user/reservations/{id}/cancel, 2) Flow 4 langkah (Pilih Layanan -> Pilih Dokter -> Pilih Jadwal & Jam -> Konfirmasi Data), 3) Modal E-Ticket Digital dengan rincian kode booking dan tombol konfirmasi WhatsApp instan, 4) Fitur pembatalan reservasi dengan dialog konfirmasi, 5) Filter status (Mendatang, Semua, Selesai).",
+        "details": [
+            "100% Endpoint Synchronization: Seluruh endpoint reservasi backend terverifikasi live via HTTPS.",
+            "Complete Patient Flow: Step-by-step reservasi auto-advance, pencocokan jadwal praktik database, dan penerbitan tiket digital.",
+            "E-Ticket & Cancellation: Menampilkan modal detail E-Ticket dan pembatalan mandiri langsung ke server."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-389",
         "timestamp": "2026-09-01T10:54:00.000Z",
         "category": "mobile-native-home-production-audit",

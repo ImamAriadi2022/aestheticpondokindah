@@ -7,7 +7,7 @@ export interface Reservation {
   doctor_name: string | null;
   scheduled_date: string | null;
   scheduled_time: string | null;
-  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'rejected' | 'no_show' | string;
   notes: string | null;
   price: number | null;
   created_at: string;
