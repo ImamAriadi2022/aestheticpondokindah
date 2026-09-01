@@ -1,14 +1,17 @@
-# Monorepo Exclusions for EAS
-/public/
-/resources/
-/storage/
-/vendor/
-/app/
-/bootstrap/
-/config/
-/database/
-/routes/
-/frontend-web/
-/node_modules/
-/.git/
-/dist/
+# Ignore everything by default
+/*
+
+# Whitelist only mobile-native
+!/mobile-native
+!/mobile-native/**
+!/package.json
+!/.easignore
+!/eas.json
+
+# Exclude generated caches inside mobile-native
+mobile-native/node_modules/
+mobile-native/.expo/
+mobile-native/dist/
+mobile-native/android/
+mobile-native/ios/
+mobile-native/*.log
