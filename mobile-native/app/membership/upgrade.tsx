@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { membershipService } from '@/services/membershipService';
 import { colors, spacing, radius } from '@/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 
 const TIERS = [
   { level: 'gold', name: 'Gold', price: 'Rp 299.000', benefits: ['Diskon 10% semua layanan', '+100 Bonus Poin', 'Priority booking', 'Birthday treat'] },
@@ -44,7 +45,7 @@ export default function MembershipUpgradeScreen() {
               }
               await refreshUser();
               Alert.alert(
-                '✅ Upgrade Berhasil!',
+                'Upgrade Berhasil',
                 `Selamat! Anda kini menjadi member ${selected.toUpperCase()}.`,
                 [{ text: 'OK', onPress: () => router.back() }]
               );
@@ -73,17 +74,24 @@ export default function MembershipUpgradeScreen() {
             activeOpacity={0.8}
           >
             <View style={styles.cardHeader}>
-              <Text style={[styles.cardTier, selected === tier.level ? { color: colors.gold } : null]}>
-                ✦ {tier.name.toUpperCase()}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="ribbon-outline" size={16} color={selected === tier.level ? colors.gold : colors.charcoal} />
+                <Text style={[styles.cardTier, selected === tier.level ? { color: colors.gold } : null]}>
+                  {tier.name.toUpperCase()}
+                </Text>
+              </View>
               <Text style={styles.cardPrice}>{tier.price}</Text>
             </View>
             {tier.benefits.map((b, i) => (
-              <Text key={i} style={styles.benefit}>✓ {b}</Text>
+              <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <Ionicons name="checkmark-circle" size={14} color={colors.goldDark} />
+                <Text style={styles.benefit}>{b}</Text>
+              </View>
             ))}
             {selected === tier.level && (
               <View style={styles.selectedBadge}>
-                <Text style={styles.selectedText}>✓ Dipilih</Text>
+                <Ionicons name="checkmark" size={12} color="#fff" style={{ marginRight: 3 }} />
+                <Text style={styles.selectedText}>Dipilih</Text>
               </View>
             )}
           </TouchableOpacity>

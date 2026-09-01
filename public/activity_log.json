@@ -1,5 +1,34 @@
 {
     "0": {
+        "id": "act-381",
+        "timestamp": "2026-09-01T05:19:00.000Z",
+        "category": "mobile-native-home-and-api-fix",
+        "title": "Fokus Beranda Mobile: Reservasi Aktif, Konsultasi Aktif & Perbaikan API Artikel Produksi",
+        "description": "1) Beranda Mobile difokuskan menampilkan data 'Reservasi Aktif' (layanan, dokter, jadwal, status konfirmasi) dan 'Konsultasi Aktif' (topik keluhan, status chat dokter, tombol lanjutkan chat), 2) Memperbaiki parsing data API produksi di contentService.ts (menangani respons array langsung dari endpoint /api/public/posts) sehingga artikel edukasi gigi dari server produksi muncul dengan sempurna.",
+        "details": [
+            "Active Reservations & Consultations Display: Beranda secara real-time menampilkan data reservasi dan konsultasi yang sedang aktif.",
+            "Production API Normalization: Memperbaiki parser getPosts() & getPromos() untuk menormalisasi array data dari API backend produksi.",
+            "Bundle Verification: 100% lulus kompilasi TypeScript dan Expo Android bundle."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
+        "id": "act-380",
+        "timestamp": "2026-09-01T05:14:00.000Z",
+        "category": "mobile-native-ui-refinement",
+        "title": "Pembersihan AI Slop & Refinement UI/UX Mobile Native (Konsultasi Tab & Vector Icons)",
+        "description": "Menyelaraskan seluruh UI mobile native dengan standar Desain Sistem Klinik Aesthetic Pondok Indah: 1) Menghapus seluruh raw emoji/AI slop di layar Beranda, Membership, Profil, Janji Temu, dan Notifikasi, menggantinya dengan @expo/vector-icons (Ionicons) luxury gold styling, 2) Memindahkan ikon Notifikasi ke Top Header Bar dengan indikator badge belum dibaca, 3) Mengganti tab Notifikasi di bottom navigation bar dengan tab Konsultasi (ConsultationTabScreen), 4) Menambahkan kartu layanan cepat, kartu poin loyalty, dan status keanggotaan yang konsisten dengan website.",
+        "details": [
+            "Zero Raw Emojis: Seluruh ikon navigasi, status, benefit membership, dan menu profil menggunakan vektor resmi @expo/vector-icons.",
+            "Top Bar Notification Bell: Notifikasi dipindahkan ke header atas dengan badge unread counter dan navigasi kembali.",
+            "Bottom Tab Konsultasi: Menambahkan tab Konsultasi di navigasi bawah untuk interaksi chat dokter dan AI triage.",
+            "Design System Compliance: Warna core gold (#C9A24A), dark charcoal (#2C2416), dan soft cream (#FAF8F5) diterapkan konsisten."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-379",
         "timestamp": "2026-08-29T13:38:05.000Z",
         "category": "auth-google-oauth-sso-integration",

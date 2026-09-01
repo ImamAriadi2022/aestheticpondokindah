@@ -7,7 +7,7 @@ export interface Reservation {
   doctor_name: string | null;
   scheduled_date: string | null;
   scheduled_time: string | null;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
   notes: string | null;
   price: number | null;
   created_at: string;
@@ -47,14 +47,16 @@ export interface Notification {
 // Types — Content
 
 export interface Post {
-  id: number;
+  id: number | string;
   title: string;
   slug: string;
   excerpt: string | null;
-  content: string;
-  thumbnail_url: string | null;
-  published_at: string | null;
-  category: string | null;
+  content?: string;
+  thumbnail_url?: string | null;
+  cover_image_url?: string | null;
+  published_at?: string | null;
+  category?: string | null;
+  reading_time_minutes?: number | null;
 }
 
 export interface GalleryItem {

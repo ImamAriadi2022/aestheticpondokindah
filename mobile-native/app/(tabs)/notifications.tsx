@@ -4,8 +4,10 @@ import {
   RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { notificationService } from '@/services/notificationService';
 import { colors, spacing, radius } from '@/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import type { Notification } from '@/types/booking';
 
 export default function NotificationsScreen() {
@@ -58,24 +60,42 @@ export default function NotificationsScreen() {
     >
       <View style={[styles.dot, !item.is_read ? styles.dotUnread : null]} />
       <View style={{ flex: 1 }}>
-        <Text style={styles.notifTitle}>{item.title}</Text>
-        <Text style={styles.notifBody} numberOfLines={2}>{item.body}</Text>
-        <Text style={styles.notifTime}>{new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.notifTitle}>{item.title}</Text>
+          <View style={styles.timeWrap}>
+            <Ionicons name="time-outline" size={11} color={colors.charcoalMedium} />
+            <Text style={styles.notifTime}>
+              {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.notifBody} numberOfLines={3}>{item.body}</Text>
       </View>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* Header with Back Button */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Notifikasi</Text>
-          {unreadCount > 0 && (
-            <Text style={styles.unreadText}>{unreadCount} belum dibaca</Text>
-          )}
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.back()}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-back" size={22} color={colors.charcoal} />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.title}>Pusat Notifikasi</Text>
+            {unreadCount > 0 && (
+              <Text style={styles.unreadText}>{unreadCount} pesan belum dibaca</Text>
+            )}
+          </View>
         </View>
         {unreadCount > 0 && (
-          <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAll}>
+          <TouchableOpacity style={styles.markAllBtn} onPress={handleMarkAll} activeOpacity={0.8}>
+            <Ionicons name="checkmark-done" size={14} color={colors.goldDark} style={{ marginRight: 4 }} />
             <Text style={styles.markAllText}>Tandai Semua</Text>
           </TouchableOpacity>
         )}
@@ -91,9 +111,14 @@ export default function NotificationsScreen() {
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>🔔</Text>
-              <Text style={styles.emptyText}>Belum ada notifikasi</Text>
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="notifications-off-outline" size={42} color={colors.gold} />
+              </View>
+              <Text style={styles.emptyTitle}>Belum Ada Notifikasi</Text>
+              <Text style={styles.emptyText}>
+                Pengingat janji temu, konfirmasi reservasi, dan update promo membership Anda akan muncul di sini.
+              </Text>
             </View>
           }
         />
@@ -104,25 +129,75 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: spacing.lg },
-  title: { fontSize: 22, fontWeight: '700', color: colors.charcoal },
-  unreadText: { fontSize: 13, color: colors.charcoalMedium, marginTop: 2 },
-  markAllBtn: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: colors.gold },
-  markAllText: { fontSize: 12, fontWeight: '600', color: colors.gold },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
-  card: {
-    backgroundColor: colors.white, borderRadius: radius.lg,
-    padding: spacing.md, marginBottom: spacing.sm,
-    flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm,
-    borderWidth: 1, borderColor: colors.border,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  cardUnread: { backgroundColor: colors.goldMuted, borderColor: colors.gold + '40' },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.border, marginTop: 6 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.full,
+    backgroundColor: colors.cream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: { fontSize: 18, fontWeight: '700', color: colors.charcoal },
+  unreadText: { fontSize: 11, color: colors.goldDark, fontWeight: '600', marginTop: 1 },
+  markAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF5EA',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+  },
+  markAllText: { fontSize: 11, color: colors.goldDark, fontWeight: '700' },
+  list: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    shadowColor: colors.charcoal,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardUnread: { backgroundColor: '#FDFBF7', borderColor: '#E8DFC8' },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: 'transparent', marginTop: 6 },
   dotUnread: { backgroundColor: colors.gold },
-  notifTitle: { fontSize: 14, fontWeight: '700', color: colors.charcoal, marginBottom: 2 },
-  notifBody: { fontSize: 13, color: colors.charcoalMedium, lineHeight: 18 },
-  notifTime: { fontSize: 11, color: colors.muted, marginTop: 4 },
-  empty: { alignItems: 'center', paddingTop: spacing.xxl },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
-  emptyText: { fontSize: 16, fontWeight: '700', color: colors.charcoal },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  notifTitle: { fontSize: 14, fontWeight: '700', color: colors.charcoal, flex: 1, marginRight: 8 },
+  timeWrap: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  notifTime: { fontSize: 10, color: colors.charcoalMedium },
+  notifBody: { fontSize: 12, color: colors.charcoalMedium, lineHeight: 18 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
+  emptyIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FAF5EA',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.charcoal, marginBottom: spacing.xs },
+  emptyText: { fontSize: 12, color: colors.charcoalMedium, textAlign: 'center', lineHeight: 18, maxWidth: 280 },
 });

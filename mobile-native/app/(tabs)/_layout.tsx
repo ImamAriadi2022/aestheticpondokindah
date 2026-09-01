@@ -55,20 +55,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="membership"
+        name="consultation"
         options={{
-          title: 'Membership',
+          title: 'Konsultasi',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'diamond' : 'diamond-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={22} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="notifications"
+        name="membership"
         options={{
-          title: 'Notifikasi',
+          title: 'Membership',
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={22} color={color} />
+            <Ionicons name={focused ? 'sparkles' : 'sparkles-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -79,6 +79,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          href: null,
+          title: 'Notifikasi',
         }}
       />
     </Tabs>

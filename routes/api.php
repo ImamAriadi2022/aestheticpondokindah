@@ -507,6 +507,17 @@ Route::get('/doctors', [UserController::class, 'publicDoctors']);
 Route::get('/specializations', [UserController::class, 'specializations']);
 Route::get('/services', [ClinicServicePublicController::class, 'index']);
 Route::get('/branches', [BranchController::class, 'index']);
+Route::get('/posts', [ContentController::class, 'posts']);
+Route::get('/posts/{slug}', [ContentController::class, 'postBySlug']);
+
+// Global CORS preflight handler for mobile native & web clients
+Route::options('/{any}', function () {
+    return response('', 204)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-App-Version, X-Client, *')
+        ->header('Access-Control-Max-Age', '86400');
+})->where('any', '.*');
 
 // =========================================================================
 // 7. WEBHOOKS & EXTERNAL CALLBACKS

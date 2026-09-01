@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { bookingService } from '@/services/bookingService';
 import { colors, spacing, radius } from '@/theme/colors';
+import { Ionicons } from '@expo/vector-icons';
 import type { Reservation } from '@/types/booking';
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
@@ -53,16 +54,35 @@ export default function BookingScreen() {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardCode}>{item.code}</Text>
+          <View style={styles.codeWrap}>
+            <Ionicons name="receipt-outline" size={13} color={colors.goldDark} />
+            <Text style={styles.cardCode}>{item.code || `INV-${item.id}`}</Text>
+          </View>
           <View style={[styles.badge, { backgroundColor: cfg.bg }]}>
             <Text style={[styles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
           </View>
         </View>
+        
         <Text style={styles.serviceName}>{item.service_name}</Text>
-        {item.doctor_name && <Text style={styles.doctorName}>drg. {item.doctor_name}</Text>}
+        
+        {item.doctor_name && (
+          <View style={styles.metaRow}>
+            <Ionicons name="person-outline" size={12} color={colors.charcoalMedium} />
+            <Text style={styles.doctorName}>drg. {item.doctor_name}</Text>
+          </View>
+        )}
+        
         <View style={styles.cardFooter}>
-          <Text style={styles.dateText}>📅 {item.scheduled_date ?? 'Menunggu konfirmasi'}{item.scheduled_time ? ` · ${item.scheduled_time}` : ''}</Text>
-          {item.price && <Text style={styles.priceText}>Rp {Number(item.price).toLocaleString('id-ID')}</Text>}
+          <View style={styles.dateWrap}>
+            <Ionicons name="calendar-outline" size={13} color={colors.goldDark} />
+            <Text style={styles.dateText}>
+              {item.scheduled_date ?? 'Menunggu jadwal'}
+              {item.scheduled_time ? ` · ${item.scheduled_time}` : ''}
+            </Text>
+          </View>
+          {item.price ? (
+            <Text style={styles.priceText}>Rp {Number(item.price).toLocaleString('id-ID')}</Text>
+          ) : null}
         </View>
       </View>
     );
@@ -72,9 +92,17 @@ export default function BookingScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Janji Temu</Text>
-        <TouchableOpacity style={styles.newBtn} onPress={() => router.push('/booking/new')}>
-          <Text style={styles.newBtnText}>+ Buat Janji</Text>
+        <View>
+          <Text style={styles.title}>Janji Temu & Riwayat</Text>
+          <Text style={styles.subtitle}>Kelola reservasi jadwal perawatan klinik</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.newBtn}
+          onPress={() => router.push('/booking/new')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={18} color="#fff" />
+          <Text style={styles.newBtnText}>Buat Janji</Text>
         </TouchableOpacity>
       </View>
 
@@ -85,6 +113,7 @@ export default function BookingScreen() {
             key={tab}
             style={[styles.tab, activeTab === tab ? styles.tabActive : null]}
             onPress={() => setActiveTab(tab)}
+            activeOpacity={0.8}
           >
             <Text style={[styles.tabText, activeTab === tab ? styles.tabTextActive : null]}>
               {tab === 'upcoming' ? 'Mendatang' : tab === 'all' ? 'Semua' : 'Selesai'}
@@ -103,10 +132,26 @@ export default function BookingScreen() {
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={colors.gold} />}
           ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>📅</Text>
-              <Text style={styles.emptyText}>Belum ada janji temu</Text>
-              <Text style={styles.emptySub}>Buat janji temu pertama Anda sekarang</Text>
+            <View style={styles.emptyContainer}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="calendar-outline" size={42} color={colors.gold} />
+              </View>
+              <Text style={styles.emptyTitle}>Tidak Ada Jadwal</Text>
+              <Text style={styles.emptyText}>
+                {activeTab === 'upcoming'
+                  ? 'Belum ada jadwal janji temu aktif. Buat janji baru dengan dokter spesialis kami.'
+                  : 'Belum ada data riwayat janji temu pada kategori ini.'}
+              </Text>
+              {activeTab === 'upcoming' && (
+                <TouchableOpacity
+                  style={styles.emptyBtn}
+                  onPress={() => router.push('/booking/new')}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="calendar" size={16} color="#fff" style={{ marginRight: 6 }} />
+                  <Text style={styles.emptyBtnText}>Buat Janji Sekarang</Text>
+                </TouchableOpacity>
+              )}
             </View>
           }
         />
@@ -117,28 +162,106 @@ export default function BookingScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg },
-  title: { fontSize: 22, fontWeight: '700', color: colors.charcoal },
-  newBtn: { backgroundColor: colors.gold, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 },
-  newBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  tabs: { flexDirection: 'row', marginHorizontal: spacing.lg, backgroundColor: colors.creamDark, borderRadius: radius.lg, padding: 4, marginBottom: spacing.md },
-  tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: radius.md },
-  tabActive: { backgroundColor: colors.white, shadowColor: colors.charcoal, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  title: { fontSize: 20, fontWeight: '700', color: colors.charcoal },
+  subtitle: { fontSize: 12, color: colors.charcoalMedium, marginTop: 2 },
+  newBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gold,
+    borderRadius: radius.full,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 4,
+    shadowColor: colors.gold,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  newBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  tabs: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.white,
+    gap: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tab: {
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderRadius: radius.full,
+    backgroundColor: colors.cream,
+  },
+  tabActive: { backgroundColor: colors.gold },
   tabText: { fontSize: 12, fontWeight: '600', color: colors.charcoalMedium },
-  tabTextActive: { color: colors.charcoal },
-  list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
-  card: { backgroundColor: colors.white, borderRadius: radius.lg, padding: spacing.md, marginBottom: spacing.sm, borderWidth: 1, borderColor: colors.border },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  cardCode: { fontSize: 12, color: colors.muted, fontWeight: '600' },
-  badge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '700' },
-  serviceName: { fontSize: 15, fontWeight: '700', color: colors.charcoal, marginBottom: 2 },
-  doctorName: { fontSize: 12, color: colors.charcoalMedium, marginBottom: spacing.sm },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs },
+  tabTextActive: { color: '#fff', fontWeight: '700' },
+  list: { padding: spacing.lg, paddingBottom: spacing.xxl },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.charcoal,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
+  codeWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  cardCode: { fontSize: 11, fontWeight: '700', color: colors.goldDark },
+  badge: { borderRadius: radius.full, paddingHorizontal: 9, paddingVertical: 3 },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  serviceName: { fontSize: 15, fontWeight: '700', color: colors.charcoal, marginVertical: 4 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing.xs },
+  doctorName: { fontSize: 12, color: colors.charcoalMedium },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  dateWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dateText: { fontSize: 12, color: colors.charcoalMedium },
-  priceText: { fontSize: 13, color: colors.gold, fontWeight: '700' },
-  empty: { alignItems: 'center', paddingTop: spacing.xxl },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
-  emptyText: { fontSize: 16, fontWeight: '700', color: colors.charcoal },
-  emptySub: { fontSize: 13, color: colors.charcoalMedium, marginTop: 4 },
+  priceText: { fontSize: 13, fontWeight: '700', color: colors.goldDark },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxl, paddingHorizontal: spacing.lg },
+  emptyIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FAF5EA',
+    borderWidth: 1,
+    borderColor: '#F0E6D3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.charcoal, marginBottom: spacing.xs },
+  emptyText: { fontSize: 12, color: colors.charcoalMedium, textAlign: 'center', lineHeight: 18, marginBottom: spacing.lg, maxWidth: 280 },
+  emptyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gold,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: radius.full,
+  },
+  emptyBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });

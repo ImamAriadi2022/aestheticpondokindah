@@ -10,27 +10,37 @@ export const contentService = {
       const cached = await cacheStorage.get<{ posts: Post[] }>(KEY);
       if (cached) return cached;
     }
-    const res = await apiClient.get<{ posts: Post[] }>(ENDPOINTS.POSTS, { skipAuth: true });
-    await cacheStorage.set(KEY, res, 10 * 60 * 1000);
-    return res;
+    const res = await apiClient.get<any>(ENDPOINTS.POSTS, { skipAuth: true });
+    const postsList: Post[] = Array.isArray(res)
+      ? res
+      : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.posts) ? res.posts : []));
+    const normalized = { posts: postsList };
+    await cacheStorage.set(KEY, normalized, 10 * 60 * 1000);
+    return normalized;
   },
 
   async getPost(slug: string): Promise<{ post: Post }> {
     const KEY = `post_${slug}`;
     const cached = await cacheStorage.get<{ post: Post }>(KEY);
     if (cached) return cached;
-    const res = await apiClient.get<{ post: Post }>(ENDPOINTS.POST_DETAIL(slug), { skipAuth: true });
-    await cacheStorage.set(KEY, res, 15 * 60 * 1000);
-    return res;
+    const res = await apiClient.get<any>(ENDPOINTS.POST_DETAIL(slug), { skipAuth: true });
+    const postItem: Post = res?.post || res?.data || res;
+    const normalized = { post: postItem };
+    await cacheStorage.set(KEY, normalized, 15 * 60 * 1000);
+    return normalized;
   },
 
   async getGallery(): Promise<{ gallery: GalleryItem[] }> {
     const KEY = 'gallery';
     const cached = await cacheStorage.get<{ gallery: GalleryItem[] }>(KEY);
     if (cached) return cached;
-    const res = await apiClient.get<{ gallery: GalleryItem[] }>(ENDPOINTS.GALLERY, { skipAuth: true });
-    await cacheStorage.set(KEY, res, 15 * 60 * 1000);
-    return res;
+    const res = await apiClient.get<any>(ENDPOINTS.GALLERY, { skipAuth: true });
+    const list: GalleryItem[] = Array.isArray(res)
+      ? res
+      : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.gallery) ? res.gallery : []));
+    const normalized = { gallery: list };
+    await cacheStorage.set(KEY, normalized, 15 * 60 * 1000);
+    return normalized;
   },
 
   async getPromos(forceRefresh = false): Promise<{ promos: Promo[] }> {
@@ -39,9 +49,13 @@ export const contentService = {
       const cached = await cacheStorage.get<{ promos: Promo[] }>(KEY);
       if (cached) return cached;
     }
-    const res = await apiClient.get<{ promos: Promo[] }>(ENDPOINTS.PROMOS, { skipAuth: true });
-    await cacheStorage.set(KEY, res, 10 * 60 * 1000);
-    return res;
+    const res = await apiClient.get<any>(ENDPOINTS.PROMOS, { skipAuth: true });
+    const promoList: Promo[] = Array.isArray(res)
+      ? res
+      : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.promos) ? res.promos : []));
+    const normalized = { promos: promoList };
+    await cacheStorage.set(KEY, normalized, 10 * 60 * 1000);
+    return normalized;
   },
 
   async getPromo(slug: string): Promise<{ promo: Promo }> {

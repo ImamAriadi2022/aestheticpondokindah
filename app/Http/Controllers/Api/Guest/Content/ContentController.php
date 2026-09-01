@@ -46,9 +46,11 @@ class ContentController extends Controller
     public function posts(Request $request): JsonResponse
     {
         $posts = Post::query()
-            ->where('status', 'published')
-            ->whereNotNull('published_at')
-            ->orderByDesc('published_at')
+            ->where(function ($q) {
+                $q->whereIn('status', ['published', 'Publish', 'PUBLISHED'])
+                  ->orWhereNull('status');
+            })
+            ->orderByRaw('COALESCE(published_at, created_at) DESC')
             ->get()
             ->map(fn (Post $p) => [
                 'id' => (string) $p->id,
@@ -58,8 +60,8 @@ class ContentController extends Controller
                 'tags' => $p->tags ?? [],
                 'cover_image_url' => $this->formatMediaUrl($p->cover_image_path),
                 'excerpt' => $p->excerpt,
-                'published_at' => optional($p->published_at)->toISOString(),
-                'reading_time_minutes' => $p->reading_time_minutes,
+                'published_at' => optional($p->published_at ?? $p->created_at)->toISOString(),
+                'reading_time_minutes' => $p->reading_time_minutes ?? 3,
                 'seo_title' => $p->seo_title,
                 'seo_description' => $p->seo_description,
                 'canonical_url' => $p->canonical_url,
@@ -73,8 +75,10 @@ class ContentController extends Controller
     public function postBySlug(string $slug): JsonResponse
     {
         $p = Post::query()
-            ->where('status', 'published')
-            ->whereNotNull('published_at')
+            ->where(function ($q) {
+                $q->whereIn('status', ['published', 'Publish', 'PUBLISHED'])
+                  ->orWhereNull('status');
+            })
             ->where('slug', $slug)
             ->firstOrFail();
 
@@ -87,8 +91,8 @@ class ContentController extends Controller
             'cover_image_url' => $this->formatMediaUrl($p->cover_image_path),
             'content_html' => $p->content_html,
             'excerpt' => $p->excerpt,
-            'published_at' => optional($p->published_at)->toISOString(),
-            'reading_time_minutes' => $p->reading_time_minutes,
+            'published_at' => optional($p->published_at ?? $p->created_at)->toISOString(),
+            'reading_time_minutes' => $p->reading_time_minutes ?? 3,
             'seo_title' => $p->seo_title,
             'seo_description' => $p->seo_description,
             'canonical_url' => $p->canonical_url,
