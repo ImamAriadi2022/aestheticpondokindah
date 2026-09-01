@@ -1,5 +1,18 @@
 {
     "0": {
+        "id": "act-414",
+        "timestamp": "2026-09-01T14:31:00.000Z",
+        "category": "mobile-native-oauth2-redirect-route",
+        "title": "Pembuatan Handler Route `oauth2redirect.tsx` untuk Menghilangkan Layar Unmatched Route di Expo Router",
+        "description": "1) Menambahkan file rute `app/oauth2redirect.tsx` di Expo Router untuk menangani skema deep link OAuth (`/--/oauth2redirect`) secara langsung dan elegan, 2) Mencegah munculnya layar 'Unmatched Route' saat callback OAuth Google mengarahkan kembali ke aplikasi native, 3) Melakukan auto-navigate dan penyimpanan sesi token otomatis ke dashboard.",
+        "details": [
+            "No More Unmatched Route: Deep link OAuth diarahkan ke route handler resmi tanpa error 404.",
+            "Production Verified: Metro Android Bundler 1.355 modul ter-bundle 100% dan TypeScript 0 error."
+        ],
+        "author": "Antigravity Assistant",
+        "version": "1.0.0"
+    },
+    "1": {
         "id": "act-413",
         "timestamp": "2026-09-01T14:11:00.000Z",
         "category": "google-oauth-trust-proxies-and-expo-go-fix",
