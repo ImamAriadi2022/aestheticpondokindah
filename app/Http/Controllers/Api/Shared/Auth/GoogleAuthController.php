@@ -299,9 +299,13 @@ class GoogleAuthController extends Controller
     public function redirectToGoogle(Request $request)
     {
         $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
+        
         $redirectUri = url('/api/auth/google/callback');
-        if (!str_starts_with($redirectUri, 'https://') && !str_contains($redirectUri, 'localhost')) {
+        if (!str_starts_with($redirectUri, 'https://') && !str_contains($redirectUri, 'localhost') && !str_contains($redirectUri, '127.0.0.1')) {
             $redirectUri = preg_replace('/^http:/', 'https:', $redirectUri);
+        }
+        if (str_contains($redirectUri, 'aestheticpondokindah.com')) {
+            $redirectUri = 'https://aestheticpondokindah.com/api/auth/google/callback';
         }
 
         $returnTo = $request->input('return_to', 'aestheticpondokindah://oauth2redirect');
@@ -345,9 +349,13 @@ class GoogleAuthController extends Controller
 
         $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
         $clientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
+        
         $redirectUri = $state['redirect_uri'] ?? url('/api/auth/google/callback');
-        if (!str_starts_with($redirectUri, 'https://') && !str_contains($redirectUri, 'localhost')) {
+        if (!str_starts_with($redirectUri, 'https://') && !str_contains($redirectUri, 'localhost') && !str_contains($redirectUri, '127.0.0.1')) {
             $redirectUri = preg_replace('/^http:/', 'https:', $redirectUri);
+        }
+        if (str_contains($redirectUri, 'aestheticpondokindah.com')) {
+            $redirectUri = 'https://aestheticpondokindah.com/api/auth/google/callback';
         }
 
         // Exchange code for token
@@ -360,7 +368,7 @@ class GoogleAuthController extends Controller
         ]);
 
         if (!$tokenRes->successful()) {
-            // Try standard production callback URI fallback if state had http or localhost
+            // Try standard production callback URI fallback
             $prodUri = 'https://aestheticpondokindah.com/api/auth/google/callback';
             if ($redirectUri !== $prodUri) {
                 $retryRes = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', [
@@ -381,6 +389,7 @@ class GoogleAuthController extends Controller
                 'status' => $tokenRes->status(),
                 'body' => $tokenRes->body(),
                 'redirect_uri' => $redirectUri,
+                'client_id' => substr($clientId, 0, 15) . '...',
             ]);
             $errJson = $tokenRes->json();
             $errDetail = $errJson['error_description'] ?? $errJson['error'] ?? 'Gagal menukarkan kode otorisasi Google.';

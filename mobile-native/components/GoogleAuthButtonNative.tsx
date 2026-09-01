@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { colors, radius, spacing } from '@/theme/colors';
 import { API_BASE } from '@/constants/api';
 import { authStorage } from '@/storage/authStorage';
+import { authService } from '@/services/authService';
 import { router } from 'expo-router';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -42,7 +43,6 @@ export default function GoogleAuthButtonNative({
       const result = await WebBrowser.openAuthSessionAsync(backendAuthUrl, redirectUri);
 
       if (result.type === 'success' && result.url) {
-        // Parse token and user from redirect url query parameters
         let token: string | null = null;
         let userJson: string | null = null;
         let errorMsg: string | null = null;
@@ -73,9 +73,12 @@ export default function GoogleAuthButtonNative({
 
           router.replace('/(tabs)');
           onSuccess?.();
-        } else {
-          throw new Error('Gagal mendapatkan sesi login dari Google.');
+          return;
         }
+      }
+
+      if (result.type === 'cancel' || result.type === 'dismiss') {
+        return;
       }
     } catch (err: any) {
       const msg = err?.message || 'Gagal masuk dengan Google.';

@@ -106,90 +106,235 @@ export default function MobileLoginScreen() {
     }
   };
 
-  // 1. WELCOME SCREEN
+  // 1. WELCOME SCREEN (RATA TENGAH ATAS-BAWAH & KANAN-KIRI)
   if (mode === 'welcome') {
     return (
       <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.welcomeScroll} showsVerticalScrollIndicator={false}>
-          {/* Header with WebP Logo */}
-          <View style={styles.welcomeHeader}>
-            <Image
-              source={require('@/assets/logo/logo-vertikal.webp')}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Subtitle */}
-          <Text style={styles.welcomeDescription}>
-            Senang melihatmu kembali! Masuk untuk melanjutkan perawatan gigi terbaik Anda.
-          </Text>
-
-          {/* Login Options */}
-          <View style={styles.optionsWrap}>
-            <TouchableOpacity
-              style={styles.mainActionBtn}
-              onPress={() => {
-                setLoginError('');
-                setMode('login');
-              }}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.mainActionBtnText}>Masuk dengan WhatsApp</Text>
-              <Ionicons name="chevron-forward" size={18} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
-            </TouchableOpacity>
-
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>ATAU</Text>
-              <View style={styles.dividerLine} />
+        <ScrollView
+          contentContainerStyle={styles.centerScroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.centerCard}>
+            {/* Header with Vertical Logo */}
+            <View style={styles.welcomeHeader}>
+              <Image
+                source={require('@/assets/logo/logo-vertikal.webp')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
 
-            {/* Google Sign In */}
-            <GoogleAuthButtonNative mode="login" />
-          </View>
+            {/* Subtitle */}
+            <Text style={styles.welcomeDescription}>
+              Senang melihatmu kembali! Masuk untuk melanjutkan perawatan gigi terbaik Anda di Aesthetic Pondok Indah.
+            </Text>
 
-          {/* Footer */}
-          <View style={styles.welcomeFooter}>
-            <Text style={styles.footerPrompt}>Belum punya akun? </Text>
-            <TouchableOpacity
-              onPress={() => {
-                setRegisterError('');
-                setMode('register');
-              }}
-            >
-              <Text style={styles.footerLink}>Daftar</Text>
-            </TouchableOpacity>
+            {/* Login Options */}
+            <View style={styles.optionsWrap}>
+              <TouchableOpacity
+                style={styles.mainActionBtn}
+                onPress={() => {
+                  setLoginError('');
+                  setMode('login');
+                }}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.mainActionBtnText}>Masuk dengan WhatsApp</Text>
+                <Ionicons name="chevron-forward" size={18} color="#FFFFFF" style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>ATAU</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Google Sign In */}
+              <GoogleAuthButtonNative mode="login" />
+            </View>
+
+            {/* Footer */}
+            <View style={styles.welcomeFooter}>
+              <Text style={styles.footerPrompt}>Belum punya akun? </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setRegisterError('');
+                  setMode('register');
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.footerLink}>Daftar Sekarang</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
     );
   }
 
-  // 2. LOGIN FORM
+  // 2. LOGIN FORM (RATA TENGAH ATAS-BAWAH & KANAN-KIRI)
   if (mode === 'login') {
     return (
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={styles.formScroll} keyboardShouldPersistTaps="handled">
-            {/* Top Bar */}
-            <View style={styles.topBar}>
-              <TouchableOpacity onPress={() => setMode('welcome')} style={styles.backBtn}>
-                <Ionicons name="arrow-back" size={22} color={colors.charcoal} />
+          <ScrollView
+            contentContainerStyle={styles.centerScroll}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.centerCard}>
+              {/* Top Bar with Back Button */}
+              <View style={styles.topBar}>
+                <TouchableOpacity onPress={() => setMode('welcome')} style={styles.backBtn} activeOpacity={0.7}>
+                  <Ionicons name="arrow-back" size={20} color={colors.charcoal} />
+                </TouchableOpacity>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.topBarTitle}>Masuk ke Akun</Text>
+                  <Text style={styles.topBarSubtitle}>Aesthetic Pondok Indah</Text>
+                </View>
+              </View>
+
+              {/* Error Banner */}
+              {loginError ? (
+                <View style={styles.errorBox}>
+                  <Text style={styles.errorBoxText}>{loginError}</Text>
+                </View>
+              ) : null}
+
+              {/* Phone Input with +62 Prefix */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nomor WhatsApp</Text>
+                <View style={styles.phoneInputRow}>
+                  <View style={styles.prefixBadge}>
+                    <Text style={styles.flagIcon}>🇮🇩</Text>
+                    <Text style={styles.prefixText}>+62</Text>
+                  </View>
+                  <TextInput
+                    style={styles.phoneTextInput}
+                    placeholder="857xxxxxxxx"
+                    placeholderTextColor={colors.muted}
+                    keyboardType="phone-pad"
+                    value={phone}
+                    onChangeText={(v) => {
+                      setPhone(normalizePhone(v));
+                      setLoginError('');
+                    }}
+                    autoFocus
+                  />
+                </View>
+              </View>
+
+              {/* Password Input */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Kata Sandi</Text>
+                <View style={styles.passwordInputRow}>
+                  <Ionicons name="lock-closed-outline" size={18} color={colors.muted} style={{ marginLeft: 12 }} />
+                  <TextInput
+                    style={styles.passwordTextInput}
+                    placeholder="Masukkan kata sandi"
+                    placeholderTextColor={colors.muted}
+                    secureTextEntry={!showPassword}
+                    value={password}
+                    onChangeText={(v) => {
+                      setPassword(v);
+                      setLoginError('');
+                    }}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeBtn}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.muted} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.mainActionBtn, isLoading ? styles.btnDisabled : null]}
+                onPress={handleLogin}
+                disabled={isLoading}
+                activeOpacity={0.85}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.mainActionBtnText}>Masuk Sekarang</Text>
+                )}
               </TouchableOpacity>
-              <View>
-                <Text style={styles.topBarTitle}>Masuk</Text>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>ATAU</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              {/* Google Sign In */}
+              <GoogleAuthButtonNative mode="login" />
+
+              {/* Switch to Register */}
+              <View style={styles.switchRow}>
+                <Text style={styles.footerPrompt}>Belum punya akun? </Text>
+                <TouchableOpacity onPress={() => setMode('register')} activeOpacity={0.7}>
+                  <Text style={styles.footerLink}>Daftar Sekarang</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
+  // 3. REGISTER FORM (RATA TENGAH ATAS-BAWAH & KANAN-KIRI)
+  return (
+    <SafeAreaView style={styles.safe}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={styles.centerScroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.centerCard}>
+            {/* Top Bar with Back Button */}
+            <View style={styles.topBar}>
+              <TouchableOpacity onPress={() => setMode('welcome')} style={styles.backBtn} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={20} color={colors.charcoal} />
+              </TouchableOpacity>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.topBarTitle}>Daftar Akun Baru</Text>
                 <Text style={styles.topBarSubtitle}>Aesthetic Pondok Indah</Text>
               </View>
             </View>
 
             {/* Error Banner */}
-            {loginError ? (
+            {registerError ? (
               <View style={styles.errorBox}>
-                <Text style={styles.errorBoxText}>{loginError}</Text>
+                <Text style={styles.errorBoxText}>{registerError}</Text>
               </View>
             ) : null}
+
+            {/* Name Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Nama Lengkap</Text>
+              <View style={styles.passwordInputRow}>
+                <Ionicons name="person-outline" size={18} color={colors.muted} style={{ marginLeft: 12 }} />
+                <TextInput
+                  style={styles.passwordTextInput}
+                  placeholder="Contoh: Ahmad Wijaya"
+                  placeholderTextColor={colors.muted}
+                  value={regName}
+                  onChangeText={(v) => {
+                    setRegName(v);
+                    setRegisterError('');
+                  }}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
 
             {/* Phone Input with +62 Prefix */}
             <View style={styles.inputGroup}>
@@ -204,12 +349,11 @@ export default function MobileLoginScreen() {
                   placeholder="857xxxxxxxx"
                   placeholderTextColor={colors.muted}
                   keyboardType="phone-pad"
-                  value={phone}
+                  value={regPhone}
                   onChangeText={(v) => {
-                    setPhone(normalizePhone(v));
-                    setLoginError('');
+                    setRegPhone(normalizePhone(v));
+                    setRegisterError('');
                   }}
-                  autoFocus
                 />
               </View>
             </View>
@@ -221,35 +365,55 @@ export default function MobileLoginScreen() {
                 <Ionicons name="lock-closed-outline" size={18} color={colors.muted} style={{ marginLeft: 12 }} />
                 <TextInput
                   style={styles.passwordTextInput}
-                  placeholder="Masukkan kata sandi"
+                  placeholder="Minimal 6 karakter"
                   placeholderTextColor={colors.muted}
-                  secureTextEntry={!showPassword}
-                  value={password}
+                  secureTextEntry={!showRegPassword}
+                  value={regPassword}
                   onChangeText={(v) => {
-                    setPassword(v);
-                    setLoginError('');
+                    setRegPassword(v);
+                    setRegisterError('');
                   }}
                 />
                 <TouchableOpacity
-                  onPress={() => setShowPassword(!showPassword)}
+                  onPress={() => setShowRegPassword(!showRegPassword)}
                   style={styles.eyeBtn}
+                  activeOpacity={0.7}
                 >
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.muted} />
+                  <Ionicons name={showRegPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.muted} />
                 </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Confirm Password Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Konfirmasi Kata Sandi</Text>
+              <View style={styles.passwordInputRow}>
+                <Ionicons name="lock-closed-outline" size={18} color={colors.muted} style={{ marginLeft: 12 }} />
+                <TextInput
+                  style={styles.passwordTextInput}
+                  placeholder="Ulangi kata sandi"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry={!showRegPassword}
+                  value={regConfirmPassword}
+                  onChangeText={(v) => {
+                    setRegConfirmPassword(v);
+                    setRegisterError('');
+                  }}
+                />
               </View>
             </View>
 
             {/* Submit Button */}
             <TouchableOpacity
               style={[styles.mainActionBtn, isLoading ? styles.btnDisabled : null]}
-              onPress={handleLogin}
+              onPress={handleRegister}
               disabled={isLoading}
               activeOpacity={0.85}
             >
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.mainActionBtnText}>Masuk</Text>
+                <Text style={styles.mainActionBtnText}>Daftar Sekarang</Text>
               )}
             </TouchableOpacity>
 
@@ -260,158 +424,15 @@ export default function MobileLoginScreen() {
             </View>
 
             {/* Google Sign In */}
-            <GoogleAuthButtonNative mode="login" />
+            <GoogleAuthButtonNative mode="register" />
 
-            {/* Switch to Register */}
+            {/* Switch to Login */}
             <View style={styles.switchRow}>
-              <Text style={styles.footerPrompt}>Belum punya akun? </Text>
-              <TouchableOpacity onPress={() => setMode('register')}>
-                <Text style={styles.footerLink}>Daftar</Text>
+              <Text style={styles.footerPrompt}>Sudah punya akun? </Text>
+              <TouchableOpacity onPress={() => setMode('login')} activeOpacity={0.7}>
+                <Text style={styles.footerLink}>Masuk</Text>
               </TouchableOpacity>
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    );
-  }
-
-  // 3. REGISTER FORM
-  return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.formScroll} keyboardShouldPersistTaps="handled">
-          {/* Top Bar */}
-          <View style={styles.topBar}>
-            <TouchableOpacity onPress={() => setMode('welcome')} style={styles.backBtn}>
-              <Ionicons name="arrow-back" size={22} color={colors.charcoal} />
-            </TouchableOpacity>
-            <View>
-              <Text style={styles.topBarTitle}>Daftar Akun Baru</Text>
-              <Text style={styles.topBarSubtitle}>Aesthetic Pondok Indah</Text>
-            </View>
-          </View>
-
-          {/* Error Banner */}
-          {registerError ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorBoxText}>{registerError}</Text>
-            </View>
-          ) : null}
-
-          {/* Name Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nama Lengkap</Text>
-            <View style={styles.passwordInputRow}>
-              <Ionicons name="person-outline" size={18} color={colors.muted} style={{ marginLeft: 12 }} />
-              <TextInput
-                style={styles.passwordTextInput}
-                placeholder="Contoh: Ahmad Wijaya"
-                placeholderTextColor={colors.muted}
-                value={regName}
-                onChangeText={(v) => {
-                  setRegName(v);
-                  setRegisterError('');
-                }}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
-
-          {/* Phone Input with +62 Prefix */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Nomor WhatsApp</Text>
-            <View style={styles.phoneInputRow}>
-              <View style={styles.prefixBadge}>
-                <Text style={styles.flagIcon}>🇮🇩</Text>
-                <Text style={styles.prefixText}>+62</Text>
-              </View>
-              <TextInput
-                style={styles.phoneTextInput}
-                placeholder="857xxxxxxxx"
-                placeholderTextColor={colors.muted}
-                keyboardType="phone-pad"
-                value={regPhone}
-                onChangeText={(v) => {
-                  setRegPhone(normalizePhone(v));
-                  setRegisterError('');
-                }}
-              />
-            </View>
-          </View>
-
-          {/* Password Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Kata Sandi</Text>
-            <View style={styles.passwordInputRow}>
-              <Ionicons name="lock-closed-outline" size={18} color={colors.muted} style={{ marginLeft: 12 }} />
-              <TextInput
-                style={styles.passwordTextInput}
-                placeholder="Minimal 6 karakter"
-                placeholderTextColor={colors.muted}
-                secureTextEntry={!showRegPassword}
-                value={regPassword}
-                onChangeText={(v) => {
-                  setRegPassword(v);
-                  setRegisterError('');
-                }}
-              />
-              <TouchableOpacity
-                onPress={() => setShowRegPassword(!showRegPassword)}
-                style={styles.eyeBtn}
-              >
-                <Ionicons name={showRegPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={colors.muted} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Confirm Password Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Konfirmasi Kata Sandi</Text>
-            <View style={styles.passwordInputRow}>
-              <Ionicons name="lock-closed-outline" size={18} color={colors.muted} style={{ marginLeft: 12 }} />
-              <TextInput
-                style={styles.passwordTextInput}
-                placeholder="Ulangi kata sandi"
-                placeholderTextColor={colors.muted}
-                secureTextEntry={!showRegPassword}
-                value={regConfirmPassword}
-                onChangeText={(v) => {
-                  setRegConfirmPassword(v);
-                  setRegisterError('');
-                }}
-              />
-            </View>
-          </View>
-
-          {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.mainActionBtn, isLoading ? styles.btnDisabled : null]}
-            onPress={handleRegister}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.mainActionBtnText}>Daftar Sekarang</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ATAU</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google Sign In */}
-          <GoogleAuthButtonNative mode="register" />
-
-          {/* Switch to Login */}
-          <View style={styles.switchRow}>
-            <Text style={styles.footerPrompt}>Sudah punya akun? </Text>
-            <TouchableOpacity onPress={() => setMode('login')}>
-              <Text style={styles.footerLink}>Masuk</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -420,37 +441,40 @@ export default function MobileLoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FAF8F5' },
-  welcomeScroll: {
+  safe: {
+    flex: 1,
+    backgroundColor: '#FAF8F5',
+  },
+  centerScroll: {
     flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 1.5,
-    paddingBottom: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl + 28,
+  },
+  centerCard: {
+    width: '100%',
+    maxWidth: 390,
+    alignSelf: 'center',
+    marginTop: -30,
   },
   welcomeHeader: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    justifyContent: 'center',
+    marginBottom: spacing.md,
   },
   logoImage: {
     width: 200,
-    height: 80,
-  },
-  welcomeTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#2C2416',
-    fontFamily: fonts.heading,
-  },
-  welcomeClinic: {
-    fontSize: 13,
-    color: '#8C8272',
-    marginTop: 1,
+    height: 90,
   },
   welcomeDescription: {
-    fontSize: 14,
+    fontSize: 13.5,
     color: '#5C5546',
-    lineHeight: 22,
+    lineHeight: 20,
+    textAlign: 'center',
     marginBottom: spacing.xl,
+    paddingHorizontal: spacing.sm,
   },
   optionsWrap: {
     gap: 12,
@@ -469,7 +493,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  btnDisabled: { opacity: 0.7 },
+  btnDisabled: {
+    opacity: 0.7,
+  },
   mainActionBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
@@ -496,8 +522,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 'auto',
-    paddingTop: spacing.xl,
+    marginTop: spacing.xl,
   },
   footerPrompt: {
     fontSize: 13,
@@ -507,12 +532,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#C9A24A',
-  },
-  formScroll: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
   },
   topBar: {
     flexDirection: 'row',
@@ -532,13 +551,14 @@ const styles = StyleSheet.create({
   },
   topBarTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#2C2416',
     fontFamily: fonts.heading,
   },
   topBarSubtitle: {
     fontSize: 12,
     color: '#8C8272',
+    marginTop: 1,
   },
   errorBox: {
     backgroundColor: '#FEF2F2',
@@ -552,13 +572,14 @@ const styles = StyleSheet.create({
     color: '#DC2626',
     fontSize: 12,
     fontWeight: '600',
+    textAlign: 'center',
   },
   inputGroup: {
     marginBottom: spacing.md,
   },
   inputLabel: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#4A3F35',
     marginBottom: 6,
   },
