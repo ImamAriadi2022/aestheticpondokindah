@@ -1,20 +1,19 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { authStorage } from '@/storage/authStorage';
+import { useAuth } from '@/context/AuthContext';
 import { colors } from '@/theme/colors';
 
 export default function OAuth2RedirectScreen() {
   const params = useLocalSearchParams<{ token?: string; user?: string; error?: string }>();
+  const { setAuthSession } = useAuth();
 
   useEffect(() => {
     const handleRedirect = async () => {
       if (params.token && params.user) {
         try {
           const user = JSON.parse(decodeURIComponent(params.user));
-          await authStorage.saveToken(params.token);
-          await authStorage.saveUser(user);
-          router.replace('/(tabs)');
+          await setAuthSession(params.token, user);
           return;
         } catch {
           router.replace('/(auth)/login');

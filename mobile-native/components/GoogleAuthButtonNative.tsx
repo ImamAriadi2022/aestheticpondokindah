@@ -24,7 +24,7 @@ export default function GoogleAuthButtonNative({
   onSuccess,
   onError,
 }: GoogleAuthButtonNativeProps) {
-  const { refreshUser } = useAuth();
+  const { setAuthSession } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleGoogleAuth = async () => {
@@ -62,16 +62,7 @@ export default function GoogleAuthButtonNative({
 
         if (token && userJson) {
           const user = JSON.parse(decodeURIComponent(userJson));
-          await authStorage.saveToken(token);
-          await authStorage.saveUser(user);
-          await refreshUser();
-
-          if (user.role === 'doctor' || user.role === 'clinic_admin' || user.role === 'admin') {
-            await authStorage.clearAll();
-            throw new Error('Aplikasi mobile ini khusus untuk Pasien. Akun Dokter dan Admin silakan login melalui portal web.');
-          }
-
-          router.replace('/(tabs)');
+          await setAuthSession(token, user);
           onSuccess?.();
           return;
         }
