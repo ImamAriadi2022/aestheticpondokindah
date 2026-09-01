@@ -29,6 +29,9 @@ declare global {
   interface Window {
     zestaConfig?: ZestaConfig;
     Zesta?: {
+      open?: () => void;
+      close?: () => void;
+      toggle?: () => void;
       setVisitor?: (visitor: ZestaVisitor) => void;
       [key: string]: any;
     };
@@ -39,8 +42,8 @@ export const ZESTA_DEFAULT_CHANNEL_ID = "573eb7f7-b6f0-4957-9778-daf531cd967c";
 const ZESTA_WIDGET_SCRIPT_ID = "zesta-widget-script";
 
 /**
- * Injects custom CSS to hide the default generic round yellow bubble button in Zesta's shadow DOM
- * so our custom gold styled AESPI launcher button is used seamlessly.
+ * Injects custom CSS to hide the default generic bubble button in Zesta's shadow DOM
+ * and styles the chat window elegantly on both Desktop and Mobile viewports.
  */
 export function hideDefaultZestaButton(): boolean {
   if (typeof document === "undefined") return false;
@@ -51,26 +54,30 @@ export function hideDefaultZestaButton(): boolean {
       style.id = "zesta-custom-theme-style";
       style.textContent = `
         #zesta-widget-toggle-button {
-          display: none !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-          visibility: hidden !important;
-          width: 0 !important;
-          height: 0 !important;
+          position: absolute !important;
+          bottom: 0 !important;
+          right: 0 !important;
+          width: 1px !important;
+          height: 1px !important;
+          opacity: 0.01 !important;
+          pointer-events: auto !important;
+          overflow: hidden !important;
+          z-index: -1 !important;
         }
         #zesta-chat-window {
           bottom: 5.5rem !important;
-          right: 1.25rem !important;
-          height: 520px !important;
-          max-height: calc(100vh - 110px) !important;
-          display: flex !important;
-          flex-direction: column !important;
+          right: 1.5rem !important;
+          left: auto !important;
+          width: 380px !important;
+          max-width: calc(100vw - 2rem) !important;
+          height: 540px !important;
+          max-height: calc(100vh - 120px) !important;
           border-radius: 1.25rem !important;
           overflow: hidden !important;
           box-shadow: 0 25px 50px -12px rgba(201, 162, 74, 0.25), 0 10px 30px rgba(0, 0, 0, 0.15) !important;
           z-index: 999999 !important;
         }
-        /* Make message list scrollable smoothly */
+        /* Message list smooth scroll */
         #zesta-chat-window .zw-flex-1,
         #zesta-chat-window > div:nth-child(2) {
           flex: 1 1 auto !important;
@@ -80,7 +87,7 @@ export function hideDefaultZestaButton(): boolean {
           -webkit-overflow-scrolling: touch !important;
           overscroll-behavior: contain !important;
         }
-        /* Ensure input area is visible, interactive and properly pinned at the bottom */
+        /* Input bar styling */
         #zesta-input-area {
           display: block !important;
           flex-shrink: 0 !important;
@@ -100,16 +107,11 @@ export function hideDefaultZestaButton(): boolean {
           font-family: inherit !important;
           font-size: 0.875rem !important;
         }
-        /* Luxury styling for Reset / Continue button if bot auto-resolves conversation */
         #zesta-input-area button {
           cursor: pointer !important;
           transition: all 0.2s ease !important;
         }
-        #zesta-input-area button:hover {
-          opacity: 0.9 !important;
-          transform: translateY(-1px) !important;
-        }
-        /* Hide ONLY the Powered by Zesta branding footer without affecting input bar */
+        /* Hide Powered by Zesta footer branding */
         #zesta-chat-window a[href*="zesta.id"] {
           display: none !important;
           height: 0 !important;
@@ -125,13 +127,14 @@ export function hideDefaultZestaButton(): boolean {
           margin: 0 !important;
           overflow: hidden !important;
         }
+        /* Mobile specific positioning */
         @media (max-width: 640px) {
           #zesta-chat-window {
-            bottom: 5.75rem !important;
+            bottom: 5rem !important;
             right: 0.75rem !important;
-            left: 0.75rem !important;
-            width: auto !important;
-            max-width: calc(100vw - 1.5rem) !important;
+            left: auto !important;
+            width: calc(100vw - 1.5rem) !important;
+            max-width: 390px !important;
             height: calc(100dvh - 7.5rem) !important;
             max-height: calc(100dvh - 7.5rem) !important;
           }
@@ -139,24 +142,6 @@ export function hideDefaultZestaButton(): boolean {
       `;
       root.shadowRoot.appendChild(style);
     }
-
-    // Direct DOM fallback removal of branding element
-    try {
-      const brandingLinks = root.shadowRoot.querySelectorAll('a[href*="zesta.id"]');
-      brandingLinks.forEach((link) => {
-        const parentDiv = (link.closest(".zw-py-1\\.5") || link.parentElement) as HTMLElement | null;
-        if (parentDiv && parentDiv.id !== "zesta-input-area") {
-          parentDiv.style.display = "none";
-          parentDiv.style.height = "0px";
-          parentDiv.style.padding = "0px";
-          parentDiv.style.margin = "0px";
-          parentDiv.style.visibility = "hidden";
-        }
-      });
-    } catch {
-      // safe
-    }
-
     return true;
   }
   return false;
@@ -167,14 +152,54 @@ export function hideDefaultZestaButton(): boolean {
  */
 export function toggleZestaChat() {
   if (typeof document === "undefined") return;
+
+  // 1. Try global method if available
+  if (typeof window !== "undefined" && window.Zesta?.toggle) {
+    try {
+      window.Zesta.toggle();
+      return;
+    } catch {
+      // fallback
+    }
+  }
+
+  // 2. Try clicking inside shadow DOM with full event dispatch
   hideDefaultZestaButton();
   const root = document.getElementById("zesta-livechat-root");
   if (root && root.shadowRoot) {
     const toggleBtn = root.shadowRoot.getElementById("zesta-widget-toggle-button") as HTMLButtonElement | null;
     if (toggleBtn) {
       toggleBtn.click();
+      try {
+        toggleBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+      } catch {
+        // safe
+      }
+      return;
     }
   }
+
+  // 3. Fallback: If widget not yet loaded, initialize and retry
+  initZestaWidget();
+  let attempts = 0;
+  const retryInterval = setInterval(() => {
+    attempts++;
+    hideDefaultZestaButton();
+    const r = document.getElementById("zesta-livechat-root");
+    if (r && r.shadowRoot) {
+      const btn = r.shadowRoot.getElementById("zesta-widget-toggle-button") as HTMLButtonElement | null;
+      if (btn) {
+        btn.click();
+        try {
+          btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+        } catch {
+          // safe
+        }
+        clearInterval(retryInterval);
+      }
+    }
+    if (attempts > 25) clearInterval(retryInterval);
+  }, 100);
 }
 
 /**
@@ -186,7 +211,7 @@ export function isZestaChatOpen(): boolean {
   if (root && root.shadowRoot) {
     const chatWin = root.shadowRoot.getElementById("zesta-chat-window");
     if (chatWin) {
-      return chatWin.classList.contains("zw-scale-100");
+      return chatWin.classList.contains("zw-scale-100") || (chatWin.classList.contains("zw-opacity-100") && !chatWin.classList.contains("zw-opacity-0"));
     }
   }
   return false;
@@ -212,8 +237,8 @@ export function initZestaWidget(visitor?: ZestaVisitor) {
   window.zestaConfig = {
     channelId: ZESTA_DEFAULT_CHANNEL_ID,
     primaryColor: "#C9A24A",
-    displayName: "AESPI Live Chat",
-    welcomeMessage: "Halo! Selamat datang di Aesthetic Pondok Indah Dental Clinic. Ada yang bisa kami bantu seputar reservasi, jadwal dokter spesialis, atau perawatan gigi?",
+    displayName: "Aesthetic Pondok Indah",
+    welcomeMessage: "Halo, selamat datang di Aesthetic Pondok Indah Dental Clinic. Silakan tanyakan informasi seputar layanan, jadwal praktik dokter, atau bantuan reservasi.",
     visitor: mergedVisitor,
   };
 
@@ -242,7 +267,7 @@ export function initZestaWidget(visitor?: ZestaVisitor) {
     if (hidden || attempts > 25) {
       clearInterval(interval);
     }
-  }, 400);
+  }, 300);
 }
 
 /**
@@ -289,8 +314,8 @@ export function updateZestaReservationContext(data: {
   window.zestaConfig = {
     channelId: ZESTA_DEFAULT_CHANNEL_ID,
     primaryColor: "#C9A24A",
-    displayName: "AESPI Live Chat",
-    welcomeMessage: "Halo! Selamat datang di Aesthetic Pondok Indah Dental Clinic. Ada yang bisa kami bantu seputar reservasi, jadwal dokter spesialis, atau perawatan gigi?",
+    displayName: "Aesthetic Pondok Indah",
+    welcomeMessage: "Halo, selamat datang di Aesthetic Pondok Indah Dental Clinic. Silakan tanyakan informasi seputar layanan, jadwal praktik dokter, atau bantuan reservasi.",
     visitor,
   };
 

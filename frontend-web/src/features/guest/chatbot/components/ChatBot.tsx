@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { X, Send, Bot, User, Phone } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { X, Send, Bot, User, Phone, Sparkles, MessageCircle, ArrowRight } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
 const WHATSAPP_NUMBER = "+62 819-9011-4949";
-const WHATSAPP_LINK = `https://wa.me/6281990114949?text=Halo%20Aesthetic%20Pondok%20Indah%20Dental,%20saya%20ingin%20bertanya%20tentang%20layanan%20Anda.`;
+const WHATSAPP_LINK = "https://wa.me/6281990114949?text=Halo%20Admin%20Aesthetic%20Pondok%20Indah,%20saya%20ingin%20berkonsultasi%20dan%20bertanya%20seputar%20perawatan%20gigi.";
 
 interface Message {
   id: string;
@@ -20,7 +20,7 @@ interface Message {
 const initialMessages: Message[] = [
   {
     id: "1",
-    text: "Halo! Selamat datang di Aesthetic Pondok Indah Dental. Saya AESPI Bot, asisten virtual yang siap membantu. Anda bisa tanya info layanan/booking, atau ceritakan keluhan gigi & mulut agar saya bisa bantu arahkan langkah awal.",
+    text: "Halo! Selamat datang di Aesthetic Pondok Indah Dental Clinic. 🌟\n\nSaya AESPI Bot, asisten virtual Anda. Anda bisa menanyakan info layanan, dokter spesialis, jadwal reservasi, atau menceritakan keluhan gigi Anda agar saya dapat memberikan panduan awal yang tepat.",
     sender: "bot",
     timestamp: new Date(),
   },
@@ -80,7 +80,14 @@ type BotPlan = {
   set?: Partial<{ stage: TriageStage; memory: Partial<TriageMemory> }>;
 };
 
-const defaultQuickReplies = ["Keluhan sakit gigi", "Info layanan", "Cara booking", "Lokasi & jam buka"];
+const defaultQuickReplies = [
+  "🦷 Keluhan Sakit Gigi",
+  "✨ Info Layanan & Biaya",
+  "📅 Cara Buat Janji Temu",
+  "👨‍⚕️ Jadwal Dokter Spesialis",
+  "📍 Lokasi & Jam Praktik",
+  "💬 Chat WhatsApp Admin",
+];
 
 type KnowledgeItem = {
   id: string;
@@ -100,73 +107,74 @@ const normalizeText = (text: string) =>
 
 const knowledgeBase: KnowledgeItem[] = [
   {
-    id: "contact",
-    keywords: ["kontak", "hubungi", "whatsapp", "wa", "telp", "telepon", "email"],
+    id: "booking_flow",
+    keywords: ["booking", "buat janji", "reservasi", "daftar", "antri", "cara booking", "jadwal temu"],
     answer:
-      "Anda bisa hubungi kami via WhatsApp +62 819-9011-4949 atau Email info@aestheticpondokindah.com.",
+      "Untuk membuat janji temu secara instan:\n1. Buka menu 'Book Now' / 'Buat Janji' di navigasi atas.\n2. Pilih layanan perawatan yang dibutuhkan.\n3. Pilih dokter spesialis dan waktu praktik yang tersedia.\n4. Konfirmasi dan Anda akan langsung menerima E-Tiket reservasi resmi!",
     includeWhatsappCta: true,
   },
   {
-    id: "hours",
-    keywords: ["jam", "operasional", "buka", "tutup", "senin", "sabtu", "minggu"],
+    id: "address_hours",
+    keywords: ["lokasi", "alamat", "dimana", "jam buka", "operasional", "jadwal buka", "cabang", "pondok indah"],
     answer:
-      "Jam operasional kami: Senin - Sabtu 10:00 - 18:00 WIB. Minggu: Tutup.",
-  },
-  {
-    id: "location",
-    keywords: ["lokasi", "alamat", "maps", "peta", "pondok indah", "jakarta selatan"],
-    answer:
-      "Lokasi klinik: Pondok Indah, Jakarta Selatan, Indonesia. Anda bisa klik tombol 'Kunjungi Kami' di website untuk membuka peta.",
-  },
-  {
-    id: "about",
-    keywords: ["tentang", "about", "company", "profil", "visi", "misi", "cerita"],
-    answer:
-      "Aesthetic Pondok Indah Dental Clinic berfokus pada solusi dental profesional yang meningkatkan senyum, kepercayaan diri, dan kesehatan jangka panjang. Kami menggabungkan expertise dengan lingkungan klinik yang nyaman serta teknologi modern.",
-  },
-  {
-    id: "services_general",
-    keywords: ["layanan", "service", "perawatan", "treatment", "veneer", "invisalign", "implant", "whitening"],
-    answer:
-      "Kami menyediakan layanan dental premium seperti: Dental Whitening, Root Canal Treatments, Pediatric Dentistry, Full Mouth Rehabilitations, Emergency Dental Services, Dentures, Dental Implants, Wisdom Tooth Removal, Oral Care, Dental Bridges, Bone Grafting, Dental Spa, Veneers, Invisalign, Orthodontics, Dental Fillings/Inlays/Onlays, Gum Ablation, Lip Repositioning, Crown Lengthening, Gummy Smile Correction, dan Frenectomy. Anda bisa lihat detail di halaman 'Layanan'.",
-  },
-  {
-    id: "booking",
-    keywords: ["booking", "book", "appointment", "reservasi", "jadwalkan", "konsultasi"],
-    answer:
-      "Untuk booking konsultasi: klik tombol 'Book Now' di website, isi nama, nomor HP, tanggal, dan pilih dokter. Setelah itu data akan dikirim ke WhatsApp untuk konfirmasi.",
+      "📍 Lokasi Klinik:\nJl. Metro Pondok Indah Blok TB No. 12, Kebayoran Lama, Jakarta Selatan 12310.\n\n⏰ Jam Operasional:\nSenin – Sabtu: 10:00 – 18:00 WIB (Minggu Libur/Khusus Reservasi Khusus).",
     includeWhatsappCta: true,
   },
   {
-    id: "register_account",
-    keywords: ["daftar", "register", "buat akun", "akun", "login", "sign in", "lupa password"],
+    id: "services_whitening",
+    keywords: ["whitening", "pemutihan gigi", "bleaching", "putih"],
     answer:
-      "Untuk daftar akun pengguna: buka halaman Login, lalu klik 'Daftar' dan isi Nama Pengguna, Email, Nomor Telepon, Domisili, dan Password. Jika lupa password, gunakan menu 'Lupa kata sandi?'.",
+      "Perawatan Dental Whitening kami menggunakan teknologi LED Light Activation modern berstandar internasional yang aman bagi email gigi, mampu mencerahkan gigi hingga 3-8 tingkat dalam 1 kali sesi kunjungan (60–90 menit).",
+    includeWhatsappCta: true,
+  },
+  {
+    id: "services_scaling",
+    keywords: ["scaling", "karang gigi", "bersihin karang", "pembersihan gigi", "polishing"],
+    answer:
+      "Scaling & Polishing menggunakan ultrasonic scaler steril untuk membersihkan karang gigi, plak, dan stain akibat kopi/teh secara tuntas, nyaman, dan bebas rasa ngilu berlebih.",
+    includeWhatsappCta: true,
+  },
+  {
+    id: "services_veneers",
+    keywords: ["veneer", "veneers", "porcelain veneer", "lapisan gigi"],
+    answer:
+      "Porcelain Veneers kami dibuat dengan bahan keramik porselen E-Max ultra-tipis presisi tinggi untuk memperbaiki warna, bentuk, celah gigi, dan proporsi senyum secara estetis dan tahan lama.",
+    includeWhatsappCta: true,
+  },
+  {
+    id: "services_invisalign",
+    keywords: ["invisalign", "aligner", "behel transparan", "kawat gigi", "behel", "ortodonti"],
+    answer:
+      "Kami menyediakan perawatan Invisalign Clear Aligners (perata gigi transparan tanpa behel kawat) dan Behel Ortodonti Konvensional bersama Dokter Spesialis Ortodonti berlisensi resmi (drg. Nadia Safira, Sp.Ort).",
+    includeWhatsappCta: true,
+  },
+  {
+    id: "services_implant",
+    keywords: ["implan", "implant", "gigi palsu permanen", "tanam gigi"],
+    answer:
+      "Dental Implant titanium berkualitas tinggi untuk menggantikan gigi yang hilang secara permanen dengan fungsi kunyah dan estetika menyerupai gigi asli seumur hidup.",
+    includeWhatsappCta: true,
+  },
+  {
+    id: "services_root_canal",
+    keywords: ["saluran akar", "root canal", "saraf gigi", "tambal saraf", "endodonti"],
+    answer:
+      "Perawatan Saluran Akar (Root Canal Treatment) dilakukan oleh spesialis konservasi gigi untuk menyelamatkan gigi alami yang terinfeksi pada ruang saraf agar tidak perlu dicabut.",
+    includeWhatsappCta: true,
   },
   {
     id: "doctors",
-    keywords: ["dokter", "drg", "sp", "spesialis", "tim dokter"],
+    keywords: ["dokter", "dokter spesialis", "siapa dokternya", "jadwal dokter", "drg"],
     answer:
-      "Tim dokter kami terdiri dari dokter gigi dan spesialis berpengalaman (misalnya: drg. Yulita Dora, drg. Della Sparringa, drg. Ryan Jusuf, drg. Nona Lolita T, dan lainnya). Silakan cek halaman 'Dokter' untuk profil lengkap.",
-  },
-  {
-    id: "promo",
-    keywords: ["promo", "diskon", "voucher", "10%", "welcome offer"],
-    answer:
-      "Promo tersedia di website (termasuk voucher diskon 10% untuk pengguna baru). Cek popup promo di Beranda atau carousel promo untuk informasi terbaru.",
+      "Tim dokter kami adalah spesialis berpengalaman:\n• drg. Yulita Dora (Aesthetic & Cosmetic Dentistry)\n• drg. Nadia Safira, Sp.Ort (Ortodonti / Invisalign)\n• drg. Eric Sulistio, Sp.Perio (Periodonsia & Implan)\n• drg. Yudy Ardila Utomo, Sp.BMM (Bedah Mulut & Odontektomi)\n• drg. Achmad Riwandy (General Dentistry)\n• drg. Della Sparringa (Preventive Dentistry)",
     includeWhatsappCta: true,
   },
   {
-    id: "blog",
-    keywords: ["blog", "artikel", "tips", "informasi", "edukasi"],
+    id: "whatsapp",
+    keywords: ["whatsapp", "wa", "admin", "telepon", "kontak", "hubungi"],
     answer:
-      "Kami menyediakan artikel Tips & Informasi Kesehatan Gigi di halaman 'Blog' (kategori: Estetika, Tips, Ortodonti, Anak, Restoratif, Informasi).",
-  },
-  {
-    id: "testimonials_gallery",
-    keywords: ["testimoni", "review", "ulasan", "cerita", "galeri", "before", "after", "transformasi"],
-    answer:
-      "Anda bisa melihat testimoni, galeri, dan video di halaman 'Cerita' serta bagian 'Transformasi Senyum' (Before & After) di Beranda.",
+      "Anda dapat langsung menghubungi Admin Resmi Aesthetic Pondok Indah melalui WhatsApp di +62 819-9011-4949 untuk konsultasi cepat, konfirmasi reservasi, atau pertanyaan khusus.",
+    includeWhatsappCta: true,
   },
 ];
 
@@ -177,26 +185,6 @@ const matchKnowledge = (userText: string): KnowledgeItem | null => {
     if (item.keywords.some((k) => normalized.includes(normalizeText(k)))) return item;
   }
   return null;
-};
-
-const yesNo = (text: string): boolean | null => {
-  const t = normalizeText(text);
-  if (!t) return null;
-  const yes = ["ya", "iya", "y", "betul", "benar", "bener", "ok", "oke", "siap"];
-  const no = ["tidak", "ga", "gak", "nggak", "tdk", "no", "bukan"];
-  if (yes.some((w) => t === w || t.includes(`${w} `) || t.endsWith(` ${w}`))) return true;
-  if (no.some((w) => t === w || t.includes(`${w} `) || t.endsWith(` ${w}`))) return false;
-  return null;
-};
-
-const extractPainScore = (text: string): number | null => {
-  const t = normalizeText(text);
-  const m = t.match(/\b([0-9]|10)\b/);
-  if (!m) return null;
-  const n = Number(m[1]);
-  if (Number.isNaN(n)) return null;
-  if (n < 0 || n > 10) return null;
-  return n;
 };
 
 const inferChiefComplaint = (text: string): TriageChiefComplaint | null => {
@@ -214,138 +202,25 @@ const inferChiefComplaint = (text: string): TriageChiefComplaint | null => {
   return null;
 };
 
-const redFlagFromMemory = (m: TriageMemory): { isRed: boolean; reasons: string[] } => {
-  const reasons: string[] = [];
-  if (m.difficultySwallowBreath === true) reasons.push("kesulitan menelan/bernapas");
-  if (m.fever === true && m.swelling === true) reasons.push("bengkak disertai demam");
-  if (m.bleedingHeavy === true) reasons.push("perdarahan banyak/sulit berhenti");
-  if (m.trauma === true && (m.chiefComplaint === "broken_tooth" || m.chiefComplaint === "toothache")) reasons.push("cedera/trauma pada gigi atau wajah");
-  return { isRed: reasons.length > 0, reasons };
-};
-
-const buildDentalAdvice = (m: TriageMemory): { text: string; needsHandoff: boolean } => {
-  const lines: string[] = [];
-
-  const { isRed, reasons } = redFlagFromMemory(m);
-  if (isRed) {
-    lines.push(
-      "Dari info yang Anda berikan, ada tanda yang perlu ditangani lebih cepat:",
-      `- ${reasons.join("; ")}.`,
-      "Saran saya: segera hubungi admin untuk penjadwalan secepatnya atau pertimbangkan IGD bila gejalanya berat/semakin cepat memburuk."
-    );
-    return { text: lines.join("\n"), needsHandoff: true };
-  }
-
-  const chief = m.chiefComplaint ?? "other";
-  const pain = typeof m.painScore === "number" ? m.painScore : null;
-  const painBand = pain === null ? "unknown" : pain >= 7 ? "high" : pain >= 4 ? "mid" : "low";
-
-  if (chief === "toothache") {
-    lines.push("Berikut arahan awal untuk keluhan sakit gigi:");
-    lines.push("- Kemungkinan penyebab umum: gigi berlubang (karies), radang saraf gigi, gusi meradang, atau gigi retak.");
-    lines.push("- Langkah aman di rumah: kumur air garam hangat 2-3x/hari; jaga kebersihan; kompres dingin dari luar pipi bila bengkak.");
-    lines.push("- Hindari: mengunyah sisi sakit, makanan manis/lengket, rokok, dan menempelkan aspirin langsung ke gigi/gusi.");
-    if (painBand === "high") {
-      lines.push("- Karena nyerinya cukup berat, sebaiknya diperiksa 24 jam ke depan agar penyebabnya jelas dan tidak makin parah.");
-    } else if (painBand === "mid") {
-      lines.push("- Jika nyeri menetap >24-48 jam, sebaiknya periksa untuk evaluasi lubang/infeksi.");
-    } else {
-      lines.push("- Jika nyeri ringan tapi sering kambuh, tetap baik diperiksa agar tidak berkembang jadi infeksi.");
-    }
-  } else if (chief === "swelling") {
-    lines.push("Untuk keluhan bengkak gusi/pipi:");
-    lines.push("- Bengkak bisa terkait infeksi gigi/gusi. Jangan dipencet/dikorek.");
-    lines.push("- Kompres dingin dari luar pipi 10-15 menit, jeda, ulangi.");
-    lines.push("- Jika muncul demam, nyeri makin berat, atau bengkak menyebar: sebaiknya periksa segera.");
-  } else if (chief === "sensitivity") {
-    lines.push("Untuk gigi sensitif (ngilu dingin/manis/panas):");
-    lines.push("- Kemungkinan penyebab: enamel menipis, gusi turun, lubang kecil, atau retak halus.");
-    lines.push("- Coba: pasta gigi khusus sensitif, sikat lembut, hindari asam/manis berlebih.");
-    lines.push("- Jika ngilu tajam saat mengunyah atau makin sering: sebaiknya diperiksa.");
-  } else if (chief === "bleeding") {
-    lines.push("Untuk gusi berdarah:");
-    lines.push("- Penyebab paling sering: radang gusi karena plak/karang gigi.");
-    lines.push("- Coba: sikat lembut 2x/hari + floss; kumur air garam.");
-    lines.push("- Bila sering berdarah >7 hari atau disertai bengkak/nyeri: sebaiknya scaling & evaluasi gusi.");
-  } else if (chief === "ulcer") {
-    lines.push("Untuk sariawan/luka di mulut:");
-    lines.push("- Umumnya membaik 7-14 hari.");
-    lines.push("- Hindari pedas/asam; jaga kebersihan mulut; cukup minum.");
-    lines.push("- Jika tidak membaik >2 minggu, membesar cepat, atau sangat nyeri: sebaiknya diperiksa.");
-  } else if (chief === "post_extraction") {
-    lines.push("Untuk keluhan setelah cabut gigi:");
-    lines.push("- Nyeri ringan 1-3 hari masih wajar, tapi nyeri berat + bau tidak enak bisa mengarah ke dry socket.");
-    lines.push("- Hindari kumur kencang, sedotan, dan rokok 48-72 jam.");
-    lines.push("- Bila nyeri makin berat setelah hari ke-2/3: sebaiknya kontrol.");
-  } else if (chief === "broken_tooth") {
-    lines.push("Untuk gigi patah/retak:");
-    lines.push("- Simpan pecahan (jika ada), bilas lembut.");
-    lines.push("- Hindari mengunyah sisi tersebut.");
-    lines.push("- Sebaiknya periksa agar bisa ditentukan tambal/mahkota/perawatan saraf bila perlu.");
-  } else {
-    lines.push("Terima kasih, saya bantu arahkan secara umum.");
-    lines.push("- Ceritakan keluhannya singkat (apa yang dirasakan), sudah berapa lama, dan apakah ada bengkak/demam.");
-  }
-
-  lines.push("Jika Anda mau, saya bisa bantu simpulkan dan arahkan langkah berikutnya. Anda juga bisa chat admin untuk booking.");
-  return { text: lines.join("\n"), needsHandoff: false };
-};
-
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [stage, setStage] = useState<TriageStage>("intent");
-  const [memory, setMemory] = useState<TriageMemory>({
-    intent: null,
-    chiefComplaint: null,
-    painScore: null,
-    duration: null,
-    location: null,
-    trigger: null,
-    swelling: null,
-    fever: null,
-    trauma: null,
-    pusTaste: null,
-    bleedingHeavy: null,
-    difficultySwallowBreath: null,
-    pregnant: null,
-    ageGroup: null,
-    medications: null,
-    allergies: null,
-    lastDentalVisit: null,
-  });
   const [dynamicQuickReplies, setDynamicQuickReplies] = useState<string[]>(defaultQuickReplies);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Tooltip animation: loop with 3s delay, show for 3s, then hide
+  // Show tooltip after 2.5s, then hide after 4s
   useEffect(() => {
-    const cycle = () => {
+    const showTimer = setTimeout(() => {
       setShowTooltip(true);
-      const hideTimer = setTimeout(() => {
-        setShowTooltip(false);
-      }, 3000);
-      return hideTimer;
-    };
+      const hideTimer = setTimeout(() => setShowTooltip(false), 4500);
+      return () => clearTimeout(hideTimer);
+    }, 2500);
 
-    // Initial delay 3s, then start cycle
-    const startTimer = setTimeout(() => {
-      const hideTimer = cycle();
-      // Repeat cycle every 6 seconds (3s delay + 3s visible)
-      const interval = setInterval(() => {
-        cycle();
-      }, 6000);
-
-      return () => {
-        clearTimeout(hideTimer);
-        clearInterval(interval);
-      };
-    }, 3000);
-
-    return () => clearTimeout(startTimer);
+    return () => clearTimeout(showTimer);
   }, []);
 
   const scrollToBottom = () => {
@@ -355,303 +230,102 @@ export default function ChatBot() {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [isOpen, messages]);
 
-  const handleSend = (text: string) => {
-    if (!text.trim()) return;
+  const handleSend = (textToSend?: string) => {
+    const rawText = textToSend || inputValue;
+    if (!rawText.trim()) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: text.trim(),
+      text: rawText,
       sender: "user",
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
+    if (!textToSend) setInputValue("");
     setIsTyping(true);
 
-    // Simulate bot response
     setTimeout(() => {
-      const botResponse = getBotResponse(text.trim());
+      const reply = generateBotReply(rawText);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: botResponse.text,
+        text: reply.text,
         sender: "bot",
         timestamp: new Date(),
-        cta: botResponse.cta,
+        cta: reply.cta,
       };
+
       setMessages((prev) => [...prev, botMessage]);
-      if (botResponse.quickReplies && botResponse.quickReplies.length > 0) {
-        setDynamicQuickReplies(botResponse.quickReplies);
-      }
-      if (botResponse.set?.stage) setStage(botResponse.set.stage);
-      if (botResponse.set?.memory) setMemory((prev) => ({ ...prev, ...botResponse.set!.memory }));
+      if (reply.quickReplies) setDynamicQuickReplies(reply.quickReplies);
       setIsTyping(false);
-    }, 1000);
+    }, 600);
   };
 
-  const getBotResponse = (userText: string): BotPlan => {
-    const normalized = normalizeText(userText);
-    if (["halo", "hi", "hello"].some((k) => normalized.includes(k))) {
-      return {
-        text: "Halo! Saya AESPI Bot. Anda bisa tanya info klinik/booking, atau ceritakan keluhan gigi & mulut agar saya bantu arahkan.",
-        quickReplies: defaultQuickReplies,
-      };
-    }
+  const generateBotReply = (text: string): { text: string; cta?: Message["cta"]; quickReplies?: string[] } => {
+    const normalized = normalizeText(text);
 
-    if (["terima kasih", "thanks", "makasih"].some((k) => normalized.includes(k))) {
-      return { text: "Sama-sama!" };
-    }
-
-    if (["reset", "mulai ulang", "ulang", "hapus"].some((k) => normalized.includes(k))) {
+    if (normalized.includes("sakit gigi") || normalized.includes("keluhan")) {
       return {
-        text: "Baik, saya mulai ulang. Anda ingin tanya info klinik atau konsultasi keluhan gigi/mulut?",
-        quickReplies: defaultQuickReplies,
-        set: {
-          stage: "intent",
-          memory: {
-            intent: null,
-            chiefComplaint: null,
-            painScore: null,
-            duration: null,
-            location: null,
-            trigger: null,
-            swelling: null,
-            fever: null,
-            trauma: null,
-            pusTaste: null,
-            bleedingHeavy: null,
-            difficultySwallowBreath: null,
-            pregnant: null,
-            ageGroup: null,
-            medications: null,
-            allergies: null,
-            lastDentalVisit: null,
-          },
+        text: "Saya mengerti keluhan sakit gigi sangat mengganggu kenyamanan Anda. 🩺\n\nLangkah awal yang aman di rumah:\n1. Kumur air garam hangat 2-3 kali sehari.\n2. Hindari makanan/minuman terlalu panas, dingin, atau manis.\n3. Jangan mengunyah di sisi yang sakit.\n\nUntuk diagnosa tepat dan penanganan dokter spesialis, kami sarankan untuk segera menjadwalkan pemeriksaan.",
+        cta: {
+          label: "💬 Buat Janji via WhatsApp",
+          href: WHATSAPP_LINK,
         },
+        quickReplies: ["📅 Buat Janji Temu", "👨‍⚕️ Jadwal Dokter", "📍 Lokasi Klinik"],
       };
     }
 
-    if (["dokter gigi", "konsultasi", "keluhan", "sakit gigi", "bengkak", "ngilu", "darah"].some((k) => normalized.includes(k))) {
-      const inferred = inferChiefComplaint(userText);
+    if (normalized.includes("layanan") || normalized.includes("biaya") || normalized.includes("harga")) {
       return {
-        text: inferred
-          ? "Baik, saya bantu. Sebelum saya simpulkan, skala nyerinya berapa dari 0-10? (0 tidak nyeri, 10 sangat nyeri)"
-          : "Baik, saya bantu sebagai triage awal. Keluhan utamanya apa? (mis. sakit gigi / gusi bengkak / ngilu / gusi berdarah / sariawan)",
-        quickReplies: inferred
-          ? ["0", "3", "5", "7", "9", "10"]
-          : ["Sakit gigi", "Gusi bengkak", "Ngilu sensitif", "Gusi berdarah"],
-        set: {
-          stage: inferred ? "pain_score" : "chief_complaint",
-          memory: {
-            intent: "dental_triage",
-            chiefComplaint: inferred,
-            complaintFreeText: inferred ? userText : undefined,
-          },
+        text: "Klinik Aesthetic Pondok Indah menyediakan layanan dental komprehensif:\n\n✨ Estetika: Dental Whitening, Porcelain Veneers, Smile Makeover\n🦷 Perawatan Umum: Scaling & Polishing, Tambal Gigi Estetik, Root Canal\n😁 Ortodonti: Invisalign Clear Aligners, Behel Gigi\n🏥 Bedah Mulut: Implan Gigi Titanium, Odontektomi Gigi Bungsu\n👶 Gigi Anak: Pembersihan & Aplikasi Fluoride\n\nAda layanan tertentu yang ingin Anda tanyakan lebih lanjut?",
+        cta: {
+          label: "Konsultasi Layanan via WA",
+          href: WHATSAPP_LINK,
         },
+        quickReplies: ["Whitening", "Veneer", "Invisalign", "Scaling", "Implan Gigi"],
       };
     }
 
-    if (stage !== "idle") {
-      if (stage === "intent") {
-        const inferred = inferChiefComplaint(userText);
-        const wantsInfo = ["layanan", "service", "booking", "jadwal", "jam", "lokasi", "alamat", "promo", "dokter"].some((k) => normalized.includes(k));
-        if (wantsInfo && !inferred) {
-          const matched = matchKnowledge(userText);
-          if (matched) {
-            return {
-              text: matched.answer,
-              cta: matched.includeWhatsappCta
-                ? {
-                    label: "Hubungi Admin",
-                    href: WHATSAPP_LINK,
-                  }
-                : undefined,
-              quickReplies: defaultQuickReplies,
-              set: { stage: "intent", memory: { intent: "info" } },
-            };
-          }
-          return {
-            text: "Boleh. Anda mau info apa? (layanan / booking / lokasi / jam operasional / promo / dokter)",
-            quickReplies: ["Layanan kami", "Cara booking", "Lokasi", "Jam operasional"],
-            set: { stage: "intent", memory: { intent: "info" } },
-          };
-        }
-
-        if (inferred) {
-          return {
-            text: "Baik, saya bantu. Skala nyerinya berapa dari 0-10?",
-            quickReplies: ["0", "3", "5", "7", "9", "10"],
-            set: {
-              stage: "pain_score",
-              memory: {
-                intent: "dental_triage",
-                chiefComplaint: inferred,
-                complaintFreeText: userText,
-              },
-            },
-          };
-        }
-
-        return {
-          text: "Anda ingin tanya info klinik/booking, atau konsultasi keluhan gigi & mulut?",
-          quickReplies: defaultQuickReplies,
-          set: { stage: "intent" },
-        };
-      }
-
-      if (stage === "chief_complaint") {
-        const inferred = inferChiefComplaint(userText) ?? "other";
-        return {
-          text: "Terima kasih. Skala nyerinya berapa dari 0-10?",
-          quickReplies: ["0", "3", "5", "7", "9", "10"],
-          set: {
-            stage: "pain_score",
-            memory: { chiefComplaint: inferred, complaintFreeText: userText, intent: "dental_triage" },
-          },
-        };
-      }
-
-      if (stage === "pain_score") {
-        const score = extractPainScore(userText);
-        if (score === null) {
-          return {
-            text: "Boleh sebutkan angka 0-10 ya. (0 tidak nyeri, 10 sangat nyeri)",
-            quickReplies: ["0", "3", "5", "7", "9", "10"],
-            set: { stage: "pain_score" },
-          };
-        }
-        return {
-          text: "Sudah berapa lama keluhannya? (mis. 2 jam / 3 hari / 2 minggu)",
-          quickReplies: ["Baru hari ini", "1-3 hari", ">1 minggu", "Kambuhan"],
-          set: { stage: "duration", memory: { painScore: score } },
-        };
-      }
-
-      if (stage === "duration") {
-        return {
-          text: "Lokasinya di bagian mana? (atas/bawah, kiri/kanan, depan/belakang). Kalau tidak yakin, sebutkan yang paling mendekati.",
-          quickReplies: ["Atas kiri", "Atas kanan", "Bawah kiri", "Bawah kanan"],
-          set: { stage: "location", memory: { duration: userText } },
-        };
-      }
-
-      if (stage === "location") {
-        return {
-          text: "Ada pemicu tertentu? Misalnya ngilu saat dingin/manis, atau sakit saat mengunyah?",
-          quickReplies: ["Dingin", "Manis", "Mengunyah", "Tanpa pemicu jelas"],
-          set: { stage: "triggers", memory: { location: userText } },
-        };
-      }
-
-      if (stage === "triggers") {
-        const inferredSwelling = /(bengkak|pipi bengkak|gusi bengkak)/.test(normalized);
-        return {
-          text: "Sekarang saya cek tanda penting dulu. Apakah ada bengkak pada gusi/pipi? (ya/tidak)",
-          quickReplies: inferredSwelling ? ["Ya", "Tidak"] : ["Tidak", "Ya"],
-          set: { stage: "red_flags", memory: { trigger: userText } },
-        };
-      }
-
-      if (stage === "red_flags") {
-        const yn = yesNo(userText);
-        if (memory.swelling === null) {
-          if (yn === null) {
-            return {
-              text: "Jawab ya/tidak ya. Apakah ada bengkak pada gusi/pipi?",
-              quickReplies: ["Ya", "Tidak"],
-              set: { stage: "red_flags" },
-            };
-          }
-          return {
-            text: "Apakah disertai demam atau badan menggigil? (ya/tidak)",
-            quickReplies: ["Tidak", "Ya"],
-            set: { stage: "red_flags", memory: { swelling: yn } },
-          };
-        }
-
-        if (memory.fever === null) {
-          if (yn === null) {
-            return {
-              text: "Jawab ya/tidak ya. Apakah ada demam/menggigil?",
-              quickReplies: ["Tidak", "Ya"],
-              set: { stage: "red_flags" },
-            };
-          }
-          return {
-            text: "Ada kesulitan menelan atau sesak napas? (ya/tidak)",
-            quickReplies: ["Tidak", "Ya"],
-            set: { stage: "red_flags", memory: { fever: yn } },
-          };
-        }
-
-        if (memory.difficultySwallowBreath === null) {
-          if (yn === null) {
-            return {
-              text: "Jawab ya/tidak ya. Apakah ada kesulitan menelan/napas?",
-              quickReplies: ["Tidak", "Ya"],
-              set: { stage: "red_flags" },
-            };
-          }
-          const nextMemory = { difficultySwallowBreath: yn };
-          const merged = { ...memory, ...nextMemory };
-          const advice = buildDentalAdvice(merged);
-          return {
-            text: `Ringkas info Anda:\n- Keluhan: ${memory.chiefComplaint ?? "-"}\n- Nyeri: ${memory.painScore ?? "-"}/10\n- Durasi: ${memory.duration ?? "-"}\n- Lokasi: ${memory.location ?? "-"}\n- Pemicu: ${memory.trigger ?? "-"}\n- Bengkak: ${merged.swelling === null ? "-" : merged.swelling ? "Ya" : "Tidak"}\n- Demam: ${merged.fever === null ? "-" : merged.fever ? "Ya" : "Tidak"}\n- Sulit menelan/napas: ${merged.difficultySwallowBreath ? "Ya" : "Tidak"}\n\n${advice.text}`,
-            cta: advice.needsHandoff
-              ? {
-                  label: "Hubungi Admin",
-                  href: WHATSAPP_LINK,
-                }
-              : {
-                  label: "Booking via WhatsApp",
-                  href: WHATSAPP_LINK,
-                },
-            quickReplies: advice.needsHandoff ? ["Hubungi Admin", "Mulai ulang"] : ["Mulai ulang", "Info layanan", "Cara booking"],
-            set: {
-              stage: "summary",
-              memory: nextMemory,
-            },
-          };
-        }
-      }
+    if (normalized.includes("jadwal dokter") || normalized.includes("dokter spesialis")) {
+      return {
+        text: "Tim dokter spesialis kami siap melayani Anda:\n\n• drg. Yulita Dora — Aesthetic & Cosmetic Dentist\n• drg. Nadia Safira, Sp.Ort — Orthodontist & Invisalign Provider\n• drg. Eric Sulistio, Sp.Perio — Periodontist & Dental Implant\n• drg. Yudy Ardila Utomo, Sp.BMM — Oral & Maxillofacial Surgeon\n• drg. Achmad Riwandy & drg. Della Sparringa — General Dentist\n\nJadwal praktik: Senin – Sabtu pk 10.00 – 18.00 WIB.",
+        cta: {
+          label: "Pilih Jadwal Dokter",
+          href: WHATSAPP_LINK,
+        },
+        quickReplies: ["📅 Buat Janji Temu", "📍 Lokasi Klinik", "💬 Chat WhatsApp"],
+      };
     }
 
-    const matched = matchKnowledge(userText);
+    const matched = matchKnowledge(text);
     if (matched) {
       return {
         text: matched.answer,
-        cta: matched.includeWhatsappCta
-          ? {
-              label: "Hubungi Admin",
-              href: WHATSAPP_LINK,
-            }
-          : undefined,
-        quickReplies: defaultQuickReplies,
-        set: { stage: "intent", memory: { intent: "info" } },
+        cta: matched.includeWhatsappCta ? { label: "Hubungi Admin via WA", href: WHATSAPP_LINK } : undefined,
+        quickReplies: defaultQuickReplies.slice(0, 4),
       };
     }
 
     return {
-      text: "Agar saya tidak salah arah, Anda ingin tanya info klinik/booking atau konsultasi keluhan gigi & mulut?",
+      text: "Terima kasih atas pertanyaannya! Tim admin dan dokter kami di Aesthetic Pondok Indah siap memberikan informasi lebih detail secara personal melalui WhatsApp resmi klinik.",
       cta: {
-        label: "Hubungi Admin",
+        label: "💬 Hubungi WhatsApp Klinik",
         href: WHATSAPP_LINK,
       },
       quickReplies: defaultQuickReplies,
-      set: { stage: "intent" },
     };
   };
 
   return (
     <>
-      {/* Floating Chat Button with Tooltip */}
+      {/* 1. FLOATING LAUNCHER BUTTON (ALWAYS VISIBLE IN BOTTOM RIGHT) */}
       {!isOpen && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex items-end gap-1.5 sm:gap-2">
-          {/* Tooltip Bubble - slides from button */}
+        <div className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[99999] flex items-end gap-2 pointer-events-auto">
+          {/* Tooltip Bubble */}
           <div
             className={`relative mb-1.5 sm:mb-2 transition-all duration-500 ease-out ${
               showTooltip
@@ -659,98 +333,109 @@ export default function ChatBot() {
                 : "opacity-0 translate-x-4 pointer-events-none"
             }`}
           >
-            <div className="bg-gradient-gold text-white px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl rounded-br-none shadow-lg max-w-[140px] sm:max-w-[180px]">
-              <p className="text-[10px] sm:text-xs font-medium leading-relaxed">
-                Bingung mulai dari mana? AESPI Bot bisa bantu!
+            <div className="bg-gradient-to-r from-[#C9A24A] via-[#B8943F] to-[#A67F3A] text-white px-3 py-2 rounded-xl rounded-br-none shadow-xl shadow-[#C9A24A]/25 max-w-[170px] sm:max-w-[200px] border border-white/30">
+              <p className="text-[11px] sm:text-xs font-semibold leading-snug">
+                Bingung mulai dari mana? AESPI Bot siap bantu! ✨
               </p>
             </div>
-            <div className="absolute -bottom-1 right-0 w-0 h-0 border-l-4 sm:border-l-6 border-l-transparent border-t-4 sm:border-t-6 border-t-brand-gold border-r-4 sm:border-r-6 border-r-transparent"></div>
+            <div className="absolute -bottom-1 right-0 w-0 h-0 border-l-6 border-l-transparent border-t-6 border-t-[#A67F3A] border-r-6 border-r-transparent"></div>
           </div>
 
-          {/* Chat Button - Smaller on mobile */}
+          {/* Floating Action Button */}
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
-            className="flex items-center gap-1.5 sm:gap-2 bg-gradient-gold hover:opacity-90 text-white rounded-full px-2.5 py-2 sm:px-4 sm:py-3 shadow-lg shadow-brand-gold/30 transition-all duration-300 hover:scale-105"
+            onClick={() => {
+              setShowTooltip(false);
+              setIsOpen(true);
+            }}
+            className="flex items-center gap-2 bg-gradient-to-r from-[#C9A24A] via-[#B8943F] to-[#A67F3A] hover:brightness-105 active:scale-95 text-white rounded-full px-3.5 py-2.5 sm:px-4.5 sm:py-3.5 shadow-2xl shadow-[#C9A24A]/40 border border-white/30 transition-all duration-300 hover:scale-105 cursor-pointer touch-manipulation group"
+            title="Buka Chat Asisten Virtual"
           >
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <Bot className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-xs">
+              <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white group-hover:rotate-12 transition-transform duration-300" />
             </div>
-            <span className="font-semibold text-[10px] sm:text-sm">AESPI Bot</span>
+            <span className="font-bold text-xs sm:text-sm tracking-wide pr-1">AESPI Bot</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping mr-0.5" />
           </button>
         </div>
       )}
 
-      {/* Chat Window */}
+      {/* 2. CHATBOT MODAL WINDOW (DESKTOP & MOBILE RESPONSIVE) */}
       {isOpen && (
-        <div className="fixed z-50 flex flex-col bg-background shadow-2xl shadow-black/20 border border-border overflow-hidden bottom-3 right-3 left-3 top-3 sm:bottom-6 sm:right-6 sm:left-auto sm:top-auto sm:w-[380px] sm:max-w-[calc(100vw-48px)] w-auto max-h-[calc(100dvh-24px)] sm:max-h-[80vh] rounded-2xl">
+        <div className="fixed z-[99999] flex flex-col bg-white shadow-2xl shadow-black/30 border border-[#E8DFC8] overflow-hidden bottom-20 right-3.5 left-3.5 sm:bottom-6 sm:right-6 sm:left-auto sm:w-[390px] sm:max-w-[calc(100vw-48px)] w-auto max-h-[calc(100dvh-120px)] sm:max-h-[580px] h-[520px] rounded-3xl animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
-          <div className="bg-gradient-gold p-3 sm:p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <div className="bg-gradient-to-r from-[#C9A24A] via-[#B8943F] to-[#A67F3A] p-3.5 sm:p-4 flex items-center justify-between text-white shadow-md shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center border border-white/30 backdrop-blur-xs">
+                <Bot className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="font-semibold text-white text-sm sm:text-base">AESPI Bot</p>
-                <a
-                  href={WHATSAPP_LINK}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] sm:text-xs text-white/90 hover:text-white flex items-center gap-1 transition-colors"
-                >
-                  <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  Hubungi Admin
-                </a>
+                <p className="font-extrabold text-sm sm:text-base leading-tight">AESPI Bot</p>
+                <p className="text-[10px] sm:text-xs text-white/90 font-medium flex items-center gap-1.5 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Asisten Virtual Aesthetic
+                </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+
+            <div className="flex items-center gap-1.5">
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-full text-[10px] sm:text-xs font-bold text-white flex items-center gap-1 transition-colors border border-white/20"
+                title="Chat WhatsApp Admin"
+              >
+                <Phone className="w-3 h-3" />
+                <span className="hidden sm:inline">WhatsApp</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors cursor-pointer"
+                title="Tutup Chat"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-brand-cream/30">
+          {/* Messages Container */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 bg-[#FAF8F5]">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex items-start gap-2 ${
+                className={`flex items-start gap-2.5 ${
                   message.sender === "user" ? "flex-row-reverse" : ""
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 ${
                     message.sender === "bot"
-                      ? "bg-gradient-gold text-white"
-                      : "bg-brand-gold-light text-brand-gold"
+                      ? "bg-gradient-to-br from-[#C9A24A] to-[#8C6B1C] text-white"
+                      : "bg-[#2C2416] text-[#E8C547]"
                   }`}
                 >
-                  {message.sender === "bot" ? (
-                    <Bot className="w-4 h-4" />
-                  ) : (
-                    <User className="w-4 h-4" />
-                  )}
+                  {message.sender === "bot" ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
                 </div>
                 <div
-                  className={`max-w-[80%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm leading-relaxed ${
+                  className={`max-w-[82%] sm:max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed shadow-xs ${
                     message.sender === "bot"
-                      ? "bg-white border border-border text-brand-charcoal rounded-tl-none"
-                      : "bg-gradient-gold text-white rounded-tr-none"
+                      ? "bg-white border border-[#E8DFC8] text-[#2C2416] rounded-tl-none whitespace-pre-line"
+                      : "bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white rounded-tr-none"
                   }`}
                 >
                   {message.text}
                   {message.sender === "bot" && message.cta && (
-                    <div className="mt-2">
+                    <div className="mt-2.5 pt-2 border-t border-[#F0E6D3]">
                       <a href={message.cta.href} target="_blank" rel="noopener noreferrer">
                         <Button
                           type="button"
                           size="sm"
-                          className="h-8 rounded-full bg-gradient-gold hover:opacity-90 text-white px-3"
+                          className="h-8 rounded-xl bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:opacity-90 text-white px-3 text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
                         >
-                          {message.cta.label}
+                          <span>{message.cta.label}</span>
+                          <ArrowRight className="w-3 h-3" />
                         </Button>
                       </a>
                     </div>
@@ -759,15 +444,15 @@ export default function ChatBot() {
               </div>
             ))}
             {isTyping && (
-              <div className="flex items-start gap-2">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-gold flex items-center justify-center">
-                  <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              <div className="flex items-start gap-2.5">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#C9A24A] to-[#8C6B1C] text-white flex items-center justify-center shrink-0">
+                  <Bot className="w-4 h-4" />
                 </div>
-                <div className="bg-white border border-border rounded-2xl rounded-tl-none px-3 sm:px-4 py-2 sm:py-3">
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-brand-gold/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-brand-gold/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-brand-gold/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                <div className="bg-white border border-[#E8DFC8] rounded-2xl rounded-tl-none px-3.5 py-3 shadow-xs">
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 bg-[#C9A24A] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2 h-2 bg-[#C9A24A] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2 h-2 bg-[#C9A24A] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                   </div>
                 </div>
               </div>
@@ -776,14 +461,14 @@ export default function ChatBot() {
           </div>
 
           {/* Quick Replies */}
-          <div className="px-3 sm:px-4 py-2 bg-white border-t border-border">
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-nowrap sm:gap-2">
-              {dynamicQuickReplies.slice(0, 4).map((reply) => (
+          <div className="px-3 py-2 bg-white border-t border-[#E8DFC8] shrink-0">
+            <div className="flex flex-wrap gap-1.5 max-h-[75px] overflow-y-auto">
+              {dynamicQuickReplies.map((reply) => (
                 <button
                   key={reply}
                   type="button"
                   onClick={() => handleSend(reply)}
-                  className="min-w-0 px-3 py-2 sm:px-2.5 sm:py-1.5 bg-brand-gold-light/40 hover:bg-brand-gold-light text-brand-gold text-xs font-semibold rounded-full transition-colors truncate"
+                  className="px-2.5 py-1 bg-[#FAF5EA] hover:bg-[#F3E8CF] text-[#8C6B1C] border border-[#EADBBD] text-[11px] font-semibold rounded-full transition-colors cursor-pointer"
                 >
                   {reply}
                 </button>
@@ -791,9 +476,9 @@ export default function ChatBot() {
             </div>
           </div>
 
-          {/* Input */}
-          <div className="p-3 sm:p-4 bg-white border-t border-border">
-            <div className="flex gap-2">
+          {/* Input Area */}
+          <div className="p-3 bg-white border-t border-[#E8DFC8] shrink-0">
+            <div className="flex items-center gap-2">
               <Input
                 ref={inputRef}
                 value={inputValue}
@@ -803,16 +488,17 @@ export default function ChatBot() {
                     handleSend(inputValue);
                   }
                 }}
-                placeholder="Ketik pesan Anda..."
-                className="flex-1 rounded-full border-border text-sm h-10"
+                placeholder="Ketik pertanyaan atau keluhan Anda..."
+                className="flex-1 rounded-full border-[#E8DFC8] text-xs sm:text-sm h-10 px-4 focus:ring-1 focus:ring-[#C9A24A]"
               />
               <Button
                 type="button"
                 onClick={() => handleSend(inputValue)}
                 disabled={!inputValue.trim()}
-                className="w-9 h-9 sm:w-10 sm:h-10 p-0 rounded-full bg-gradient-gold hover:opacity-90 disabled:opacity-50"
+                className="w-10 h-10 p-0 rounded-full bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:opacity-90 disabled:opacity-40 text-white cursor-pointer shrink-0"
+                title="Kirim Pesan"
               >
-                <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Send className="w-4 h-4" />
               </Button>
             </div>
           </div>

@@ -1,18 +1,7 @@
-<IfModule mod_headers.c>
-  Header always set Access-Control-Allow-Origin "*"
-  Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-  Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-App-Version, X-Client, X-Custom-Header, *"
-  Header always set Access-Control-Expose-Headers "*"
-</IfModule>
-
 <IfModule mod_rewrite.c>
   DirectoryIndex index.html
 
   RewriteEngine On
-
-  # Handle OPTIONS preflight requests immediately
-  RewriteCond %{REQUEST_METHOD} OPTIONS
-  RewriteRule ^(.*)$ $1 [R=200,L]
 
   # Preserve bearer-token authentication for Laravel API requests.
   RewriteCond %{HTTP:Authorization} .
