@@ -15,7 +15,7 @@ class WebPushSubscriptionController extends Controller
      */
     public function getVapidPublicKey(): JsonResponse
     {
-        $publicKey = config('services.vapid.public_key', env('VAPID_PUBLIC_KEY', 'BHZFSJTgwTDw7EYkAzfgi1gtoenGg1IJsNdCQVOLvxd8TLpIPQkNccQRu1p2RXhB96M3AXEP71_9RuGkK64iM4k'));
+        $publicKey = config('services.vapid.public_key') ?: env('VAPID_PUBLIC_KEY', '');
 
         return response()->json([
             'publicKey' => $publicKey,

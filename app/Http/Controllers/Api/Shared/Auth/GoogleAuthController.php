@@ -310,4 +310,136 @@ class GoogleAuthController extends Controller
 
         return null;
     }
+
+    /**
+     * Redirect user to Google OAuth (Universal Web & Mobile Native Bridge)
+     */
+    public function redirectToGoogle(Request $request)
+    {
+        $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
+        $redirectUri = url('/api/auth/google/callback');
+        $returnTo = $request->input('return_to', 'aestheticpondokindah://oauth2redirect');
+        $mode = $request->input('mode', 'login');
+
+        $state = base64_encode(json_encode([
+            'return_to' => $returnTo,
+            'mode' => $mode,
+            'time' => time(),
+        ]));
+
+        $params = http_build_query([
+            'client_id' => $clientId,
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code',
+            'scope' => 'openid profile email',
+            'access_type' => 'online',
+            'prompt' => 'select_account',
+            'state' => $state,
+        ]);
+
+        return redirect("https://accounts.google.com/o/oauth2/v2/auth?{$params}");
+    }
+
+    /**
+     * Handle Google OAuth Callback (Exchanges Code, Creates Session, Redirects back to Mobile / Web)
+     */
+    public function handleGoogleCallback(Request $request)
+    {
+        $code = $request->input('code');
+        $stateRaw = $request->input('state');
+        $state = json_decode(base64_decode((string)$stateRaw), true) ?: [];
+        $returnTo = $state['return_to'] ?? 'aestheticpondokindah://oauth2redirect';
+        $mode = $state['mode'] ?? 'login';
+
+        if (empty($code)) {
+            $errorMsg = $request->input('error_description', 'Autentikasi Google dibatalkan.');
+            return $this->renderOAuthBridge($returnTo, ['error' => $errorMsg]);
+        }
+
+        $clientId = config('services.google.client_id') ?: env('GOOGLE_CLIENT_ID');
+        $clientSecret = config('services.google.client_secret') ?: env('GOOGLE_CLIENT_SECRET');
+        $redirectUri = url('/api/auth/google/callback');
+
+        // Exchange code for token
+        $tokenRes = Http::timeout(10)->asForm()->post('https://oauth2.googleapis.com/token', [
+            'code' => $code,
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'redirect_uri' => $redirectUri,
+            'grant_type' => 'authorization_code',
+        ]);
+
+        if (!$tokenRes->successful()) {
+            return $this->renderOAuthBridge($returnTo, ['error' => 'Gagal menukarkan kode otorisasi Google.']);
+        }
+
+        $accessToken = $tokenRes->json('access_token');
+        $idToken = $tokenRes->json('id_token');
+
+        $subRequest = Request::create('/api/auth/google', 'POST', [
+            'access_token' => $accessToken,
+            'credential' => $idToken,
+            'mode' => $mode,
+            'device_name' => 'mobile_native_google',
+        ]);
+
+        $authResponse = $this->handleGoogleAuth($subRequest);
+        $authData = $authResponse->getData(true);
+
+        if (empty($authData['success'])) {
+            return $this->renderOAuthBridge($returnTo, ['error' => $authData['message'] ?? 'Login Google gagal.']);
+        }
+
+        return $this->renderOAuthBridge($returnTo, [
+            'token' => $authData['token'] ?? '',
+            'user' => json_encode($authData['user'] ?? []),
+            'message' => $authData['message'] ?? 'Login berhasil',
+        ]);
+    }
+
+    /**
+     * Render HTML Bridge that redirects back to the Mobile Native App or Web
+     */
+    private function renderOAuthBridge(string $returnTo, array $params)
+    {
+        $queryString = http_build_query($params);
+        $separator = str_contains($returnTo, '?') ? '&' : '?';
+        $fullRedirectUrl = $returnTo . $separator . $queryString;
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mengalihkan ke Aplikasi...</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #FAF8F5; color: #2C2416; }
+        .card { background: white; padding: 32px; border-radius: 20px; border: 1px solid #E8DFC8; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05); max-width: 360px; margin: 16px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #E8DFC8; border-top: 3px solid #C9A24A; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn { display: inline-block; margin-top: 16px; padding: 12px 24px; background: #C9A24A; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="spinner"></div>
+        <h3 style="margin: 0 0 8px;">Autentikasi Selesai</h3>
+        <p style="font-size: 13px; color: #8C8272; margin: 0;">Sedang mengalihkan kembali ke aplikasi Aesthetic Pondok Indah...</p>
+        <a id="redirectLink" href="{$fullRedirectUrl}" class="btn">Buka Aplikasi</a>
+    </div>
+    <script>
+        const targetUrl = "{$fullRedirectUrl}";
+        window.location.href = targetUrl;
+        setTimeout(() => {
+            const link = document.getElementById('redirectLink');
+            if (link) link.style.display = 'inline-block';
+        }, 1200);
+    </script>
+</body>
+</html>
+HTML;
+
+        return response($html, 200)->header('Content-Type', 'text/html; charset=UTF-8');
+    }
 }

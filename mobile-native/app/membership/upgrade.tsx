@@ -11,7 +11,6 @@ import { colors, spacing, radius } from '@/theme/colors';
 const TIERS = [
   { level: 'gold', name: 'Gold', price: 'Rp 299.000', benefits: ['Diskon 10% semua layanan', '+100 Bonus Poin', 'Priority booking', 'Birthday treat'] },
   { level: 'platinum', name: 'Platinum', price: 'Rp 599.000', benefits: ['Diskon 20% semua layanan', '+300 Bonus Poin', 'Priority booking', 'Free konsultasi 1x/bulan', 'Birthday treat Premium'] },
-  { level: 'diamond', name: 'Diamond', price: 'Rp 999.000', benefits: ['Diskon 30% semua layanan', '+1000 Bonus Poin', 'VIP booking', 'Free konsultasi unlimited', 'Personal dental advisor', 'Birthday treat VIP'] },
 ];
 
 export default function MembershipUpgradeScreen() {
@@ -21,7 +20,7 @@ export default function MembershipUpgradeScreen() {
 
   const currentTier = user?.membership_level ?? 'bronze';
   const availableTiers = TIERS.filter((t) => {
-    const order = ['bronze', 'gold', 'platinum', 'diamond'];
+    const order = ['bronze', 'gold', 'platinum'];
     return order.indexOf(t.level) > order.indexOf(currentTier);
   });
 

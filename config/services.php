@@ -2,9 +2,9 @@
 
 return [
     'vapid' => [
-        'public_key' => env('VAPID_PUBLIC_KEY', 'BHZFSJTgwTDw7EYkAzfgi1gtoenGg1IJsNdCQVOLvxd8TLpIPQkNccQRu1p2RXhB96M3AXEP71_9RuGkK64iM4k'),
-        'private_key' => env('VAPID_PRIVATE_KEY', 'JjIMcuIbB_2ov4tL363cFbB_XLb5gkFp18BpoWjeY2c'),
-        'subject' => env('VAPID_SUBJECT', 'mailto:admin@aestheticpondokindah.local'),
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', 'mailto:admin@aestheticpondokindah.com'),
     ],
 
 

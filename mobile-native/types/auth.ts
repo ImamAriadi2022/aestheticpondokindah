@@ -21,7 +21,7 @@ export interface User {
   email: string | null;
   phone: string;
   role: 'user' | 'clinic_admin' | 'doctor';
-  membership_level: 'bronze' | 'gold' | 'platinum' | 'diamond';
+  membership_level: 'bronze' | 'gold' | 'platinum';
   membership_status: 'active' | 'inactive' | 'expired';
   membership_expires_at: string | null;
   total_transactions: number;

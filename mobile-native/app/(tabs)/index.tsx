@@ -17,7 +17,6 @@ const TIER_COLORS: Record<string, string> = {
   bronze: '#CD7F32',
   gold: '#C59E3F',
   platinum: '#9CA3AF',
-  diamond: '#60A5FA',
 };
 
 export default function HomeScreen() {
@@ -80,13 +79,23 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Halo, {user?.name?.split(' ')[0] ?? 'Pengguna'} 👋</Text>
-            <Text style={styles.subGreeting}>Selamat datang kembali</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Image
+              source={require('@/assets/logo/logo.webp')}
+              style={{ width: 130, height: 38 }}
+              resizeMode="contain"
+            />
           </View>
-          <TouchableOpacity style={[styles.tierBadge, { backgroundColor: tierColor + '20', borderColor: tierColor }]}>
+          <TouchableOpacity
+            style={[styles.tierBadge, { backgroundColor: tierColor + '20', borderColor: tierColor }]}
+            onPress={() => router.push('/(tabs)/membership')}
+          >
             <Text style={[styles.tierText, { color: tierColor }]}>✦ {tierName}</Text>
           </TouchableOpacity>
+        </View>
+        <View style={{ paddingHorizontal: spacing.md, marginBottom: spacing.sm, marginTop: 4 }}>
+          <Text style={styles.greeting}>Halo, {user?.name?.split(' ')[0] ?? 'Pengguna'} 👋</Text>
+          <Text style={styles.subGreeting}>Selamat datang di Aesthetic Pondok Indah</Text>
         </View>
 
         {/* Membership Card */}
@@ -109,12 +118,41 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Doctor Portal Switch Banner */}
+        {user?.role === 'doctor' && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: '#FAF5EA',
+              borderWidth: 1,
+              borderColor: '#C9A24A',
+              borderRadius: radius.lg,
+              padding: spacing.md,
+              marginHorizontal: spacing.md,
+              marginBottom: spacing.md,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+            onPress={() => router.push('/doctor')}
+            activeOpacity={0.85}
+          >
+            <View>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: colors.goldDark }}>🩺 Portal Dokter Aktif</Text>
+              <Text style={{ fontSize: 11, color: colors.charcoalMedium, marginTop: 2 }}>Buka antrean pasien & kelola rekam medis</Text>
+            </View>
+            <View style={{ backgroundColor: colors.gold, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.full }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: '#fff' }}>Buka Portal</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Layanan Cepat</Text>
           <View style={styles.quickActions}>
             {[
               { label: 'Buat Janji', icon: '📅', route: '/(tabs)/booking' },
+              { label: 'Chat AI', icon: '💬', route: '/consultation' },
               { label: 'Membership', icon: '💎', route: '/(tabs)/membership' },
               { label: 'Notifikasi', icon: '🔔', route: '/(tabs)/notifications' },
               { label: 'Profil', icon: '👤', route: '/(tabs)/profile' },

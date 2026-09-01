@@ -54,9 +54,7 @@ export default function GoogleAuthButton({
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const tokenClientRef = useRef<any>(null);
 
-  const clientId =
-    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-    "559787286465-po35hsp1bsteotm2rs5cuftavtkb1m9f.apps.googleusercontent.com";
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
   // Load Google Identity Services script
   useEffect(() => {

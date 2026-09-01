@@ -2,14 +2,16 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { authStorage } from '@/storage/authStorage';
 import { authService } from '@/services/authService';
 import { router } from 'expo-router';
-import type { User } from '@/types/auth';
+import type { User, RegisterPayload } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone: string, password: string) => Promise<void>;
+  login: (phoneOrEmail: string, password: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  loginGoogle: (payload: { credential?: string; access_token?: string; code?: string; mode?: 'login' | 'register' }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -40,11 +42,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initAuth();
   }, []);
 
-  const login = useCallback(async (phone: string, password: string) => {
-    const res = await authService.login({ phone, password });
+  const routeByRole = (role?: string) => {
+    if (role === 'doctor') {
+      router.replace('/doctor');
+    } else {
+      router.replace('/(tabs)');
+    }
+  };
+
+  const login = useCallback(async (phoneOrEmail: string, password: string) => {
+    const res = await authService.login({ login: phoneOrEmail, password });
     setToken(res.token);
     setUser(res.user);
-    router.replace('/(tabs)');
+    routeByRole(res.user?.role);
+  }, []);
+
+  const register = useCallback(async (payload: RegisterPayload) => {
+    const res = await authService.register(payload);
+    setToken(res.token);
+    setUser(res.user);
+    routeByRole(res.user?.role);
+  }, []);
+
+  const loginGoogle = useCallback(async (payload: { credential?: string; access_token?: string; code?: string; mode?: 'login' | 'register' }) => {
+    const res = await authService.loginGoogle(payload);
+    setToken(res.token);
+    setUser(res.user);
+    routeByRole(res.user?.role);
   }, []);
 
   const logout = useCallback(async () => {
@@ -75,6 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated: !!token && !!user,
       isLoading,
       login,
+      register,
+      loginGoogle,
       logout,
       refreshUser,
     }}>

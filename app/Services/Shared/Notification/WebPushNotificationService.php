@@ -20,9 +20,9 @@ class WebPushNotificationService
         if (self::$webPushInstance === null) {
             $auth = [
                 'VAPID' => [
-                    'subject' => config('services.vapid.subject', env('VAPID_SUBJECT', 'mailto:admin@aestheticpondokindah.local')),
-                    'publicKey' => config('services.vapid.public_key', env('VAPID_PUBLIC_KEY', 'BHZFSJTgwTDw7EYkAzfgi1gtoenGg1IJsNdCQVOLvxd8TLpIPQkNccQRu1p2RXhB96M3AXEP71_9RuGkK64iM4k')),
-                    'privateKey' => config('services.vapid.private_key', env('VAPID_PRIVATE_KEY', 'JjIMcuIbB_2ov4tL363cFbB_XLb5gkFp18BpoWjeY2c')),
+                    'subject' => config('services.vapid.subject') ?: env('VAPID_SUBJECT', 'mailto:admin@aestheticpondokindah.com'),
+                    'publicKey' => config('services.vapid.public_key') ?: env('VAPID_PUBLIC_KEY', ''),
+                    'privateKey' => config('services.vapid.private_key') ?: env('VAPID_PRIVATE_KEY', ''),
                 ],
             ];
 

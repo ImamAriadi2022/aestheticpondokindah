@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator, Alert,
+  RefreshControl, ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -14,7 +14,12 @@ const TIER_COLORS: Record<string, { bg: string; text: string; border: string }> 
   bronze: { bg: '#FDF4E8', text: '#92400E', border: '#CD7F32' },
   gold: { bg: '#FFFBEB', text: '#78350F', border: '#C59E3F' },
   platinum: { bg: '#F9FAFB', text: '#374151', border: '#9CA3AF' },
-  diamond: { bg: '#EFF6FF', text: '#1E3A5F', border: '#60A5FA' },
+};
+
+const TIER_IMAGES: Record<string, any> = {
+  bronze: require('@/assets/dashboard/cardbronze.webp'),
+  gold: require('@/assets/dashboard/cardgold.webp'),
+  platinum: require('@/assets/dashboard/cardplatinum.webp'),
 };
 
 export default function MembershipScreen() {
@@ -69,7 +74,15 @@ export default function MembershipScreen() {
           <ActivityIndicator color={colors.gold} style={{ marginTop: spacing.xl }} />
         ) : (
           <>
-            {/* Membership Card */}
+            {/* Membership Card with WebP Artwork */}
+            <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
+              <Image
+                source={TIER_IMAGES[tier] ?? TIER_IMAGES.bronze}
+                style={{ width: '100%', height: 180, borderRadius: radius.xl }}
+                resizeMode="cover"
+              />
+            </View>
+
             <View style={[styles.memberCard, { backgroundColor: colors.charcoal }]}>
               <View style={styles.memberCardTop}>
                 <View>
@@ -101,7 +114,7 @@ export default function MembershipScreen() {
             </View>
 
             {/* Upgrade Button */}
-            {tier !== 'diamond' && (
+            {tier !== 'platinum' && (
               <TouchableOpacity
                 style={styles.upgradeBtn}
                 onPress={() => router.push('/membership/upgrade' as any)}

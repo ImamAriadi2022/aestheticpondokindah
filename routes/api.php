@@ -105,6 +105,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/otp/send', [OtpController::class, 'sendOtp']);
     Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
     Route::post('/google', [GoogleAuthController::class, 'handleGoogleAuth']);
+    Route::get('/google/redirect', [GoogleAuthController::class, 'redirectToGoogle']);
+    Route::get('/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
     Route::middleware('auth:sanctum')->post('/google/link', [GoogleAuthController::class, 'linkGoogle']);
     Route::middleware('auth:sanctum')->post('/google/unlink', [GoogleAuthController::class, 'unlinkGoogle']);
     Route::middleware('auth:sanctum')->get('/google/status', [GoogleAuthController::class, 'getGoogleStatus']);

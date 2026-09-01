@@ -4,7 +4,7 @@ import { getSession } from "@/core/auth/services/session";
 import { getServiceWorkerRegistration } from "./pushNotificationService";
 import { toast } from "@/shared/ui/toast";
 
-const FALLBACK_VAPID_PUBLIC_KEY = "BHZFSJTgwTDw7EYkAzfgi1gtoenGg1IJsNdCQVOLvxd8TLpIPQkNccQRu1p2RXhB96M3AXEP71_9RuGkK64iM4k";
+const FALLBACK_VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "";
 
 /**
  * Convert standard base64url string to Uint8Array for PushManager

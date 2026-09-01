@@ -1,7 +1,7 @@
 // Types — Membership & Points
 
 export interface MembershipTier {
-  level: 'bronze' | 'gold' | 'platinum' | 'diamond';
+  level: 'bronze' | 'gold' | 'platinum';
   name: string;
   min_transactions: number;
   benefits: string[];
@@ -12,7 +12,7 @@ export interface MembershipTier {
 export interface MembershipProfile {
   id: number;
   user_id: number;
-  level: 'bronze' | 'gold' | 'platinum' | 'diamond';
+  level: 'bronze' | 'gold' | 'platinum';
   status: 'active' | 'inactive' | 'expired';
   started_at: string | null;
   expires_at: string | null;

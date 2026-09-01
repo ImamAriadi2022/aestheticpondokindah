@@ -1,11 +1,32 @@
 import { apiClient } from './apiClient';
 import { authStorage } from '@/storage/authStorage';
 import { ENDPOINTS } from '@/constants/api';
-import type { LoginPayload, AuthResponse } from '@/types/auth';
+import type { LoginPayload, RegisterPayload, AuthResponse } from '@/types/auth';
 
 export const authService = {
-  async login(payload: LoginPayload): Promise<AuthResponse> {
-    const res = await apiClient.post<AuthResponse>(ENDPOINTS.LOGIN, payload, { skipAuth: true });
+  async login(payload: { phone?: string; login?: string; password: string }): Promise<AuthResponse> {
+    const loginIdentifier = payload.login || payload.phone || '';
+    const res = await apiClient.post<AuthResponse>(ENDPOINTS.LOGIN, {
+      login: loginIdentifier,
+      password: payload.password,
+    }, { skipAuth: true });
+    await authStorage.saveToken(res.token);
+    await authStorage.saveUser(res.user);
+    return res;
+  },
+
+  async register(payload: RegisterPayload): Promise<AuthResponse> {
+    const res = await apiClient.post<AuthResponse>(ENDPOINTS.REGISTER, payload, { skipAuth: true });
+    await authStorage.saveToken(res.token);
+    await authStorage.saveUser(res.user);
+    return res;
+  },
+
+  async loginGoogle(payload: { credential?: string; access_token?: string; code?: string; mode?: 'login' | 'register' }): Promise<AuthResponse> {
+    const res = await apiClient.post<AuthResponse>('/auth/google', {
+      ...payload,
+      device_name: 'mobile_native_google',
+    }, { skipAuth: true });
     await authStorage.saveToken(res.token);
     await authStorage.saveUser(res.user);
     return res;

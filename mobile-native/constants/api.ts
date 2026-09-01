@@ -1,15 +1,9 @@
 // API Base URL — Aesthetic Pondok Indah
-// Production: https://aestheticpondokindah.com/api
+// Production API: https://aestheticpondokindah.com/api
+// Production Storage: https://aestheticpondokindah.com/storage
 
-export const API_BASE =
-  process.env.NODE_ENV === 'development'
-    ? 'http://10.0.2.2:8000/api' // Android emulator localhost alias
-    : 'https://aestheticpondokindah.com/api';
-
-export const STORAGE_BASE =
-  process.env.NODE_ENV === 'development'
-    ? 'http://10.0.2.2:8000/storage'
-    : 'https://aestheticpondokindah.com/storage';
+export const API_BASE = 'https://aestheticpondokindah.com/api';
+export const STORAGE_BASE = 'https://aestheticpondokindah.com/storage';
 
 export const getStorageUrl = (path: string | null | undefined): string | null => {
   if (!path) return null;
