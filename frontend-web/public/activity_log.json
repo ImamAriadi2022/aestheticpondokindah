@@ -11,7 +11,7 @@
             "Unified Token & Session Management: Mengintegrasikan token Sanctum dengan masa aktif 10 hari dan serialisasi data profil lengkap.",
             "Zero Build Errors: Kompilasi npm run build sukses 100% tanpa error."
         ],
-        "author": "Antigravity Assistant",
+        "author": "Imam Ariadi",
         "version": "1.0.0"
     },
     "id": "act-379",
@@ -26,5 +26,5 @@
     "category": "auth-google-oauth-sso-integration",
     "description": "Mengimplementasikan fitur autentikasi Google OAuth 2.0 lengkap di backend Laravel dan frontend React: 1) Backend: Menambahkan kolom google_id pada tabel users (migration 2026_08_29_200000_add_google_id_to_users_table.php), membuat GoogleAuthController untuk menangani login/pendaftaran otomatis (POST /api/auth/google), menghubungkan akun Google (POST /api/auth/google/link), memutuskan koneksi Google (POST /api/auth/google/unlink), dan status koneksi (GET /api/auth/google/status), 2) Frontend: Membuat komponen GoogleAuthButton yang bersih dan elegan dengan logo resmi Google SVG dan tipografi Poppins, mendukung Google Identity Services (GIS) One Tap & Popup fallback, 3) Integrasi Halaman: Menambahkan tombol 'Masuk dengan Google' di halaman Login (Login.tsx & MobileLogin.tsx), tombol 'Daftar dengan Google' di tab Registrasi, serta kartu 'Koneksi Akun Google' di halaman Pengaturan Keamanan Pasien (Security.tsx) yang mendukung penautan akun dan pemutusan tautan instan.",
     "version": "1.0.0",
-    "author": "Antigravity Assistant"
+    "author": "Imam Ariadi"
 }

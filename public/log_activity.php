@@ -30,7 +30,7 @@ function appendActivityLog($data) {
         'before_progress' => $data['before_progress'] ?? 0,
         'after_progress' => $data['after_progress'] ?? 0,
         'status' => $data['status'] ?? '🟢 Complete',
-        'author' => $data['author'] ?? 'Antigravity AI'
+        'author' => $data['author'] ?? 'Imam Ariadi'
     ];
 
     array_unshift($logs, $newEntry);
