@@ -7,6 +7,8 @@ import {
   toggleZestaChat,
   isZestaChatOpen,
   hideDefaultZestaButton,
+  closeZestaChat,
+  setZestaWidgetVisibility,
 } from "../services/zestaService";
 
 export default function ZestaLiveChat() {
@@ -15,8 +17,61 @@ export default function ZestaLiveChat() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Initialize and sync Zesta session
+  // Check if the current route is inside Patient, Doctor, or Admin portals/features
+  const isDoctorRoute = location.pathname.startsWith("/doctor");
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const isPatientRoute =
+    location.pathname === "/dashboard" ||
+    location.pathname.startsWith("/dashboard/") ||
+    location.pathname === "/booking" ||
+    location.pathname.startsWith("/booking/") ||
+    location.pathname === "/riwayat" ||
+    location.pathname.startsWith("/riwayat/") ||
+    location.pathname === "/konsultasi" ||
+    location.pathname.startsWith("/konsultasi/") ||
+    location.pathname.startsWith("/consultation/") ||
+    location.pathname === "/membership" ||
+    location.pathname.startsWith("/membership/") ||
+    location.pathname === "/profil" ||
+    location.pathname.startsWith("/profil/") ||
+    location.pathname === "/profile" ||
+    location.pathname.startsWith("/profile/") ||
+    location.pathname === "/pengaturan" ||
+    location.pathname.startsWith("/pengaturan/") ||
+    location.pathname === "/keamanan" ||
+    location.pathname.startsWith("/keamanan/") ||
+    location.pathname === "/pemberitahuan" ||
+    location.pathname === "/notifikasi" ||
+    location.pathname === "/help" ||
+    location.pathname === "/bantuan" ||
+    location.pathname === "/layanan-treatment/odontogram" ||
+    (Boolean(session) &&
+      (location.pathname.startsWith("/dashboard") ||
+        location.pathname.startsWith("/booking") ||
+        location.pathname.startsWith("/membership") ||
+        location.pathname.startsWith("/konsultasi") ||
+        location.pathname.startsWith("/riwayat") ||
+        location.pathname.startsWith("/profil") ||
+        location.pathname.startsWith("/profile") ||
+        location.pathname.startsWith("/pengaturan") ||
+        location.pathname.startsWith("/keamanan") ||
+        location.pathname.startsWith("/doctor") ||
+        location.pathname.startsWith("/admin")));
+
+  const isDocsApi = location.pathname === "/docs-api" || location.pathname === "/doc-api";
+
+  const shouldHideChat = isDoctorRoute || isAdminRoute || isPatientRoute || isDocsApi;
+
+  // Initialize and sync Zesta session (only on public pages)
   useEffect(() => {
+    if (shouldHideChat) {
+      setZestaWidgetVisibility(false);
+      closeZestaChat();
+      setIsOpen(false);
+      return;
+    }
+
+    setZestaWidgetVisibility(true);
     if (session) {
       const rawPhone = (session as any).whatsapp || (session as any).phone || "";
       const normalizedPhone = rawPhone
@@ -35,10 +90,12 @@ export default function ZestaLiveChat() {
     } else {
       initZestaWidget();
     }
-  }, [session?.id, location.pathname]);
+  }, [shouldHideChat, session?.id, location.pathname]);
 
   // Show subtle greeting tooltip after 3 seconds, auto hide after 4 seconds
   useEffect(() => {
+    if (shouldHideChat) return;
+
     const timer = setTimeout(() => {
       setShowTooltip(true);
       const hideTimer = setTimeout(() => setShowTooltip(false), 4000);
@@ -46,10 +103,12 @@ export default function ZestaLiveChat() {
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [shouldHideChat, location.pathname]);
 
   // Poll state to check if Zesta chat window was opened or closed internally
   useEffect(() => {
+    if (shouldHideChat) return;
+
     const interval = setInterval(() => {
       hideDefaultZestaButton();
       const open = isZestaChatOpen();
@@ -57,7 +116,7 @@ export default function ZestaLiveChat() {
     }, 250);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [shouldHideChat]);
 
   const handleToggle = () => {
     setShowTooltip(false);
@@ -67,11 +126,7 @@ export default function ZestaLiveChat() {
     }, 150);
   };
 
-  // Only hide on active real-time doctor tele-consultation rooms or dev docs
-  const isConsultationChat = location.pathname.includes("/konsultasi/guest/") || location.pathname.includes("/consultation/");
-  const isDocsApi = location.pathname === "/docs-api" || location.pathname === "/doc-api";
-
-  if (isConsultationChat || isDocsApi) {
+  if (shouldHideChat) {
     return null;
   }
 

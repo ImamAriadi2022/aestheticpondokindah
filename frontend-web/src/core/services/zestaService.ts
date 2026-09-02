@@ -218,6 +218,39 @@ export function isZestaChatOpen(): boolean {
 }
 
 /**
+ * Close the Zesta Live Chat window if open.
+ */
+export function closeZestaChat() {
+  if (typeof document === "undefined") return;
+  if (typeof window !== "undefined" && window.Zesta?.close) {
+    try {
+      window.Zesta.close();
+      return;
+    } catch {}
+  }
+  const root = document.getElementById("zesta-livechat-root");
+  if (root && root.shadowRoot) {
+    if (isZestaChatOpen()) {
+      const toggleBtn = root.shadowRoot.getElementById("zesta-widget-toggle-button") as HTMLButtonElement | null;
+      if (toggleBtn) {
+        toggleBtn.click();
+      }
+    }
+  }
+}
+
+/**
+ * Sets visibility of the underlying Zesta widget DOM root.
+ */
+export function setZestaWidgetVisibility(visible: boolean) {
+  if (typeof document === "undefined") return;
+  const root = document.getElementById("zesta-livechat-root");
+  if (root) {
+    root.style.display = visible ? "" : "none";
+  }
+}
+
+/**
  * Initialize Zesta Live Chat Widget globally.
  */
 export function initZestaWidget(visitor?: ZestaVisitor) {

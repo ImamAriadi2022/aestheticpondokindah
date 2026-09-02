@@ -1,14 +1,14 @@
 {
     "0": {
-        "id": "act-419",
-        "timestamp": "2026-09-01T18:26:00.000Z",
-        "category": "admin-download-app-upload-progress-and-action-bar",
-        "title": "Implementasi Live Upload Progress Animation & Bottom Action Bar pada Editor Rilis APK Admin",
-        "description": "1) Menambahkan animasi progress bar real-time (0% s/d 100%) dengan indikator byte terunggah (MB / Total MB) menggunakan XMLHttpRequest onprogress pada `DownloadAppEditor.tsx`, 2) Menambahkan Bottom Action Bar yang persisten dan responsif dengan tombol 'Simpan & Rilis Aplikasi' serta 'Batal' di bagian bawah form dan header, 3) Memperbarui limit upload APK di `DownloadAppAdminController.php` menjadi 200 MB dengan dukungan penuh berbagai MIME type browser.",
+        "id": "act-420",
+        "timestamp": "2026-09-02T01:34:00.000Z",
+        "category": "ui-zesta-livechat-visibility-guard",
+        "title": "Penyembunyian Tombol Zesta Live Chat pada Seluruh Portal & Fitur Patient, Doctor, dan Admin",
+        "description": "1) Mengimplementasikan pengkondisian visibilitas rute pada `ZestaLiveChat.tsx` dan `zestaService.ts` sehingga tombol floating bubble Live Chat Zesta otomatis disembunyikan dan di-dismiss secara tuntas saat pengguna membuka area Dashboard Pasien, Booking, Riwayat, Konsultasi/Telekonsultasi, Membership, Profil, Pengaturan, Keamanan, seluruh fitur Dokter (/doctor/*), dan seluruh fitur Admin (/admin/*), 2) Tombol Zesta Live Chat tetap aktif dan melayani pengunjung secara optimal di halaman-halaman publik (Beranda, Layanan, Tentang Kami, Kontak, Blog, Promo, Download Aplikasi, Login, dan Registrasi).",
         "details": [
-            "Live Upload Progress: Visual progress bar emas dengan animasi pulsing dan persentase real-time.",
-            "Dual Action Bar: Tombol simpan tersedia di header dan bottom bar yang ramah mobile & desktop.",
-            "200MB APK Support: Backend mendukung berkas APK hingga 200MB dengan validasi yang fleksibel.",
+            "Authenticated Portal Guard: Area Pasien, Dokter, dan Admin 100% bersih tanpa tombol Zesta Live Chat.",
+            "Instant Dismiss & Cleanup: Widget ditutup dan di-hide dari DOM secara otomatis saat navigasi antar rute.",
+            "Public Pages Active: Beranda dan halaman publik tetap dilengkapi AI Live Chat Zesta.",
             "Production Verified: TypeScript 0 error dan npm run build ter-bundle 100%."
         ],
         "author": "Antigravity Assistant",
