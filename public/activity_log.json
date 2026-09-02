@@ -1,20 +1,5 @@
 {
     "0": {
-        "id": "act-420",
-        "timestamp": "2026-09-02T01:34:00.000Z",
-        "category": "ui-zesta-livechat-visibility-guard",
-        "title": "Penyembunyian Tombol Zesta Live Chat pada Seluruh Portal & Fitur Patient, Doctor, dan Admin",
-        "description": "1) Mengimplementasikan pengkondisian visibilitas rute pada `ZestaLiveChat.tsx` dan `zestaService.ts` sehingga tombol floating bubble Live Chat Zesta otomatis disembunyikan dan di-dismiss secara tuntas saat pengguna membuka area Dashboard Pasien, Booking, Riwayat, Konsultasi/Telekonsultasi, Membership, Profil, Pengaturan, Keamanan, seluruh fitur Dokter (/doctor/*), dan seluruh fitur Admin (/admin/*), 2) Tombol Zesta Live Chat tetap aktif dan melayani pengunjung secara optimal di halaman-halaman publik (Beranda, Layanan, Tentang Kami, Kontak, Blog, Promo, Download Aplikasi, Login, dan Registrasi).",
-        "details": [
-            "Authenticated Portal Guard: Area Pasien, Dokter, dan Admin 100% bersih tanpa tombol Zesta Live Chat.",
-            "Instant Dismiss & Cleanup: Widget ditutup dan di-hide dari DOM secara otomatis saat navigasi antar rute.",
-            "Public Pages Active: Beranda dan halaman publik tetap dilengkapi AI Live Chat Zesta.",
-            "Production Verified: TypeScript 0 error dan npm run build ter-bundle 100%."
-        ],
-        "author": "Imam Ariadi",
-        "version": "1.0.0"
-    },
-    "1": {
         "id": "act-379",
         "timestamp": "2026-08-29T13:38:05.000Z",
         "category": "auth-google-oauth-sso-integration",

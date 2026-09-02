@@ -17,50 +17,39 @@ export default function ZestaLiveChat() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Check if the current route is inside Patient, Doctor, or Admin portals/features
-  const isDoctorRoute = location.pathname.startsWith("/doctor");
-  const isAdminRoute = location.pathname.startsWith("/admin");
-  const isPatientRoute =
-    location.pathname === "/dashboard" ||
-    location.pathname.startsWith("/dashboard/") ||
-    location.pathname === "/booking" ||
-    location.pathname.startsWith("/booking/") ||
-    location.pathname === "/riwayat" ||
-    location.pathname.startsWith("/riwayat/") ||
-    location.pathname === "/konsultasi" ||
-    location.pathname.startsWith("/konsultasi/") ||
-    location.pathname.startsWith("/consultation/") ||
-    location.pathname === "/membership" ||
-    location.pathname.startsWith("/membership/") ||
-    location.pathname === "/profil" ||
-    location.pathname.startsWith("/profil/") ||
-    location.pathname === "/profile" ||
-    location.pathname.startsWith("/profile/") ||
-    location.pathname === "/pengaturan" ||
-    location.pathname.startsWith("/pengaturan/") ||
-    location.pathname === "/keamanan" ||
-    location.pathname.startsWith("/keamanan/") ||
-    location.pathname === "/pemberitahuan" ||
-    location.pathname === "/notifikasi" ||
-    location.pathname === "/help" ||
-    location.pathname === "/bantuan" ||
-    location.pathname === "/layanan-treatment/odontogram" ||
-    (Boolean(session) &&
-      (location.pathname.startsWith("/dashboard") ||
-        location.pathname.startsWith("/booking") ||
-        location.pathname.startsWith("/membership") ||
-        location.pathname.startsWith("/konsultasi") ||
-        location.pathname.startsWith("/riwayat") ||
-        location.pathname.startsWith("/profil") ||
-        location.pathname.startsWith("/profile") ||
-        location.pathname.startsWith("/pengaturan") ||
-        location.pathname.startsWith("/keamanan") ||
-        location.pathname.startsWith("/doctor") ||
-        location.pathname.startsWith("/admin")));
+  // Comprehensive check across React Router location, hash, and window.location
+  const currentPath = (
+    location.pathname +
+    " " +
+    location.hash +
+    " " +
+    (typeof window !== "undefined" ? window.location.pathname + " " + window.location.hash + " " + window.location.href : "")
+  ).toLowerCase();
 
-  const isDocsApi = location.pathname === "/docs-api" || location.pathname === "/doc-api";
+  const isInternalOrDashboard =
+    currentPath.includes("/dashboard") ||
+    currentPath.includes("/admin") ||
+    currentPath.includes("/doctor") ||
+    currentPath.includes("/booking") ||
+    currentPath.includes("/riwayat") ||
+    currentPath.includes("/konsultasi") ||
+    currentPath.includes("/consultation") ||
+    currentPath.includes("/membership") ||
+    currentPath.includes("/profil") ||
+    currentPath.includes("/profile") ||
+    currentPath.includes("/pengaturan") ||
+    currentPath.includes("/settings") ||
+    currentPath.includes("/keamanan") ||
+    currentPath.includes("/security") ||
+    currentPath.includes("/notifikasi") ||
+    currentPath.includes("/pemberitahuan") ||
+    currentPath.includes("/help") ||
+    currentPath.includes("/bantuan") ||
+    currentPath.includes("/docs-api") ||
+    currentPath.includes("/doc-api") ||
+    currentPath.includes("odontogram");
 
-  const shouldHideChat = isDoctorRoute || isAdminRoute || isPatientRoute || isDocsApi;
+  const shouldHideChat = isInternalOrDashboard;
 
   // Initialize and sync Zesta session (only on public pages)
   useEffect(() => {
