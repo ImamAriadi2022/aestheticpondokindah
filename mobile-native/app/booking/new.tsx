@@ -1,18 +1,26 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet,
-  ActivityIndicator, Alert, Modal, Linking, Image,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import DigitalSignatureModalNative from '@/components/DigitalSignatureModalNative';
+import TermsPdfModalNative from '@/components/TermsPdfModalNative';
+import { getStorageUrl } from '@/constants/api';
 import { useAuth } from '@/context/AuthContext';
 import { bookingService, ClinicServiceItem, ClinicSettingsData } from '@/services/bookingService';
 import { doctorService } from '@/services/doctorService';
-import { colors, spacing, radius } from '@/theme/colors';
-import { getStorageUrl } from '@/constants/api';
+import { colors, radius, spacing } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
-import TermsPdfModalNative from '@/components/TermsPdfModalNative';
-import DigitalSignatureModalNative from '@/components/DigitalSignatureModalNative';
+import { router } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+    ActivityIndicator, Alert,
+    Image,
+    Linking,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Exact parity with web NewBookingFlow.tsx
 export function parseTimeRangeToSlots(timeRange: string, intervalMinutes: number = 15): string[] {
@@ -74,7 +82,18 @@ export default function NewBookingScreen() {
 
   // Step 4: Confirmation & Form Inputs
   const [patientName, setPatientName] = useState(user?.name || '');
-  const [patientPhone, setPatientPhone] = useState(user?.phone || (user as any)?.whatsapp || '');
+
+  // Helper: strip leading +62 / 62 / 0 so user sees local digits only (e.g. "812xxxxxxx")
+  // The +62 prefix is already shown as a fixed UI label in the input
+  const normalizePhoneLocal = (raw: string): string => {
+    if (!raw) return '';
+    const digits = raw.replace(/[^0-9]/g, '');
+    if (digits.startsWith('62')) return digits.slice(2);
+    if (digits.startsWith('0')) return digits.slice(1);
+    return digits;
+  };
+
+  const [patientPhone, setPatientPhone] = useState(normalizePhoneLocal(user?.phone || (user as any)?.whatsapp || ''));
   const [complaintNotes, setComplaintNotes] = useState('');
   const [isTermsAgreed, setIsTermsAgreed] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
@@ -133,7 +152,7 @@ export default function NewBookingScreen() {
   useEffect(() => {
     if (user?.name && !patientName) setPatientName(user.name);
     if ((user?.phone || (user as any)?.whatsapp) && !patientPhone) {
-      setPatientPhone(user?.phone || (user as any)?.whatsapp || '');
+      setPatientPhone(normalizePhoneLocal(user?.phone || (user as any)?.whatsapp || ''));
     }
   }, [user, patientName, patientPhone]);
 
@@ -308,24 +327,31 @@ export default function NewBookingScreen() {
 
     setIsSubmitting(true);
     const chosenDate = activeDateItem?.iso;
-    const scheduleId = currentDaySchedules[0]?.id || null;
+    // The native input displays +62 outside the editable field; include it in the API value.
+    const phoneForBackend = cleanPhone.startsWith('62')
+      ? cleanPhone
+      : '62' + (cleanPhone.startsWith('0') ? cleanPhone.slice(1) : cleanPhone);
 
     try {
       const res = await bookingService.createReservation({
         name: patientName.trim(),
-        phone: cleanPhone,
+        phone: phoneForBackend,
         treatment_interest: selectedService?.title || 'Pemeriksaan Gigi',
-        doctor_id: selectedDoctor?.id || null,
-        doctor_schedule_id: scheduleId ? Number(scheduleId) : null,
+        doctor_id: selectedDoctor?.userId || selectedDoctor?.id || null,
         branch_id: 1,
         date: chosenDate,
         preferred_time: selectedTimeSlot,
         complaint: complaintNotes.trim() || ('Reservasi ' + (selectedService?.title || 'Perawatan Gigi') + ' bersama ' + (selectedDoctor?.name || 'Dokter Spesialis')),
+        source: 'user_dashboard',
         signature_data: signatureData,
-        service_price: selectedService?.price ? Number(selectedService.price) : 500000,
+        redeem_points: 0,
+        service_price: Number(selectedService?.price ?? 0),
       });
 
-      const ticketCode = res.code || (res.reservation as any)?.code || ('RSV-' + new Date().getFullYear() + '001');
+      const ticketCode = res.code || (res.reservation as any)?.code;
+      if (!res.reservation?.id || !ticketCode) {
+        throw new Error('Respons reservasi tidak lengkap. Reservasi belum dapat dikonfirmasi.');
+      }
       const ticket = {
         code: ticketCode,
         service: selectedService?.title || 'Perawatan Gigi',
@@ -747,19 +773,6 @@ export default function NewBookingScreen() {
                   <Text style={styles.summaryTimeBadge}>⏰ Pukul {selectedTimeSlot} WIB</Text>
                 </View>
               </View>
-
-              <View style={styles.summaryDivider} />
-
-              <View style={styles.summaryItemRow}>
-                <View style={styles.summaryIconWrap}>
-                  <Ionicons name="location" size={15} color={colors.goldDark} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.summaryLabel}>Lokasi Cabang Praktik</Text>
-                  <Text style={styles.summaryValue}>{currentDaySchedules[0]?.location || 'Aesthetic Pondok Indah Main Branch'}</Text>
-                  <Text style={styles.summarySubText}>Jl. Sapta Taruna Raya No.7, Pondok Pinang, Jaksel</Text>
-                </View>
-              </View>
             </View>
 
             {/* FORM DATA PASIEN */}
@@ -934,8 +947,12 @@ export default function NewBookingScreen() {
       <TermsPdfModalNative
         isOpen={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        onAccept={() => setIsTermsAgreed(true)}
+        onAccept={(name) => {
+          setIsTermsAgreed(true);
+          if (name && !patientName.trim()) setPatientName(name);
+        }}
         isAgreed={isTermsAgreed}
+        patientName={patientName || user?.name || ''}
       />
 
       {/* POPUP MODAL 2: DIGITAL SIGNATURE & INFORMED CONSENT */}
@@ -944,6 +961,7 @@ export default function NewBookingScreen() {
         onClose={() => setShowSignatureModal(false)}
         onSaveSignature={(sig) => setSignatureData(sig)}
         patientName={patientName || user?.name || 'Pasien Klinik'}
+        patientPhone={patientPhone || user?.phone || '-'}
         doctorName={selectedDoctor?.name || 'Dokter Spesialis'}
         serviceName={selectedService?.title || 'Pemeriksaan Gigi'}
         appointmentDate={activeDateItem?.fullDisplay + ' (' + selectedTimeSlot + ' WIB)'}

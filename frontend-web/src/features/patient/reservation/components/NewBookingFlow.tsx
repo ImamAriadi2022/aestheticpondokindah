@@ -1,50 +1,38 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router";
-import {
-  ArrowLeft,
-  Search,
-  Sparkles,
-  Clock,
-  Check,
-  CheckCircle2,
-  Calendar as CalendarIcon,
-  MapPin,
-  User,
-  GraduationCap,
-  Star,
-  FileText,
-  AlertCircle,
-  Briefcase,
-  ChevronRight,
-  ShieldCheck,
-  Info,
-  CalendarDays,
-  Loader2,
-  ExternalLink,
-  PenTool,
-  ChevronDown,
-  CalendarOff,
-  Coins,
-} from "lucide-react";
+import { apiClient } from "@/core/api/apiClient";
+import { getSession } from "@/core/auth/services/session";
+import { PageTransition } from "@/core/router/RouteTransition";
+import { scrollPageToTop } from "@/core/router/ScrollToTop";
+import { broadcastRealtimeReservationEvent } from "@/core/services/GlobalNotificationManager";
+import { subscribeToPushNotifications, triggerPushNotification } from "@/core/services/pushNotificationService";
+import { updateZestaReservationContext } from "@/core/services/zestaService";
+import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { getSession } from "@/core/auth/services/session";
 import { toast } from "@/shared/ui/toast";
-import { API_BASE } from "@/core/api/apiConfig";
-import { apiClient } from "@/core/api/apiClient";
-import { triggerPushNotification, subscribeToPushNotifications } from "@/core/services/pushNotificationService";
-import { broadcastRealtimeReservationEvent } from "@/core/services/GlobalNotificationManager";
-import { useRef } from "react";
-import DigitalSignaturePad from "./DigitalSignaturePad";
-import DigitalSignatureModal from "./DigitalSignatureModal";
-import TermsPdfModal from "./TermsPdfModal";
-import { scrollPageToTop } from "@/core/router/ScrollToTop";
-import { PageTransition } from "@/core/router/RouteTransition";
-import ReservationConsentPdfModal from "@/features/admin/reservation/components/ReservationConsentPdfModal";
-import BookingSuccessModal from "./BookingSuccessModal";
-import ETicketModal from "./ETicketModal";
-import { updateZestaReservationContext } from "@/core/services/zestaService";
+import {
+    AlertCircle,
+    ArrowLeft,
+    Calendar as CalendarIcon,
+    CalendarOff,
+    Check,
+    ChevronDown,
+    ChevronRight,
+    Clock,
+    FileText,
+    Info,
+    Loader2,
+    PenTool,
+    Search,
+    ShieldCheck,
+    Sparkles
+} from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import BookingHistoryList, { resolveDoctorPhotoUrl } from "./BookingHistoryList";
+import BookingSuccessModal from "./BookingSuccessModal";
+import DigitalSignatureModal from "./DigitalSignatureModal";
+import ETicketModal from "./ETicketModal";
+import TermsPdfModal from "./TermsPdfModal";
 
 // Branch Catalog Interface
 export interface BranchItem {
@@ -995,13 +983,12 @@ export default function NewBookingFlow({
       };
 
       const res = await apiClient.post("/user/reservations", payload);
-      const resData = res.data?.reservation || res.data?.data || res.data;
+      const resData = res?.reservation || res?.data?.reservation || res?.data?.data || res?.data || res;
 
-      const ticketCode =
-        resData?.code ||
-        res?.data?.code ||
-        res?.reservation?.code ||
-        (resData?.id ? `#RSV-${String(resData.id).padStart(6, "0")}` : `#RSV-${new Date().getFullYear()}0001`);
+      const ticketCode = resData?.code || res?.data?.code || res?.code;
+      if (!resData?.id || !ticketCode) {
+        throw new Error("Respons reservasi tidak lengkap. Reservasi belum dapat dikonfirmasi.");
+      }
 
       const newTicket = {
         id: resData?.id || Date.now(),
@@ -1081,56 +1068,10 @@ export default function NewBookingFlow({
 
       setShowSuccessModal(true);
     } catch (err: any) {
-      const fallbackCode = `#RSV-${new Date().getFullYear()}${String(Math.floor(Math.random() * 90000) + 10000)}`;
-      const fallbackTicket = {
-        id: Date.now(),
-        code: fallbackCode,
-        doctorName: selectedDoctor.name,
-        specialization: selectedDoctor.specialization,
-        serviceName: selectedService.name,
-        date: selectedDate,
-        displayDate: selectedDateObj?.display || selectedDate,
-        time: selectedTimeSlot,
-        status: "confirmed",
-        locationName: selectedBranch?.name || "Aesthetic Pondok Indah Main Branch",
-        locationAddress: selectedBranch?.address || "Jl. Metro Pondok Indah No. 12, Jakarta Selatan",
-        totalAmount: selectedService.price,
-        patientName: patientName,
-        phone: patientPhone,
-      };
-
-      setActiveTicket(fallbackTicket);
-      setBookingsHistory((prev) => [fallbackTicket, ...prev.filter((b) => b.id !== fallbackTicket.id)]);
-
-      const waMessage = [
-        "*KONFIRMASI RESERVASI JANJI TEMU DOKTER GIGI*",
-        "*Aesthetic Pondok Indah Dental Clinic*",
-        "━━━━━━━━━━━━━━━━━━━━━━━",
-        "",
-        "Halo Admin Aesthetic Pondok Indah, saya telah mengajukan reservasi janji temu melalui website dengan rincian sebagai berikut:",
-        "",
-        `📋 *Kode Reservasi:* ${fallbackCode}`,
-        `👤 *Nama Pasien:* ${patientName}`,
-        `📱 *No. WhatsApp:* ${patientPhone}`,
-        "",
-        `👨‍⚕️ *Dokter Spesialis:* ${selectedDoctor.name} (${selectedDoctor.specialization || "Spesialis Gigi"})`,
-        `🏥 *Layanan Perawatan:* ${selectedService.name}`,
-        `📅 *Tanggal Janji Temu:* ${selectedDateObj?.display || selectedDate}`,
-        `⏰ *Waktu / Jam:* ${selectedTimeSlot} WIB`,
-        `📍 *Lokasi:* Aesthetic Pondok Indah, Jakarta Selatan`,
-        notes ? `📝 *Catatan Keluhan:* ${notes}` : "",
-        "",
-        "Mohon verifikasi dan konfirmasi ketersediaan jadwal tersebut. Terima kasih! 🙏",
-      ].filter(Boolean).join("\n");
-
-      const adminPhone = "6281990114949";
-      const waUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(waMessage)}`;
-
-      try {
-        window.open(waUrl, "_blank");
-      } catch {}
-
-      setShowSuccessModal(true);
+      toast({
+        title: "Reservasi Gagal",
+        message: err?.message || "Reservasi tidak tersimpan. Silakan coba lagi.",
+      });
     } finally {
       setIsSubmitting(false);
     }

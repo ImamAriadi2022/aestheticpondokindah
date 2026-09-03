@@ -32,6 +32,13 @@ return Application::configure(basePath: dirname(__DIR__))
             // codes. Returning every exception as 500 hid expired/missing
             // authentication tokens from the frontend.
             if ($e instanceof AuthenticationException
+                && ($request->is('api/*') || $request->expectsJson())) {
+                return response()->json([
+                    'message' => 'Unauthenticated.',
+                ], 401);
+            }
+
+            if ($e instanceof AuthenticationException
                 || $e instanceof ValidationException
                 || $e instanceof HttpExceptionInterface) {
                 return null;

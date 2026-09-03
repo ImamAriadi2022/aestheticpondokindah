@@ -2,7 +2,7 @@ import { API_BASE } from '@/constants/api';
 import { authStorage } from '@/storage/authStorage';
 import { router } from 'expo-router';
 
-const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 30000;
 
 class ApiError extends Error {
   constructor(
@@ -15,20 +15,25 @@ class ApiError extends Error {
   }
 }
 
-const getErrorMessage = (status: number, serverMessage?: string): string => {
+const getErrorMessage = (status: number, serverMessage?: string, errors?: Record<string, string[]>): string => {
+  const validationDetails = errors
+    ? Object.values(errors).flat().filter(Boolean).join(' ')
+    : '';
+  const detail = validationDetails || serverMessage;
+
   switch (status) {
-    case 400: return serverMessage || 'Permintaan tidak valid.';
+    case 400: return detail || 'Permintaan tidak valid.';
     case 401: return 'Sesi Anda telah berakhir. Silakan login kembali.';
     case 403: return 'Anda tidak memiliki hak akses.';
-    case 404: return serverMessage || 'Data tidak ditemukan.';
-    case 409: return serverMessage || 'Terjadi konflik data.';
-    case 422: return serverMessage || 'Data yang dimasukkan tidak valid.';
+    case 404: return detail || 'Data tidak ditemukan.';
+    case 409: return detail || 'Terjadi konflik data.';
+    case 422: return detail || 'Data yang dimasukkan tidak valid.';
     case 429: return 'Terlalu banyak permintaan. Silakan tunggu sebentar.';
     case 500: return 'Terjadi kesalahan pada server.';
     case 502:
     case 503:
     case 504: return 'Server sedang dalam pemeliharaan.';
-    default: return serverMessage || 'Terjadi kesalahan yang tidak terduga.';
+    default: return detail || 'Terjadi kesalahan yang tidak terduga.';
   }
 };
 
@@ -63,9 +68,9 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
     Accept: 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
     'X-App-Version': '1.0.0',
-    'X-Client': 'android-native',
-    Origin: 'https://aestheticpondokindah.com',
-    Referer: 'https://aestheticpondokindah.com/',
+    // Match the web API client. React Native must not spoof browser-only
+    // Origin/Referer headers, which can be rejected by a server-side WAF.
+    'X-Request-Timestamp': new Date().toISOString(),
     ...extraHeaders,
   };
 
@@ -104,7 +109,7 @@ async function request<T = any>(endpoint: string, options: RequestOptions = {}):
         throw new ApiError('Sesi berakhir.', 401);
       }
 
-      const msg = getErrorMessage(response.status, data?.message);
+      const msg = getErrorMessage(response.status, data?.message || data?.error, data?.errors);
       throw new ApiError(msg, response.status, data?.errors);
     } catch (err: any) {
       clearTimeout(timeoutId);

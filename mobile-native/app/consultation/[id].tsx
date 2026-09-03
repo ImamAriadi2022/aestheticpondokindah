@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
-  KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Linking,
+  KeyboardAvoidingView, Platform, StyleSheet, ActivityIndicator, Linking, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -41,6 +41,58 @@ export default function ConsultationChatScreen() {
   }, [loadData]);
 
   const isClosed = consultation?.status === 'Selesai' || consultation?.status === 'Ditolak';
+  const isHandedOver = (consultation as any)?.notes === 'connected_to_human_admin' ||
+    messages.some((m) => (m as any).attachments?.type === 'handoff_confirmed' || (m as any).attachments?.is_handed_off);
+
+  const handleRequestAdminHandoff = () => {
+    if (isSending || isClosed || isHandedOver) return;
+
+    Alert.alert(
+      'Bicara dengan Admin Langsung',
+      'Apakah Anda ingin mengalihkan percakapan dari AI ke Tim Admin & Resepsionis Klinik? Asisten AI akan dinonaktifkan untuk sesi ini.',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Ya, Hubungkan Admin',
+          onPress: async () => {
+            const text = 'Saya ingin berbicara langsung dengan Admin Klinik';
+            setInputText('');
+            setIsSending(true);
+
+            // Optimistic message
+            const tempId = Date.now();
+            const optimisticMsg: ConsultationMessage = {
+              id: tempId,
+              consultation_id: Number(id),
+              sender_id: user?.id || null,
+              sender_role: 'patient',
+              body: text,
+              read_at: null,
+              created_at: new Date().toISOString(),
+            };
+
+            setMessages((prev) => [...prev, optimisticMsg]);
+
+            try {
+              const sent = await consultationService.sendMessage(id, text);
+              setMessages((prev) => {
+                const withoutTemp = prev.filter((m) => m.id !== tempId && m.id !== sent.id);
+                return [...withoutTemp, sent];
+              });
+              setTimeout(() => {
+                loadData();
+              }, 800);
+            } catch {
+              setMessages((prev) => prev.filter((m) => m.id !== tempId));
+              Alert.alert('Gagal', 'Tidak dapat mengirim permintaan ke Admin. Silakan periksa koneksi internet Anda.');
+            } finally {
+              setIsSending(false);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleSend = async () => {
     const text = inputText.trim();
@@ -69,7 +121,7 @@ export default function ConsultationChatScreen() {
         const withoutTemp = prev.filter((m) => m.id !== tempId && m.id !== sent.id);
         return [...withoutTemp, sent];
       });
-      // Poll slightly later for the AI assistant reply without overwriting optimistic state
+      // Poll slightly later for the AI assistant / admin reply without overwriting optimistic state
       setTimeout(() => {
         loadData();
       }, 1200);
@@ -88,6 +140,7 @@ export default function ConsultationChatScreen() {
     const role = item.sender_role || (item as any).senderRole;
     const isPatient = role === 'patient' || (user?.id && (String(item.sender_id) === String(user.id) || String((item as any).senderId) === String(user.id)));
     const isDoctor = role === 'doctor';
+    const isAdmin = role === 'admin' || (item as any).attachments?.type === 'handoff_confirmed' || (item as any).attachments?.is_handed_off;
     const rec = item.attachments?.type === 'ai_recommendation' ? item.attachments : null;
 
     const createdAtVal = item.created_at || (item as any).createdAt;
@@ -99,13 +152,21 @@ export default function ConsultationChatScreen() {
       <View style={[styles.bubbleWrap, isPatient ? styles.bubbleWrapPatient : styles.bubbleWrapOther]}>
         <View style={[
           styles.bubble,
-          isPatient ? styles.bubblePatient : (isDoctor ? styles.bubbleDoctor : styles.bubbleOther),
+          isPatient ? styles.bubblePatient : (isDoctor ? styles.bubbleDoctor : (isAdmin ? styles.bubbleAdmin : styles.bubbleOther)),
         ]}>
           {!isPatient && (
             <View style={styles.senderHeader}>
-              <Ionicons name={isDoctor ? 'medkit' : 'sparkles'} size={12} color={colors.goldDark} />
-              <Text style={styles.senderLabel}>
-                {isDoctor ? (`drg. ${consultation?.doctor_name || 'Dokter Spesialis'}`) : 'AESPI AI Dental Assistant'}
+              <Ionicons
+                name={isDoctor ? 'medkit' : (isAdmin ? 'person' : 'sparkles')}
+                size={12}
+                color={isAdmin ? '#059669' : colors.goldDark}
+              />
+              <Text style={[styles.senderLabel, isAdmin ? { color: '#059669' } : null]}>
+                {isDoctor
+                  ? (`drg. ${consultation?.doctor_name || 'Dokter Spesialis'}`)
+                  : isAdmin
+                  ? 'Tim Admin Klinik'
+                  : 'AESPI AI Dental Assistant'}
               </Text>
             </View>
           )}
@@ -150,31 +211,45 @@ export default function ConsultationChatScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
       {/* Top Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.8}>
           <Ionicons name="chevron-back" size={22} color={colors.charcoal} />
         </TouchableOpacity>
 
-        <View style={styles.avatarWrap}>
-          <Ionicons name="chatbubbles" size={16} color={colors.goldDark} />
+        <View style={[styles.avatarWrap, isHandedOver ? { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' } : null]}>
+          <Ionicons name={isHandedOver ? 'person' : 'chatbubbles'} size={16} color={isHandedOver ? '#059669' : colors.goldDark} />
         </View>
 
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle} numberOfLines={1}>
-            {consultation?.doctor_name ? `drg. ${consultation.doctor_name}` : (consultation?.topic || 'Konsultasi Gigi')}
+            {isHandedOver
+              ? 'Tim Admin Klinik'
+              : (consultation?.doctor_name ? `drg. ${consultation.doctor_name}` : (consultation?.topic || 'Konsultasi Gigi'))}
           </Text>
           <View style={styles.statusRow}>
             <View style={[
               styles.statusDot,
-              isClosed ? styles.statusDotClosed : styles.statusDotActive,
+              isClosed ? styles.statusDotClosed : (isHandedOver ? styles.statusDotAdmin : styles.statusDotActive),
             ]} />
-            <Text style={styles.headerSubtitle}>
-              {consultation?.status || 'Aktif'} · {consultation?.category || 'Umum'}
+            <Text style={[styles.headerSubtitle, isHandedOver ? { color: '#059669', fontWeight: '700' } : null]}>
+              {isHandedOver ? 'Live Chat Admin' : (consultation?.status || 'Aktif')} · {consultation?.category || 'Umum'}
             </Text>
           </View>
         </View>
+
+        {!isHandedOver && !isClosed && (
+          <TouchableOpacity
+            style={styles.headerAdminBtn}
+            onPress={handleRequestAdminHandoff}
+            activeOpacity={0.8}
+            disabled={isSending}
+          >
+            <Ionicons name="person" size={12} color="#8C6B1C" />
+            <Text style={styles.headerAdminBtnText}>Bicara Admin</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Video Meeting Banner if Scheduled */}
@@ -205,9 +280,9 @@ export default function ConsultationChatScreen() {
         </View>
       )}
 
-      {/* Chat Messages */}
+      {/* Chat Messages & Relative Input Container */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
@@ -222,8 +297,32 @@ export default function ConsultationChatScreen() {
             keyExtractor={(item, idx) => String(item.id || idx)}
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
+            keyboardShouldPersistTaps="handled"
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
           />
+        )}
+
+        {/* Quick Action Suggestion / Status for Admin Handoff */}
+        {!isClosed && (
+          isHandedOver ? (
+            <View style={styles.adminConnectedBanner}>
+              <Ionicons name="shield-checkmark" size={13} color="#059669" />
+              <Text style={styles.adminConnectedText}>Terhubung Langsung dengan Tim Admin & Resepsionis Klinik</Text>
+            </View>
+          ) : (
+            <View style={styles.quickActionRow}>
+              <TouchableOpacity
+                style={styles.handoffChip}
+                onPress={handleRequestAdminHandoff}
+                activeOpacity={0.8}
+                disabled={isSending}
+              >
+                <Ionicons name="person-circle-outline" size={14} color="#8C6B1C" />
+                <Text style={styles.handoffChipText}>Bicara dengan Admin Langsung</Text>
+              </TouchableOpacity>
+            </View>
+          )
         )}
 
         {/* Input Bar */}
@@ -231,7 +330,7 @@ export default function ConsultationChatScreen() {
           <View style={styles.inputBar}>
             <TextInput
               style={styles.input}
-              placeholder="Tulis balasan pesan..."
+              placeholder={isHandedOver ? 'Ketik pesan ke Admin Klinik...' : 'Tulis pesan Anda...'}
               placeholderTextColor="#9CA3AF"
               value={inputText}
               onChangeText={setInputText}
@@ -308,12 +407,31 @@ const styles = StyleSheet.create({
   statusDotActive: {
     backgroundColor: '#10B981',
   },
+  statusDotAdmin: {
+    backgroundColor: '#059669',
+  },
   statusDotClosed: {
     backgroundColor: '#9CA3AF',
   },
   headerSubtitle: {
     fontSize: 10.5,
     color: colors.charcoalMedium,
+  },
+  headerAdminBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FAF5EA',
+    borderWidth: 1,
+    borderColor: '#EADBBD',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: radius.full,
+  },
+  headerAdminBtnText: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#8C6B1C',
   },
   meetingBanner: {
     flexDirection: 'row',
@@ -397,6 +515,12 @@ const styles = StyleSheet.create({
     borderColor: '#F0E6D3',
     borderBottomLeftRadius: 4,
   },
+  bubbleAdmin: {
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderBottomLeftRadius: 4,
+  },
   bubbleOther: {
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -469,6 +593,47 @@ const styles = StyleSheet.create({
   timeText: {
     fontSize: 9.5,
     color: colors.charcoalMedium,
+  },
+  adminConnectedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#ECFDF5',
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: '#A7F3D0',
+  },
+  adminConnectedText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#065F46',
+  },
+  quickActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: '#F5EFE6',
+  },
+  handoffChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FAF5EA',
+    borderWidth: 1,
+    borderColor: '#EADBBD',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+  },
+  handoffChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#8C6B1C',
   },
   inputBar: {
     flexDirection: 'row',
