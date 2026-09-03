@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import * as Notifications from 'expo-notifications';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { registerForPushNotifications } from '@/services/pushNotificationService';
+import { colors, radius, spacing } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors, radius, spacing } from '@/theme/colors';
-import { registerForPushNotifications } from '@/services/pushNotificationService';
+import * as Notifications from 'expo-notifications';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SETTINGS_KEY = 'apident_notification_preferences';
 type NotificationPreferences = { enabled: boolean; reservations: boolean; consultations: boolean; promotions: boolean };
