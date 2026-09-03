@@ -1,17 +1,28 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
-  Modal, TextInput, ActivityIndicator, Linking, KeyboardAvoidingView, Platform,
-  Image, RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '@/context/AuthContext';
-import { userService, UserProfileData } from '@/services/userService';
-import { wilayahService, WilayahItem } from '@/services/wilayahService';
 import { getStorageUrl } from '@/constants/api';
-import { colors, spacing, radius } from '@/theme/colors';
+import { useAuth } from '@/context/AuthContext';
+import { UserProfileData, userService } from '@/services/userService';
+import { WilayahItem, wilayahService } from '@/services/wilayahService';
+import { colors, radius, spacing } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    KeyboardAvoidingView,
+    Linking,
+    Modal,
+    Platform,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const GENDER_OPTIONS = ['Laki-laki', 'Perempuan'];
 const BLOOD_OPTIONS = ['A', 'B', 'AB', 'O', 'Tidak Tahu'];

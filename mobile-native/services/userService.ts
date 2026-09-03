@@ -1,6 +1,6 @@
-import { apiClient } from './apiClient';
 import { ENDPOINTS } from '@/constants/api';
 import { authStorage } from '@/storage/authStorage';
+import { apiClient } from './apiClient';
 
 export interface UserProfileData {
   id?: string | number;
