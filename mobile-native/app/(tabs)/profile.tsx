@@ -5,6 +5,7 @@ import { WilayahItem, wilayahService } from '@/services/wilayahService';
 import { colors, radius, spacing } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -26,6 +27,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 const GENDER_OPTIONS = ['Laki-laki', 'Perempuan'];
 const BLOOD_OPTIONS = ['A', 'B', 'AB', 'O', 'Tidak Tahu'];
+const LAST_VISIT_OPTIONS = ['< 6 Bulan Lalu', '6 - 12 Bulan Lalu', '1 - 2 Tahun Lalu', 'Lebih dari 2 Tahun Lalu', 'Belum Pernah Periksa Gigi'];
+const COMPLAINT_OPTIONS = ['Gigi Berlubang', 'Gigi Sensitif', 'Gusi Berdarah / Bengkak', 'Gigi Kuning / Noda', 'Gigi Tidak Rapi / Gingsul', 'Bau Mulut', 'Tidak Ada Keluhan Khusus'];
+const SERVICE_OPTIONS = ['Pembersihan Karang Gigi (Scaling)', 'Penambalan Gigi', 'Pemutihan Gigi (Bleaching)', 'Behel / Orthodontic', 'Veneer Gigi', 'Implan Gigi', 'Pencabutan Gigi', 'Konsultasi Rutin'];
+const GOAL_OPTIONS = ['Senyum Lebih Estetik & Putih', 'Bebas Dari Rasa Nyeri / Sakit', 'Gigi Rapi & Rata', 'Kesehatan Gigi & Gusi Jangka Panjang', 'Pencegahan Karang & Gigi Berlubang'];
 
 const normalizePhoneLocal = (raw: string): string => {
   const digits = raw.replace(/[^0-9]/g, '');
@@ -62,6 +67,10 @@ export default function ProfileScreen() {
     postalCode: '',
     isCoffeeDrinker: false,
     isSmoker: false,
+    lastDentalVisit: '',
+    dentalComplaints: [] as string[],
+    desiredServices: [] as string[],
+    treatmentGoals: [] as string[],
   });
 
   // Wilayah Indonesia dropdown states
@@ -121,6 +130,10 @@ export default function ProfileScreen() {
       postalCode: data.postalCode || data.postal_code || '',
       isCoffeeDrinker: Boolean(data.isCoffeeDrinker ?? data.is_coffee_drinker),
       isSmoker: Boolean(data.isSmoker ?? data.is_smoker),
+      lastDentalVisit: data.lastDentalVisit || data.last_dental_visit || '',
+      dentalComplaints: data.dentalComplaints || data.dental_complaints || [],
+      desiredServices: data.desiredServices || data.desired_services || [],
+      treatmentGoals: data.treatmentGoals || data.treatment_goals || [],
     });
   };
 
@@ -241,6 +254,13 @@ export default function ProfileScreen() {
     }
   };
 
+  const togglePreference = (key: 'dentalComplaints' | 'desiredServices' | 'treatmentGoals', value: string) => {
+    setEditForm((previous) => ({
+      ...previous,
+      [key]: previous[key].includes(value) ? previous[key].filter((item) => item !== value) : [...previous[key], value],
+    }));
+  };
+
   const handleSaveProfile = async () => {
     if (!editForm.name.trim()) {
       Alert.alert('Perhatian', 'Nama lengkap wajib diisi.');
@@ -271,6 +291,10 @@ export default function ProfileScreen() {
         postalCode: editForm.postalCode.trim(),
         isCoffeeDrinker: editForm.isCoffeeDrinker,
         isSmoker: editForm.isSmoker,
+        lastDentalVisit: editForm.lastDentalVisit,
+        dentalComplaints: editForm.dentalComplaints,
+        desiredServices: editForm.desiredServices,
+        treatmentGoals: editForm.treatmentGoals,
       });
 
       await refreshUser();
@@ -485,6 +509,29 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeaderLeft}>
+            <Ionicons name="options-outline" size={18} color={colors.goldDark} />
+            <Text style={styles.sectionTitle}>Preferensi Perawatan</Text>
+          </View>
+          <View style={styles.preferenceDetailBlock}>
+            <Text style={styles.preferenceDetailLabel}>Kunjungan gigi terakhir</Text>
+            <Text style={styles.attributeValue}>{activeUser?.lastDentalVisit || activeUser?.last_dental_visit || '-'}</Text>
+          </View>
+          <View style={styles.preferenceDetailBlock}>
+            <Text style={styles.preferenceDetailLabel}>Keluhan gigi</Text>
+            <Text style={styles.preferenceDetailValue}>{(activeUser?.dentalComplaints || activeUser?.dental_complaints || []).join(', ') || '-'}</Text>
+          </View>
+          <View style={styles.preferenceDetailBlock}>
+            <Text style={styles.preferenceDetailLabel}>Layanan yang diinginkan</Text>
+            <Text style={styles.preferenceDetailValue}>{(activeUser?.desiredServices || activeUser?.desired_services || []).join(', ') || '-'}</Text>
+          </View>
+          <View style={styles.preferenceDetailBlock}>
+            <Text style={styles.preferenceDetailLabel}>Tujuan perawatan</Text>
+            <Text style={styles.preferenceDetailValue}>{(activeUser?.treatmentGoals || activeUser?.treatment_goals || []).join(', ') || '-'}</Text>
+          </View>
+        </View>
+
         {/* 3. PENGATURAN AKUN & BANTUAN */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderLeft}>
@@ -499,6 +546,39 @@ export default function ProfileScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.actionMenuTitle}>Ubah Kata Sandi</Text>
               <Text style={styles.actionMenuDesc}>Amankan akun Anda dengan kata sandi baru</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.charcoalMedium} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionMenuRow} onPress={() => router.push('/faq')} activeOpacity={0.7}>
+            <View style={[styles.menuIconWrap, { backgroundColor: '#FFF7ED' }]}>
+              <Ionicons name="help-circle-outline" size={18} color="#EA580C" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.actionMenuTitle}>Panduan FAQ</Text>
+              <Text style={styles.actionMenuDesc}>Temukan jawaban pertanyaan umum pasien</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.charcoalMedium} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionMenuRow} onPress={() => router.push('/tutorial')} activeOpacity={0.7}>
+            <View style={[styles.menuIconWrap, { backgroundColor: '#FAF5EA' }]}>
+              <Ionicons name="book-outline" size={18} color={colors.goldDark} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.actionMenuTitle}>Panduan Pasien</Text>
+              <Text style={styles.actionMenuDesc}>Pelajari cara memakai fitur aplikasi</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.charcoalMedium} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionMenuRow} onPress={() => router.push('/preferences')} activeOpacity={0.7}>
+            <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
+              <Ionicons name="options-outline" size={18} color="#16A34A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.actionMenuTitle}>Preferensi Sistem</Text>
+              <Text style={styles.actionMenuDesc}>Atur kebutuhan dan tujuan perawatan gigi</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={colors.charcoalMedium} />
           </TouchableOpacity>
@@ -726,6 +806,33 @@ export default function ProfileScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
+
+              <Text style={styles.inputLabel}>Terakhir Kunjungan Gigi</Text>
+              <View style={styles.preferenceChipGroup}>
+                {LAST_VISIT_OPTIONS.map((option) => (
+                  <TouchableOpacity key={option} style={[styles.preferenceChip, editForm.lastDentalVisit === option ? styles.preferenceChipActive : null]} onPress={() => setEditForm((p) => ({ ...p, lastDentalVisit: option }))} activeOpacity={0.75}>
+                    <Text style={[styles.preferenceChipText, editForm.lastDentalVisit === option ? styles.preferenceChipTextActive : null]}>{option}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {[
+                { key: 'dentalComplaints' as const, title: 'Keluhan Gigi Yang Pernah Dilaporkan', options: COMPLAINT_OPTIONS },
+                { key: 'desiredServices' as const, title: 'Layanan Gigi Yang Diinginkan', options: SERVICE_OPTIONS },
+                { key: 'treatmentGoals' as const, title: 'Tujuan Perawatan Gigi', options: GOAL_OPTIONS },
+              ].map((group) => (
+                <View key={group.key}>
+                  <Text style={styles.inputLabel}>{group.title}</Text>
+                  <View style={styles.preferenceChipGroup}>
+                    {group.options.map((option) => {
+                      const selected = editForm[group.key].includes(option);
+                      return <TouchableOpacity key={option} style={[styles.preferenceChip, selected ? styles.preferenceChipActive : null]} onPress={() => togglePreference(group.key, option)} activeOpacity={0.75}>
+                        <Text style={[styles.preferenceChipText, selected ? styles.preferenceChipTextActive : null]}>{selected ? '✓ ' : ''}{option}</Text>
+                      </TouchableOpacity>;
+                    })}
+                  </View>
+                </View>
+              ))}
 
               {/* Tombol Simpan */}
               <TouchableOpacity
@@ -1380,6 +1487,47 @@ const styles = StyleSheet.create({
   dropdownSelectorPlaceholder: {
     color: '#9CA3AF',
     fontWeight: '400',
+  },
+  preferenceDetailBlock: {
+    borderTopWidth: 1,
+    borderTopColor: '#F5EFE6',
+    paddingTop: spacing.sm,
+  },
+  preferenceDetailLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.charcoalMedium,
+    marginBottom: 3,
+  },
+  preferenceDetailValue: {
+    fontSize: 11.5,
+    lineHeight: 17,
+    color: colors.charcoal,
+  },
+  preferenceChipGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  preferenceChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: '#FAF8F5',
+  },
+  preferenceChipActive: {
+    backgroundColor: colors.gold,
+    borderColor: colors.gold,
+  },
+  preferenceChipText: {
+    fontSize: 10.5,
+    color: colors.charcoalMedium,
+  },
+  preferenceChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   pickerSearchWrap: {
     flexDirection: 'row',

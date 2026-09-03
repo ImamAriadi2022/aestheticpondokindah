@@ -26,6 +26,14 @@ export interface UserProfileData {
   is_coffee_drinker?: boolean;
   isSmoker?: boolean;
   is_smoker?: boolean;
+  lastDentalVisit?: string;
+  last_dental_visit?: string;
+  dentalComplaints?: string[];
+  dental_complaints?: string[];
+  desiredServices?: string[];
+  desired_services?: string[];
+  treatmentGoals?: string[];
+  treatment_goals?: string[];
   membership_level?: string;
   membership_status?: string;
   total_points?: number;

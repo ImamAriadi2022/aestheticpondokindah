@@ -1,15 +1,30 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { notificationService } from './notificationService';
 
+const SETTINGS_KEY = 'apident_notification_preferences';
+
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    try {
+      const raw = await AsyncStorage.getItem(SETTINGS_KEY);
+      const settings = raw ? JSON.parse(raw) : { enabled: true, reservations: true, consultations: true, promotions: true };
+      if (!settings.enabled) return { shouldShowAlert: false, shouldPlaySound: false, shouldSetBadge: false, shouldShowBanner: false, shouldShowList: false };
+
+      const type = String(notification.request.content.data?.type || '').toLowerCase();
+      const categoryEnabled = type.includes('reservation') || type.includes('booking')
+        ? settings.reservations
+        : type.includes('consultation') || type.includes('message')
+        ? settings.consultations
+        : type.includes('promo') || type.includes('membership')
+        ? settings.promotions
+        : true;
+      return { shouldShowAlert: categoryEnabled, shouldPlaySound: categoryEnabled, shouldSetBadge: categoryEnabled, shouldShowBanner: categoryEnabled, shouldShowList: categoryEnabled };
+    } catch {
+      return { shouldShowAlert: true, shouldPlaySound: true, shouldSetBadge: true, shouldShowBanner: true, shouldShowList: true };
+    }
+  },
 });
 
 export async function registerForPushNotifications(): Promise<string | null> {
