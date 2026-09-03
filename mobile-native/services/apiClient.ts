@@ -29,7 +29,7 @@ const getErrorMessage = (status: number, serverMessage?: string, errors?: Record
     case 409: return detail || 'Terjadi konflik data.';
     case 422: return detail || 'Data yang dimasukkan tidak valid.';
     case 429: return 'Terlalu banyak permintaan. Silakan tunggu sebentar.';
-    case 500: return 'Terjadi kesalahan pada server.';
+    case 500: return detail || 'Terjadi kesalahan pada server.';
     case 502:
     case 503:
     case 504: return 'Server sedang dalam pemeliharaan.';

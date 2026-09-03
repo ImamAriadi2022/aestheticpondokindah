@@ -97,14 +97,13 @@ class ReservationController extends Controller
         ]);
 
         $user = $request->user();
-        $patientPhone = !empty($validated['phone']) ? trim($validated['phone']) : ($user->whatsapp ?? $user->phone);
+        $patientPhone = !empty($validated['phone']) ? trim($validated['phone']) : $user->whatsapp;
         $patientName = !empty($validated['name']) ? trim($validated['name']) : ($user->name ?? 'Pasien');
 
-        // If user registered via Google / has empty phone, update user profile with provided phone
+        // Keep the contact field consistent with the users table schema.
         if (!empty($patientPhone)) {
-            if (empty($user->whatsapp) || empty($user->phone)) {
+            if (empty($user->whatsapp)) {
                 $user->whatsapp = $user->whatsapp ?: $patientPhone;
-                $user->phone = $user->phone ?: $patientPhone;
                 $user->save();
             }
         } else {
@@ -253,7 +252,7 @@ class ReservationController extends Controller
             }
 
             // Dispatch Official WhatsApp Notification to Patient via Zesta Gateway
-            $patientPhone = $user->whatsapp ?? $user->phone;
+            $patientPhone = $user->whatsapp;
             if (!empty($patientPhone)) {
                 $docName = $reservation->doctor?->name ?? 'Dokter Spesialis';
                 $formattedDate = optional($reservation->date)->format('d/m/Y') ?? (string) $reservation->date;
