@@ -312,6 +312,8 @@ export default function NewBookingScreen() {
 
     try {
       const res = await bookingService.createReservation({
+        name: patientName.trim(),
+        phone: cleanPhone,
         treatment_interest: selectedService?.title || 'Pemeriksaan Gigi',
         doctor_id: selectedDoctor?.id || null,
         doctor_schedule_id: scheduleId ? Number(scheduleId) : null,

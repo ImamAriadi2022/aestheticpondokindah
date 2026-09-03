@@ -2,8 +2,8 @@
 // Production API: https://aestheticpondokindah.com/api
 // Production Storage: https://aestheticpondokindah.com/storage
 
-export const API_BASE = 'https://aestheticpondokindah.com/api';
-export const STORAGE_BASE = 'https://aestheticpondokindah.com/storage';
+export const API_BASE = process.env.EXPO_PUBLIC_API_URL || 'https://aestheticpondokindah.com/api';
+export const STORAGE_BASE = process.env.EXPO_PUBLIC_STORAGE_URL || 'https://aestheticpondokindah.com/storage';
 
 export const getStorageUrl = (path: string | null | undefined): string | null => {
   if (!path) return null;
@@ -86,4 +86,10 @@ export const ENDPOINTS = {
   PUBLIC_SERVICES: '/public/services',
   BRANCHES: '/public/branches',
   SETTINGS: '/public/settings',
+
+  // Wilayah Indonesia (Public)
+  WILAYAH_PROVINCES: '/wilayah/provinsi',
+  WILAYAH_REGENCIES: (provinceId: string | number) => `/wilayah/kabupaten/${provinceId}`,
+  WILAYAH_DISTRICTS: (regencyId: string | number) => `/wilayah/kecamatan/${regencyId}`,
+  WILAYAH_VILLAGES: (districtId: string | number) => `/wilayah/kelurahan/${districtId}`,
 } as const;

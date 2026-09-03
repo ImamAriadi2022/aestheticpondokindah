@@ -97,14 +97,20 @@ class ReservationController extends Controller
         ]);
 
         $user = $request->user();
-        $patientPhone = $validated['phone'] ?? ($user->whatsapp ?? $user->phone);
-        $patientName = $validated['name'] ?? $user->name;
+        $patientPhone = !empty($validated['phone']) ? trim($validated['phone']) : ($user->whatsapp ?? $user->phone);
+        $patientName = !empty($validated['name']) ? trim($validated['name']) : ($user->name ?? 'Pasien');
 
-        // If user registered via Google / has empty phone, update user profile
-        if (!empty($patientPhone) && (empty($user->whatsapp) || empty($user->phone))) {
-            $user->whatsapp = $user->whatsapp ?: $patientPhone;
-            $user->phone = $user->phone ?: $patientPhone;
-            $user->save();
+        // If user registered via Google / has empty phone, update user profile with provided phone
+        if (!empty($patientPhone)) {
+            if (empty($user->whatsapp) || empty($user->phone)) {
+                $user->whatsapp = $user->whatsapp ?: $patientPhone;
+                $user->phone = $user->phone ?: $patientPhone;
+                $user->save();
+            }
+        } else {
+            return response()->json([
+                'message' => 'Nomor WhatsApp atau kontak diperlukan untuk konfirmasi reservasi.'
+            ], 422);
         }
 
         $scheduleId = $validated['doctor_schedule_id'] ?? null;

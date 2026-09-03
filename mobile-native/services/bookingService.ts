@@ -17,6 +17,8 @@ export interface PublicReservationResponse {
 }
 
 export interface CreateUserReservationPayload {
+  name?: string;
+  phone?: string;
   treatment_interest: string;
   doctor_id?: number | string | null;
   doctor_schedule_id?: number | string | null;

@@ -65,8 +65,14 @@ export default function ConsultationChatScreen() {
 
     try {
       const sent = await consultationService.sendMessage(id, text);
-      setMessages((prev) => prev.map((m) => (m.id === tempId ? sent : m)));
-      await loadData();
+      setMessages((prev) => {
+        const withoutTemp = prev.filter((m) => m.id !== tempId && m.id !== sent.id);
+        return [...withoutTemp, sent];
+      });
+      // Poll slightly later for the AI assistant reply without overwriting optimistic state
+      setTimeout(() => {
+        loadData();
+      }, 1200);
     } catch {
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
     } finally {
@@ -79,12 +85,14 @@ export default function ConsultationChatScreen() {
   };
 
   const renderItem = ({ item }: { item: ConsultationMessage }) => {
-    const isPatient = item.sender_role === 'patient';
-    const isDoctor = item.sender_role === 'doctor';
+    const role = item.sender_role || (item as any).senderRole;
+    const isPatient = role === 'patient' || (user?.id && (String(item.sender_id) === String(user.id) || String((item as any).senderId) === String(user.id)));
+    const isDoctor = role === 'doctor';
     const rec = item.attachments?.type === 'ai_recommendation' ? item.attachments : null;
 
-    const timeStr = item.created_at
-      ? new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+    const createdAtVal = item.created_at || (item as any).createdAt;
+    const timeStr = createdAtVal
+      ? new Date(createdAtVal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       : '';
 
     return (

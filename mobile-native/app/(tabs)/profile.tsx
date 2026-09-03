@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
   Modal, TextInput, ActivityIndicator, Linking, KeyboardAvoidingView, Platform,
@@ -7,6 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import { userService, UserProfileData } from '@/services/userService';
+import { wilayahService, WilayahItem } from '@/services/wilayahService';
 import { getStorageUrl } from '@/constants/api';
 import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,10 +34,24 @@ export default function ProfileScreen() {
     bloodType: 'Tidak Tahu',
     job: '',
     address: '',
+    province: '',
+    provinceId: '',
     city: '',
+    cityId: '',
+    district: '',
+    districtId: '',
+    postalCode: '',
     isCoffeeDrinker: false,
     isSmoker: false,
   });
+
+  // Wilayah Indonesia dropdown states
+  const [provinces, setProvinces] = useState<WilayahItem[]>([]);
+  const [regencies, setRegencies] = useState<WilayahItem[]>([]);
+  const [districts, setDistricts] = useState<WilayahItem[]>([]);
+  const [isLoadingWilayah, setIsLoadingWilayah] = useState(false);
+  const [pickerModalType, setPickerModalType] = useState<'province' | 'city' | 'district' | null>(null);
+  const [pickerSearch, setPickerSearch] = useState('');
 
   // Change Password Modal State
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -73,11 +88,96 @@ export default function ProfileScreen() {
       bloodType: data.bloodType || data.blood_type || 'Tidak Tahu',
       job: data.job || data.occupation || '',
       address: data.address || data.address_line || '',
+      province: data.province || '',
+      provinceId: data.provinceId || data.province || '',
       city: data.city || '',
+      cityId: data.cityId || data.city || '',
+      district: data.district || '',
+      districtId: data.districtId || data.district || '',
+      postalCode: data.postalCode || data.postal_code || '',
       isCoffeeDrinker: Boolean(data.isCoffeeDrinker ?? data.is_coffee_drinker),
       isSmoker: Boolean(data.isSmoker ?? data.is_smoker),
     });
   };
+
+  // Fetch provinces when edit modal opens
+  useEffect(() => {
+    if (isEditModalOpen && provinces.length === 0) {
+      setIsLoadingWilayah(true);
+      wilayahService.getProvinces()
+        .then((list) => setProvinces(list || []))
+        .finally(() => setIsLoadingWilayah(false));
+    }
+  }, [isEditModalOpen, provinces.length]);
+
+  // Fetch regencies when province changes
+  useEffect(() => {
+    const provKey = editForm.provinceId || editForm.province;
+    if (provKey) {
+      wilayahService.getRegencies(provKey).then((list) => setRegencies(list || []));
+    } else {
+      setRegencies([]);
+    }
+  }, [editForm.provinceId, editForm.province]);
+
+  // Fetch districts when city changes
+  useEffect(() => {
+    const cityKey = editForm.cityId || editForm.city;
+    if (cityKey) {
+      wilayahService.getDistricts(cityKey).then((list) => setDistricts(list || []));
+    } else {
+      setDistricts([]);
+    }
+  }, [editForm.cityId, editForm.city]);
+
+  const handleSelectProvince = (item: WilayahItem) => {
+    setEditForm((p) => ({
+      ...p,
+      province: item.name,
+      provinceId: item.id || item.kode || item.name,
+      city: '',
+      cityId: '',
+      district: '',
+      districtId: '',
+    }));
+    setDistricts([]);
+    setPickerModalType(null);
+    setPickerSearch('');
+  };
+
+  const handleSelectCity = (item: WilayahItem) => {
+    setEditForm((p) => ({
+      ...p,
+      city: item.name,
+      cityId: item.id || item.kode || item.name,
+      district: '',
+      districtId: '',
+    }));
+    setPickerModalType(null);
+    setPickerSearch('');
+  };
+
+  const handleSelectDistrict = (item: WilayahItem) => {
+    setEditForm((p) => ({
+      ...p,
+      district: item.name,
+      districtId: item.id || item.kode || item.name,
+    }));
+    setPickerModalType(null);
+    setPickerSearch('');
+  };
+
+  // Filter items in modal picker
+  const currentPickerItems = useMemo(() => {
+    let source: WilayahItem[] = [];
+    if (pickerModalType === 'province') source = provinces;
+    else if (pickerModalType === 'city') source = regencies;
+    else if (pickerModalType === 'district') source = districts;
+
+    if (!pickerSearch.trim()) return source;
+    const q = pickerSearch.toLowerCase().trim();
+    return source.filter((item) => item.name.toLowerCase().includes(q));
+  }, [pickerModalType, provinces, regencies, districts, pickerSearch]);
 
   useEffect(() => {
     loadProfile();
@@ -118,7 +218,10 @@ export default function ProfileScreen() {
         bloodType: editForm.bloodType,
         job: editForm.job.trim(),
         address: editForm.address.trim(),
+        province: editForm.province.trim(),
         city: editForm.city.trim(),
+        district: editForm.district.trim(),
+        postalCode: editForm.postalCode.trim(),
         isCoffeeDrinker: editForm.isCoffeeDrinker,
         isSmoker: editForm.isSmoker,
       });
@@ -276,11 +379,27 @@ export default function ProfileScreen() {
               <Text style={styles.attributeLabel}>Pekerjaan</Text>
               <Text style={styles.attributeValue}>{activeUser?.job || activeUser?.occupation || '-'}</Text>
             </View>
-            <View style={[styles.attributeRow, { borderBottomWidth: 0 }]}>
+            <View style={styles.attributeRow}>
               <Text style={styles.attributeLabel}>Alamat Domisili</Text>
-              <Text style={[styles.attributeValue, { flex: 1, textAlign: 'right' }]}>
-                {activeUser?.address || activeUser?.address_line || activeUser?.city ? `${activeUser?.address || activeUser?.address_line || ''} ${activeUser?.city || ''}`.trim() : '-'}
+              <Text style={[styles.attributeValue, { flex: 1, textAlign: 'right' }]} numberOfLines={2}>
+                {activeUser?.address || activeUser?.address_line || '-'}
               </Text>
+            </View>
+            <View style={styles.attributeRow}>
+              <Text style={styles.attributeLabel}>Provinsi</Text>
+              <Text style={styles.attributeValue}>{activeUser?.province || '-'}</Text>
+            </View>
+            <View style={styles.attributeRow}>
+              <Text style={styles.attributeLabel}>Kota / Kabupaten</Text>
+              <Text style={styles.attributeValue}>{activeUser?.city || '-'}</Text>
+            </View>
+            <View style={styles.attributeRow}>
+              <Text style={styles.attributeLabel}>Kecamatan</Text>
+              <Text style={styles.attributeValue}>{activeUser?.district || '-'}</Text>
+            </View>
+            <View style={[styles.attributeRow, { borderBottomWidth: 0 }]}>
+              <Text style={styles.attributeLabel}>Kode Pos</Text>
+              <Text style={styles.attributeValue}>{activeUser?.postalCode || activeUser?.postal_code || '-'}</Text>
             </View>
           </View>
         </View>
@@ -464,13 +583,70 @@ export default function ProfileScreen() {
                 placeholderTextColor="#9CA3AF"
               />
 
-              {/* Kota */}
+              {/* Provinsi Dropdown */}
+              <Text style={styles.inputLabel}>Provinsi</Text>
+              <TouchableOpacity
+                style={styles.dropdownSelector}
+                onPress={() => { setPickerSearch(''); setPickerModalType('province'); }}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.dropdownSelectorText, !editForm.province ? styles.dropdownSelectorPlaceholder : null]}>
+                  {editForm.province || 'Pilih Provinsi'}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={colors.charcoalMedium} />
+              </TouchableOpacity>
+
+              {/* Kota / Kabupaten Dropdown */}
               <Text style={styles.inputLabel}>Kota / Kabupaten</Text>
+              <TouchableOpacity
+                style={[styles.dropdownSelector, !editForm.province ? styles.dropdownSelectorDisabled : null]}
+                onPress={() => {
+                  if (!editForm.province) {
+                    Alert.alert('Perhatian', 'Harap pilih provinsi terlebih dahulu.');
+                    return;
+                  }
+                  setPickerSearch('');
+                  setPickerModalType('city');
+                }}
+                disabled={!editForm.province}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.dropdownSelectorText, !editForm.city ? styles.dropdownSelectorPlaceholder : null]}>
+                  {editForm.city || (editForm.province ? 'Pilih Kota / Kabupaten' : 'Pilih Provinsi Terlebih Dahulu')}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={colors.charcoalMedium} />
+              </TouchableOpacity>
+
+              {/* Kecamatan Dropdown */}
+              <Text style={styles.inputLabel}>Kecamatan</Text>
+              <TouchableOpacity
+                style={[styles.dropdownSelector, !editForm.city ? styles.dropdownSelectorDisabled : null]}
+                onPress={() => {
+                  if (!editForm.city) {
+                    Alert.alert('Perhatian', 'Harap pilih kota/kabupaten terlebih dahulu.');
+                    return;
+                  }
+                  setPickerSearch('');
+                  setPickerModalType('district');
+                }}
+                disabled={!editForm.city}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.dropdownSelectorText, !editForm.district ? styles.dropdownSelectorPlaceholder : null]}>
+                  {editForm.district || (editForm.city ? 'Pilih Kecamatan' : 'Pilih Kota Terlebih Dahulu')}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={colors.charcoalMedium} />
+              </TouchableOpacity>
+
+              {/* Kode Pos */}
+              <Text style={styles.inputLabel}>Kode Pos</Text>
               <TextInput
                 style={styles.textInput}
-                value={editForm.city}
-                onChangeText={(text) => setEditForm((p) => ({ ...p, city: text }))}
-                placeholder="Contoh: Jakarta Selatan"
+                value={editForm.postalCode}
+                onChangeText={(text) => setEditForm((p) => ({ ...p, postalCode: text.replace(/[^0-9]/g, '').slice(0, 5) }))}
+                placeholder="Contoh: 12310"
+                keyboardType="number-pad"
+                maxLength={5}
                 placeholderTextColor="#9CA3AF"
               />
 
@@ -513,6 +689,89 @@ export default function ProfileScreen() {
                   <Text style={styles.modalSaveBtnText}>Simpan Perubahan</Text>
                 )}
               </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* MODAL: PILIH WILAYAH (PROVINSI / KOTA / KECAMATAN) */}
+      <Modal visible={pickerModalType !== null} animationType="fade" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalBackdrop}>
+          <View style={[styles.modalContent, { maxHeight: '80%', paddingBottom: spacing.md }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {pickerModalType === 'province'
+                  ? 'Pilih Provinsi'
+                  : pickerModalType === 'city'
+                  ? 'Pilih Kota / Kabupaten'
+                  : 'Pilih Kecamatan'}
+              </Text>
+              <TouchableOpacity
+                onPress={() => { setPickerModalType(null); setPickerSearch(''); }}
+                style={styles.modalCloseBtn}
+              >
+                <Ionicons name="close" size={20} color={colors.charcoal} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.pickerSearchWrap}>
+              <Ionicons name="search-outline" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.pickerSearchInput}
+                value={pickerSearch}
+                onChangeText={setPickerSearch}
+                placeholder="Cari nama wilayah / daerah..."
+                placeholderTextColor="#9CA3AF"
+                clearButtonMode="while-editing"
+                autoCorrect={false}
+              />
+              {pickerSearch ? (
+                <TouchableOpacity onPress={() => setPickerSearch('')}>
+                  <Ionicons name="close-circle" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {/* Region Items List */}
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {isLoadingWilayah ? (
+                <View style={{ paddingVertical: 32, alignItems: 'center', gap: 8 }}>
+                  <ActivityIndicator size="small" color={colors.gold} />
+                  <Text style={{ fontSize: 12, color: colors.charcoalMedium }}>Memuat data wilayah dari server...</Text>
+                </View>
+              ) : currentPickerItems.length === 0 ? (
+                <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                  <Text style={{ fontSize: 12, color: colors.charcoalMedium }}>Tidak ada daerah yang sesuai pencarian.</Text>
+                </View>
+              ) : (
+                currentPickerItems.map((item) => {
+                  const isSelected =
+                    (pickerModalType === 'province' && editForm.province === item.name) ||
+                    (pickerModalType === 'city' && editForm.city === item.name) ||
+                    (pickerModalType === 'district' && editForm.district === item.name);
+
+                  return (
+                    <TouchableOpacity
+                      key={item.id || item.name}
+                      style={[styles.pickerItemRow, isSelected ? styles.pickerItemRowSelected : null]}
+                      onPress={() => {
+                        if (pickerModalType === 'province') handleSelectProvince(item);
+                        else if (pickerModalType === 'city') handleSelectCity(item);
+                        else if (pickerModalType === 'district') handleSelectDistrict(item);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={[styles.pickerItemText, isSelected ? styles.pickerItemTextSelected : null]}>
+                        {item.name}
+                      </Text>
+                      {isSelected ? (
+                        <Ionicons name="checkmark-circle" size={18} color={colors.goldDark} />
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                })
+              )}
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -939,5 +1198,69 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  dropdownSelector: {
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownSelectorDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#F3F4F6',
+  },
+  dropdownSelectorText: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: colors.charcoal,
+    flex: 1,
+  },
+  dropdownSelectorPlaceholder: {
+    color: '#9CA3AF',
+    fontWeight: '400',
+  },
+  pickerSearchWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: spacing.sm,
+  },
+  pickerSearchInput: {
+    flex: 1,
+    fontSize: 12.5,
+    color: colors.charcoal,
+    padding: 0,
+  },
+  pickerItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5EFE6',
+  },
+  pickerItemRowSelected: {
+    backgroundColor: '#FAF5EA',
+    borderRadius: radius.md,
+  },
+  pickerItemText: {
+    fontSize: 13,
+    color: colors.charcoal,
+    flex: 1,
+  },
+  pickerItemTextSelected: {
+    color: colors.goldDark,
+    fontWeight: '700',
   },
 });

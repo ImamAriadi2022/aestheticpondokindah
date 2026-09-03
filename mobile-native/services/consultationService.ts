@@ -4,16 +4,44 @@ import { ENDPOINTS } from '@/constants/api';
 import * as WebBrowser from 'expo-web-browser';
 
 export interface ConsultationMessage {
-  id: number;
-  consultation_id: number;
-  sender_id: number | null;
-  sender_role: 'patient' | 'doctor' | 'admin';
+  id: number | string;
+  consultation_id?: number | string;
+  consultationId?: number | string;
+  sender_id?: number | string | null;
+  senderId?: number | string | null;
+  sender_role?: 'patient' | 'doctor' | 'admin' | string;
+  senderRole?: 'patient' | 'doctor' | 'admin' | string;
   sender_name?: string;
+  senderName?: string;
   body: string;
   attachments?: any;
-  read_at: string | null;
-  created_at: string;
+  read_at?: string | null;
+  readAt?: string | null;
+  created_at?: string;
+  createdAt?: string;
 }
+
+export const normalizeMessage = (m: any): ConsultationMessage => {
+  if (!m) return m;
+  const role = m.sender_role || m.senderRole || 'patient';
+  return {
+    id: m.id,
+    consultation_id: m.consultation_id || m.consultationId,
+    consultationId: m.consultationId || m.consultation_id,
+    sender_id: m.sender_id ?? m.senderId ?? null,
+    senderId: m.senderId ?? m.sender_id ?? null,
+    sender_role: role,
+    senderRole: role,
+    sender_name: m.sender_name || m.senderName || '',
+    senderName: m.senderName || m.sender_name || '',
+    body: m.body || '',
+    attachments: m.attachments,
+    read_at: m.read_at || m.readAt || null,
+    readAt: m.readAt || m.read_at || null,
+    created_at: m.created_at || m.createdAt || new Date().toISOString(),
+    createdAt: m.createdAt || m.created_at || new Date().toISOString(),
+  };
+};
 
 export interface ConsultationMeeting {
   id: number;
@@ -95,7 +123,7 @@ export const consultationService = {
       chief_complaint: c.chief_complaint || c.chiefComplaint || '',
       pain_scale: c.pain_scale ?? c.painScale ?? null,
       doctor_name: c.doctor_name || c.doctorName || (c.doctor?.name) || '',
-      messages: Array.isArray(c.messages) ? c.messages : [],
+      messages: Array.isArray(c.messages) ? c.messages.map(normalizeMessage) : [],
       meetings: Array.isArray(c.meetings) ? c.meetings : [],
     };
   },
@@ -121,7 +149,8 @@ export const consultationService = {
     const url = typeof ENDPOINTS.CONSULTATION_MESSAGES === 'function' ? ENDPOINTS.CONSULTATION_MESSAGES(id) : `/user/consultations/${id}/messages`;
     const res = await apiClient.post<any>(url, { body });
     await cacheStorage.invalidate('user_consultations');
-    return res?.message || res?.data || res;
+    const sent = res?.message || res?.data || res;
+    return normalizeMessage(sent);
   },
 
   async markRead(id: string | number): Promise<void> {
