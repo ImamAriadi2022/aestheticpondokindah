@@ -11,9 +11,17 @@ import { wilayahService, WilayahItem } from '@/services/wilayahService';
 import { getStorageUrl } from '@/constants/api';
 import { colors, spacing, radius } from '@/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
 const GENDER_OPTIONS = ['Laki-laki', 'Perempuan'];
 const BLOOD_OPTIONS = ['A', 'B', 'AB', 'O', 'Tidak Tahu'];
+
+const normalizePhoneLocal = (raw: string): string => {
+  const digits = raw.replace(/[^0-9]/g, '');
+  if (digits.startsWith('62')) return digits.slice(2);
+  if (digits.startsWith('0')) return digits.slice(1);
+  return digits;
+};
 
 export default function ProfileScreen() {
   const { user, logout, refreshUser } = useAuth();
@@ -52,6 +60,11 @@ export default function ProfileScreen() {
   const [isLoadingWilayah, setIsLoadingWilayah] = useState(false);
   const [pickerModalType, setPickerModalType] = useState<'province' | 'city' | 'district' | null>(null);
   const [pickerSearch, setPickerSearch] = useState('');
+  const [jobOptions, setJobOptions] = useState<{ id: string; name: string }[]>([]);
+  const [jobSearch, setJobSearch] = useState('');
+  const [isJobPickerOpen, setIsJobPickerOpen] = useState(false);
+  const [isBirthDatePickerOpen, setIsBirthDatePickerOpen] = useState(false);
+  const [birthDateValue, setBirthDateValue] = useState(new Date(2000, 0, 1));
 
   // Change Password Modal State
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
@@ -82,7 +95,7 @@ export default function ProfileScreen() {
     setEditForm({
       name: data.name || '',
       email: data.email || '',
-      phone: data.phone || data.whatsapp || '',
+      phone: normalizePhoneLocal(data.phone || data.whatsapp || ''),
       gender: data.gender === 'female' ? 'Perempuan' : data.gender === 'male' ? 'Laki-laki' : (data.gender || 'Laki-laki'),
       birthDate: data.birthDate || data.birth_date || '',
       bloodType: data.bloodType || data.blood_type || 'Tidak Tahu',
@@ -109,6 +122,11 @@ export default function ProfileScreen() {
         .finally(() => setIsLoadingWilayah(false));
     }
   }, [isEditModalOpen, provinces.length]);
+
+  useEffect(() => {
+    if (!isEditModalOpen || jobOptions.length > 0) return;
+    userService.getJobOptions().then(setJobOptions).catch(() => setJobOptions([]));
+  }, [isEditModalOpen, jobOptions.length]);
 
   // Fetch regencies when province changes
   useEffect(() => {
@@ -198,9 +216,27 @@ export default function ProfileScreen() {
     setIsEditModalOpen(true);
   };
 
+  const openBirthDatePicker = () => {
+    const parsed = editForm.birthDate ? new Date(`${editForm.birthDate}T00:00:00`) : new Date(2000, 0, 1);
+    setBirthDateValue(Number.isNaN(parsed.getTime()) ? new Date(2000, 0, 1) : parsed);
+    setIsBirthDatePickerOpen(true);
+  };
+
+  const handleBirthDateChange = (event: DateTimePickerEvent, value?: Date) => {
+    if (Platform.OS === 'android') setIsBirthDatePickerOpen(false);
+    if (event.type === 'set' && value) {
+      setBirthDateValue(value);
+      setEditForm((p) => ({ ...p, birthDate: value.toISOString().slice(0, 10) }));
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!editForm.name.trim()) {
       Alert.alert('Perhatian', 'Nama lengkap wajib diisi.');
+      return;
+    }
+    if (!editForm.phone.trim()) {
+      Alert.alert('Perhatian', 'No. WhatsApp / HP wajib diisi.');
       return;
     }
 
@@ -488,7 +524,7 @@ export default function ProfileScreen() {
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.lg }}>
               {/* Nama Lengkap */}
-              <Text style={styles.inputLabel}>Nama Lengkap</Text>
+              <Text style={styles.inputLabel}>Nama Lengkap <Text style={styles.requiredMark}>*</Text></Text>
               <TextInput
                 style={styles.textInput}
                 value={editForm.name}
@@ -510,15 +546,21 @@ export default function ProfileScreen() {
               />
 
               {/* Nomor WhatsApp */}
-              <Text style={styles.inputLabel}>No. WhatsApp / HP</Text>
-              <TextInput
-                style={styles.textInput}
-                value={editForm.phone}
-                onChangeText={(text) => setEditForm((p) => ({ ...p, phone: text }))}
-                placeholder="08123456789"
-                keyboardType="phone-pad"
-                placeholderTextColor="#9CA3AF"
-              />
+              <Text style={styles.inputLabel}>No. WhatsApp / HP <Text style={styles.requiredMark}>*</Text></Text>
+              <View style={styles.phoneInputRow}>
+                <View style={styles.phonePrefix}>
+                  <Text style={styles.phonePrefixText}>+62</Text>
+                </View>
+                <TextInput
+                  style={styles.phoneInput}
+                  value={editForm.phone}
+                  onChangeText={(text) => setEditForm((p) => ({ ...p, phone: normalizePhoneLocal(text) }))}
+                  placeholder="8123456789"
+                  keyboardType="phone-pad"
+                  placeholderTextColor="#9CA3AF"
+                  maxLength={13}
+                />
+              </View>
 
               {/* Jenis Kelamin */}
               <Text style={styles.inputLabel}>Jenis Kelamin</Text>
@@ -537,14 +579,13 @@ export default function ProfileScreen() {
               </View>
 
               {/* Tanggal Lahir */}
-              <Text style={styles.inputLabel}>Tanggal Lahir (YYYY-MM-DD)</Text>
-              <TextInput
-                style={styles.textInput}
-                value={editForm.birthDate}
-                onChangeText={(text) => setEditForm((p) => ({ ...p, birthDate: text }))}
-                placeholder="Contoh: 1995-08-17"
-                placeholderTextColor="#9CA3AF"
-              />
+              <Text style={styles.inputLabel}>Tanggal Lahir</Text>
+              <TouchableOpacity style={styles.dropdownSelector} onPress={openBirthDatePicker} activeOpacity={0.8}>
+                <Text style={[styles.dropdownSelectorText, !editForm.birthDate ? styles.dropdownSelectorPlaceholder : null]}>
+                  {editForm.birthDate || 'Pilih tanggal lahir'}
+                </Text>
+                <Ionicons name="calendar-outline" size={17} color={colors.charcoalMedium} />
+              </TouchableOpacity>
 
               {/* Golongan Darah */}
               <Text style={styles.inputLabel}>Golongan Darah</Text>
@@ -564,13 +605,12 @@ export default function ProfileScreen() {
 
               {/* Pekerjaan */}
               <Text style={styles.inputLabel}>Pekerjaan</Text>
-              <TextInput
-                style={styles.textInput}
-                value={editForm.job}
-                onChangeText={(text) => setEditForm((p) => ({ ...p, job: text }))}
-                placeholder="Pekerjaan / Profesi"
-                placeholderTextColor="#9CA3AF"
-              />
+              <TouchableOpacity style={styles.dropdownSelector} onPress={() => { setJobSearch(''); setIsJobPickerOpen(true); }} activeOpacity={0.8}>
+                <Text style={[styles.dropdownSelectorText, !editForm.job ? styles.dropdownSelectorPlaceholder : null]} numberOfLines={1}>
+                  {editForm.job || 'Pilih pekerjaan / profesi'}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={colors.charcoalMedium} />
+              </TouchableOpacity>
 
               {/* Alamat */}
               <Text style={styles.inputLabel}>Alamat Domisili</Text>
@@ -689,6 +729,73 @@ export default function ProfileScreen() {
                   <Text style={styles.modalSaveBtnText}>Simpan Perubahan</Text>
                 )}
               </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* MODAL: PILIH TANGGAL LAHIR */}
+      <Modal visible={isBirthDatePickerOpen} animationType="fade" transparent>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.datePickerCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Pilih Tanggal Lahir</Text>
+              <TouchableOpacity onPress={() => setIsBirthDatePickerOpen(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={20} color={colors.charcoal} />
+              </TouchableOpacity>
+            </View>
+            <DateTimePicker
+              value={birthDateValue}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'calendar'}
+              maximumDate={new Date()}
+              minimumDate={new Date(1900, 0, 1)}
+              onChange={handleBirthDateChange}
+              themeVariant="light"
+            />
+            {Platform.OS === 'ios' ? (
+              <TouchableOpacity style={styles.modalSaveBtn} onPress={() => setIsBirthDatePickerOpen(false)} activeOpacity={0.85}>
+                <Text style={styles.modalSaveBtnText}>Pakai Tanggal Ini</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+
+      {/* MODAL: PILIH PEKERJAAN */}
+      <Modal visible={isJobPickerOpen} animationType="fade" transparent>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalBackdrop}>
+          <View style={[styles.modalContent, { maxHeight: '80%', paddingBottom: spacing.md }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Pilih Pekerjaan</Text>
+              <TouchableOpacity onPress={() => setIsJobPickerOpen(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={20} color={colors.charcoal} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.pickerSearchWrap}>
+              <Ionicons name="search-outline" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.pickerSearchInput}
+                value={jobSearch}
+                onChangeText={setJobSearch}
+                placeholder="Cari pekerjaan / profesi..."
+                placeholderTextColor="#9CA3AF"
+                autoCorrect={false}
+              />
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {jobOptions.filter((job) => !jobSearch.trim() || job.name.toLowerCase().includes(jobSearch.toLowerCase().trim())).map((job) => (
+                <TouchableOpacity
+                  key={job.id}
+                  style={[styles.pickerItemRow, editForm.job === job.name ? styles.pickerItemRowSelected : null]}
+                  onPress={() => { setEditForm((p) => ({ ...p, job: job.name })); setIsJobPickerOpen(false); }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.pickerItemText, editForm.job === job.name ? styles.pickerItemTextSelected : null]}>{job.name}</Text>
+                  {editForm.job === job.name ? <Ionicons name="checkmark-circle" size={18} color={colors.goldDark} /> : null}
+                </TouchableOpacity>
+              ))}
+              {jobOptions.length === 0 ? <Text style={styles.inputHelper}>Opsi pekerjaan belum tersedia dari server.</Text> : null}
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -1083,6 +1190,13 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     maxHeight: '85%',
   },
+  datePickerCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: radius.xxl,
+    borderTopRightRadius: radius.xxl,
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1113,11 +1227,43 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginTop: spacing.sm,
   },
+  requiredMark: {
+    color: '#DC2626',
+    fontWeight: '800',
+  },
   textInput: {
     backgroundColor: '#FAF8F5',
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    fontSize: 12.5,
+    color: colors.charcoal,
+  },
+  phoneInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAF8F5',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+  },
+  phonePrefix: {
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    borderRightWidth: 1,
+    borderRightColor: colors.border,
+    backgroundColor: '#F5EFE6',
+  },
+  phonePrefixText: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  phoneInput: {
+    flex: 1,
     paddingHorizontal: 12,
     paddingVertical: 9,
     fontSize: 12.5,

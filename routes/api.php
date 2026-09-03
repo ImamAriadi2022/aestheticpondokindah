@@ -485,6 +485,7 @@ Route::prefix('public')->group(function () {
     Route::get('/public/promos/{slug}', [ContentController::class, 'promoBySlug']);
     Route::get('/doctor-schedules', [DoctorScheduleController::class, 'publicIndex']);
     Route::get('/doctors', [UserController::class, 'publicDoctors']);
+    Route::get('/job-options', [UserController::class, 'publicJobOptions']);
     Route::get('/specializations', [UserController::class, 'specializations']);
     Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/membership/tiers', [UserMembershipController::class, 'tiers']);

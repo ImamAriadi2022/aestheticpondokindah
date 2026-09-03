@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Shared\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shared\User\User;
+use App\Models\Shared\User\JobOption;
 use App\Models\Patient\Profile\UserProfile;
 use App\Services\Patient\Membership\MembershipService;
 use Illuminate\Http\Request;
@@ -190,6 +191,18 @@ class UserController extends Controller
         return response()->json([
             'doctors' => $doctors,
         ])->header('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    }
+
+    public function publicJobOptions(): JsonResponse
+    {
+        return response()->json([
+            'jobs' => JobOption::query()
+                ->where('is_active', true)
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->pluck('name')
+                ->values(),
+        ])->header('Cache-Control', 'public, max-age=3600');
     }
 
     /**

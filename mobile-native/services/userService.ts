@@ -32,7 +32,18 @@ export interface UserProfileData {
   role?: string;
 }
 
+export interface JobOption {
+  id: string;
+  name: string;
+}
+
 export const userService = {
+  async getJobOptions(): Promise<JobOption[]> {
+    const res = await apiClient.get<any>('/public/job-options', { skipAuth: true });
+    const jobs = Array.isArray(res) ? res : (res?.jobs || res?.data || []);
+    return jobs.map((job: string | JobOption) => typeof job === 'string' ? { id: job, name: job } : job);
+  },
+
   async getProfile(): Promise<UserProfileData> {
     const res = await apiClient.get<any>(ENDPOINTS.PROFILE);
     const profile = res?.data || res?.user || res;
