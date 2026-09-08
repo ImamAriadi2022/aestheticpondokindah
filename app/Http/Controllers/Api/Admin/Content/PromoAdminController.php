@@ -29,9 +29,12 @@ class PromoAdminController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:promos,slug',
+            'headline' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'discount_text' => 'nullable|string|max:255',
             'content_html' => 'nullable|string',
             'category' => 'nullable|string|max:50',
+            'target_tier' => 'nullable|string|max:50',
             'image' => 'nullable|image|max:5120',
             'button_label' => 'nullable|string|max:255',
             'contact_whatsapp' => 'nullable|string|max:50',
@@ -61,9 +64,12 @@ class PromoAdminController extends Controller
         $promo = Promo::create([
             'title' => $data['title'],
             'slug' => $slug,
+            'headline' => $data['headline'] ?? null,
             'description' => $data['description'] ?? null,
+            'discount_text' => $data['discount_text'] ?? null,
             'content_html' => $data['content_html'] ?? null,
             'category' => $data['category'] ?? null,
+            'target_tier' => $data['target_tier'] ?? null,
             'image_path' => $imagePath,
             'button_label' => $data['button_label'] ?? 'Klaim Promo',
             'contact_whatsapp' => $data['contact_whatsapp'] ?? null,
@@ -81,9 +87,12 @@ class PromoAdminController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'nullable|string|max:255',
             'slug' => 'nullable|string|max:255|unique:promos,slug,' . $promo->id,
+            'headline' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'discount_text' => 'nullable|string|max:255',
             'content_html' => 'nullable|string',
             'category' => 'nullable|string|max:50',
+            'target_tier' => 'nullable|string|max:50',
             'image' => 'nullable|image|max:5120',
             'button_label' => 'nullable|string|max:255',
             'contact_whatsapp' => 'nullable|string|max:50',
@@ -102,9 +111,12 @@ class PromoAdminController extends Controller
 
         if (array_key_exists('title', $data)) $promo->title = $data['title'];
         if (array_key_exists('slug', $data)) $promo->slug = $data['slug'];
+        if (array_key_exists('headline', $data)) $promo->headline = $data['headline'];
         if (array_key_exists('description', $data)) $promo->description = $data['description'];
+        if (array_key_exists('discount_text', $data)) $promo->discount_text = $data['discount_text'];
         if (array_key_exists('content_html', $data)) $promo->content_html = $data['content_html'];
         if (array_key_exists('category', $data)) $promo->category = $data['category'];
+        if (array_key_exists('target_tier', $data)) $promo->target_tier = $data['target_tier'];
         if (array_key_exists('button_label', $data)) $promo->button_label = $data['button_label'];
         if (array_key_exists('contact_whatsapp', $data)) $promo->contact_whatsapp = $data['contact_whatsapp'];
         if (array_key_exists('is_active', $data) || $request->has('is_active')) $promo->is_active = $request->boolean('is_active');
@@ -144,9 +156,12 @@ class PromoAdminController extends Controller
             'id' => (string) $promo->id,
             'title' => $promo->title,
             'slug' => $promo->slug,
+            'headline' => $promo->headline,
             'description' => $promo->description,
+            'discount_text' => $promo->discount_text,
             'content_html' => $promo->content_html,
             'category' => $promo->category,
+            'target_tier' => $promo->target_tier,
             'image_url' => $promo->image_path ? asset('storage/' . $promo->image_path) : null,
             'image_path' => $promo->image_path,
             'button_label' => $promo->button_label,
