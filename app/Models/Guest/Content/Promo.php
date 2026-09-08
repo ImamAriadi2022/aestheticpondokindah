@@ -14,9 +14,12 @@ class Promo extends Model
     protected $fillable = [
         'title',
         'slug',
+        'headline',
         'description',
+        'discount_text',
         'content_html',
         'category',
+        'target_tier',
         'image_path',
         'button_label',
         'contact_whatsapp',
