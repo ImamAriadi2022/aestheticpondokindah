@@ -222,7 +222,7 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
                 className="w-full sm:w-auto rounded-full bg-gradient-to-r from-[#c9a24a] to-[#a8843a] hover:from-[#b8923f] hover:to-[#9a7630] text-white font-semibold px-8 shadow-lg shadow-[#c9a24a]/20 hover:shadow-[#c9a24a]/30 transition-all duration-300"
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
-                {selectedSlot ? `Pilih Jadwal ${selectedSlot.displayDate}` : "Pilih Jadwal & Booking"}
+                Buat Janji Temu
               </Button>
             </div>
           </div>
