@@ -23,7 +23,22 @@ export default function GallerySection() {
       .catch(() => setLoading(false));
   }, []);
 
-  const galleryImages = apiItems.map((item: any) => ({ src: item.image_url, title: item.title, category: item.category }));
+  // Map API items to gallery images; deduplicate by id to prevent React rendering duplicates
+  const galleryImages = useMemo(() => {
+    const seen = new Set<string>();
+    return apiItems
+      .filter((item: any) => {
+        if (!item.id || seen.has(String(item.id))) return false;
+        seen.add(String(item.id));
+        return true;
+      })
+      .map((item: any) => ({
+        id: String(item.id),
+        src: item.image_url,
+        title: item.title,
+        category: item.category,
+      }));
+  }, [apiItems]);
 
   const [selected, setSelected] = useState<{ src: string; title: string; category: string } | null>(null);
 
@@ -110,7 +125,7 @@ export default function GallerySection() {
           >
             {filteredImages.map((img) => (
               <button
-                key={img.src}
+                key={img.id}
                 type="button"
                 data-gallery-card
                 className="snap-center shrink-0 basis-[86%] group relative overflow-hidden rounded-3xl bg-brand-cream border border-border shadow-xl shadow-black/5 text-left"
@@ -129,7 +144,7 @@ export default function GallerySection() {
         <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredImages.map((img) => (
             <button
-              key={img.src}
+              key={img.id}
               type="button"
               className="group relative overflow-hidden rounded-3xl bg-brand-cream border border-border shadow-xl shadow-black/5 text-left"
               onClick={() => {

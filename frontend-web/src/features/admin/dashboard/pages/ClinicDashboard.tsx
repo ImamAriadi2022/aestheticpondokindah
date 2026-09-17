@@ -78,7 +78,7 @@ export default function ClinicDashboardPage() {
   const [doctorSchedules, setDoctorSchedules] = useState<any[]>([]);
   const [apiPosts, setApiPosts] = useState<any[]>(() => getAdminCache(CACHE_KEYS.POSTS));
   const [apiPopups, setApiPopups] = useState<any[]>(() => getAdminCache(CACHE_KEYS.POPUPS));
-  const [apiGalleryItems, setApiGalleryItems] = useState<any[]>(() => getAdminCache(CACHE_KEYS.GALLERY));
+  const [apiGalleryItems, setApiGalleryItems] = useState<any[]>([]); // Always load fresh from API, not localStorage
   const [apiTestimonials, setApiTestimonials] = useState<any[]>(() => getAdminCache(CACHE_KEYS.TESTIMONIALS));
   const [apiPromos, setApiPromos] = useState<any[]>(() => getAdminCache(CACHE_KEYS.PROMOS));
   const [apiDownloadApps, setApiDownloadApps] = useState<any[]>(() => getAdminCache(CACHE_KEYS.DOWNLOAD_APPS));
@@ -188,6 +188,8 @@ export default function ClinicDashboardPage() {
 
   const fetchApiGallery = async () => {
     try {
+      // Clear any stale localStorage cache before fetching fresh data
+      try { localStorage.removeItem(CACHE_KEYS.GALLERY); } catch {}
       const list = await fetchAdminGallery(token);
       setApiGalleryItems(list);
     } catch (e) { logger.error("Gagal memuat galeri", e); }

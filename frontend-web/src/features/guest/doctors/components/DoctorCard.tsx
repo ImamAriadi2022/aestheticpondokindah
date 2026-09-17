@@ -255,7 +255,7 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
                         >
                           <div>
                             <div className="text-xs font-bold text-gray-800">
-                              {slot.displayDate || slot.date} ({slot.location})
+                              {slot.displayDate || slot.date}
                             </div>
                             <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
                               <Clock className="w-3 h-3 text-[#c9a24a]" />

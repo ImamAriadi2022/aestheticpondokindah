@@ -135,31 +135,34 @@ export async function fetchAdminPosts(_token?: string) {
   return getAdminCache(CACHE_KEYS.POSTS);
 }
 
-// 4. Gallery
+// 4. Gallery — always fetch from API, never fall back to localStorage
+// (localStorage causes stale/duplicate data on other devices)
 export async function fetchAdminGallery(_token?: string) {
+  // Try admin endpoint first
   try {
     const res: any = await apiClient.get("/admin/gallery-items", { skipToast: true });
     const list = Array.isArray(res) ? res : res?.data || [];
-    if (Array.isArray(list) && list.length > 0) {
-      setAdminCache(CACHE_KEYS.GALLERY, list);
+    if (Array.isArray(list)) {
       return list;
     }
   } catch (e) {
     logger.warn("Failed fetching /admin/gallery-items, trying public fallback...", e);
   }
 
+  // Try public endpoint as fallback
   try {
-    const pubRes: any = await apiClient.get("/gallery-items", { skipToast: true });
+    const pubRes: any = await apiClient.get("/public/gallery-items", { skipToast: true });
     const pubList = Array.isArray(pubRes) ? pubRes : pubRes?.data || [];
-    if (Array.isArray(pubList) && pubList.length > 0) {
-      setAdminCache(CACHE_KEYS.GALLERY, pubList);
+    if (Array.isArray(pubList)) {
       return pubList;
     }
   } catch (e) {
     logger.error("Failed fetching public gallery items", e);
   }
 
-  return getAdminCache(CACHE_KEYS.GALLERY);
+  // No localStorage fallback — return empty array so UI shows "tidak ada data"
+  // instead of showing stale data from a previous session
+  return [];
 }
 
 // 5. Testimonials
