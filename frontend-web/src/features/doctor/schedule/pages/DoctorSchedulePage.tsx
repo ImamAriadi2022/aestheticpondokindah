@@ -104,7 +104,7 @@ export default function DoctorSchedulePage({
             Daftar Jadwal Praktik Dokter
           </h2>
           <p className="text-xs text-[#8A7B6B] mt-0.5">
-            Kelola sesi waktu, kuota pasien, dan lokasi cabang tempat praktik Anda.
+            Kelola sesi waktu dan kuota pasien untuk jadwal praktik Anda.
           </p>
         </div>
         <Button
@@ -156,7 +156,7 @@ export default function DoctorSchedulePage({
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari tanggal, jam praktik, atau lokasi cabang..."
+            placeholder="Cari tanggal atau jam praktik..."
             className="pl-10 pr-9 h-10 rounded-xl border-[#EADBBD] focus:border-[#C9A24A] focus:ring-[#C9A24A]/20 bg-[#FAF8F5] text-xs font-medium text-gray-900"
           />
           {searchQuery && (

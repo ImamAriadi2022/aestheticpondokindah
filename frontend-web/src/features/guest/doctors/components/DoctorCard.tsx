@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { Award, MapPin, MessageCircle, Stethoscope, ChevronRight, Calendar, Clock } from "lucide-react";
+import { Award, MapPin, MessageCircle, Stethoscope, ChevronRight } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import {
@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/shared/ui/dialog";
-import { getPublicDoctorSchedules, type PublicDoctorScheduleItem } from "@/features/guest/doctors/services/publicDoctorScheduleApi";
 
 interface Doctor {
   id: number;
@@ -30,35 +29,6 @@ interface DoctorCardProps {
 export default function DoctorCard({ doctor }: DoctorCardProps) {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
-  const [liveSchedules, setLiveSchedules] = useState<PublicDoctorScheduleItem[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<PublicDoctorScheduleItem | null>(null);
-  const [loadingSchedule, setLoadingSchedule] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    setLoadingSchedule(true);
-    getPublicDoctorSchedules()
-      .then((items) => {
-        if (!mounted) return;
-        // Filter slots matching doctor name
-        const doctorNameClean = doctor.name.toLowerCase().trim();
-        const matched = items.filter(
-          (s) =>
-            s.doctorName &&
-            (s.doctorName.toLowerCase().includes(doctorNameClean) ||
-              doctorNameClean.includes(s.doctorName.toLowerCase()))
-        );
-        setLiveSchedules(matched.length > 0 ? matched : items.slice(0, 3));
-        setLoadingSchedule(false);
-      })
-      .catch(() => {
-        if (mounted) setLoadingSchedule(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [doctor.name]);
 
   const fellowship = doctor.fellowship || [
     "Penn Endodontic Global Symposium 2025 - Lecture session",
@@ -71,10 +41,6 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
   const handleBookingRedirect = () => {
     const params = new URLSearchParams();
     params.set("doctor", doctor.name);
-    if (selectedSlot) {
-      params.set("date", selectedSlot.date);
-      params.set("slot", selectedSlot.timeRange);
-    }
     navigate(`/booking/new?${params.toString()}`);
   };
 
@@ -222,63 +188,6 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
                 <p className="text-sm text-gray-600 font-body leading-relaxed">{doctor.education}</p>
               </div>
 
-              {/* Live Schedule & Available Slots */}
-              <div className="mb-6">
-                <h4 className="text-sm font-bold text-[#c9a24a] font-body uppercase tracking-wider mb-2 flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Jadwal & Kuota Praktik
-                </h4>
-                {loadingSchedule ? (
-                  <div className="text-xs text-gray-500 py-2">Memuat jadwal dokter...</div>
-                ) : liveSchedules.length === 0 ? (
-                  <div className="text-xs text-gray-500 py-2 bg-[#f8f6f3] rounded-xl p-3">
-                    Belum ada jadwal tersedia untuk dokter ini.
-                  </div>
-                ) : (
-                  <div className="bg-[#f8f6f3] rounded-xl p-3 sm:p-4 space-y-2">
-                    {liveSchedules.map((slot) => {
-                      const disabled = slot.isFull || slot.slotsLeft <= 0;
-                      const isSelected = selectedSlot?.id === slot.id;
-                      return (
-                        <button
-                          key={slot.id}
-                          type="button"
-                          disabled={disabled}
-                          onClick={() => setSelectedSlot(slot)}
-                          className={`w-full text-left p-2.5 sm:p-3 rounded-lg border transition-all flex justify-between items-center ${
-                            disabled
-                              ? "bg-gray-100 border-gray-200 opacity-60 cursor-not-allowed text-gray-400"
-                              : isSelected
-                              ? "bg-[#c9a24a]/15 border-[#c9a24a] ring-1 ring-[#c9a24a]"
-                              : "bg-white border-gray-200 hover:border-[#c9a24a]/50 text-gray-700"
-                          }`}
-                        >
-                          <div>
-                            <div className="text-xs font-bold text-gray-800">
-                              {slot.displayDate || slot.date}
-                            </div>
-                            <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                              <Clock className="w-3 h-3 text-[#c9a24a]" />
-                              <span>{slot.timeRange}</span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            {disabled ? (
-                              <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 text-[10px]">
-                                Penuh
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px]">
-                                {slot.slotsLeft} slot tersisa
-                              </Badge>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
 
               {/* Fellowship */}
               <div className="mb-4">

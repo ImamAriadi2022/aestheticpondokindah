@@ -138,30 +138,82 @@ export async function fetchAdminPosts(_token?: string) {
 // 4. Gallery — always fetch from API, never fall back to localStorage
 // (localStorage causes stale/duplicate data on other devices)
 export async function fetchAdminGallery(_token?: string) {
+  let rawList: any[] = [];
+
   // Try admin endpoint first
   try {
     const res: any = await apiClient.get("/admin/gallery-items", { skipToast: true });
     const list = Array.isArray(res) ? res : res?.data || [];
     if (Array.isArray(list)) {
-      return list;
+      rawList = list;
     }
   } catch (e) {
     logger.warn("Failed fetching /admin/gallery-items, trying public fallback...", e);
   }
 
-  // Try public endpoint as fallback
-  try {
-    const pubRes: any = await apiClient.get("/public/gallery-items", { skipToast: true });
-    const pubList = Array.isArray(pubRes) ? pubRes : pubRes?.data || [];
-    if (Array.isArray(pubList)) {
-      return pubList;
+  // Try public endpoint as fallback if admin failed
+  if (rawList.length === 0) {
+    try {
+      const pubRes: any = await apiClient.get("/public/gallery-items", { skipToast: true });
+      const pubList = Array.isArray(pubRes) ? pubRes : pubRes?.data || [];
+      if (Array.isArray(pubList)) {
+        rawList = pubList;
+      }
+    } catch (e) {
+      logger.error("Failed fetching public gallery items", e);
     }
-  } catch (e) {
-    logger.error("Failed fetching public gallery items", e);
   }
 
-  // No localStorage fallback — return empty array so UI shows "tidak ada data"
-  // instead of showing stale data from a previous session
+  // Auto-deduplicate: group by normalized image path, keep item with smallest numeric ID,
+  // silently delete the rest via API so the database stays clean
+  if (rawList.length > 0) {
+    // Group items by their image_path (the storage path, not the full URL)
+    const groups = new Map<string, any[]>();
+    for (const item of rawList) {
+      // Normalize key: extract just the filename from the URL/path
+      const rawKey = item.image_path || item.image_url || "";
+      const key = rawKey.split("/").pop()?.split("?")[0] || rawKey || String(item.id);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(item);
+    }
+
+    const toDelete: string[] = [];
+    const unique: any[] = [];
+
+    for (const group of groups.values()) {
+      if (group.length === 1) {
+        unique.push(group[0]);
+      } else {
+        // Sort by numeric ID ascending — keep the lowest (original), delete the rest
+        group.sort((a, b) => Number(a.id) - Number(b.id));
+        unique.push(group[0]);
+        for (let i = 1; i < group.length; i++) {
+          toDelete.push(group[i].id);
+        }
+      }
+    }
+
+    // Fire-and-forget deletion of duplicate records from the database
+    if (toDelete.length > 0) {
+      logger.warn(`[Gallery] Auto-removing ${toDelete.length} duplicate DB record(s):`, toDelete);
+      Promise.allSettled(
+        toDelete.map((id) =>
+          fetch(`${API_BASE}/admin/gallery-items/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("apident:token") || ""}`,
+              Accept: "application/json",
+            },
+          }).catch((err) => logger.error(`[Gallery] Failed to delete duplicate id=${id}`, err))
+        )
+      );
+    }
+
+    // Sort unique items by sort_order then id for consistent display
+    unique.sort((a, b) => (Number(a.sort_order) - Number(b.sort_order)) || (Number(a.id) - Number(b.id)));
+    return unique;
+  }
+
   return [];
 }
 

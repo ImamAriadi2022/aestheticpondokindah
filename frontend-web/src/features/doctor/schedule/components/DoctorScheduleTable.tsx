@@ -68,7 +68,6 @@ export default function DoctorScheduleTable({
               <tr className="border-b border-[#F0E6D3] bg-[#FAF8F5]">
                 <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Tanggal</th>
                 <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Jam Praktik</th>
-                <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Lokasi / Cabang</th>
                 <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Slot Terisi</th>
                 <th className="text-right py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Aksi</th>
               </tr>
@@ -78,7 +77,6 @@ export default function DoctorScheduleTable({
                 <tr key={s.id} className="border-b border-[#F5F0E8] hover:bg-[#FDF8F0]/50 transition-colors">
                   <td className="py-4 px-5 font-semibold text-[#4A3F35]">{s.displayDate || s.date}</td>
                   <td className="py-4 px-5 text-[#4A3F35] font-medium">{s.timeRange}</td>
-                  <td className="py-4 px-5 text-[#8A7B6B]">{s.location}</td>
                   <td className="py-4 px-5">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
