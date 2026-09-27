@@ -286,7 +286,7 @@ export default function ReservationConsentPdfModal({
             <div class="kop-title">Aesthetic Pondok Indah</div>
             <div class="kop-address">
               Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310<br/>
-              Telepon: 021-7695948 | WhatsApp: 0812-3456-7890 | Email: aesthetic.pondokindah@gmail.com
+              Telepon: 021-7695948 | WhatsApp: 0819-9011-4949 | Email: aesthetic.pondokindah@gmail.com
             </div>
           </div>
           <div class="doc-header">
@@ -445,7 +445,7 @@ export default function ReservationConsentPdfModal({
               </h1>
               <p className="text-[10px] text-gray-700 leading-snug pt-0.5">
                 Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310<br />
-                Telepon: 021-7695948 | WhatsApp: 0812-3456-7890 | Email: aesthetic.pondokindah@gmail.com
+                Telepon: 021-7695948 | WhatsApp: 0819-9011-4949 | Email: aesthetic.pondokindah@gmail.com
               </p>
             </div>
 

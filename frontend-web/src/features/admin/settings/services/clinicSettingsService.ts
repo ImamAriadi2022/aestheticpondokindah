@@ -119,7 +119,7 @@ export function getConsentBodyHtml(consent: Partial<PdfConsentSettings> | null |
 export const DEFAULT_GENERAL_INFO: ClinicGeneralInfo = {
   clinicName: "Aesthetic Pondok Indah Dental Clinic",
   tagline: "Pusat Perawatan Gigi Estetik & Spesialis Komprehensif",
-  whatsappNumber: "628198974030",
+  whatsappNumber: "6281990114949",
   phone: "(021) 750-1234",
   email: "info@aestheticpondokindah.com",
   address: "Jl. Metro Pondok Indah Blok TB No. 12, Pondok Pinang, Kebayoran Lama, Jakarta Selatan 12310",
@@ -129,7 +129,7 @@ export const DEFAULT_GENERAL_INFO: ClinicGeneralInfo = {
 export const DEFAULT_TERMS_SETTINGS: PdfTermsSettings = {
   kop: {
     clinicName: "Aesthetic Pondok Indah",
-    phone: "021-7695948 | 0812-3456-7890",
+    phone: "021-7695948 | 0819-9011-4949",
     email: "aesthetic.pondokindah@gmail.com",
     address: "Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310",
     logoUrl: "/logo/logo-vertikal.webp",
@@ -179,7 +179,7 @@ export const DEFAULT_TERMS_SETTINGS: PdfTermsSettings = {
 export const DEFAULT_CONSENT_SETTINGS: PdfConsentSettings = {
   kop: {
     clinicName: "Aesthetic Pondok Indah",
-    phone: "021-7695948 | 0812-3456-7890",
+    phone: "021-7695948 | 0819-9011-4949",
     email: "aesthetic.pondokindah@gmail.com",
     address: "Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310",
     logoUrl: "/logo/logo-vertikal.webp",

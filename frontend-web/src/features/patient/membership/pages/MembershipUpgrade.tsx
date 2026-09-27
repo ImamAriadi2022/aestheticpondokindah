@@ -115,7 +115,7 @@ export default function MembershipUpgradePage() {
     getPublicClinicSettings()
       .then((settings) => {
         if (settings?.phone || settings?.whatsapp) {
-          setClinicPhone(settings.whatsapp || settings.phone || "081234567890");
+          setClinicPhone(settings.whatsapp || settings.phone || "081990114949");
         }
       })
       .catch(() => {});

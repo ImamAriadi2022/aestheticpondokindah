@@ -128,7 +128,7 @@ export default function DigitalSignatureModalNative({
   const clinicAddress =
     consentData?.kop?.address ||
     "Jl. Niaga Hijau Raya No.49, Pd. Pinang, Kec. Kby. Lama, Kota Jakarta Selatan, DKI Jakarta 12310";
-  const clinicPhone = consentData?.kop?.phone || "021-7695948 | 0812-3456-7890";
+  const clinicPhone = consentData?.kop?.phone || "021-7695948 | 0819-9011-4949";
   const clinicEmail = consentData?.kop?.email || "aesthetic.pondokindah@gmail.com";
 
   const docTitle =
