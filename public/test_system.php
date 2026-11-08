@@ -56,6 +56,24 @@ foreach ($possibleBackendPaths as $path) {
     }
 }
 
+// Auto-Ensure APP_KEY ada di .env jika kosong atau belum dibuat
+if ($backendDir) {
+    $envFileCheck = $backendDir . '/.env';
+    if (file_exists($envFileCheck)) {
+        $envRaw = @file_get_contents($envFileCheck);
+        if (!preg_match('/^APP_KEY=(.+)$/m', (string)$envRaw, $km) || empty(trim($km[1]))) {
+            $newKey = 'base64:' . base64_encode(random_bytes(32));
+            if (preg_match('/^APP_KEY=/m', (string)$envRaw)) {
+                $envRaw = preg_replace('/^APP_KEY=.*$/m', "APP_KEY={$newKey}", $envRaw);
+            } else {
+                $envRaw = "APP_KEY={$newKey}\n" . $envRaw;
+            }
+            @file_put_contents($envFileCheck, $envRaw);
+            @unlink($backendDir . '/bootstrap/cache/config.php');
+        }
+    }
+}
+
 // Handler Aksi Perbaikan Otomatis
 $repairMessage = null;
 if (isset($_GET['action']) && $backendDir) {
@@ -185,6 +203,26 @@ addTestResult(
     $hasEnv,
     $hasEnv ? 'File environment .env root Laravel tersedia' : 'File .env belum dibuat di root Laravel. Silakan rename .env.example menjadi .env',
     'Path: .env (root Laravel)'
+);
+
+// Test 6b: Kunci Enkripsi Aplikasi (APP_KEY)
+$hasKey = false;
+$keyVal = '';
+if ($hasEnv) {
+    $envContent = @file_get_contents($envPath);
+    if (preg_match('/^APP_KEY=(.+)$/m', (string)$envContent, $mKey)) {
+        $keyVal = trim($mKey[1]);
+        if (!empty($keyVal) && (str_starts_with($keyVal, 'base64:') || strlen($keyVal) === 32)) {
+            $hasKey = true;
+        }
+    }
+}
+addTestResult(
+    $results['backend'],
+    'Kunci Enkripsi Aplikasi (APP_KEY)',
+    $hasKey,
+    $hasKey ? 'APP_KEY tersedia dan valid untuk enkripsi' : 'APP_KEY belum ada atau tidak valid di .env! Inilah yang menyebabkan API Backend Error 500.',
+    $hasKey ? 'Key: ' . substr($keyVal, 0, 16) . '...' : 'Status: KOSONG / BELUM ADA'
 );
 
 // Test 7: Vendor Autoload

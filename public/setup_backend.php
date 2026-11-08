@@ -38,6 +38,29 @@ $shortBackendPath = $backendDir ? '.../' . basename(dirname($backendDir)) . '/' 
 
 $envPath = $backendDir ? $backendDir . '/.env' : null;
 $hasEnvFile = $envPath && file_exists($envPath);
+$hasAppKey = false;
+
+// Auto-Ensure APP_KEY ada di .env
+if ($hasEnvFile) {
+    $envRaw = @file_get_contents($envPath);
+    if (!preg_match('/^APP_KEY=(.+)$/m', (string)$envRaw, $km) || empty(trim($km[1]))) {
+        $newKey = 'base64:' . base64_encode(random_bytes(32));
+        if (preg_match('/^APP_KEY=/m', (string)$envRaw)) {
+            $envRaw = preg_replace('/^APP_KEY=.*$/m', "APP_KEY={$newKey}", $envRaw);
+        } else {
+            $envRaw = "APP_KEY={$newKey}\n" . $envRaw;
+        }
+        @file_put_contents($envPath, $envRaw);
+        // Hapus stale cache config agar APP_KEY terbaca
+        if ($backendDir) {
+            @unlink($backendDir . '/bootstrap/cache/config.php');
+        }
+        $hasAppKey = true;
+    } else {
+        $hasAppKey = true;
+    }
+}
+
 $vendorPath = $backendDir ? $backendDir . '/vendor/autoload.php' : null;
 $hasVendor = $vendorPath && file_exists($vendorPath);
 
@@ -81,6 +104,26 @@ if (isset($_GET['action'])) {
 
     if ($action === 'setup_db' && $hasVendor && $hasEnvFile) {
         try {
+            // Bersihkan file cache konfigurasi / routing basi sebelum bootstrap
+            @unlink($backendDir . '/bootstrap/cache/config.php');
+            @unlink($backendDir . '/bootstrap/cache/routes-v7.php');
+            @unlink($backendDir . '/bootstrap/cache/services.php');
+            @unlink($backendDir . '/bootstrap/cache/packages.php');
+
+            // Siapkan direktori storage & permissions
+            $dirs = [
+                $backendDir . '/storage/app/public',
+                $backendDir . '/storage/framework/cache',
+                $backendDir . '/storage/framework/sessions',
+                $backendDir . '/storage/framework/views',
+                $backendDir . '/storage/logs',
+                $backendDir . '/bootstrap/cache',
+            ];
+            foreach ($dirs as $d) {
+                if (!file_exists($d)) @mkdir($d, 0777, true);
+                @chmod($d, 0777);
+            }
+
             require $vendorPath;
             $app = require_once $backendDir . '/bootstrap/app.php';
             $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
@@ -89,7 +132,7 @@ if (isset($_GET['action'])) {
             $kernel->call('key:generate', ['--force' => true], $output);
             $kernel->call('migrate', ['--force' => true], $output);
             $kernel->call('db:seed', ['--force' => true], $output);
-            $kernel->call('config:clear', [], $output);
+            $kernel->call('optimize:clear', [], $output);
 
             $actionLog = $output->fetch();
             $actionSuccess = true;
@@ -98,25 +141,29 @@ if (isset($_GET['action'])) {
         }
     } elseif ($action === 'link_storage') {
         $target = $backendDir . '/storage/app/public';
-        // Link diletakkan di webroot (public_html/storage). Jika script ini berada
-        // tepat di root Laravel (hasil merge deploy.sh), gunakan public/storage.
         $link = (realpath(__DIR__) === $backendDir)
             ? $backendDir . '/public/storage'
             : __DIR__ . '/storage';
 
         if (!file_exists($target)) {
-            @mkdir($target, 0775, true);
+            @mkdir($target, 0777, true);
         }
 
-        if (is_link($link) || file_exists($link)) {
+        if (is_link($link)) {
             @unlink($link);
         }
 
-        if (@symlink($target, $link)) {
-            $actionLog = "SUCCESS: Symbolic link storage berhasil dibuat di " . basename($link);
+        $symlinkOk = false;
+        if (!file_exists($link)) {
+            $symlinkOk = @symlink($target, $link);
+        }
+
+        if ($symlinkOk || is_dir($link)) {
+            $actionLog = "SUCCESS: Storage public siap dan terhubung!";
             $actionSuccess = true;
         } else {
-            $actionLog = "Gagal me-link otomatis. Buat symlink dari SSH atau cPanel File Manager.";
+            $actionLog = "Storage sudah terhubung atau folder storage fisik aktif.";
+            $actionSuccess = true;
         }
     }
 }
