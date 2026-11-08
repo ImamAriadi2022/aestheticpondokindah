@@ -38,9 +38,6 @@ $publicHtmlDir = __DIR__;
 $backendDir = null;
 
 // Cari lokasi root Laravel secara dinamis (arsitektur baru: backend di root repo).
-// File ini dideploy di public_html/ (webroot) dan disalin dari public/ Laravel,
-// sehingga root Laravel berada di __DIR__ (saat dideploy di root) atau
-// dirname(__DIR__) (saat file berada di dalam folder public_html/).
 $possibleBackendPaths = [
     __DIR__,
     dirname(__DIR__),
@@ -56,6 +53,64 @@ foreach ($possibleBackendPaths as $path) {
     ) {
         $backendDir = realpath($path);
         break;
+    }
+}
+
+// Handler Aksi Perbaikan Otomatis
+$repairMessage = null;
+if (isset($_GET['action']) && $backendDir) {
+    $action = $_GET['action'];
+    if ($action === 'repair' || $action === 'clear_cache') {
+        $msgs = [];
+        // 1. Buat dan set izin folder storage & bootstrap/cache
+        $neededDirs = [
+            $backendDir . '/storage/app/public',
+            $backendDir . '/storage/framework/cache',
+            $backendDir . '/storage/framework/sessions',
+            $backendDir . '/storage/framework/views',
+            $backendDir . '/storage/logs',
+            $backendDir . '/bootstrap/cache',
+            $publicHtmlDir . '/storage',
+        ];
+        foreach ($neededDirs as $dir) {
+            if (!file_exists($dir)) {
+                @mkdir($dir, 0777, true);
+            }
+            @chmod($dir, 0777);
+        }
+        $msgs[] = "Izin direktori storage & cache disiapkan (0777).";
+
+        // 2. Hapus file cache konfigurasi / routing basi
+        $cacheFiles = glob($backendDir . '/bootstrap/cache/*.php');
+        $deleted = 0;
+        if ($cacheFiles) {
+            foreach ($cacheFiles as $cf) {
+                if (@unlink($cf)) $deleted++;
+            }
+        }
+        $msgs[] = "Berhasil menghapus $deleted file cache basi di bootstrap/cache/.";
+
+        // 3. Jalankan artisan migrate jika diminta
+        if ($action === 'repair') {
+            try {
+                if (file_exists($backendDir . '/vendor/autoload.php')) {
+                    require_once $backendDir . '/vendor/autoload.php';
+                    $appInstance = require_once $backendDir . '/bootstrap/app.php';
+                    $kernel = $appInstance->make(\Illuminate\Contracts\Console\Kernel::class);
+                    $output = new \Symfony\Component\Console\Output\BufferedOutput();
+                    
+                    // Generate key jika kosong
+                    $kernel->call('key:generate', ['--force' => true], $output);
+                    $kernel->call('migrate', ['--force' => true], $output);
+                    $kernel->call('db:seed', ['--force' => true], $output);
+                    $kernel->call('optimize:clear', [], $output);
+                    $msgs[] = "Migrasi & Seeder dieksekusi: " . substr(strip_tags($output->fetch()), 0, 300);
+                }
+            } catch (\Throwable $e) {
+                $msgs[] = "Peringatan Artisan: " . $e->getMessage();
+            }
+        }
+        $repairMessage = implode(" | ", $msgs);
     }
 }
 
@@ -162,11 +217,72 @@ curl_close($ch);
 if ($httpCode === 200 && str_contains(strtolower($contentType ?? ''), 'json')) {
     $apiPassed = true;
     $apiMsg = 'API Endpoint Backend merespons JSON 200 OK dengan sukses!';
+    $apiMeta = 'URL: ' . $apiTestUrl . ' | Snippet: ' . substr(strip_tags($apiBody ?? ''), 0, 75);
 } else {
     $apiPassed = false;
     $apiMsg = 'API Endpoint merespons HTTP ' . $httpCode . ' (' . ($contentType ?: 'Format HTML/Teks') . ').' ;
+    
+    // Deep Diagnostic Inspection
+    $diagnostics = [];
+    $diagnostics[] = 'URL: ' . $apiTestUrl;
+    
+    // 1. Cek folder permissions
+    if ($backendDir) {
+        $storageFolders = [
+            'storage/logs' => $backendDir . '/storage/logs',
+            'storage/framework/cache' => $backendDir . '/storage/framework/cache',
+            'storage/framework/sessions' => $backendDir . '/storage/framework/sessions',
+            'storage/framework/views' => $backendDir . '/storage/framework/views',
+            'bootstrap/cache' => $backendDir . '/bootstrap/cache',
+        ];
+        $permFailures = [];
+        foreach ($storageFolders as $lbl => $fPath) {
+            if (!file_exists($fPath)) {
+                $permFailures[] = "$lbl (Tidak ada)";
+            } elseif (!is_writable($fPath)) {
+                $permFailures[] = "$lbl (Read-only)";
+            }
+        }
+        if (!empty($permFailures)) {
+            $diagnostics[] = 'Direktori bermasalah: ' . implode(', ', $permFailures);
+        }
+
+        // 2. Cek file cache basi
+        $staleCache = glob($backendDir . '/bootstrap/cache/*.php');
+        if (!empty($staleCache)) {
+            $diagnostics[] = 'Cache aktif: ' . implode(', ', array_map('basename', $staleCache));
+        }
+
+        // 3. Tangkap Exception Laravel Booting secara langsung
+        try {
+            if (file_exists($backendDir . '/vendor/autoload.php') && file_exists($backendDir . '/bootstrap/app.php')) {
+                require_once $backendDir . '/vendor/autoload.php';
+                $appCheck = require_once $backendDir . '/bootstrap/app.php';
+                $reqCheck = \Illuminate\Http\Request::create('/api/public/posts', 'GET');
+                $reqCheck->headers->set('Accept', 'application/json');
+                $respCheck = $appCheck->handleRequest($reqCheck);
+                $statusCheck = $respCheck->getStatusCode();
+                $bodyCheck = $respCheck->getContent();
+                $diagnostics[] = "Boot In-Process: HTTP $statusCheck -> " . substr(strip_tags($bodyCheck), 0, 250);
+            }
+        } catch (\Throwable $e) {
+            $diagnostics[] = "FATAL ERROR: [" . get_class($e) . "] " . $e->getMessage() . " (" . basename($e->getFile()) . ":" . $e->getLine() . ")";
+        }
+
+        // 4. Log Laravel terakhir
+        $logFile = $backendDir . '/storage/logs/laravel.log';
+        if (file_exists($logFile) && is_readable($logFile)) {
+            $lines = @file($logFile);
+            if (!empty($lines)) {
+                $lastSlice = array_slice($lines, -6);
+                $cleanLog = trim(preg_replace('/\s+/', ' ', implode(' ', $lastSlice)));
+                $diagnostics[] = "Laravel Log: " . substr($cleanLog, 0, 300);
+            }
+        }
+    }
+
+    $apiMeta = implode(' | ', $diagnostics);
 }
-$apiMeta = 'URL: ' . $apiTestUrl . ' | Snippet: ' . substr(strip_tags($apiBody ?? ''), 0, 75);
 
 addTestResult(
     $results['backend'],
@@ -216,7 +332,7 @@ addTestResult(
 );
 
 // Test 9: Integritas Tabel Database
-$requiredTables = ['users', 'reservations', 'doctor_schedules', 'promos', 'consultations', 'complaints'];
+$requiredTables = ['users', 'reservations', 'doctor_schedules', 'promos', 'posts', 'clinic_services', 'branches', 'consultations', 'complaints'];
 $existingTables = [];
 $missingTables = [];
 
@@ -341,6 +457,12 @@ $healthPercentage = round(($results['passed_count'] / max($results['total_count'
             </div>
         </div>
 
+        <?php if (!empty($repairMessage)): ?>
+            <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 12px; padding: 16px; margin-bottom: 20px; color: #a7f3d0; font-size: 13px; line-height: 1.6;">
+                <strong>⚡ Hasil Tindakan Perbaikan:</strong><br><?= htmlspecialchars($repairMessage) ?>
+            </div>
+        <?php endif; ?>
+
         <!-- Section 1: FRONTEND -->
         <div class="section-title">💻 1. Pengujian Frontend & Static Assets</div>
         <div class="test-grid">
@@ -412,6 +534,7 @@ $healthPercentage = round(($results['passed_count'] / max($results['total_count'
         <!-- Action Footer -->
         <div class="actions-footer">
             <a href="test_system.php" class="btn btn-refresh">🔄 Jalankan Pengujian Ulang</a>
+            <a href="test_system.php?action=repair" class="btn" style="background: #10b981; color: white;">🛠️ Perbaiki Otomatis (Cache, Izin & Migrasi)</a>
             <a href="setup_backend.php" class="btn btn-setup">⚡ Buka Setup Backend Control Center</a>
         </div>
     </div>
