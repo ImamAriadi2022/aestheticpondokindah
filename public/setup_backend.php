@@ -165,6 +165,37 @@ if (isset($_GET['action'])) {
             $actionLog = "Storage sudah terhubung atau folder storage fisik aktif.";
             $actionSuccess = true;
         }
+    } elseif ($action === 'test_api') {
+        try {
+            ini_set('display_errors', 1);
+            error_reporting(E_ALL);
+            require $vendorPath;
+            $app = require_once $backendDir . '/bootstrap/app.php';
+            $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+            $req = Illuminate\Http\Request::create('/api/public/posts', 'GET');
+            $req->headers->set('Accept', 'application/json');
+            $response = $kernel->handle($req);
+            $actionLog = "STATUS CODE: " . $response->getStatusCode() . "\n"
+                       . "HEADERS: " . json_encode($response->headers->all(), JSON_PRETTY_PRINT) . "\n\n"
+                       . "CONTENT BODY:\n" . substr($response->getContent(), 0, 1500);
+            $actionSuccess = ($response->getStatusCode() === 200);
+        } catch (\Throwable $e) {
+            $actionLog = "FATAL ERROR / EXCEPTION:\n"
+                       . "Class: " . get_class($e) . "\n"
+                       . "Message: " . $e->getMessage() . "\n"
+                       . "File: " . $e->getFile() . ":" . $e->getLine() . "\n\n"
+                       . "Stack Trace:\n" . $e->getTraceAsString();
+        }
+    } elseif ($action === 'view_log') {
+        $logPath = $backendDir . '/storage/logs/laravel.log';
+        if (file_exists($logPath) && is_readable($logPath)) {
+            $raw = file($logPath);
+            $actionLog = "LOG FILE: " . $logPath . " (" . count($raw) . " lines)\n\n"
+                       . implode("", array_slice($raw, -60));
+            $actionSuccess = true;
+        } else {
+            $actionLog = "storage/logs/laravel.log belum ada atau tidak dapat dibaca.";
+        }
     }
 }
 ?>
@@ -297,6 +328,8 @@ if (isset($_GET['action'])) {
         <div class="actions-group">
             <?php if ($hasBackendFolder && $hasEnvFile && $hasVendor && $dbStatus === 'CONNECTED'): ?>
                 <a href="?action=setup_db" class="btn-action btn-primary">🚀 Jalankan Migrasi Database & Key</a>
+                <a href="?action=test_api" class="btn-action" style="background: #10b981; color: white;">🔍 Tes Diagnosa Endpoint API (/api/public/posts)</a>
+                <a href="?action=view_log" class="btn-action" style="background: #8b5cf6; color: white;">📄 Lihat Log Error Laravel (laravel.log)</a>
                 <a href="?action=link_storage" class="btn-action btn-secondary">🔗 Buat Storage Link Gambar</a>
             <?php elseif (!$hasVendor): ?>
                 <div class="btn-action btn-disabled">
