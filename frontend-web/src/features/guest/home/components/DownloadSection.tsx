@@ -33,35 +33,16 @@ export default function DownloadSection() {
               </p>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                {apps.length > 0 && !apps[0]?.is_development ? (
-                  <>
-                    {apps[0]?.apk_url && (
-                      <a href={apps[0].apk_url} download>
-                        <Button className="bg-gradient-gold text-white font-semibold px-6 rounded-xl shadow-lg shadow-brand-gold/20 h-12">
-                          <Download className="w-5 h-5 mr-2" />
-                          Download APK
-                        </Button>
-                      </a>
-                    )}
-                    {apps[0]?.download_link && (
-                      <a href={apps[0].download_link} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" className="rounded-xl border-brand-gold/30 text-brand-gold h-12">
-                          Link Download
-                        </Button>
-                      </a>
-                    )}
-                  </>
-                ) : (
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 max-w-md">
-                    <p className="font-semibold flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4" />
-                      Aplikasi Sedang Dalam Tahap Development
-                    </p>
-                    <p className="mt-1 text-amber-700">
-                      Aplikasi mobile masih dalam pengembangan dan akan segera tersedia.
-                    </p>
-                  </div>
-                )}
+                <a
+                  href="https://github.com/osaespi-os/aestheticpondokindah/releases/download/v1.1.0/aespi.apk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button className="bg-gradient-gold text-white font-semibold px-6 rounded-xl shadow-lg shadow-brand-gold/20 h-12 flex items-center gap-2">
+                    <Download className="w-5 h-5 mr-2" />
+                    Download APK
+                  </Button>
+                </a>
               </div>
 
               <div className="pt-2">

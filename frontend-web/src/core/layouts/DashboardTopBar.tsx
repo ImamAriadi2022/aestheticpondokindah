@@ -105,9 +105,9 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
     if (role === "clinic") {
       switch (activeTab) {
         case "etalase-beranda":
-          return { title: "CMS Etalase — Edit Beranda", subtitle: "Kustomisasi teks headline, banner promo, foto dokter, dan kartu layanan floating" };
+          return { title: "Pengaturan Beranda", subtitle: "Kustomisasi teks headline, banner promo, foto dokter, dan kartu layanan floating" };
         case "etalase-tentang":
-          return { title: "CMS Etalase — Edit Tentang Kami", subtitle: "Kustomisasi narasi cerita klinik, foto fasilitas, badge penghargaan, dan statistik" };
+          return { title: "Pengaturan Tentang", subtitle: "Kustomisasi narasi cerita klinik, foto fasilitas, badge penghargaan, dan statistik" };
         case "reservasi":
           return { title: "Daftar Reservasi & Antrean", subtitle: "Kelola data reservasi dan antrean pasien klinik" };
         case "konsultasi":

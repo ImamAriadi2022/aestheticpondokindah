@@ -26,9 +26,10 @@ export interface AppMenu {
   root: Record<Exclude<AppRole, "guest">, MenuItem[]>;
 }
 
-export const ETALASE_SUBMENU: MenuItem["submenu"] = [
-  { label: "Edit Beranda", href: "/dashboard/clinic?tab=etalase-beranda" },
-  { label: "Edit Tentang", href: "/dashboard/clinic?tab=etalase-tentang" },
+export const SETTINGS_SUBMENU: MenuItem["submenu"] = [
+  { label: "Pengaturan Umum", href: "/dashboard/clinic?tab=settings&sub=general" },
+  { label: "Pengaturan Beranda", href: "/dashboard/clinic?tab=etalase-beranda" },
+  { label: "Pengaturan Tentang", href: "/dashboard/clinic?tab=etalase-tentang" },
 ];
 
 export const CONTENT_SUBMENU: MenuItem["submenu"] = [
@@ -63,12 +64,6 @@ export const MENU: AppMenu = {
     [ROLES.CLINIC]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/clinic" },
       {
-        label: "Etalase",
-        icon: Store,
-        href: "/dashboard/clinic?tab=etalase-beranda",
-        submenu: ETALASE_SUBMENU,
-      },
-      {
         label: "Sistem Booking",
         icon: Calendar,
         href: "/dashboard/clinic?tab=reservasi",
@@ -90,6 +85,7 @@ export const MENU: AppMenu = {
         label: "Pengaturan",
         icon: Settings,
         href: "/dashboard/clinic?tab=settings",
+        submenu: SETTINGS_SUBMENU,
       },
       {
         label: "Panduan Admin",

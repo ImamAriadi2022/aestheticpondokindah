@@ -151,8 +151,6 @@ export default function NewMobileDashboardLayout({
     {
       title: "Konten & CMS",
       items: [
-        { label: "Edit Beranda", icon: LayoutDashboard, href: "/dashboard/clinic?tab=etalase-beranda" },
-        { label: "Edit Tentang", icon: Info, href: "/dashboard/clinic?tab=etalase-tentang" },
         { label: "Pop Up Promo", icon: Sparkles, href: "/dashboard/clinic?tab=content-popup" },
         { label: "Promo", icon: FileText, href: "/dashboard/clinic?tab=content-promo" },
         { label: "Blog", icon: FileText, href: "/dashboard/clinic?tab=content-blog" },
@@ -174,7 +172,9 @@ export default function NewMobileDashboardLayout({
     {
       title: "Pengaturan",
       items: [
-        { label: "Pengaturan Klinik", icon: Settings, href: "/dashboard/clinic?tab=settings" },
+        { label: "Pengaturan Umum", icon: Settings, href: "/dashboard/clinic?tab=settings" },
+        { label: "Pengaturan Beranda", icon: LayoutDashboard, href: "/dashboard/clinic?tab=etalase-beranda" },
+        { label: "Pengaturan Tentang", icon: Info, href: "/dashboard/clinic?tab=etalase-tentang" },
         { label: "Preferensi", icon: UserCircle, href: "/settings" },
       ],
     },

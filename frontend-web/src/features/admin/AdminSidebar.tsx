@@ -50,7 +50,8 @@ export default function AdminSidebar({ activeTab }: Props) {
     "content-download",
   ];
 
-  const etalaseTabs = [
+  const settingsTabs = [
+    "settings",
     "etalase-beranda",
     "etalase-tentang",
   ];
@@ -68,23 +69,6 @@ export default function AdminSidebar({ activeTab }: Props) {
             label: "Dashboard & Analytics",
             icon: LayoutDashboard,
             href: "/dashboard/clinic?tab=dashboard",
-          },
-        ],
-      },
-      {
-        title: "Etalase (CMS Website)",
-        items: [
-          {
-            id: "etalase-beranda",
-            label: "Edit Beranda",
-            icon: Home,
-            href: "/dashboard/clinic?tab=etalase-beranda",
-          },
-          {
-            id: "etalase-tentang",
-            label: "Edit Tentang",
-            icon: Info,
-            href: "/dashboard/clinic?tab=etalase-tentang",
           },
         ],
       },
@@ -201,6 +185,29 @@ export default function AdminSidebar({ activeTab }: Props) {
             label: "Kebijakan & Ketentuan",
             icon: Shield,
             href: "/dashboard/clinic?tab=public-legal",
+          },
+        ],
+      },
+      {
+        title: "Pengaturan",
+        items: [
+          {
+            id: "settings",
+            label: "Pengaturan Umum",
+            icon: Settings,
+            href: "/dashboard/clinic?tab=settings",
+          },
+          {
+            id: "etalase-beranda",
+            label: "Pengaturan Beranda",
+            icon: Home,
+            href: "/dashboard/clinic?tab=etalase-beranda",
+          },
+          {
+            id: "etalase-tentang",
+            label: "Pengaturan Tentang",
+            icon: Info,
+            href: "/dashboard/clinic?tab=etalase-tentang",
           },
         ],
       },
