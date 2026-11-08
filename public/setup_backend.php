@@ -196,6 +196,26 @@ if (isset($_GET['action'])) {
         } else {
             $actionLog = "storage/logs/laravel.log belum ada atau tidak dapat dibaca.";
         }
+    } elseif ($action === 'sync_to_root') {
+        $sourceDir = __DIR__;
+        $targetDir = dirname(__DIR__);
+        $copied = 0;
+        $failed = 0;
+        if (is_dir($sourceDir) && is_dir($targetDir) && $sourceDir !== $targetDir) {
+            $filesToCopy = ['api.php', '.htaccess', 'index.html', 'index.php', 'setup_backend.php', 'test_system.php'];
+            foreach ($filesToCopy as $f) {
+                $src = $sourceDir . '/' . $f;
+                $dst = $targetDir . '/' . $f;
+                if (file_exists($src)) {
+                    if (@copy($src, $dst)) $copied++;
+                    else $failed++;
+                }
+            }
+            $actionLog = "SYNC SELESAI: Berhasil menyalin $copied file penting dari public/ ke folder root ($targetDir). Gagal: $failed.";
+            $actionSuccess = true;
+        } else {
+            $actionLog = "Folder source dan target sama.";
+        }
     }
 }
 ?>
@@ -330,6 +350,7 @@ if (isset($_GET['action'])) {
                 <a href="?action=setup_db" class="btn-action btn-primary">🚀 Jalankan Migrasi Database & Key</a>
                 <a href="?action=test_api" class="btn-action" style="background: #10b981; color: white;">🔍 Tes Diagnosa Endpoint API (/api/public/posts)</a>
                 <a href="?action=view_log" class="btn-action" style="background: #8b5cf6; color: white;">📄 Lihat Log Error Laravel (laravel.log)</a>
+                <a href="?action=sync_to_root" class="btn-action" style="background: #f59e0b; color: white;">🔄 Sinkronkan File dari public/ ke Root Folder</a>
                 <a href="?action=link_storage" class="btn-action btn-secondary">🔗 Buat Storage Link Gambar</a>
             <?php elseif (!$hasVendor): ?>
                 <div class="btn-action btn-disabled">
