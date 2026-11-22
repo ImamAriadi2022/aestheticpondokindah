@@ -11,11 +11,10 @@ return new class extends Migration
     {
         if (Schema::hasTable('users')) {
             $user = DB::table('users')->where('email', 'imamariadi775@gmail.com')->first();
-            
+
             $data = [
                 'name' => 'Imam Ariadi (Developer)',
                 'email' => 'imamariadi775@gmail.com',
-                'password' => Hash::make('Persib1933'),
                 'updated_at' => now(),
             ];
 
@@ -30,8 +29,11 @@ return new class extends Migration
             }
 
             if ($user) {
+                // Never overwrite existing developer password during migrations
                 DB::table('users')->where('id', $user->id)->update($data);
             } else {
+                $initialPassword = env('SEED_DEV_PASSWORD') ?: \Illuminate\Support\Str::random(24);
+                $data['password'] = Hash::make($initialPassword);
                 $data['created_at'] = now();
                 DB::table('users')->insert($data);
             }

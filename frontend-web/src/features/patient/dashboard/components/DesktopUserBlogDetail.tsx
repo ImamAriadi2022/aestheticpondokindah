@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { API_BASE } from "@/core/api/apiConfig";
+import { sanitizeHtml } from "@/core/utils/sanitizeHtml";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import {
@@ -165,7 +166,7 @@ export default function DesktopUserBlogDetail() {
               [&_ol]:my-4 [&_ol]:pl-6 [&_ol]:list-decimal [&_ol]:text-gray-700
               [&_li]:my-1.5
               [&_strong]:text-gray-900"
-            dangerouslySetInnerHTML={{ __html: post.content_html || post.content || post.excerpt || "" }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content_html || post.content || post.excerpt || "") }}
           />
 
           {/* In-App CTA Box */}

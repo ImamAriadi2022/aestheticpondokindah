@@ -21,12 +21,16 @@ class DatabaseSeeder extends Seeder
         $hasRole = Schema::hasColumn('users', 'role');
         $hasStatus = Schema::hasColumn('users', 'status');
 
+        $adminPassword = env('SEED_ADMIN_PASSWORD') ?: \Illuminate\Support\Str::random(20);
+        $userPassword = env('SEED_USER_PASSWORD') ?: \Illuminate\Support\Str::random(20);
+        $devPassword = env('SEED_DEV_PASSWORD') ?: \Illuminate\Support\Str::random(20);
+
         $defaultUsers = [
             [
                 'name' => 'Admin Klinik',
                 'email' => 'clinic@aestheticpondokindah.local',
                 'whatsapp' => '+6281990114949',
-                'password' => 'admin123',
+                'password' => $adminPassword,
                 'role' => 'clinic_admin',
                 'status' => 'active',
             ],
@@ -34,7 +38,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Pengguna',
                 'email' => 'user@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525305',
-                'password' => 'user123',
+                'password' => $userPassword,
                 'role' => 'patient',
                 'status' => 'active',
             ],
@@ -42,26 +46,25 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Imam Ariadi (Developer)',
                 'email' => 'imamariadi775@gmail.com',
                 'whatsapp' => '+62887437525399',
-                'password' => 'Persib1933',
+                'password' => $devPassword,
                 'role' => 'developer',
                 'status' => 'active',
             ],
         ];
 
         foreach ($defaultUsers as $userData) {
-            $updateData = [
+            $baseData = [
                 'name' => $userData['name'],
-                'password' => Hash::make($userData['password']),
             ];
 
             if ($hasWhatsapp) {
-                $updateData['whatsapp'] = $userData['whatsapp'];
+                $baseData['whatsapp'] = $userData['whatsapp'];
             }
             if ($hasRole) {
-                $updateData['role'] = $userData['role'];
+                $baseData['role'] = $userData['role'];
             }
             if ($hasStatus) {
-                $updateData['status'] = $userData['status'];
+                $baseData['status'] = $userData['status'];
             }
             $user = User::query()
                 ->where('email', $userData['email'])
@@ -73,9 +76,13 @@ class DatabaseSeeder extends Seeder
                 ->first();
 
             if ($user) {
-                $user->update(array_merge(['email' => $userData['email']], $updateData));
+                // Never overwrite existing user passwords on re-deploy/re-seed
+                $user->update(array_merge(['email' => $userData['email']], $baseData));
             } else {
-                User::query()->create(array_merge(['email' => $userData['email']], $updateData));
+                User::query()->create(array_merge(
+                    ['email' => $userData['email'], 'password' => Hash::make($userData['password'])],
+                    $baseData
+                ));
             }
         }
 

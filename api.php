@@ -21,9 +21,9 @@ try {
     $app->handleRequest(Request::capture());
 } catch (\Throwable $e) {
     http_response_code(500);
-    header('Content-Type: text/plain; charset=utf-8');
-    echo "API EXCEPTION: " . get_class($e) . "\n";
-    echo "MESSAGE: " . $e->getMessage() . "\n";
-    echo "FILE: " . $e->getFile() . ":" . $e->getLine() . "\n\n";
-    echo "TRACE:\n" . $e->getTraceAsString();
+    header('Content-Type: application/json; charset=utf-8');
+    $debug = filter_var(getenv('APP_DEBUG') ?: false, FILTER_VALIDATE_BOOLEAN);
+    echo json_encode([
+        'message' => $debug ? $e->getMessage() : 'Terjadi kesalahan internal pada server.',
+    ]);
 }

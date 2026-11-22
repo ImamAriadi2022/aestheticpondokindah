@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { sanitizeHtml } from "@/core/utils/sanitizeHtml";
 
 type Props = {
   open: boolean;
@@ -174,7 +175,7 @@ export default function HomeWelcomePopup({ open, onOpenChange }: Props) {
 
               <h3
                 className="text-lg sm:text-2xl font-bold text-[#2C2416] leading-tight"
-                dangerouslySetInnerHTML={{ __html: headline || "Promo Spesial Klinik" }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(headline || "Promo Spesial Klinik") }}
               />
 
               <p className="text-xs sm:text-sm text-[#6B5E4F] leading-relaxed whitespace-pre-wrap">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
+import { sanitizeHtml } from "@/core/utils/sanitizeHtml";
 import {
   Scale,
   FileText,
@@ -352,7 +353,7 @@ export default function TermsOfServicePage() {
               ) : (
                 <div
                   className="terms-rendered-content text-[#3A332A] text-xs sm:text-sm leading-relaxed space-y-4"
-                  dangerouslySetInnerHTML={{ __html: bodyHtml }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
                 />
               )}
 

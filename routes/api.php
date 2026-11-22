@@ -100,11 +100,11 @@ Route::get('/wilayah/kelurahan/{districtId}', [WilayahController::class, 'villag
 // 2. AUTHENTICATION ROUTES (SHARED ACROSS ALL ACTORS)
 // =========================================================================
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [RegistrationController::class, 'register']);
-    Route::post('/otp/send', [OtpController::class, 'sendOtp']);
-    Route::post('/otp/verify', [OtpController::class, 'verifyOtp']);
-    Route::post('/google', [GoogleAuthController::class, 'handleGoogleAuth']);
+    Route::middleware('throttle:10,1')->post('/login', [AuthController::class, 'login']);
+    Route::middleware('throttle:10,1')->post('/register', [RegistrationController::class, 'register']);
+    Route::middleware('throttle:10,1')->post('/otp/send', [OtpController::class, 'sendOtp']);
+    Route::middleware('throttle:10,1')->post('/otp/verify', [OtpController::class, 'verifyOtp']);
+    Route::middleware('throttle:15,1')->post('/google', [GoogleAuthController::class, 'handleGoogleAuth']);
     Route::get('/google/redirect', [GoogleAuthController::class, 'redirectToGoogle']);
     Route::get('/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
     Route::middleware('auth:sanctum')->post('/google/link', [GoogleAuthController::class, 'linkGoogle']);
@@ -515,11 +515,19 @@ Route::get('/posts', [ContentController::class, 'posts']);
 Route::get('/posts/{slug}', [ContentController::class, 'postBySlug']);
 
 // Global CORS preflight handler for mobile native & web clients
-Route::options('/{any}', function () {
+Route::options('/{any}', function (\Illuminate\Http\Request $request) {
+    $origin = (string) $request->header('Origin', '');
+    $allowedOrigins = (array) config('cors.allowed_origins', []);
+    $allowedOrigin = in_array($origin, $allowedOrigins, true)
+        || (bool) preg_match('#^https://([a-z0-9-]+\.)?aestheticpondokindah\.com$#i', $origin)
+        ? $origin
+        : 'https://aestheticpondokindah.com';
+
     return response('', 204)
-        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Origin', $allowedOrigin)
+        ->header('Vary', 'Origin')
         ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
-        ->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-App-Version, X-Client, *')
+        ->header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-App-Version, X-Client, X-XSRF-TOKEN')
         ->header('Access-Control-Max-Age', '86400');
 })->where('any', '.*');
 

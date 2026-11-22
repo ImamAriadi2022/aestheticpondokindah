@@ -33,6 +33,7 @@ export const SETTINGS_SUBMENU: MenuItem["submenu"] = [
 ];
 
 export const CONTENT_SUBMENU: MenuItem["submenu"] = [
+  { label: "Katalog Layanan", href: "/dashboard/clinic?tab=public-services" },
   { label: "Blog", href: "/dashboard/clinic?tab=content-blog" },
   { label: "Promo", href: "/dashboard/clinic?tab=content-promo" },
   { label: "Pop Up", href: "/dashboard/clinic?tab=content-popup" },

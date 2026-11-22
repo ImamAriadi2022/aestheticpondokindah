@@ -53,7 +53,10 @@ export default function ServicesManagePage() {
   };
 
   useEffect(() => {
-    fetchServices();
+    const timer = setTimeout(() => {
+      fetchServices();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [search]);
 
   // Extract unique categories

@@ -27,7 +27,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Yulita Dora',
                 'email' => 'yulita.dora@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525310',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Aesthetic Dentistry (Veneers)',
@@ -36,7 +35,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Della Sparringa',
                 'email' => 'della.sparringa@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525311',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Aesthetic Dentistry & Pediatric Dentistry',
@@ -45,7 +43,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Ryan Jusuf',
                 'email' => 'ryan.jusuf@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525312',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Aesthetic Dentistry & Pediatric Dentistry',
@@ -54,7 +51,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Nona Lolita T',
                 'email' => 'nona.lolita@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525313',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Aesthetic Dentistry',
@@ -63,7 +59,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Melati Putri, Sp. Pros',
                 'email' => 'melati.putri@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525314',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Prosthodontist, Full Mouth Rehabilitations, Aesthetic Dentistry',
@@ -72,7 +67,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Shilvy',
                 'email' => 'shilvy@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525315',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Aesthetic Dentistry & Pediatric Dentistry',
@@ -81,7 +75,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Achmad Riwandy',
                 'email' => 'achmad.riwandy@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525316',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Full Denture, Partial Denture, Prosthodontist, Full Mouth Rehabilitations',
@@ -90,7 +83,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Ramayani Ramli',
                 'email' => 'ramayani.ramli@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525317',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Cosmetic Dentistry',
@@ -99,7 +91,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Sharah Syam, Sp. Ort',
                 'email' => 'sharah.syam@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525318',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Orthodontist',
@@ -108,7 +99,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Eric Sulistio, Sp. Perio',
                 'email' => 'eric.sulistio@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525319',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Periodontist, Full Mouth Rehabilitation, Crown Lengthening, Frenectomy',
@@ -117,7 +107,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Pramodanti Jiwanakusuma, Sp.KG',
                 'email' => 'pramodanti.jiwanakusuma@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525320',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Root Canal Treatment & Conservation',
@@ -126,7 +115,6 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Riesta Paluvi, Sp.KG',
                 'email' => 'riesta.paluvi@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525321',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Oral Examination, Oral Health Education, Preventive Restoration, Root Canal Treatment',
@@ -135,17 +123,17 @@ class DoctorSeeder extends Seeder
                 'name' => 'drg. Yudy Ardila Utomo, Sp.BMM, Subsp.I.DM.(K)',
                 'email' => 'yudy.ardila@aestheticpondokindah.local',
                 'whatsapp' => '+62887437525322',
-                'password' => 'doctor123',
                 'role' => 'doctor',
                 'status' => 'active',
                 'job' => 'Oral Surgeon Consultant',
             ],
         ];
 
+        $defaultDoctorPassword = env('SEED_DOCTOR_PASSWORD') ?: \Illuminate\Support\Str::random(20);
+
         foreach ($doctors as $doctorData) {
             $updateData = [
                 'name' => $doctorData['name'],
-                'password' => Hash::make($doctorData['password']),
             ];
 
             if ($hasWhatsapp) {
@@ -157,6 +145,9 @@ class DoctorSeeder extends Seeder
             if ($hasStatus) {
                 $updateData['status'] = $doctorData['status'];
             }
+            if ($hasJob && !empty($doctorData['job'])) {
+                $updateData['job'] = $doctorData['job'];
+            }
             $user = User::query()
                 ->where('email', $doctorData['email'])
                 ->orWhere(function ($q) use ($hasWhatsapp, $doctorData) {
@@ -167,9 +158,16 @@ class DoctorSeeder extends Seeder
                 ->first();
 
             if ($user) {
+                // Never overwrite existing doctor passwords during re-deploy/re-seed
                 $user->update(array_merge(['email' => $doctorData['email']], $updateData));
             } else {
-                User::query()->create(array_merge(['email' => $doctorData['email']], $updateData));
+                User::query()->create(array_merge(
+                    [
+                        'email' => $doctorData['email'],
+                        'password' => Hash::make($defaultDoctorPassword),
+                    ],
+                    $updateData
+                ));
             }
         }
     }

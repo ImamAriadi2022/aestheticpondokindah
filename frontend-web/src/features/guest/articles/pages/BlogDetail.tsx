@@ -4,6 +4,7 @@ import Footer from "@/core/layouts/Footer";
 import { Calendar, Clock, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/core/api/apiConfig";
+import { sanitizeHtml } from "@/core/utils/sanitizeHtml";
 
 export default function BlogDetailPage() {
   const { slug } = useParams();
@@ -97,7 +98,7 @@ export default function BlogDetailPage() {
                     [&_ol]:my-4 [&_ol]:pl-6 [&_ol]:list-decimal [&_ol]:text-brand-warm-gray
                     [&_li]:my-1.5
                     [&_strong]:text-brand-charcoal"
-                  dangerouslySetInnerHTML={{ __html: post.content_html || post.content || "" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content_html || post.content || "") }}
                 />
 
                 <div className="mt-12 rounded-2xl bg-brand-cream ring-1 ring-foreground/10 p-6 sm:p-8">

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
 import { Button } from "@/shared/ui/button";
 import { updateMetaTags, resetMetaTags } from "@/features/guest/seo/services/metaTags";
+import { sanitizeHtml } from "@/core/utils/sanitizeHtml";
 
 const WA_NUMBER = "6281990114949";
 
@@ -134,7 +135,7 @@ export default function PromoDetailPage() {
                     [&_li]:my-1.5
                     [&_strong]:text-brand-charcoal"
                   dangerouslySetInnerHTML={{
-                    __html: promo.content_html || promo.description || "",
+                    __html: sanitizeHtml(promo.content_html || promo.description || ""),
                   }}
                 />
 

@@ -159,6 +159,12 @@ class UserController extends Controller
             return User::query()
                 ->where('role', 'doctor')
                 ->where('status', 'active')
+                ->with(['doctorSchedules' => function ($q) {
+                    $q->where('is_active', true)
+                      ->whereDate('date', '>=', now()->toDateString())
+                      ->orderBy('date')
+                      ->orderBy('time_range');
+                }])
                 ->orderBy('id')
                 ->get()
                 ->map(function (User $u) {
@@ -169,6 +175,18 @@ class UserController extends Controller
 
                     $exp = (int) ($u->experience_years ?: 5);
 
+                    $schedules = $u->doctorSchedules
+                        ->take(6)
+                        ->map(fn ($s) => [
+                            'id' => (string) $s->id,
+                            'date' => optional($s->date)->format('Y-m-d'),
+                            'time_range' => $s->time_range,
+                            'location' => $s->location ?: ($u->primary_branch ?: 'Aesthetic Pondok Indah Main Branch'),
+                            'available_slots' => max(0, (int) ($s->total_slots ?? 0) - (int) ($s->booked_slots ?? 0)),
+                        ])
+                        ->values()
+                        ->all();
+
                     return [
                         'id' => (string) $u->id,
                         'userId' => (string) $u->id,
@@ -176,12 +194,15 @@ class UserController extends Controller
                         'specialization' => $u->specialization ?: ($u->job ?: 'Dokter Gigi Spesialis'),
                         'university' => $u->education ?: 'Universitas Indonesia',
                         'education' => $u->education ?: 'Universitas Indonesia',
+                        'str_number' => $u->str_number,
+                        'sip_number' => $u->sip_number,
                         'experienceYears' => $exp,
                         'experience_years' => $exp,
                         'photo' => $photo,
                         'avatar' => $photo,
                         'bio' => $u->bio,
                         'primary_branch' => $u->primary_branch ?: 'Aesthetic Pondok Indah Main Branch',
+                        'schedules' => $schedules,
                     ];
                 })
                 ->values()

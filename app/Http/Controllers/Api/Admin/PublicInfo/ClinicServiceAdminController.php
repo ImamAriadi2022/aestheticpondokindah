@@ -16,8 +16,11 @@ class ClinicServiceAdminController extends Controller
 
         $search = trim((string) $request->query('search', ''));
         if ($search !== '') {
-            $query->where('title', 'like', "%{$search}%")
-                  ->orWhere('intro', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('intro', 'like', "%{$search}%")
+                  ->orWhere('category', 'like', "%{$search}%");
+            });
         }
 
         return response()->json($query->get());

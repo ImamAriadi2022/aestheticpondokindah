@@ -1,116 +1,91 @@
+import { useEffect, useState } from "react";
 import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
-import DoctorCard from "@/features/guest/doctors/components/DoctorCard";
-import { Award, GraduationCap, MessageCircle } from "lucide-react";
+import DoctorCard, { type Doctor } from "@/features/guest/doctors/components/DoctorCard";
+import { CLINIC_DOCTORS } from "@/features/guest/doctors/services/doctorsService";
+import { API_BASE } from "@/core/api/apiConfig";
+import { Award, GraduationCap, MessageCircle, Search } from "lucide-react";
 
-const doctors = [
-  {
-    id: 1,
-    name: "drg. Yulita Dora",
-    role: "Aesthetic Dentistry (Veneers)",
-    image: "/dokter/drg. Yulita Dora.webp",
-    education: "Faculty of Dentistry, Trisakti University",
-    description: "Spesialis dalam perawatan estetika gigi dan veneer untuk senyum sempurna.",
-  },
-  {
-    id: 2,
-    name: "drg. Della Sparringa",
-    role: "Aesthetic Dentistry & Pediatric Dentistry",
-    image: "/dokter/drg. Della Sparringa.webp",
-    education: "Faculty of Dentistry, Airlangga University",
-    description: "Ahli dalam perawatan estetika gigi dan kesehatan gigi anak.",
-  },
-  {
-    id: 3,
-    name: "drg. Ryan Jusuf",
-    role: "Aesthetic Dentistry & Pediatric Dentistry",
-    image: "/dokter/drg. Ryan Jusuf.webp",
-    education: "Faculty of Dentistry, Andalas University",
-    description: "Spesialis estetika dan perawatan gigi anak dengan pendekatan gentle.",
-  },
-  {
-    id: 4,
-    name: "drg. Nona Lolita T",
-    role: "Aesthetic Dentistry",
-    image: "/dokter/drg. Nona Lolita T.webp",
-    education: "Faculty of Dentistry, Airlangga University",
-    description: "Fokus pada perawatan estetika gigi untuk senyum yang menawan.",
-  },
-  {
-    id: 5,
-    name: "drg. Melati Putri, Sp. Pros",
-    role: "Prosthodontist, Full Mouth Rehabilitations, Aesthetic Dentistry",
-    image: "/dokter/drg. Melati Putri, Sp. Pros.webp",
-    education: "Faculty of Dentistry, Trisakti University & Prosthodontics Specialist Faculty of Dentistry, University of Indonesia",
-    description: "Spesialis rehabilitasi mulut penuh dan estetika gigi tingkat lanjut.",
-  },
-  {
-    id: 6,
-    name: "drg. Shilvy",
-    role: "Aesthetic Dentistry & Pediatric Dentistry",
-    image: "/dokter/drg. Shilvy.webp",
-    education: "Faculty of Dentistry, University of Indonesia & Professional Doctor of Dentistry Education",
-    description: "Kombinasi keahlian estetika dan perawatan gigi anak yang komprehensif.",
-  },
-  {
-    id: 7,
-    name: "drg. Achmad Riwandy",
-    role: "Full Denture, Partial Denture, Prosthodontist, Full Mouth Rehabilitations",
-    image: "/dokter/drg. Achmad Riwandy.webp",
-    education: "Faculty of Dentistry, Lambung Mangkurat & Prosthodontics Specialist Faculty of Dentistry, University of Indonesia",
-    description: "Ahli dalam pembuatan gigi tiruan lengkap dan rehabilitasi mulut kompleks.",
-  },
-  {
-    id: 8,
-    name: "drg. Ramayani Ramli",
-    role: "Cosmetic Dentistry",
-    image: "/dokter/drg. Ramayani Ramli.webp",
-    education: "Faculty of Dentistry, Hasanuddin University",
-    description: "Spesialis dalam perawatan kosmetik gigi untuk tampilan yang memukau.",
-  },
-  {
-    id: 9,
-    name: "drg. Sharah Syam, Sp. Ort",
-    role: "Orthodontist",
-    image: "/dokter/drg. Sharah Syam, Sp. Ort.webp",
-    education: "Faculty of Dentistry, University of Indonesia & Orthodontist Specialist Faculty of Dentistry, University of Indonesia",
-    description: "Ahli dalam koreksi gigitan dan perawatan kawat gigi untuk semua usia.",
-  },
-  {
-    id: 10,
-    name: "drg. Eric Sulistio, Sp. Perio",
-    role: "Periodontist, Full Mouth Rehabilitation, Crown Lengthening, Frenectomy",
-    image: "/dokter/drg. Eric Sulistio, Sp. Perio.webp",
-    education: "Faculty of Dentistry, University Pasundan Bandung & Periodontist Specialist Faculty of Dentistry, University of Indonesia",
-    description: "Spesialis perawatan gusi dan jaringan pendukung gigi tingkat lanjut.",
-  },
-  {
-    id: 11,
-    name: "drg. Pramodanti Jiwanakusuma, Sp.KG",
-    role: "Root Canal Treatment & Conservation",
-    image: "/dokter/drg. Pramodanti Jiwanakusuma, Sp.KG.webp",
-    education: "Faculty of Dentistry, University of Indonesia & Dental Conservation Specialist Faculty of Dentistry, University of Indonesia",
-    description: "Ahli dalam perawatan saluran akar dan konservasi gigi.",
-  },
-  {
-    id: 12,
-    name: "drg. Riesta Paluvi, Sp.KG",
-    role: "Oral Examination, Oral Health Education, Preventive Restoration, Resin infiltration, in office / home / walking bleaching, Root Canal Treatment, Micro Dentistry Services, Microsurgery endodontic, Retreatment endodontic, minimally invasive restoration",
-    image: "/dokter/drg. Riesta Paluvi, Sp.KG.webp",
-    education: "Bachelor of Dentistry, Faculty of Dentistry Trisakti University, Profession Dentistry Program, Faculty of Dentistry Trisakti University, Postgraduate Dental Specialist of Conservative Dentistry, Faculty of Dentistry Trisakti University",
-    description: "Spesialis konservasi gigi komprehensif dengan teknik mikroskopik canggih.",
-  },
-  {
-    id: 13,
-    name: "drg. Yudy Ardila Utomo, Sp.BMM, Subsp.I.DM.(K)",
-    role: "Oral Surgeon Consultant",
-    image: "/dokter/drg. Yudy Ardila Utomo, Sp.BMM, Subsp.I.DM.(K).webp",
-    education: "Bachelor of Dentistry, Faculty of Dentistry Airlangga University, Program in Dental Surgery Specialty (PPDGS) in Oral and Maxillofacial Surgery, University of Indonesia, Oral and Maxillofacial Surgeon Faculty of Dentistry, University of Indonesia, Doctor of Dental Medicine, Faculty of Dentistry University of Indonesia",
-    description: "Konsultan ahli bedah mulut dan maksilofasial untuk kasus kompleks.",
-  },
-];
+const FALLBACK_DOCTORS: Doctor[] = CLINIC_DOCTORS.map((d) => ({
+  id: d.id,
+  name: d.name,
+  role: d.role,
+  image: d.image,
+  education: d.education,
+  description: d.description,
+}));
 
 export default function DoctorsPage() {
+  const [doctors, setDoctors] = useState<Doctor[]>(() => {
+    try {
+      const cached = localStorage.getItem("apig_public_cached_doctors");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // Ignore storage error
+    }
+    return FALLBACK_DOCTORS;
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${API_BASE}/public/doctors`, {
+      headers: { Accept: "application/json" },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (!active || !payload) return;
+        const list = Array.isArray(payload) ? payload : payload.doctors || payload.data || [];
+        if (Array.isArray(list) && list.length > 0) {
+          const mapped: Doctor[] = list.map((d: any) => ({
+            id: d.id ?? d.userId,
+            name: d.name || "Dokter Spesialis",
+            role: d.specialization || d.job || "Dokter Gigi Spesialis",
+            image: d.photo || d.avatar || `/dokter/${d.name}.webp`,
+            education: d.education || d.university || "Universitas Indonesia",
+            description:
+              d.bio ||
+              `Dokter gigi berpengalaman di bidang ${d.specialization || "perawatan estetika gigi"}.`,
+            strNumber: d.str_number ?? null,
+            sipNumber: d.sip_number ?? null,
+            experienceYears: d.experience_years ?? d.experienceYears ?? undefined,
+            primaryBranch: d.primary_branch ?? null,
+            schedules: Array.isArray(d.schedules) ? d.schedules : [],
+          }));
+          setDoctors(mapped);
+          try {
+            localStorage.setItem("apig_public_cached_doctors", JSON.stringify(mapped));
+          } catch {
+            // Ignore quota error
+          }
+        }
+      })
+      .catch(() => {
+        // Keep cached/fallback doctors gracefully
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filteredDoctors = doctors.filter((doc) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      doc.name.toLowerCase().includes(q) ||
+      doc.role.toLowerCase().includes(q) ||
+      doc.education.toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -131,6 +106,18 @@ export default function DoctorsPage() {
               <p className="text-base sm:text-lg text-brand-warm-gray font-body leading-relaxed">
                 Dipimpin oleh tim dokter gigi spesialis berpengalaman dengan dedikasi tinggi untuk memberikan perawatan gigi terbaik dan hasil estetika yang natural.
               </p>
+
+              {/* Search Doctor */}
+              <div className="mt-8 max-w-md mx-auto relative">
+                <Search className="w-4 h-4 text-[#8A7B6B] absolute left-4 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari nama dokter atau spesialisasi..."
+                  className="w-full h-11 pl-11 pr-4 rounded-2xl bg-white border border-[#E8DFC8] text-sm text-[#2C2416] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#C59E3F]"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -138,11 +125,24 @@ export default function DoctorsPage() {
         {/* Doctors Grid */}
         <section className="py-14 sm:py-20 bg-background">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-6">
-              {doctors.map((doctor) => (
-                <DoctorCard key={doctor.id} doctor={doctor} />
-              ))}
+            <div className="flex items-center justify-between mb-6 text-xs sm:text-sm text-[#7A6E60]">
+              <span>
+                Menampilkan <strong className="text-[#2C2416]">{filteredDoctors.length}</strong> dokter aktif
+              </span>
+              {loading && <span className="text-[#A37E28]">Menyinkronkan jadwal terbaru...</span>}
             </div>
+            {filteredDoctors.length === 0 ? (
+              <div className="text-center py-12 bg-[#FAF8F5] rounded-2xl border border-[#F0E6D3]">
+                <p className="text-sm font-semibold text-[#2C2416]">Dokter tidak ditemukan</p>
+                <p className="text-xs text-[#7A6E60] mt-1">Coba ubah kata kunci pencarian Anda.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                {filteredDoctors.map((doctor) => (
+                  <DoctorCard key={doctor.id} doctor={doctor} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -152,7 +152,7 @@ export default function DoctorsPage() {
             <div className="text-center max-w-2xl mx-auto mb-16">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-charcoal mb-5 sm:mb-6">
                 Menggunakan Peralatan Modern
-                <span className="text-gradient-gold"> & Berstandar Internasional</span>
+                <span className="text-gradient-gold"> &amp; Berstandar Internasional</span>
               </h2>
               <p className="text-base sm:text-lg text-brand-warm-gray font-body">
                 Tim dokter kami menggunakan teknologi terbaru dan teknik internasional untuk memberikan hasil terbaik.
@@ -179,7 +179,7 @@ export default function DoctorsPage() {
                   <MessageCircle className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-lg font-bold text-brand-charcoal mb-2">Pendekatan Personal</h3>
-                <p className="text-sm text-brand-warm-gray font-body">Setiap pasien mendapat perhatian individual untuk hasil yang optimal.</p>
+                <p className="text-sm text-brand-warm-gray font-body">Konsultasi mendalam untuk memahami kebutuhan dan harapan setiap pasien.</p>
               </div>
             </div>
           </div>

@@ -173,12 +173,50 @@ export default function ServiceEditModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">URL / Jalur Gambar</Label>
-              <Input
-                value={image}
-                onChange={(e) => setImage(e.target.value)}
-                placeholder="cth: /layanan/Dental Whitening.png"
-              />
+              <Label className="text-xs font-semibold">Gambar Layanan (Upload atau URL)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={image.startsWith("data:image") ? "[Gambar siap diunggah]" : image}
+                  onChange={(e) => setImage(e.target.value)}
+                  placeholder="cth: /layanan/Dental Whitening.webp"
+                  className="flex-1"
+                />
+                <label className="inline-flex items-center justify-center px-3 h-10 rounded-md border border-[#C9A24A] bg-[#FAF4E8] text-[#8A6B2B] text-xs font-semibold cursor-pointer hover:bg-[#F3E6CA] transition-colors shrink-0">
+                  Pilih File
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        if (typeof reader.result === "string") {
+                          setImage(reader.result);
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+              </div>
+              {image && (
+                <div className="mt-1.5 flex items-center gap-2">
+                  <img
+                    src={image}
+                    alt="Preview layanan"
+                    className="w-12 h-12 rounded-lg object-cover border border-[#E8DFC8]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setImage("")}
+                    className="text-[11px] text-red-600 hover:underline font-medium"
+                  >
+                    Hapus Gambar
+                  </button>
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1.5">
