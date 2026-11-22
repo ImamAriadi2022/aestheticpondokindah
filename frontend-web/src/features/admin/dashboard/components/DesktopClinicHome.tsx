@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Sparkline from "@/shared/ui/Sparkline";
+import TrafficUtmAnalyticsSection from "@/features/admin/dashboard/components/TrafficUtmAnalyticsSection";
 
 export default function DesktopClinicHome({
   session,
@@ -91,7 +92,10 @@ export default function DesktopClinicHome({
       iconBg: "bg-[#F5E6C8]",
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
-      trendValue: "15%",
+      trendValue:
+        typeof analyticsData?.previous_period?.growth_percentage === "number"
+          ? `${analyticsData.previous_period.growth_percentage >= 0 ? "+" : ""}${analyticsData.previous_period.growth_percentage}%`
+          : "Live",
       trendLabel: "Trafik website",
       sparklineData: visitorSparkline,
     },
@@ -200,6 +204,9 @@ export default function DesktopClinicHome({
           ))}
         </div>
       </div>
+
+      {/* Traffic & UTM Acquisition Overview */}
+      <TrafficUtmAnalyticsSection />
 
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

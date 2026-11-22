@@ -10,6 +10,7 @@ class PageVisit extends Model
 
     protected $fillable = [
         'visitor_id',
+        'session_id',
         'source',
         'medium',
         'campaign',

@@ -283,7 +283,12 @@ export default function ClinicDashboardPage() {
     if (activeTab === "settings") fetchClinicSettings();
   }, [activeTab]);
 
-  const visitorsCount = analyticsData?.totals?.visitors ?? analyticsData?.total_visitors ?? 0;
+  const visitorsCount =
+    analyticsData?.totals?.visits ??
+    analyticsData?.total_visits ??
+    analyticsData?.totals?.visitors ??
+    analyticsData?.total_visitors ??
+    0;
 
   const stats = [
     { title: "Total Pengguna", value: users.length, subtitle: "Pengguna terdaftar" },

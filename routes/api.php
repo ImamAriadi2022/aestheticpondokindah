@@ -123,6 +123,7 @@ Route::prefix('admin')->group(function () {
     Route::middleware(['auth:sanctum', 'role:clinic_admin,admin,developer'])->group(function () {
         // Analytics
         Route::get('/analytics/summary', [AnalyticsAdminController::class, 'summary']);
+        Route::get('/analytics/overview', [AnalyticsAdminController::class, 'overview']);
 
         // User / Patient Management
         Route::get('/users', [UserController::class, 'index']);
@@ -464,7 +465,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // =========================================================================
 Route::prefix('public')->group(function () {
     // Analytics
-    Route::post('/analytics/visit', [AnalyticsVisitController::class, 'store']);
+    Route::middleware('throttle:60,1')->post('/analytics/visit', [AnalyticsVisitController::class, 'store']);
 
     // Guest Consultations
     Route::post('/consultations', [GuestConsultationController::class, 'store']);
@@ -504,6 +505,8 @@ Route::prefix('public')->group(function () {
 });
 
 // Top-level Public Aliases (direct without /public prefix)
+Route::middleware('throttle:60,1')->post('/analytics/track', [AnalyticsVisitController::class, 'store']);
+Route::middleware(['auth:sanctum', 'role:clinic_admin,admin,developer'])->get('/analytics/overview', [AnalyticsAdminController::class, 'overview']);
 Route::get('/doctors', [UserController::class, 'publicDoctors']);
 Route::get('/specializations', [UserController::class, 'specializations']);
 Route::get('/services', [ClinicServicePublicController::class, 'index']);

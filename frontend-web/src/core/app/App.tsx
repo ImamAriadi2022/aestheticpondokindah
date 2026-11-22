@@ -152,14 +152,33 @@ function RoleAwareDownload() {
   return isDoctorSession() ? <DoctorDownloadPage /> : <DownloadPage />;
 }
 
+const EXCLUDED_TRACKING_PREFIXES = [
+  "/dashboard",
+  "/admin",
+  "/doctor",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/docs-api",
+];
+
 function VisitTracker() {
   const location = useLocation();
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const utmSource = url.searchParams.get("utm_source");
-    const utmMedium = url.searchParams.get("utm_medium");
-    const utmCampaign = url.searchParams.get("utm_campaign");
+    const pathname = (location.pathname || "/").toLowerCase();
+    const isInternalRoute = EXCLUDED_TRACKING_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
+    if (isInternalRoute) {
+      return;
+    }
+
+    const params = new URLSearchParams(location.search);
+    const utmSource = params.get("utm_source");
+    const utmMedium = params.get("utm_medium");
+    const utmCampaign = params.get("utm_campaign");
 
     trackVisit({
       landingPage: location.pathname || "/",
@@ -168,7 +187,7 @@ function VisitTracker() {
       utmMedium,
       utmCampaign,
     }).catch(() => {});
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   return null;
 }
