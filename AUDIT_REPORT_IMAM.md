@@ -5,7 +5,7 @@
 **Tanggal Pembaruan Pasca-Perbaikan:** 22 November 2026  
 **PIC Monitoring:** Imam  
 **Ruang Lingkup:** 7 Poin Monitoring Pemeliharaan & Kesiapan Produksi (Poin 5, 6, 7, 8, 10, 11, 12)  
-**Metode:** Inspeksi langsung terhadap source code aktual, konfirmasi penyelesaian manual aplikasi Android oleh PIC, serta verifikasi build produksi (`prebuild`, `tsc -b`, `vite build`, `postbuild`).
+**Metode:** Inspeksi langsung terhadap source code aktual, konfirmasi penyelesaian manual penyesuaian tautan unduh aplikasi pasien (Android) oleh PIC, serta verifikasi build produksi (`prebuild`, `tsc -b`, `vite build`, `postbuild`).
 
 ---
 
@@ -14,7 +14,7 @@
 ### Tech Stack Terdeteksi
 - **Backend & Database:** Laravel 12 (`laravel/framework ^12.0`), PHP 8.2 / 8.3 (Plesk), MySQL (`aestheti_imamv2`), Laravel Sanctum (`^4.3`), `minishlink/web-push` (`^11.0`), `midtrans/midtrans-php` (`^2.6`), Zesta WhatsApp API Gateway.
 - **Frontend Web (SPA + PWA):** React 19.0.0, TypeScript 5.8.3, Vite 7.1.3, React Router 7.5.3, Tailwind CSS 3.4.17, Radix UI, Lucide Icons, TipTap Rich Editor, Recharts (charting), DOMPurify (XSS sanitization), Service Worker (`public/sw.js` v2.1.0) & Web App Manifest (`public/manifest.json`).
-- **Mobile Native App:** React Native 0.81.5 + Expo 54 + Expo Router 6 (`mobile-native/`) — **telah diselesaikan & diverifikasi secara manual oleh PIC untuk platform Android**.
+- **Mobile Native App & Tautan Unduh Aplikasi:** React Native 0.81.5 + Expo 54 + Expo Router 6 (`mobile-native/`) & manajemen tautan unduh aplikasi (`DownloadAppEditor.tsx`) — **tautan unduh aplikasi telah dirapikan secara manual oleh PIC (menghapus duplikasi dari 2 link menjadi 1 link aktif)**.
 - **Deployment Target:** Plesk (Apache/Nginx reverse proxy) dengan webroot `public/` dan otomatisasi `deploy.sh`.
 
 ### Skor Kesiapan Keseluruhan (*Overall Readiness Score*)
@@ -25,7 +25,7 @@
 | :--- | :---: | :---: | :--- |
 | Poin 5 — Informasi Layanan | 78% | **95%** | Menu sidebar desktop Katalog Layanan ditambahkan, file upload picker WebP aktif, query search & debounce dirapikan. |
 | Poin 6 — Profil Dokter & Kompetensi | 60% | **95%** | Halaman publik `/doctors` kini 100% dinamis dari DB, menampilkan STR/SIP, pengalaman, jadwal praktik aktif, & menghapus data dummy fellowship. |
-| Poin 7 — Aplikasi Pasien | 82% | **95%** | Aplikasi Android telah diselesaikan secara manual oleh PIC; portal web pasien, PWA (`sw.js` v2.1.0 & `manifest.json`), booking, konsultasi, membership, dan pengaduan berjalan lengkap. |
+| Poin 7 — Aplikasi Pasien | 82% | **95%** | Tautan download aplikasi pasien telah dirapikan secara manual oleh PIC (dari 2 link menjadi 1 link aktif); portal web pasien, PWA (`sw.js` v2.1.0 & `manifest.json`), booking, konsultasi, membership, dan pengaduan berjalan lengkap. |
 | Poin 8 — Performa Website | 62% | **94%** | `public/assets/` turun dari **43.306 file (714,63 MB)** menjadi **150 file (3,14 MB)** (`-99,56%`), chunk `ClinicDashboard` turun dari 1,35 MB ke 521 KB, & browser caching/gzip `.htaccess` aktif. |
 | Poin 10 — Keamanan Data | 45% | **90%** | Stack trace dimatikan, password hardcode/overwrite seeder dihapus, rate limit auth aktif, CORS diperketat, login dokter nonaktif ditutup, & 5 celah XSS disanitasi DOMPurify. *(OTP send & `.htaccess` operasional dibiarkan sementara sesuai arahan PIC).* |
 | Poin 11 — Tindak Lanjut Pasien | 65% | **92%** | EMR dokter, notifikasi in-app/WebPush, WA konfirmasi & selesai via Zesta, tiket pengaduan, serta scheduler otomatis pengingat H-1 & follow-up H+3 (`appointments:send-reminders`) telah tersedia lengkap. |
@@ -39,7 +39,7 @@
 | :---: | :--- | :--- | :---: | :---: | :--- |
 | **5** | **Informasi layanan** | Selesai | Imam | 7 hari kerja | Data layanan publik dinamis dari DB (`clinic_services`), menu **Katalog Layanan** tersedia di sidebar desktop Admin (`menu.ts`), form admin mendukung file upload gambar otomatis WebP (`ServiceEditModal.tsx`), serta pencarian sudah dirapikan dengan debounce 300ms. |
 | **6** | **Profil dokter & Kompetensi** | Selesai | Imam | 7 hari kerja | Halaman publik `/doctors` (`Doctors.tsx`) tersinkron langsung ke `GET /api/public/doctors` dengan pencarian & eager-loading jadwal praktik. Modal `DoctorCard.tsx` menampilkan kredensial **STR/SIP**, pengalaman, profil singkat, dan **Jadwal Praktik Aktif**. |
-| **7** | **Aplikasi pasien** | Selesai | Imam | 10 hari kerja | Aplikasi pasien Android telah diselesaikan secara manual oleh PIC. Portal web pasien & PWA (`sw.js` v2.1.0 & `manifest.json` bebas bug 404/scheme) mencakup registrasi, login, Google OAuth, manajemen profil, booking + E-Ticket, konsultasi, membership, dan pengaduan. |
+| **7** | **Aplikasi pasien** | Selesai | Imam | 10 hari kerja | Tautan unduh aplikasi pasien telah dirapikan secara manual oleh PIC (menghapus 1 link duplikat dari awalnya 2 link menjadi 1 link aktif). Portal web pasien & PWA (`sw.js` v2.1.0 & `manifest.json` bebas bug 404/scheme) mencakup registrasi, login, Google OAuth, manajemen profil, booking + E-Ticket, konsultasi, membership, dan pengaduan. |
 | **8** | **Performa website** | Selesai | Imam | 10 hari kerja | Bloat `public/assets/` turun **99,56%** (dari 43.306 file / 714,63 MB menjadi **150 file / 3,14 MB**) via `prebuild.mjs`, chunk `ClinicDashboard` turun 70,8% gzip (352 KB -> 102 KB) via `manualChunks`, gambar sudah WebP (maks. 168 KB), serta `mod_expires` & `mod_deflate` aktif di `public/.htaccess`. |
 | **10** | **Keamanan data** | Selesai | Imam | 10 hari kerja | Stack trace produksi di `api.php`/`index.php` dimatikan, password hardcode & overwrite pada seeder/migrasi dihapus, rate limiting `throttle` auth dipasang, CORS diperketat ke domain resmi, blokir login dokter nonaktif diperbaiki, dan seluruh 5 `dangerouslySetInnerHTML` disanitasi **DOMPurify**. *(Catatan PIC: `OtpController::sendOtp` & akses `.htaccess` tool maintenance dibiarkan sesuai kebutuhan saat ini).* |
 | **11** | **Tindak lanjut pasien** | Selesai | Imam | 7 hari kerja | EMR dokter (SOAP, diagnosa ICD-10, prosedur, odontogram), notifikasi in-app/WebPush, pesan WA otomatis saat booking dikonfirmasi & perawatan selesai via Zesta, sistem pengaduan, serta scheduler otomatis **`appointments:send-reminders`** (pengingat H-1 & follow-up H+3 pukul 09:00 WIB) telah terpasang. |
@@ -93,12 +93,12 @@
 
 - **Status Saat Ini:** `Selesai`
 - **File/Komponen Terkait:**
-  - Aplikasi Android / Mobile Native: `mobile-native/` *(diselesaikan & diverifikasi secara manual oleh PIC)*
+  - Tautan Unduh Aplikasi & Mobile Native: `DownloadAppEditor.tsx`, `mobile-native/` *(perapihan tautan download dari 2 link menjadi 1 link aktif telah diselesaikan secara manual oleh PIC)*
   - Portal Web Pasien: `frontend-web/src/features/patient/dashboard/pages/UserDashboardNew.tsx`, `ProfileEdit.tsx`, `UserReservation.tsx`, `Membership.tsx`, `ComplaintPage.tsx`, `PatientConsultationChatPage.tsx`
   - PWA: `public/sw.js` (v2.1.0), `public/manifest.json`
 
 - **Yang Sudah Berjalan Baik & Perbaikan yang Telah Diterapkan:**
-  - **Aplikasi Android:** Telah diselesaikan secara manual oleh PIC Imam dan siap digunakan oleh pasien.
+  - **Penyesuaian Link Download Aplikasi (Android):** PIC telah menghapus 1 link unduh aplikasi yang sebelumnya berjumlah 2 link sehingga kini hanya tersisa **1 link aktif** yang rapi dan tidak membingungkan pasien.
   - **Portal Web & PWA:** Registrasi, login, Google OAuth 2.0, manajemen profil lengkap, booking online + tanda tangan digital + E-Ticket, konsultasi chat, membership & poin loyalty, serta pengaduan berjalan lengkap.
   - `[FIXED - HIGH]` Memperbaiki `public/sw.js`: mengganti aset 404 `/logo/logo.png` menjadi `/logo/logo.webp`, menambahkan eksklusi cache untuk `/api/admin/`, `/api/doctor/`, `/api/user/`, serta menaikkan versi cache ke `v2.1.0`.
   - `[FIXED - MEDIUM]` Menambahkan guard `if (!request.url.startsWith('http://') && !request.url.startsWith('https://')) return;` pada `public/sw.js:58` untuk menghentikan error `chrome-extension://`.
@@ -195,7 +195,7 @@
 ### Tugas Maintenance Utama — Seluruh Target Selesai
 - [x] **Poin 5 (Informasi layanan):** Menu Katalog Layanan desktop, upload gambar WebP di form admin, grouping query pencarian & debounce 300ms.
 - [x] **Poin 6 (Profil dokter & Kompetensi):** Sinkronisasi `/doctors` ke API dinamis `GET /api/public/doctors`, tampilkan STR/SIP & Jadwal Praktik Aktif, hapus fallback dummy.
-- [x] **Poin 7 (Aplikasi pasien):** Aplikasi Android selesai manual oleh PIC; perbaiki `public/sw.js` v2.1.0 (404 `/logo/logo.png` & guard `chrome-extension://`) & `public/manifest.json`.
+- [x] **Poin 7 (Aplikasi pasien):** Link unduh aplikasi dirapikan manual oleh PIC (dari 2 link menjadi 1 link aktif); perbaiki `public/sw.js` v2.1.0 (404 `/logo/logo.png` & guard `chrome-extension://`) & `public/manifest.json`.
 - [x] **Poin 8 (Performa website):** Bersihkan 43.306 file build lama (714,63 MB -> 3,14 MB) dengan `prebuild.mjs`, split `manualChunks` (`ClinicDashboard` -70,8% gzip), & pasang `mod_expires`/`mod_deflate` di `public/.htaccess`.
 - [x] **Poin 10 (Keamanan data):** Matikan eksposur stack trace `api.php`/`index.php`, hapus hardcoded password & overwrite seeder, pasang rate limit auth `throttle`, perketat `config/cors.php`, blokir login dokter non-aktif, & sanitasi 5 XSS surface dengan **DOMPurify**.
 - [x] **Poin 11 (Tindak lanjut pasien):** Buat & jadwalkan Artisan Command `appointments:send-reminders` (pengingat H-1 & follow-up H+3 pukul 09:00 WIB) di `routes/console.php`.

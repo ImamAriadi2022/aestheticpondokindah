@@ -79,6 +79,7 @@ export default function GuestBookingFlow() {
   const [searchParams] = useSearchParams();
   const requestedServiceName = searchParams.get("service") || searchParams.get("treatment") || searchParams.get("layanan");
   const requestedServiceId = searchParams.get("serviceId") || searchParams.get("id");
+  const requestedDoctorName = searchParams.get("doctor") || searchParams.get("dokter");
 
   const [currentStep, setCurrentStep] = useState<"layanan" | "dokter" | "jadwal" | "konfirmasi">("layanan");
 
@@ -282,19 +283,31 @@ export default function GuestBookingFlow() {
         if (Array.isArray(list) && list.length > 0) {
           const mapped = list.map((doc: any, index: number) => ({
             id: doc.id || index + 1,
-            userId: doc.user_id || doc.id,
+            userId: doc.user_id || doc.userId || doc.id,
             name: doc.name || "drg. Spesialis Gigi",
             specialization: doc.specialization || "Dokter Gigi Spesialis",
-            experienceYears: doc.experience_years || 8,
+            experienceYears: doc.experience_years || doc.experienceYears || 8,
             rating: Number(doc.rating) || 4.9,
-            avatar: doc.avatar_url || doc.avatar || "https://images.unsplash.com/photo-1594824813628-98e3532c2560?w=400&q=80",
-            branches: ["Aesthetic Pondok Indah Main Branch"],
+            avatar: doc.avatar_url || doc.avatar || doc.photo || "https://images.unsplash.com/photo-1594824813628-98e3532c2560?w=400&q=80",
+            branches: [doc.primary_branch || "Aesthetic Pondok Indah Main Branch"],
           }));
           try {
             localStorage.setItem("apig_cached_doctors", JSON.stringify(mapped));
           } catch {}
           setDoctors(mapped);
-          setSelectedDoctor(mapped[0]);
+
+          let initialDoc = mapped[0];
+          if (requestedDoctorName) {
+            const q = requestedDoctorName.toLowerCase().trim();
+            const foundDoc = mapped.find(
+              (d: any) =>
+                d.name.toLowerCase() === q ||
+                d.name.toLowerCase().includes(q) ||
+                q.includes(d.name.toLowerCase())
+            );
+            if (foundDoc) initialDoc = foundDoc;
+          }
+          setSelectedDoctor(initialDoc);
         }
       } catch {
         // fallback
@@ -303,7 +316,7 @@ export default function GuestBookingFlow() {
       }
     };
     fetchDoctors();
-  }, []);
+  }, [requestedDoctorName]);
 
   // Load Doctor Schedules
   useEffect(() => {

@@ -160,8 +160,7 @@ class UserController extends Controller
                 ->where('role', 'doctor')
                 ->where('status', 'active')
                 ->with(['doctorSchedules' => function ($q) {
-                    $q->where('is_active', true)
-                      ->whereDate('date', '>=', now()->toDateString())
+                    $q->whereDate('date', '>=', now()->toDateString())
                       ->orderBy('date')
                       ->orderBy('time_range');
                 }])
@@ -190,6 +189,7 @@ class UserController extends Controller
                     return [
                         'id' => (string) $u->id,
                         'userId' => (string) $u->id,
+                        'user_id' => (string) $u->id,
                         'name' => $u->name,
                         'specialization' => $u->specialization ?: ($u->job ?: 'Dokter Gigi Spesialis'),
                         'university' => $u->education ?: 'Universitas Indonesia',
@@ -200,6 +200,7 @@ class UserController extends Controller
                         'experience_years' => $exp,
                         'photo' => $photo,
                         'avatar' => $photo,
+                        'avatar_url' => $photo,
                         'bio' => $u->bio,
                         'primary_branch' => $u->primary_branch ?: 'Aesthetic Pondok Indah Main Branch',
                         'schedules' => $schedules,
