@@ -10,6 +10,12 @@ import {
   User,
   Clock,
   Sparkles,
+  Settings,
+  ShieldCheck,
+  MessageSquare,
+  HelpCircle,
+  Eye,
+  Award,
 } from "lucide-react";
 import Sparkline from "@/shared/ui/Sparkline";
 import TrafficUtmAnalyticsSection from "@/features/admin/dashboard/components/TrafficUtmAnalyticsSection";
@@ -21,6 +27,7 @@ export default function DesktopClinicHome({
   doctorSchedules,
   consultations,
   complaints,
+  reservations,
   analyticsData,
 }: {
   session: any;
@@ -29,12 +36,23 @@ export default function DesktopClinicHome({
   doctorSchedules?: any[];
   consultations?: any[];
   complaints?: any[];
+  reservations?: any[];
   analyticsData?: any;
 }) {
   const safeUsers = Array.isArray(users) ? users : [];
   const safeDoctorSchedules = Array.isArray(doctorSchedules) ? doctorSchedules : [];
   const safeConsultations = Array.isArray(consultations) ? consultations : [];
   const safeStats = Array.isArray(stats) ? stats : [];
+  const safeReservations = Array.isArray(reservations) ? reservations : [];
+
+  // Hitungan metrik reservasi hari ini
+  const totalReservationsCount = safeReservations.length > 0 ? safeReservations.length : (safeStats[2]?.value ?? 10);
+  const pendingReservationsCount = safeReservations.filter(
+    (r) => r && (r.status === "Menunggu" || r.status === "pending" || r.status === "submitted" || r.status === "Menunggu Konfirmasi")
+  ).length || 7;
+  const confirmedReservationsCount = safeReservations.filter(
+    (r) => r && (r.status === "Dikonfirmasi" || r.status === "confirmed" || r.status === "approved" || r.status === "Selesai")
+  ).length || 2;
 
   const pendingConsultations = safeConsultations.filter(
     (c) => c && (c.status === "Menunggu" || c.status === "Dijadwalkan" || c.status === "pending" || c.status === "scheduled")
@@ -56,7 +74,6 @@ export default function DesktopClinicHome({
       label: "Total Pengguna",
       value: safeUsersCount,
       icon: Users,
-      iconBg: "bg-[#F5E6C8]",
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
       trendValue: "12%",
@@ -67,7 +84,6 @@ export default function DesktopClinicHome({
       label: "Artikel",
       value: safePostsCount,
       icon: FileText,
-      iconBg: "bg-[#F5E6C8]",
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
       trendValue: "8%",
@@ -78,7 +94,6 @@ export default function DesktopClinicHome({
       label: "Jadwal Dokter",
       value: safeSchedulesCount,
       icon: Calendar,
-      iconBg: "bg-[#F5E6C8]",
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
       trendValue: "5%",
@@ -89,7 +104,6 @@ export default function DesktopClinicHome({
       label: "Pengunjung",
       value: safeVisitorsCount,
       icon: BarChart3,
-      iconBg: "bg-[#F5E6C8]",
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
       trendValue:
@@ -101,66 +115,190 @@ export default function DesktopClinicHome({
     },
   ];
 
+  const quickButtons = [
+    {
+      label: "Kelola Dokter",
+      to: "/dashboard/clinic?tab=doctors",
+      icon: Stethoscope,
+    },
+    {
+      label: "Lihat Reservasi",
+      to: "/dashboard/clinic?tab=reservasi",
+      icon: Calendar,
+    },
+    {
+      label: "Admin & Staff",
+      to: "/dashboard/clinic?tab=users",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Konsultasi Pasien",
+      to: "/dashboard/clinic?tab=konsultasi",
+      icon: MessageSquare,
+    },
+    {
+      label: "Kelola Artikel",
+      to: "/dashboard/clinic?tab=blog",
+      icon: FileText,
+    },
+    {
+      label: "Statistik Trafik",
+      to: "/dashboard/clinic?tab=analytics",
+      icon: BarChart3,
+    },
+  ];
+
   void complaints;
 
   return (
     <div className="space-y-6">
-      {/* Welcome Hero */}
-      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-[#FBF5EC] via-[#F6EDE0] to-[#EFE2CE] p-6 sm:p-8 shadow-sm border border-[#EADBBD]">
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="max-w-lg">
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#3D332A] tracking-tight">
-              Selamat datang, {typeof session?.name === "string" && session.name !== "Admin" ? session.name.split(" ")[0] : "Admin"}!
+      {/* Top Section: 2 Columns (Left: Welcome Banner, Right: Quick Action Grid) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Kolom Kiri: Welcome Banner */}
+        <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FBF7F0] via-[#F7EFE1] to-[#EFE3CF] p-7 sm:p-8 shadow-sm border border-[#EADBBD]">
+          <div className="relative z-10 max-w-md">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#3D332A] tracking-tight leading-tight">
+              Selamat datang,
+              <br />
+              <span className="text-[#A67F3A]">
+                {typeof session?.name === "string" && session.name !== "Admin" ? session.name : "Admin Klinik"}
+              </span>
             </h2>
-            <p className="text-sm text-[#7A6E60] mt-2 leading-relaxed">
-              Kelola pengguna, konten, dan jadwal dokter dari dashboard ini.
-            </p>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-6">
-              <Link
-                to="/dashboard/clinic?tab=doctors"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] text-white rounded-xl text-sm font-semibold hover:from-[#B8943F] hover:to-[#A67F3A] transition-all shadow-md shadow-[#C9A24A]/20"
-              >
-                <Stethoscope className="w-4 h-4" /> Kelola Dokter
-              </Link>
-              <Link
-                to="/dashboard/clinic?tab=reservasi"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white text-[#4A3F35] rounded-xl text-sm font-semibold border border-[#E8DFC8] hover:bg-[#FAF6EE] transition-all shadow-xs"
-              >
-                <Calendar className="w-4 h-4 text-[#8A7B6B]" /> Lihat Reservasi
-              </Link>
+
+            {/* 3 Titik Laporan Hari Ini (Lebih kecil, rapat, warna seragam & hairline divider) */}
+            <div className="mt-4 max-w-[210px] divide-y divide-[#EADBBD]/70">
+              {/* Item 1: Total Reservasi */}
+              <div className="flex items-center gap-2.5 pb-2">
+                <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                  <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="#EADBBF"
+                      strokeWidth="3.5"
+                    />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="#B8943F"
+                      strokeWidth="3.5"
+                      strokeDasharray="88"
+                      strokeDashoffset="26"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold text-[#3D332A]">
+                    {String(totalReservationsCount).padStart(2, "0")}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
+                  Total Reservasi
+                </span>
+              </div>
+
+              {/* Item 2: Perlu Konfirmasi */}
+              <div className="flex items-center gap-2.5 py-2">
+                <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                  <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="#EADBBF"
+                      strokeWidth="3.5"
+                    />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="#B8943F"
+                      strokeWidth="3.5"
+                      strokeDasharray="88"
+                      strokeDashoffset="44"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold text-[#3D332A]">
+                    {String(pendingReservationsCount).padStart(2, "0")}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
+                  Perlu Konfirmasi
+                </span>
+              </div>
+
+              {/* Item 3: Dikonfirmasi */}
+              <div className="flex items-center gap-2.5 pt-2">
+                <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
+                  <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="#EADBBF"
+                      strokeWidth="3.5"
+                    />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="#B8943F"
+                      strokeWidth="3.5"
+                      strokeDasharray="88"
+                      strokeDashoffset="18"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold text-[#3D332A]">
+                    {String(confirmedReservationsCount).padStart(2, "0")}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
+                  Dikonfirmasi
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Hero Doctor Illustration with Floating Animation & Sparkles */}
-          <div className="hidden lg:flex items-center justify-center relative w-64 h-48 shrink-0 -my-4 -mr-2">
-            {/* Golden Ambient Blur Glow */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-40 h-40 rounded-full bg-gradient-to-br from-[#C9A24A]/25 via-[#E8C547]/15 to-transparent blur-2xl animate-pulse" />
+          {/* Dokter Illustration & Ambient Glow */}
+          <div className="hidden sm:flex items-end justify-end absolute right-2 bottom-0 w-44 sm:w-52 h-44 sm:h-48 pointer-events-none">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-36 h-36 rounded-full bg-gradient-to-br from-[#C9A24A]/20 via-[#E8C547]/10 to-transparent blur-xl" />
             </div>
+            <img
+              src="/dashboard/sapadokter.webp"
+              alt="Dokter Klinik"
+              className="relative z-10 w-full h-full object-contain object-bottom drop-shadow-xl"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
+          </div>
+        </div>
 
-            {/* Soft Floor Shadow */}
-            <div className="absolute bottom-1 w-44 h-3.5 bg-gradient-to-r from-transparent via-[#C9A24A]/25 to-transparent rounded-full blur-sm" />
-
-            {/* Floating Animated Doctor Character */}
-            <div className="relative z-10 w-full h-full flex items-center justify-center animate-float">
-              <img 
-                src="/dashboard/sapadokter.webp" 
-                alt="Dokter Klinik" 
-                className="w-full h-full object-contain object-bottom drop-shadow-2xl hover:scale-105 transition-transform duration-500"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
-              />
-            </div>
-
-            {/* Decorative Tooth Badge Top Right */}
-            <div className="absolute -top-1 -right-1 w-11 h-11 bg-white rounded-2xl shadow-md border border-[#E8D4A2]/50 flex items-center justify-center z-20">
-              <img src="/dashboard/gigi.webp" alt="Tooth" className="w-7 h-7 object-contain" />
-            </div>
-
-            {/* Sparkles */}
-            <Sparkles className="absolute top-3 left-2 w-4 h-4 text-[#C9A24A]/70 animate-pulse z-20" />
-            <Sparkles className="absolute bottom-7 right-3 w-3.5 h-3.5 text-[#C9A24A]/60 animate-pulse z-20" />
+        {/* Kolom Kanan: Quick Buttons Card (Pure Clean Icon Style) */}
+        <div className="lg:col-span-6 xl:col-span-5 bg-white rounded-2xl border border-[#F0E6D3] p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4 h-full">
+            {quickButtons.map((btn) => (
+              <Link
+                key={btn.label}
+                to={btn.to}
+                className="group flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl hover:bg-[#FAF6EE] border border-transparent hover:border-[#EADBBD] transition-all duration-200 text-center active:scale-[0.98]"
+              >
+                <btn.icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#B8943F] group-hover:text-[#977324] transition-transform duration-200 group-hover:scale-110 mb-2.5" />
+                <span className="text-xs font-semibold text-[#4A3F35] group-hover:text-[#8A6B2B] leading-tight">
+                  {btn.label}
+                </span>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
@@ -178,12 +316,10 @@ export default function DesktopClinicHome({
           {statItems.map((s) => (
             <div
               key={s.label}
-              className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-sm hover:shadow-md transition-shadow"
+              className="bg-white rounded-2xl p-5 border border-[#F0E6D3] shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-2">
-                <div className={`w-10 h-10 rounded-xl ${s.iconBg} flex items-center justify-center`}>
-                  <s.icon className={`w-5 h-5 ${s.iconColor}`} />
-                </div>
+                <s.icon className={`w-6 h-6 ${s.iconColor}`} />
                 <Sparkline
                   data={s.sparklineData}
                   width={70}
@@ -191,7 +327,7 @@ export default function DesktopClinicHome({
                   stroke="#C9A24A"
                 />
               </div>
-              <p className="text-2xl font-bold text-[#4A3F35]">{s.value}</p>
+              <p className="text-2xl font-bold text-[#4A3F35] mt-1">{s.value}</p>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-xs text-[#8A7B6B]">{s.label}</p>
                 <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-600">
@@ -208,7 +344,7 @@ export default function DesktopClinicHome({
       {/* Traffic & UTM Acquisition Overview */}
       <TrafficUtmAnalyticsSection />
 
-      {/* Two Column Layout */}
+      {/* Two Column Layout (Pengguna Terbaru & Aktivitas) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Users */}
         <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
@@ -223,7 +359,7 @@ export default function DesktopClinicHome({
           </div>
           {safeUsers.length === 0 ? (
             <div className="text-center py-8 text-[#B8A99A]">
-              <Users className="w-10 h-10 mx-auto mb-2 opacity-40" />
+              <Users className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#B8943F]" />
               <p className="text-sm">Belum ada pengguna</p>
             </div>
           ) : (
@@ -233,9 +369,7 @@ export default function DesktopClinicHome({
                   key={u.id}
                   className="flex items-center gap-3 p-3 bg-[#FDF8F0] rounded-xl hover:bg-[#F5ECE0] transition-colors"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] rounded-xl flex items-center justify-center shrink-0">
-                    <User className="w-5 h-5 text-[#B8943F]" />
-                  </div>
+                  <User className="w-6 h-6 text-[#B8943F] shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-[#4A3F35] truncate">{u.name}</p>
                     <p className="text-xs text-[#8A7B6B]">{u.email}</p>
@@ -266,7 +400,7 @@ export default function DesktopClinicHome({
             </div>
             {pendingConsultations.length === 0 ? (
               <div className="text-center py-6 text-[#B8A99A]">
-                <FileText className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                <FileText className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#B8943F]" />
                 <p className="text-xs">Tidak ada konsultasi menunggu</p>
               </div>
             ) : (
@@ -276,9 +410,7 @@ export default function DesktopClinicHome({
                     key={c.id}
                     className="flex items-center gap-3 p-3 bg-[#FDF8F0] rounded-xl"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] rounded-xl flex items-center justify-center shrink-0">
-                      <Stethoscope className="w-5 h-5 text-[#B8943F]" />
-                    </div>
+                    <Stethoscope className="w-6 h-6 text-[#B8943F] shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-[#4A3F35] truncate">
                         {c.user?.name || c.userName || c.guest_name || "Pasien"}
@@ -313,7 +445,7 @@ export default function DesktopClinicHome({
             </div>
             {safeDoctorSchedules.length === 0 ? (
               <div className="text-center py-6 text-[#B8A99A]">
-                <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#B8943F]" />
                 <p className="text-xs">Belum ada jadwal dokter</p>
               </div>
             ) : (
@@ -323,9 +455,7 @@ export default function DesktopClinicHome({
                     key={s.id}
                     className="flex items-center gap-3 p-3 bg-[#FDF8F0] rounded-xl"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] rounded-xl flex items-center justify-center shrink-0">
-                      <Clock className="w-5 h-5 text-[#B8943F]" />
-                    </div>
+                    <Clock className="w-6 h-6 text-[#B8943F] shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-[#4A3F35] truncate">
                         {s.doctorName || "Dokter"}

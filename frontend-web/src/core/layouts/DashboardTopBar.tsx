@@ -19,6 +19,7 @@ import {
   ChevronDown,
   FileText,
   Check,
+  RefreshCw,
 } from "lucide-react";
 import {
   subscribeToPushNotifications,
@@ -467,26 +468,20 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       : notifications;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
-      {/* Left: Penjelasan Halaman & Status Login */}
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xs sm:text-sm font-bold text-[#2C2416] tracking-tight truncate">
-            {pageTitle}
-          </h1>
-          <span className="text-[10px] font-semibold text-[#8C6B1C] bg-[#FAF5EA] border border-[#EADBBD] px-2 py-0.5 rounded-full flex items-center gap-1">
-            <span className="text-[#8C8272] font-normal">Login sebagai:</span>
-            <span className="font-bold">{getLoginAsText()}</span>
-          </span>
-        </div>
-        <p className="text-[10px] text-[#8C8272] hidden sm:block truncate">
-          {pageSubtitle}
-        </p>
-      </div>
-
+    <header className="sticky top-0 z-40 bg-white border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-end gap-3 shadow-xs">
       {/* Right: Ikon Notifikasi & Profil Dropdown (Termasuk Pengaturan Klinik) */}
       <div className="flex items-center gap-2.5">
-        {/* Notification Bell */}
+        {/* Tombol Refresh Halaman / Data (Bulat Sempurna) */}
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs active:scale-95"
+          title="Muat Ulang Halaman"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
+
+        {/* Notification Bell (Bulat Sempurna) */}
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
@@ -494,7 +489,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
               setIsDropdownOpen((prev) => !prev);
               setIsProfileOpen(false);
             }}
-            className="relative p-2 rounded-xl text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs"
+            className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs"
             title="Lihat Notifikasi"
           >
             <Bell className="w-4 h-4" />
@@ -660,7 +655,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
           )}
         </div>
 
-        {/* Profile Avatar Button & Dropdown (Area Profil / Pengaturan Klinik) */}
+        {/* Profile Avatar Button & Dropdown (Area Profil Bulat Sempurna Tanpa Border Luar) */}
         <div className="relative" ref={profileDropdownRef}>
           <button
             type="button"
@@ -668,28 +663,20 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
               setIsProfileOpen((prev) => !prev);
               setIsDropdownOpen(false);
             }}
-            className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-xl border border-[#E8DFC8] hover:border-[#C9A24A] bg-white hover:bg-[#FAF8F5] transition-all cursor-pointer shadow-2xs group"
+            className="flex items-center justify-center w-9 h-9 rounded-full transition-all cursor-pointer shadow-2xs group hover:opacity-90 active:scale-95"
+            title="Profil Pengguna"
           >
             {(session as any)?.avatar ? (
               <img
                 src={(session as any).avatar.includes("storage/data:image") ? (session as any).avatar.substring((session as any).avatar.indexOf("data:image")) : (session as any).avatar}
                 alt={session?.name || "User"}
-                className="w-7 h-7 rounded-lg object-cover ring-1 ring-[#C9A24A]/40 shrink-0"
+                className="w-9 h-9 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#C9A24A] to-[#A8843A] flex items-center justify-center text-white font-bold text-xs shadow-2xs shrink-0">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A24A] to-[#A8843A] flex items-center justify-center text-white font-bold text-sm shadow-2xs shrink-0">
                 {(session?.name || "A").charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="hidden sm:flex flex-col text-left">
-              <span className="text-[11px] font-bold text-[#4A3F35] leading-tight group-hover:text-[#8C6B1C] transition-colors truncate max-w-[110px]">
-                {session?.name || (role === "clinic" ? "Admin Klinik" : "Pengguna")}
-              </span>
-              <span className="text-[9px] text-[#8A7B6B] leading-tight capitalize">
-                {role === "clinic" ? "Administrator" : role === "doctor" ? "Dokter" : "Pasien"}
-              </span>
-            </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 group-hover:text-[#8C6B1C] transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`} />
           </button>
 
           {/* Profile Dropdown Menu */}

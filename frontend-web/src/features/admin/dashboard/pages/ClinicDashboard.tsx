@@ -423,6 +423,7 @@ export default function ClinicDashboardPage() {
             doctorSchedules={doctorSchedules}
             consultations={consultations}
             complaints={complaints}
+            reservations={reservations}
             analyticsData={analyticsData}
           />
         );

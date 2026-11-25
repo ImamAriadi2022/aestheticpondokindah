@@ -217,14 +217,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-start">
-      {/* Left Sidebar */}
+    <div className="min-h-screen bg-white flex">
+      {/* Left Sidebar Container */}
       {role === "user" ? (
         <AccountSidebar userName={session?.name || "User"} onLogout={handleLogout} />
       ) : role === "doctor" ? (
         <DoctorSidebar onLogout={handleLogout} />
       ) : (
-        <div className="sticky top-4 left-0 h-[calc(100vh-32px)] self-start z-[100] pointer-events-auto ml-2 mr-2 flex-shrink-0">
+        <div className="fixed top-4 left-2 h-[calc(100vh-32px)] z-[100] pointer-events-auto flex-shrink-0">
           {/* Floating Glassmorphism Sidebar - Elegant Gold Theme */}
           <aside
             ref={sidebarRef}
@@ -721,7 +721,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className={`flex-1 min-w-0 flex flex-col transition-all duration-300 ${role === "clinic" ? (sidebarExpanded ? "pl-[276px]" : "pl-[88px]") : ""}`}>
         {/* Top Navbar Header Bar */}
         <DashboardTopBar role={role} navbarLabel={navbarLabel} />
 
