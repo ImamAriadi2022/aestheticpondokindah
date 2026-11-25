@@ -55,6 +55,10 @@ interface DoctorItem {
   rating: number;
   avatar: string;
   branches: string[];
+  weekly_schedules?: Record<string, any>;
+  weeklySchedules?: Record<string, any>;
+  primary_branch?: string;
+  primaryBranch?: string;
 }
 
 const displayPhoneWithoutPrefix = (phone: string | null | undefined): string => {

@@ -297,6 +297,10 @@ export interface DoctorItem {
   university: string;
   experienceYears: number;
   photo: string;
+  weekly_schedules?: Record<string, any>;
+  weeklySchedules?: Record<string, any>;
+  primary_branch?: string;
+  primaryBranch?: string;
 }
 
 // Helper to parse backend time_range string (e.g. "09:00 - 12:00" or "10.00-14.00") into 10-minute slots

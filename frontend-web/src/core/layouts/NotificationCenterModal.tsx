@@ -104,21 +104,6 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
     loadData();
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "appointment":
-        return <Calendar className="w-5 h-5 text-amber-600" />;
-      case "membership":
-        return <Crown className="w-5 h-5 text-amber-500" />;
-      case "promo":
-        return <Tag className="w-5 h-5 text-emerald-600" />;
-      case "article":
-        return <FileText className="w-5 h-5 text-blue-600" />;
-      default:
-        return <Bell className="w-5 h-5 text-yellow-600" />;
-    }
-  };
-
   if (!isOpen) return null;
 
   return createPortal(
@@ -128,9 +113,6 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
         {/* Modal Header */}
         <div className="p-5 bg-white border-b border-[#E6DECB] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
-              <Bell className="w-5 h-5 text-amber-600" />
-            </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg">Pusat Notifikasi</h3>
               <p className="text-xs text-gray-500">
