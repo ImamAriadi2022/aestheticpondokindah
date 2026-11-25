@@ -1,11 +1,11 @@
 /**
  * Production Service Worker — Aesthetic Pondok Indah Dental Clinic PWA
- * Version: 2.0.0
+ * Version: 2.1.0
  */
 
-const CACHE_STATIC_NAME = 'apig-static-v2.0.0';
-const CACHE_DYNAMIC_NAME = 'apig-dynamic-v2.0.0';
-const CACHE_API_NAME = 'apig-api-v2.0.0';
+const CACHE_STATIC_NAME = 'apig-static-v2.1.0';
+const CACHE_DYNAMIC_NAME = 'apig-dynamic-v2.1.0';
+const CACHE_API_NAME = 'apig-api-v2.1.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -111,7 +111,10 @@ self.addEventListener('fetch', (event) => {
           if (networkResponse && networkResponse.status === 200) {
             const clonedResponse = networkResponse.clone();
             caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-              cache.put(request, clonedResponse);
+              // Avoid caching non-HTTP requests (like chrome-extension://)
+              if (request.url.startsWith('http')) {
+                cache.put(request, clonedResponse);
+              }
             });
           }
           return networkResponse;
