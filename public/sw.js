@@ -1,11 +1,11 @@
 /**
  * Production Service Worker — Aesthetic Pondok Indah Dental Clinic PWA
- * Version: 2.1.0
+ * Version: 2.0.0
  */
 
-const CACHE_STATIC_NAME = 'apig-static-v2.2.0';
-const CACHE_DYNAMIC_NAME = 'apig-dynamic-v2.2.0';
-const CACHE_API_NAME = 'apig-api-v2.2.0';
+const CACHE_STATIC_NAME = 'apig-static-v2.0.0';
+const CACHE_DYNAMIC_NAME = 'apig-dynamic-v2.0.0';
+const CACHE_API_NAME = 'apig-api-v2.0.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -90,36 +90,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Bundled production assets (/assets/): Network-First (with versioned cache) so updates never get stuck
-  if (url.pathname.startsWith('/assets/')) {
-    event.respondWith(
-      fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type !== 'opaque') {
-            const clonedResponse = networkResponse.clone();
-            caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-              cache.put(request, clonedResponse);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match(request))
-    );
-    return;
-  }
-
-  // 4. Static Images, Fonts, 3rd party CDNs: Cache-First / Stale-While-Revalidate Strategy
+  // 3. Static Assets, Images, Fonts, Scripts: Stale-While-Revalidate Strategy
   if (
     url.hostname.includes('fonts.googleapis.com') ||
     url.hostname.includes('fonts.gstatic.com') ||
     url.hostname.includes('cdn.jsdelivr.net') ||
+    url.pathname.startsWith('/assets/') ||
     url.pathname.startsWith('/layanan/') ||
     url.pathname.startsWith('/logo/') ||
     url.pathname.endsWith('.png') ||
     url.pathname.endsWith('.jpg') ||
     url.pathname.endsWith('.webp') ||
     url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.css')
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js')
   ) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
@@ -127,9 +111,7 @@ self.addEventListener('fetch', (event) => {
           if (networkResponse && networkResponse.status === 200) {
             const clonedResponse = networkResponse.clone();
             caches.open(CACHE_DYNAMIC_NAME).then((cache) => {
-              if (request.url.startsWith('http')) {
-                cache.put(request, clonedResponse);
-              }
+              cache.put(request, clonedResponse);
             });
           }
           return networkResponse;
