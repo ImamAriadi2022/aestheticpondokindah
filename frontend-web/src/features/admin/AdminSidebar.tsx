@@ -35,7 +35,6 @@ export default function AdminSidebar({ activeTab }: Props) {
   const currentTab = searchParams.get("tab") || activeTab || "dashboard";
 
   const publicInfoTabs = [
-    "public-services",
     "public-faqs",
     "public-about",
     "public-legal",
@@ -82,12 +81,6 @@ export default function AdminSidebar({ activeTab }: Props) {
             href: "/dashboard/clinic?tab=reservasi",
           },
           {
-            id: "treatments",
-            label: "Layanan Klinik",
-            icon: Sparkles,
-            href: "/dashboard/clinic?tab=treatments",
-          },
-          {
             id: "konsultasi",
             label: "Konsultasi Pasien",
             icon: MessageSquare,
@@ -98,6 +91,12 @@ export default function AdminSidebar({ activeTab }: Props) {
             label: "Pengaduan Pasien",
             icon: AlertCircle,
             href: "/dashboard/clinic?tab=pengaduan",
+          },
+          {
+            id: "treatments",
+            label: "Layanan",
+            icon: Sparkles,
+            href: "/dashboard/clinic?tab=treatments",
           },
         ],
       },
@@ -174,12 +173,6 @@ export default function AdminSidebar({ activeTab }: Props) {
       {
         title: "Informasi Publik",
         items: [
-          {
-            id: "public-services",
-            label: "Katalog Layanan",
-            icon: Layers,
-            href: "/dashboard/clinic?tab=public-services",
-          },
           {
             id: "public-faqs",
             label: "Pusat Bantuan (FAQ)",

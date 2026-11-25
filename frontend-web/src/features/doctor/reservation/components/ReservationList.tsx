@@ -160,37 +160,18 @@ export default function DoctorReservationList() {
         <div className="space-y-6 text-left animate-in fade-in duration-150">
           {/* Top Bar Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 bg-white rounded-3xl border border-[#EADBBD] shadow-xs">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedPatient(null);
-                  scrollPageToTop();
-                }}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAF5EA] hover:bg-[#F3EAD5] text-[#8C6B1C] hover:text-[#735614] text-xs font-bold border border-[#EADBBD] shadow-2xs transition-all cursor-pointer shrink-0"
-                title="Kembali ke Daftar Pasien"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Kembali</span>
-              </button>
-
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#C9A24A] to-[#B8943F] flex items-center justify-center text-white shadow-md shadow-[#C9A24A]/20 shrink-0">
-                <User className="w-5 h-5" />
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-[#4A3F35]">
+                  Detail Data Pasien
+                </h2>
+                <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#8C6B1C]/10 text-[#8C6B1C] border border-[#8C6B1C]/20">
+                  #{selectedPatient.code || `RSV-${selectedPatient.id}`}
+                </span>
               </div>
-
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-bold text-[#4A3F35]">
-                    Detail Data Pasien
-                  </h2>
-                  <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#8C6B1C]/10 text-[#8C6B1C] border border-[#8C6B1C]/20">
-                    #{selectedPatient.code || `RSV-${selectedPatient.id}`}
-                  </span>
-                </div>
-                <p className="text-xs text-[#8A7B6B] mt-0.5">
-                  Informasi reservasi klinik Aesthetic Pondok Indah
-                </p>
-              </div>
+              <p className="text-xs text-[#8A7B6B] mt-0.5">
+                Informasi reservasi klinik Aesthetic Pondok Indah
+              </p>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -279,12 +260,12 @@ export default function DoctorReservationList() {
                     <span className="text-[#8A7B6B] block text-[11px]">Jam Praktik</span>
                     <div className="flex items-center gap-1.5 font-bold text-[#8C6B1C] mt-0.5">
                       <Clock className="w-4 h-4 text-[#C9A24A]" />
-                      <span>{selectedPatient.preferred_time || "Sesuai Jadwal"} WIB</span>
+                      <span>{String(selectedPatient.preferred_time || "Sesuai Jadwal").replace(/\s*WIB\s*$/i, "")} WIB</span>
                     </div>
                   </div>
                   <div>
                     <span className="text-[#8A7B6B] block text-[11px]">Perawatan yang Dipilih</span>
-                    <span className="font-bold text-[#4A3F35] block bg-[#FAF5EA] p-2 rounded-xl border border-[#EADBBD] text-xs mt-0.5">
+                    <span className="font-semibold text-[#4A3F35] block text-xs mt-0.5">
                       {selectedPatient.treatment_interest || "Pemeriksaan Dokter Gigi"}
                     </span>
                   </div>

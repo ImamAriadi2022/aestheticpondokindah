@@ -409,6 +409,7 @@ export default function ClinicDashboardPage() {
         );
 
       case "treatments":
+      case "public-services":
         return <AdminTreatmentManagement />;
 
       case "users":
@@ -425,9 +426,6 @@ export default function ClinicDashboardPage() {
 
       case "settings":
         return <SettingsPage settings={clinicSettings} />;
-
-      case "public-services":
-        return <ServicesManagePage />;
 
       case "public-faqs":
         return <FaqsManagePage />;

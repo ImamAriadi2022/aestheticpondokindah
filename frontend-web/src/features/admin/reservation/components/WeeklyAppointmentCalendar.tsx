@@ -562,7 +562,7 @@ export default function WeeklyAppointmentCalendar({
   return (
     <div className="bg-white rounded-3xl border border-[#F0E6D3] p-5 sm:p-6 shadow-xs space-y-5">
       {/* Calendar Header with Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#F7EFE2]">
+      <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#F7EFE2]">
         <div className="flex items-center gap-2.5">
           <CalendarDays className="w-5 h-5 text-[#8C6B1C]" />
           <div>
@@ -572,7 +572,7 @@ export default function WeeklyAppointmentCalendar({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handlePrevWeek}
@@ -593,7 +593,7 @@ export default function WeeklyAppointmentCalendar({
       </div>
 
       {/* 6 Days Grid (Senin - Sabtu) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+      <div className="grid grid-cols-6 gap-1 sm:gap-2.5">
         {weekDays.map((d) => {
           const list = reservationsByDate.get(d.isoDate) || [];
           const count = list.length;
@@ -606,7 +606,7 @@ export default function WeeklyAppointmentCalendar({
               onClick={() =>
                 setSelectedDateStr((prev) => (prev === d.isoDate ? null : d.isoDate))
               }
-              className={`rounded-2xl p-3 border transition-all cursor-pointer text-left flex flex-col justify-between min-h-[105px] ${
+              className={`rounded-xl sm:rounded-2xl p-1.5 sm:p-3 border transition-all cursor-pointer text-center sm:text-left flex flex-col justify-center sm:justify-between min-h-[58px] sm:min-h-[105px] ${
                 isSelected
                   ? "bg-[#FAF4E8] border-[#C9A24A] shadow-xs ring-2 ring-[#C9A24A]/20"
                   : isToday
@@ -615,24 +615,24 @@ export default function WeeklyAppointmentCalendar({
               }`}
             >
               <div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-center sm:justify-between">
                   <span
-                    className={`text-[11px] font-bold uppercase tracking-wider ${
+                    className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${
                       isSelected || isToday ? "text-[#8C6B1C]" : "text-[#8A7B6B]"
                     }`}
                   >
                     {d.dayName}
                   </span>
                   {isToday && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#B8943F]" title="Hari ini" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#B8943F] hidden sm:inline-block" title="Hari ini" />
                   )}
                 </div>
-                <div className="text-xl font-bold text-[#3D332A] mt-0.5">
+                <div className="text-sm sm:text-xl font-bold text-[#3D332A] mt-0.5">
                   {d.dayNumber}
                 </div>
               </div>
 
-              <div className="mt-2 pt-2 border-t border-[#F5ECE0] flex items-center justify-between text-[11px]">
+              <div className="hidden sm:flex mt-2 pt-2 border-t border-[#F5ECE0] items-center justify-between text-[11px]">
                 <span className="text-[#8A7B6B] font-medium">Janji:</span>
                 <span
                   className={`font-bold px-1.5 py-0.5 rounded-md ${
@@ -738,13 +738,13 @@ export default function WeeklyAppointmentCalendar({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-[#FAF8F5] border-b border-[#F0E6D3]">
-                    <TableHead className="font-bold text-[#3D332A] py-3.5 pl-5 text-xs">Nama</TableHead>
-                    <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Layanan</TableHead>
-                    <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Dokter</TableHead>
-                    <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Jadwal</TableHead>
-                    <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Waktu</TableHead>
+                    <TableHead className="font-bold text-[#3D332A] py-3.5 pl-3 sm:pl-5 text-xs">Nama</TableHead>
+                    <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Layanan</TableHead>
+                    <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Dokter</TableHead>
+                    <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Jadwal</TableHead>
+                    <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Waktu</TableHead>
                     <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Status</TableHead>
-                    <TableHead className="font-bold text-[#3D332A] py-3.5 pr-5 text-right text-xs">Aksi</TableHead>
+                    <TableHead className="font-bold text-[#3D332A] py-3.5 pr-3 sm:pr-5 text-right text-xs">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -776,7 +776,7 @@ export default function WeeklyAppointmentCalendar({
                         className="hover:bg-[#FDFBF7] transition-colors border-b border-[#F5ECE0]"
                       >
                         {/* Nama */}
-                        <TableCell className="py-3.5 pl-5">
+                        <TableCell className="py-3.5 pl-3 sm:pl-5">
                           <div className="flex items-center gap-1.5 text-xs font-bold text-[#3D332A]">
                             <User className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                             <span>{pName}</span>
@@ -784,7 +784,7 @@ export default function WeeklyAppointmentCalendar({
                         </TableCell>
 
                         {/* Layanan */}
-                        <TableCell className="py-3.5">
+                        <TableCell className="hidden md:table-cell py-3.5">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-[#3D332A] max-w-[200px] truncate">
                             <Sparkles className="w-3.5 h-3.5 text-[#C9A24A] shrink-0" />
                             <span className="truncate">{sName}</span>
@@ -792,7 +792,7 @@ export default function WeeklyAppointmentCalendar({
                         </TableCell>
 
                         {/* Dokter */}
-                        <TableCell className="py-3.5">
+                        <TableCell className="hidden md:table-cell py-3.5">
                           <div className="flex items-center gap-1.5 text-xs text-[#5C4D3C] max-w-[190px] truncate">
                             <Stethoscope className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                             <span className="truncate font-medium">{dName}</span>
@@ -800,7 +800,7 @@ export default function WeeklyAppointmentCalendar({
                         </TableCell>
 
                         {/* Jadwal */}
-                        <TableCell className="py-3.5">
+                        <TableCell className="hidden md:table-cell py-3.5">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-[#3D332A]">
                             <CalendarIcon className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                             <span>{dayFormatted}, {dateFormatted}</span>
@@ -808,7 +808,7 @@ export default function WeeklyAppointmentCalendar({
                         </TableCell>
 
                         {/* Waktu */}
-                        <TableCell className="py-3.5">
+                        <TableCell className="hidden md:table-cell py-3.5">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-[#5C4D3C]">
                             <Clock className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                             <span>{rawTime}</span>
@@ -826,7 +826,7 @@ export default function WeeklyAppointmentCalendar({
                         </TableCell>
 
                         {/* Aksi */}
-                        <TableCell className="py-3.5 pr-5 text-right">
+                        <TableCell className="py-3.5 pr-3 sm:pr-5 text-right">
                           <Button
                             size="sm"
                             onClick={() => onSelectReservation && onSelectReservation(item)}

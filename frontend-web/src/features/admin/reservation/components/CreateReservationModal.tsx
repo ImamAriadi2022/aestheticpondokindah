@@ -295,17 +295,19 @@ export default function CreateReservationModal({
                 </button>
 
                 {treatmentOpen && (
-                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl border border-[#E8DFC8] shadow-xl z-30 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="p-2 border-b border-[#F4EFE6] flex items-center gap-2 bg-[#FAF8F5]">
-                      <Search className="w-3.5 h-3.5 text-[#8A7C6D]" />
-                      <input
-                        type="text"
-                        autoFocus
-                        value={treatmentSearch}
-                        onChange={(e) => setTreatmentSearch(e.target.value)}
-                        placeholder="Ketik nama layanan gigi..."
-                        className="w-full bg-transparent text-xs text-[#3D332A] placeholder-[#A89D8F] focus:outline-hidden"
-                      />
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl border border-[#E8DFC8] shadow-xl z-30 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="p-2 border-b border-[#F4EFE6] bg-[#FAF8F5]">
+                      <div className="relative flex items-center">
+                        <Search className="w-3.5 h-3.5 text-[#8C6B1C] absolute left-3 pointer-events-none" />
+                        <input
+                          type="text"
+                          autoFocus
+                          value={treatmentSearch}
+                          onChange={(e) => setTreatmentSearch(e.target.value)}
+                          placeholder="Ketik nama layanan gigi..."
+                          className="w-full h-8 pl-8 pr-3 text-xs rounded-lg border border-[#E8DFC8] bg-white text-[#3D332A] placeholder-[#A89D8F] outline-none focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C]/20 transition-all"
+                        />
+                      </div>
                     </div>
 
                     <div className="max-h-52 overflow-y-auto p-1 divide-y divide-transparent">
@@ -364,17 +366,19 @@ export default function CreateReservationModal({
                 </button>
 
                 {doctorOpen && (
-                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-2xl border border-[#E8DFC8] shadow-xl z-30 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="p-2 border-b border-[#F4EFE6] flex items-center gap-2 bg-[#FAF8F5]">
-                      <Search className="w-3.5 h-3.5 text-[#8A7C6D]" />
-                      <input
-                        type="text"
-                        autoFocus
-                        value={doctorSearch}
-                        onChange={(e) => setDoctorSearch(e.target.value)}
-                        placeholder="Cari nama atau spesialis dokter..."
-                        className="w-full bg-transparent text-xs text-[#3D332A] placeholder-[#A89D8F] focus:outline-hidden"
-                      />
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl border border-[#E8DFC8] shadow-xl z-30 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="p-2 border-b border-[#F4EFE6] bg-[#FAF8F5]">
+                      <div className="relative flex items-center">
+                        <Search className="w-3.5 h-3.5 text-[#8C6B1C] absolute left-3 pointer-events-none" />
+                        <input
+                          type="text"
+                          autoFocus
+                          value={doctorSearch}
+                          onChange={(e) => setDoctorSearch(e.target.value)}
+                          placeholder="Cari nama atau spesialis dokter..."
+                          className="w-full h-8 pl-8 pr-3 text-xs rounded-lg border border-[#E8DFC8] bg-white text-[#3D332A] placeholder-[#A89D8F] outline-none focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C]/20 transition-all"
+                        />
+                      </div>
                     </div>
 
                     <div className="max-h-52 overflow-y-auto p-1">

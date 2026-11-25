@@ -221,9 +221,7 @@ export default function DashboardLayout({
       {/* Left Sidebar Container */}
       {role === "user" ? (
         <AccountSidebar userName={session?.name || "User"} onLogout={handleLogout} />
-      ) : role === "doctor" ? (
-        <DoctorSidebar onLogout={handleLogout} />
-      ) : (
+      ) : role === "doctor" ? null : (
         <div className="fixed top-4 left-2 h-[calc(100vh-32px)] z-[100] pointer-events-auto flex-shrink-0">
           {/* Floating Glassmorphism Sidebar - Elegant Gold Theme */}
           <aside
