@@ -7,14 +7,17 @@ import {
   CheckCircle2,
   Calendar,
   Sparkles,
-  Search,
   MessageSquare,
   Stethoscope,
   ArrowRight,
+  Filter,
+  Search,
 } from "lucide-react";
 import { StatusBadge } from "@/shared/consultation/components/StatusBadge";
 import type { ConsultationItem } from "@/features/patient/consultation/services/consultationApi";
 import { Button } from "@/shared/ui/button";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 export default function PatientConsultationList({
   consultations,
@@ -67,55 +70,24 @@ export default function PatientConsultationList({
   return (
     <div className="space-y-6">
       {/* Top Filter and Search Bar */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-          <button
-            type="button"
-            onClick={() => setFilterTab("all")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-              filterTab === "all"
-                ? "bg-[#8C6B1C] text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#5C5546] hover:bg-[#F3EAD5]"
-            }`}
-          >
-            Semua ({sorted.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterTab("completed")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-              filterTab === "completed"
-                ? "bg-[#8C6B1C] text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#5C5546] hover:bg-[#F3EAD5]"
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            Sudah Selesai ({completedConsultations.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setFilterTab("active")}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-              filterTab === "active"
-                ? "bg-[#8C6B1C] text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#5C5546] hover:bg-[#F3EAD5]"
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5 text-amber-500" />
-            Sedang Berjalan ({activeConsultations.length})
-          </button>
-        </div>
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-3.5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Cari riwayat keluhan..."
+        />
 
-        {/* Search Box */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari riwayat keluhan..."
-            className="w-full h-9 pl-9 pr-3 text-xs rounded-xl border border-[#E8DFC8] bg-[#FAF8F5] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#8C6B1C]"
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <FilterDropdown
+            value={filterTab}
+            onChange={(v) => setFilterTab(v as any)}
+            icon={Filter}
+            labelPrefix="Status"
+            options={[
+              { value: "all", label: `Semua (${sorted.length})` },
+              { value: "completed", label: `Sudah Selesai (${completedConsultations.length})` },
+              { value: "active", label: `Sedang Berjalan (${activeConsultations.length})` },
+            ]}
           />
         </div>
       </div>

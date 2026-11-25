@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Edit2, Stethoscope, Calendar, Trash2, Search, Mail, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
+import { Edit2, Stethoscope, Calendar, Trash2, Mail, ShieldCheck, CheckCircle2, XCircle, Filter } from "lucide-react";
 import { getStorageUrl } from "@/core/api/apiConfig";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 type Props = {
   doctors: any[];
@@ -32,48 +33,25 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
   return (
     <div className="space-y-4">
       {/* Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari nama dokter, spesialisasi, email login, atau nomor STR..."
-            className="pl-10 rounded-xl border-gray-200 text-xs h-10"
-          />
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#E2E8F0] shadow-xs">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Cari nama dokter, spesialisasi, email..."
+        />
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <span className="text-xs font-semibold text-gray-500 shrink-0">Filter Status:</span>
-          <div className="flex bg-[#FAF8F5] p-1 rounded-xl border border-[#F0E6D3] overflow-x-auto no-scrollbar shrink-0">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
-                statusFilter === "all" ? "bg-[#C9A24A] text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Semua ({doctors.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("active")}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
-                statusFilter === "active" ? "bg-emerald-600 text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Aktif ({doctors.filter((d) => d.is_active !== false).length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("inactive")}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
-                statusFilter === "inactive" ? "bg-rose-600 text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Non-aktif ({doctors.filter((d) => d.is_active === false).length})
-            </button>
-          </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <FilterDropdown
+            value={statusFilter}
+            onChange={(v) => setStatusFilter(v as any)}
+            icon={Filter}
+            labelPrefix="Status"
+            options={[
+              { value: "all", label: `Semua Status (${doctors.length})` },
+              { value: "active", label: `Aktif (${doctors.filter((d) => d.is_active !== false).length})` },
+              { value: "inactive", label: `Non-aktif (${doctors.filter((d) => d.is_active === false).length})` },
+            ]}
+          />
         </div>
       </div>
 

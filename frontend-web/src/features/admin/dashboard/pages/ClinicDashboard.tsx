@@ -20,6 +20,7 @@ import TestimonialsPage from "@/features/admin/content/pages/TestimonialsPage";
 import DownloadAppPage from "@/features/admin/content/pages/DownloadAppPage";
 import ConsultationPage from "@/features/admin/consultation/pages/ConsultationPage";
 import ReservationPage from "@/features/admin/reservation/pages/ReservationPage";
+import AdminTreatmentManagement from "@/features/admin/treatments/pages/AdminTreatmentManagement";
 import DoctorsPage from "@/features/admin/doctors/pages/DoctorsPage";
 import UsersPage from "@/features/admin/users/pages/UsersPage";
 import BranchesPage from "@/features/admin/branches/pages/BranchesPage";
@@ -165,6 +166,10 @@ export default function ClinicDashboardPage() {
     }
   };
 
+  useEffect(() => {
+    fetchApiDoctors();
+  }, []);
+
   const fetchDoctorSchedules = async () => {
     try {
       const data = await getAdminDoctorSchedules();
@@ -257,30 +262,50 @@ export default function ClinicDashboardPage() {
   };
 
   useEffect(() => {
-    if (activeTab === "dashboard" || !activeTab) {
-      fetchUsers();
-      fetchApiPosts();
-      fetchDoctorSchedules();
-      fetchConsultations();
-      fetchComplaints();
-      fetchAnalytics();
+    if (!token && !session) {
+      toast({ title: "Authentication Required", message: "Silakan login untuk mengakses dashboard admin", variant: "error" });
+      navigate("/klinik", { replace: true });
+      return;
     }
-    if (activeTab === "users") fetchUsers();
-    if (activeTab === "doctors" || activeTab === "reservasi") { fetchApiDoctors(); fetchDoctorSchedules(); }
-    if (activeTab === "content-blog") fetchApiPosts();
-    if (activeTab === "content-popup") fetchApiPopups();
-    if (activeTab === "content-gallery") fetchApiGallery();
-    if (activeTab === "content-testimonials") fetchApiTestimonials();
-    if (activeTab === "content-promo") fetchApiPromos();
-    if (activeTab === "content-download") fetchApiDownloadApps();
-    if (activeTab === "branches") fetchBranches();
-    if (activeTab === "reservasi") {
+
+    if (activeTab === "dashboard" || !activeTab) {
+      // Parallel batching to eliminate waterfall loading
+      Promise.allSettled([
+        fetchUsers(),
+        fetchApiPosts(),
+        fetchDoctorSchedules(),
+        fetchConsultations(),
+        fetchComplaints(),
+        fetchAnalytics(),
+      ]);
+    } else if (activeTab === "users") {
+      fetchUsers();
+    } else if (activeTab === "doctors") {
+      Promise.allSettled([fetchApiDoctors(), fetchDoctorSchedules()]);
+    } else if (activeTab === "reservasi") {
       refreshReservations();
       fetchApiDoctors();
+    } else if (activeTab === "content-blog") {
+      fetchApiPosts();
+    } else if (activeTab === "content-popup") {
+      fetchApiPopups();
+    } else if (activeTab === "content-gallery") {
+      fetchApiGallery();
+    } else if (activeTab === "content-testimonials") {
+      fetchApiTestimonials();
+    } else if (activeTab === "content-promo") {
+      fetchApiPromos();
+    } else if (activeTab === "content-download") {
+      fetchApiDownloadApps();
+    } else if (activeTab === "branches") {
+      fetchBranches();
+    } else if (activeTab === "pengaduan") {
+      fetchComplaints();
+    } else if (activeTab === "konsultasi") {
+      fetchConsultations();
+    } else if (activeTab === "settings") {
+      fetchClinicSettings();
     }
-    if (activeTab === "pengaduan") fetchComplaints();
-    if (activeTab === "konsultasi") fetchConsultations();
-    if (activeTab === "settings") fetchClinicSettings();
   }, [activeTab]);
 
   const visitorsCount =
@@ -382,6 +407,9 @@ export default function ClinicDashboardPage() {
             onRefresh={refreshReservations}
           />
         );
+
+      case "treatments":
+        return <AdminTreatmentManagement />;
 
       case "users":
         return <UsersPage users={users} onRefresh={fetchUsers} />;

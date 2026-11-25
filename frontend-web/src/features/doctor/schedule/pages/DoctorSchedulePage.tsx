@@ -10,6 +10,7 @@ import {
   deleteDoctorSchedule,
   type DoctorScheduleItem,
 } from "../services/doctorScheduleApi";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 interface DoctorSchedulePageProps {
   schedules?: DoctorScheduleItem[];
@@ -48,6 +49,8 @@ export default function DoctorSchedulePage({
       fetchSchedules();
     }
   }, [propSchedules]);
+
+  usePageRefresh(fetchSchedules);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Apakah Anda yakin ingin menghapus jadwal ini?")) return;

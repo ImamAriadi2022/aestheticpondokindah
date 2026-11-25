@@ -36,6 +36,7 @@ import { getSession, clearSession } from "@/core/auth/services/session";
 import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
 import { subscribeToWebPush } from "@/core/services/webPushManager";
 import { apiClient } from "@/core/api/apiClient";
+import { triggerPageRefresh } from "@/core/events/refreshEvents";
 
 interface DashboardTopBarProps {
   role: "user" | "clinic" | "doctor";
@@ -76,6 +77,15 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshClick = () => {
+    setIsRefreshing(true);
+    triggerPageRefresh({ tab: activeTab, pathname });
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 800);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -474,11 +484,11 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         {/* Tombol Refresh Halaman / Data (Bulat Sempurna) */}
         <button
           type="button"
-          onClick={() => window.location.reload()}
+          onClick={handleRefreshClick}
           className="w-9 h-9 rounded-full flex items-center justify-center text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs active:scale-95"
-          title="Muat Ulang Halaman"
+          title="Muat Ulang Data Halaman"
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-[#8C6B1C]" : ""}`} />
         </button>
 
         {/* Notification Bell (Bulat Sempurna) */}

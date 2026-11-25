@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import {
-  Search,
   Mail,
   Trash2,
   Eye,
   Loader2,
   Phone,
   MessageCircle,
+  Filter,
 } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
 import {
@@ -20,6 +19,9 @@ import {
   type ContactMessageItem,
 } from "../services/publicInfoAdminApi";
 import ContactMessageDetailModal from "../components/ContactMessageDetailModal";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 export default function ContactMessagesPage() {
   const [messages, setMessages] = useState<ContactMessageItem[]>([]);
@@ -95,43 +97,32 @@ export default function ContactMessagesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-brand-charcoal">Pesan Kontak Masuk</h1>
-        <p className="text-sm text-brand-warm-gray">
-          Daftar pesan dan pertanyaan yang dikirimkan oleh pasien & pengunjung melalui formulir Kontak Kami.
-        </p>
-      </div>
-
-      {/* Filter & Search */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0">
-          {["all", "unread", "read", "replied", "archived"].map((st) => (
-            <Button
-              key={st}
-              size="sm"
-              variant={statusFilter === st ? "default" : "outline"}
-              className={`rounded-xl text-xs font-semibold shrink-0 cursor-pointer ${
-                statusFilter === st ? "bg-[#C9A24A] hover:bg-[#B8943F] text-white" : ""
-              }`}
-              onClick={() => setStatusFilter(st)}
-            >
-              {st === "all" ? "Semua Status" : st === "unread" ? "Belum Dibaca" : st === "read" ? "Sudah Dibaca" : st === "replied" ? "Sudah Dibalas" : "Diarsipkan"}
-            </Button>
-          ))}
-        </div>
-
-        <div className="relative flex-1 max-w-xs w-full">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari pengirim / isi pesan..."
-            className="pl-9"
-          />
-        </div>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        title="Pesan Kontak Masuk"
+        actions={
+          <>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Cari pengirim / isi pesan..."
+            />
+            <FilterDropdown
+              value={statusFilter}
+              onChange={setStatusFilter}
+              icon={Filter}
+              labelPrefix="Status"
+              options={[
+                { value: "all", label: "Semua Status" },
+                { value: "unread", label: "Belum Dibaca" },
+                { value: "read", label: "Sudah Dibaca" },
+                { value: "replied", label: "Sudah Dibalas" },
+                { value: "archived", label: "Diarsipkan" },
+              ]}
+            />
+          </>
+        }
+      />
 
       {/* Messages List */}
       {loading ? (

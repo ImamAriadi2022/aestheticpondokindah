@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "@/core/layouts/Header";
 import Footer from "@/core/layouts/Footer";
 import DoctorCard, { type Doctor } from "@/features/guest/doctors/components/DoctorCard";
+import DoctorScheduleSection from "@/features/guest/doctors/components/DoctorScheduleSection";
 import { CLINIC_DOCTORS } from "@/features/guest/doctors/services/doctorsService";
 import { API_BASE } from "@/core/api/apiConfig";
 import { Award, GraduationCap, MessageCircle, Search } from "lucide-react";
@@ -145,6 +146,9 @@ export default function DoctorsPage() {
             )}
           </div>
         </section>
+
+        {/* Jadwal Dokter Mingguan (Senin - Sabtu) */}
+        <DoctorScheduleSection doctors={doctors} />
 
         {/* Why Choose Our Doctors */}
         <section className="py-14 sm:py-20 bg-brand-cream">

@@ -44,6 +44,7 @@ export const CONTENT_SUBMENU: MenuItem["submenu"] = [
 
 export const BOOKING_SUBMENU: MenuItem["submenu"] = [
   { label: "Booking", href: "/dashboard/clinic?tab=reservasi" },
+  { label: "Layanan Klinik", href: "/dashboard/clinic?tab=treatments" },
   { label: "Konsultasi", href: "/dashboard/clinic?tab=konsultasi" },
   { label: "Pengaduan", href: "/dashboard/clinic?tab=pengaduan" },
 ];

@@ -1,13 +1,17 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import ConsultationTable from "../components/ConsultationTable";
 import AdminConsultationChatView from "../components/AdminConsultationChatView";
-import { MessageSquare, Clock, CheckCircle2, Search, Sparkles, RefreshCw } from "lucide-react";
+import { Filter } from "lucide-react";
 import { getAllConsultations } from "@/features/patient/consultation/services/consultationApi";
 import {
   getCachedConsultationList,
   setCachedConsultationList,
 } from "@/features/patient/consultation/services/consultationCache";
 import { Button } from "@/shared/ui/button";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 type Props = {
   consultations?: any[];
@@ -66,6 +70,8 @@ export default function ConsultationPage({ consultations: initialConsultations =
     if (onRefresh) onRefresh();
   };
 
+  usePageRefresh(handleRefresh);
+
   const counts = useMemo(() => {
     return {
       total: consultations.length,
@@ -109,96 +115,32 @@ export default function ConsultationPage({ consultations: initialConsultations =
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <div className="space-y-5 animate-in fade-in duration-150">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#2C2416]">Konsultasi Pasien</h2>
-          <p className="text-xs text-[#8C8272] mt-0.5">
-            Kelola sesi chat konsultasi medis online antara pasien dan admin klinik secara real-time.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={loading}
-            className="h-8 text-xs font-semibold text-[#8C6B1C] border-[#E8DFC8] bg-white hover:bg-[#FAF8F5] rounded-xl cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-            Segarkan
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-bold text-[#8C8272]">Total Konsultasi</span>
-            <MessageSquare className="w-4 h-4 text-[#8C6B1C]" />
-          </div>
-          <p className="text-2xl font-black text-[#2C2416]">{counts.total}</p>
-        </div>
-
-        <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-bold text-amber-700">Menunggu Respon</span>
-            <Clock className="w-4 h-4 text-amber-600" />
-          </div>
-          <p className="text-2xl font-black text-amber-600">{counts.waiting}</p>
-        </div>
-
-        <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-bold text-emerald-700">Sedang Dibuka</span>
-            <Sparkles className="w-4 h-4 text-emerald-600" />
-          </div>
-          <p className="text-2xl font-black text-emerald-600">{counts.opened}</p>
-        </div>
-
-        <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] font-bold text-gray-600">Telah Selesai</span>
-            <CheckCircle2 className="w-4 h-4 text-gray-500" />
-          </div>
-          <p className="text-2xl font-black text-gray-700">{counts.completed}</p>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E8DFC8]">
-        {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
-          {(["Semua", "Menunggu", "Dibuka", "Selesai"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setStatusFilter(tab)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                statusFilter === tab
-                  ? "bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] text-white shadow-2xs"
-                  : "text-[#6B5E4F] hover:bg-[#FAF5EA] hover:text-[#8C6B1C]"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Search Box */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-3.5 h-3.5 text-[#8C8272] absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari pasien, topik, kode..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#FAF8F5] border border-[#E8DFC8] focus:border-[#C9A24A] focus:bg-white rounded-xl outline-hidden text-[#2C2416] transition-all"
-          />
-        </div>
-      </div>
+      <PageHeader
+        title="Konsultasi Pasien"
+        actions={
+          <>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Cari pasien, topik, kode..."
+            />
+            <FilterDropdown
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v as any)}
+              icon={Filter}
+              labelPrefix="Status"
+              options={[
+                { value: "Semua", label: "Semua Status" },
+                { value: "Menunggu", label: "Menunggu" },
+                { value: "Dibuka", label: "Dibuka" },
+                { value: "Selesai", label: "Selesai" },
+              ]}
+            />
+          </>
+        }
+      />
 
       {/* Consultation Table */}
       <ConsultationTable

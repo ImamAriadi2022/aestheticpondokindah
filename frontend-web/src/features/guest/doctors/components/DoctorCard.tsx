@@ -149,15 +149,6 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
               </span>
             </div>
 
-            {schedules.length > 0 && (
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-emerald-700 font-medium mb-3">
-                <Calendar className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">
-                  Jadwal terdekat: {formatScheduleDate(schedules[0].date)} ({schedules[0].time_range})
-                </span>
-              </div>
-            )}
-
             <div className="flex-grow" />
 
             <div className="flex items-center gap-2 sm:gap-3">
@@ -266,31 +257,6 @@ export default function DoctorCard({ doctor }: DoctorCardProps) {
                   <p className="text-sm text-gray-600 font-body leading-relaxed">{doctor.description}</p>
                 </div>
               )}
-
-              {/* Jadwal Praktik Aktif */}
-              <div className="mb-5">
-                <h4 className="text-xs font-bold text-[#c9a24a] font-body uppercase tracking-wider mb-2">
-                  Jadwal Praktik Aktif
-                </h4>
-                {schedules.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {schedules.map((slot) => (
-                      <div
-                        key={slot.id}
-                        className="p-2.5 rounded-xl bg-[#FAF8F5] border border-[#E8DFC8] text-xs"
-                      >
-                        <p className="font-bold text-[#2C2416]">{formatScheduleDate(slot.date)}</p>
-                        <p className="text-[#5C5546] mt-0.5">{slot.time_range}</p>
-                        <p className="text-[11px] text-[#8A7B6B] truncate mt-0.5">{slot.location}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-gray-500 italic">
-                    Jadwal praktik tersedia berdasarkan perjanjian (appointment). Klik tombol di bawah untuk memilih tanggal.
-                  </p>
-                )}
-              </div>
 
               {fellowship && (
                 <div className="mb-4">

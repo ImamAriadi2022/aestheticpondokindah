@@ -43,12 +43,12 @@ export default function UserTable({ users, onSelect, onDelete, isSearching }: Pr
                     <p className="text-[10px] text-[#8A7B6B]">{user.whatsapp || user.phone || "-"}</p>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF8F5] text-[#4A3F35] border border-[#F0E6D3]">
+                    <span className="text-xs font-medium text-[#4A3F35]">
                       {user.role || "user"}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FDF8F0] text-[#B8943F] border border-[#F5E6C8]">
+                    <span className="text-xs font-semibold text-[#8C6B1C]">
                       {user.membership_tier || user.membership_level || "Bronze"}
                     </span>
                   </TableCell>

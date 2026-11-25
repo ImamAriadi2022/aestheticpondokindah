@@ -11,6 +11,7 @@ import {
   updateAdminLegal,
   type ClinicLegalPolicy,
 } from "../services/publicInfoAdminApi";
+import { PageHeader } from "@/shared/ui/PageHeader";
 
 export default function LegalManagePage() {
   const [activeType, setActiveType] = useState<"privacy_policy" | "terms_of_service">("privacy_policy");
@@ -61,15 +62,21 @@ export default function LegalManagePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-charcoal">Kebijakan & Ketentuan Legal</h1>
-          <p className="text-sm text-brand-warm-gray">
-            Kelola teks resmi Syarat & Ketentuan Layanan (*Terms of Service*) serta Kebijakan Privasi (*Privacy Policy*).
-          </p>
-        </div>
-      </div>
+    <div className="space-y-5 max-w-4xl">
+      <PageHeader
+        title="Kebijakan & Ketentuan Legal"
+        actions={
+          <Button
+            type="button"
+            disabled={saving}
+            onClick={handleSave}
+            className="bg-[#C9A24A] hover:bg-[#B8943F] text-white font-bold rounded-xl h-9 px-4 text-xs shadow-xs cursor-pointer justify-center"
+          >
+            {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
+            Simpan Dokumen
+          </Button>
+        }
+      />
 
       {/* Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">

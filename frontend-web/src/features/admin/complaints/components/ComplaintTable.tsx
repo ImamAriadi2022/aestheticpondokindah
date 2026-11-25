@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/shared/ui/button";
 import { 
   MessageSquare, 
-  Search, 
   Clock, 
   CheckCircle2, 
   AlertCircle, 
@@ -12,8 +11,11 @@ import {
   MessageCircle,
   Tag,
   Check,
-  X
+  X,
+  Filter
 } from "lucide-react";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 type Props = {
   complaints: any[];
@@ -60,64 +62,25 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
   return (
     <div className="space-y-4">
       {/* Search & Filter Controls Bar */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setStatusFilter("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "all"
-                ? "bg-[#C9A24A] text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Semua ({complaints.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("pending")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "pending"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Menunggu ({pendingCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("processing")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "processing"
-                ? "bg-sky-600 text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Diproses ({processingCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("resolved")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "resolved"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Selesai ({resolvedCount})
-          </button>
-        </div>
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Cari nama pasien, tiket, kategori..."
+        />
 
-        {/* Searchbar */}
-        <div className="relative w-full md:w-80 shrink-0">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari nama pasien, tiket, kategori..."
-            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <FilterDropdown
+            value={statusFilter}
+            onChange={setStatusFilter}
+            icon={Filter}
+            labelPrefix="Status"
+            options={[
+              { value: "all", label: `Semua Status (${complaints.length})` },
+              { value: "pending", label: `Menunggu (${pendingCount})` },
+              { value: "processing", label: `Diproses (${processingCount})` },
+              { value: "resolved", label: `Selesai (${resolvedCount})` },
+            ]}
           />
         </div>
       </div>

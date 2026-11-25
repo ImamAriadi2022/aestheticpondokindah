@@ -82,6 +82,12 @@ export default function AdminSidebar({ activeTab }: Props) {
             href: "/dashboard/clinic?tab=reservasi",
           },
           {
+            id: "treatments",
+            label: "Layanan Klinik",
+            icon: Sparkles,
+            href: "/dashboard/clinic?tab=treatments",
+          },
+          {
             id: "konsultasi",
             label: "Konsultasi Pasien",
             icon: MessageSquare,

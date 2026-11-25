@@ -3,9 +3,12 @@ import DownloadAppEditor from "../components/DownloadAppEditor";
 import { PwaInstallButton } from "@/core/components/PwaInstallButton";
 import { Button } from "@/shared/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { Plus, Edit2, Trash2, Download, Smartphone, Apple, Search, Check, X, HardDrive } from "lucide-react";
+import { Plus, Edit2, Trash2, Download, Smartphone, Apple, Check, X, Filter } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
 import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 type Props = {
   searchParams: URLSearchParams;
@@ -107,99 +110,45 @@ export default function DownloadAppPage({ searchParams, setSearchParams, apiDown
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#4A3F35]">Distribusi & Download Aplikasi Pasien</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">
-            Kelola rilis APK Android langsung, link Google Play Store, dan link Apple App Store untuk pasien klinik.
-          </p>
-        </div>
-        <div className="download-app-page-actions flex items-center gap-2">
-          <Button
-            className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
-            onClick={() => {
-            setSearchParams((prev: any) => {
-              const next = new URLSearchParams(prev);
-              next.set("tab", "content-download");
-              next.set("view", "editor");
-              next.delete("id");
-              return next;
-            });
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Rilis Versi Baru
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
-              <HardDrive className="w-5 h-5" />
-            </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Total Versi Rilis</p>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{apiDownloadApps.length}</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <Check className="w-5 h-5" />
-            </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Rilis Aktif</p>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-emerald-600">{activeCount}</p>
-        </div>
-
-        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
-              <Smartphone className="w-5 h-5" />
-            </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Distribusi Platform</p>
-          </div>
-          <p className="text-xs sm:text-sm font-bold text-[#4A3F35] mt-1">
-            {androidCount} Android • {iosCount} iOS
-          </p>
-        </div>
-      </div>
-
-      {/* Filters & Search */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
-        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
-          {(["All", "android", "ios"] as const).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setFilterPlatform(p)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                filterPlatform === p
-                  ? "bg-[#C9A24A] text-white shadow-xs"
-                  : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-              }`}
+    <div className="space-y-5 animate-in fade-in duration-150">
+      <PageHeader
+        title="Distribusi & Download Aplikasi Pasien"
+        actions={
+          <>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Cari versi / rilis..."
+            />
+            <FilterDropdown
+              value={filterPlatform}
+              onChange={(v) => setFilterPlatform(v as any)}
+              icon={Filter}
+              labelPrefix="Platform"
+              options={[
+                { value: "All", label: `Semua Platform (${apiDownloadApps.length})` },
+                { value: "android", label: `Android (${androidCount})` },
+                { value: "ios", label: `iOS (${iosCount})` },
+              ]}
+            />
+            <Button
+              className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-xs h-9 text-xs cursor-pointer justify-center"
+              onClick={() => {
+                setSearchParams((prev: any) => {
+                  const next = new URLSearchParams(prev);
+                  next.set("tab", "content-download");
+                  next.set("view", "editor");
+                  next.delete("id");
+                  return next;
+                });
+              }}
             >
-              {p === "All" ? "Semua Platform" : p === "android" ? "Android (APK)" : "iOS App Store"}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full md:w-64 shrink-0">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari versi / rilis..."
-            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
-          />
-        </div>
-      </div>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Rilis Versi Baru
+            </Button>
+          </>
+        }
+      />
 
       {/* Table with horizontal scroll */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">

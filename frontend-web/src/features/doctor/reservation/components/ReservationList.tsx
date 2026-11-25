@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   Loader2,
   Stethoscope,
-  Search,
-  RefreshCw,
   Phone,
   Calendar,
   Clock,
@@ -13,6 +11,7 @@ import {
   X,
   ArrowLeft,
   FileText,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
@@ -20,6 +19,10 @@ import { apiClient } from "@/core/api/apiClient";
 import { getDoctorQueue } from "@/features/doctor/dashboard/services/doctorDashboardService";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 const STORAGE_KEY = "apig_doctor_cached_patients";
 
@@ -73,6 +76,8 @@ export default function DoctorReservationList() {
 
     return () => clearInterval(timer);
   }, [fetchPatients, reservations.length]);
+
+  usePageRefresh(() => fetchPatients(false));
 
   useEffect(() => {
     if (selectedPatient) {
@@ -334,97 +339,30 @@ export default function DoctorReservationList() {
         </div>
       ) : (
         /* Patient List Table View */
-        <div className="space-y-6 text-left animate-in fade-in duration-150">
-          {/* Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 sm:p-6 rounded-2xl border border-[#F0E6D3] shadow-xs">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#FAF5EA] border border-[#EADBBD] text-[#8C6B1C] text-xs font-semibold mb-1.5">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Aesthetic Pondok Indah</span>
-              </div>
-              <h2 className="text-xl font-bold text-[#4A3F35] flex items-center gap-2">
-                <Stethoscope className="w-5 h-5 text-[#C9A24A]" />
-                Daftar Pasien
-              </h2>
-              <p className="text-xs text-[#8A7B6B] mt-0.5">
-                Daftar seluruh pasien yang memilih jadwal periksa Anda di klinik
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fetchPatients(false)}
-                disabled={loading}
-                className="rounded-xl border-[#EADBBD] text-[#8C6B1C] hover:bg-[#FAF5EA] font-semibold h-10 px-4 text-xs cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-                Refresh Data
-              </Button>
-            </div>
-          </div>
-
-          {/* Filter & Search Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
-            {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              <button
-                type="button"
-                onClick={() => setStatusFilter("all")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  statusFilter === "all"
-                    ? "bg-[#8C6B1C] text-white shadow-xs"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Semua ({counts.all})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter("in_progress")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  statusFilter === "in_progress"
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "bg-blue-50 text-blue-800 hover:bg-blue-100"
-                }`}
-              >
-                Dikonfirmasi Admin ({counts.in_progress})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter("completed")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  statusFilter === "completed"
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
-                }`}
-              >
-                Selesai ({counts.completed})
-              </button>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari pasien / tindakan..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50/80 border border-[#EADBBD] rounded-xl text-xs text-[#4A3F35] placeholder:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]/20 focus:border-[#C9A24A] transition-all"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="space-y-5 text-left animate-in fade-in duration-150">
+          <PageHeader
+            title="Daftar Pasien"
+            actions={
+              <>
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Cari pasien / tindakan..."
+                />
+                <FilterDropdown
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  icon={Filter}
+                  labelPrefix="Status"
+                  options={[
+                    { value: "all", label: `Semua Status (${counts.all})` },
+                    { value: "in_progress", label: `Dikonfirmasi (${counts.in_progress})` },
+                    { value: "completed", label: `Selesai (${counts.completed})` },
+                  ]}
+                />
+              </>
+            }
+          />
 
           {/* Patient Table List */}
           <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-xs overflow-hidden">

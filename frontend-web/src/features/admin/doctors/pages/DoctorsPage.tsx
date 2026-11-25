@@ -3,7 +3,7 @@ import DoctorTable from "../components/DoctorTable";
 import DoctorEditorModal from "../components/DoctorEditorModal";
 import DoctorScheduleModal from "../components/DoctorScheduleModal";
 import { Button } from "@/shared/ui/button";
-import { Plus, Stethoscope, Users, CheckCircle2, Calendar, RefreshCw } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
 import { apiClient } from "@/core/api/apiClient";
 import {
@@ -11,6 +11,8 @@ import {
   syncAdminDoctorSchedules,
   type AdminDoctorScheduleItem,
 } from "../services/adminDoctorScheduleApi";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 const CACHE_KEY_DOCTORS = "apident:admin:doctors";
 const CACHE_KEY_SCHEDULES = "apident:admin:doctor_schedules";
@@ -51,7 +53,8 @@ export default function DoctorsPage({
   // 1. Instant Cache Initialization (0 ms initial render)
   const [localDoctors, setLocalDoctors] = useState<any[]>(() => {
     if (Array.isArray(propsDoctors) && propsDoctors.length > 0) return propsDoctors;
-    return getCachedData<any[]>(CACHE_KEY_DOCTORS, []);
+    const cached = getCachedData<any[]>(CACHE_KEY_DOCTORS, []);
+    return cached;
   });
 
   const [localSchedules, setLocalSchedules] = useState<AdminDoctorScheduleItem[]>(() => {
@@ -67,13 +70,22 @@ export default function DoctorsPage({
     setLoading(true);
     try {
       const [docRes, schedRes]: [any, any] = await Promise.all([
-        apiClient.get("/admin/doctors", { skipToast: true }).catch(() => null),
+        apiClient.get("/admin/doctors", { skipToast: true }).catch(async () => {
+          return apiClient.get("/doctors", { skipToast: true }).catch(() => null);
+        }),
         getAdminDoctorSchedules().catch(() => null),
       ]);
 
-      const docList = Array.isArray(docRes)
+      let docList = Array.isArray(docRes)
         ? docRes
         : docRes?.doctors || docRes?.data || [];
+
+      if ((!Array.isArray(docList) || docList.length === 0)) {
+        const pubFallback: any = await apiClient.get("/doctors", { skipToast: true }).catch(() => null);
+        docList = Array.isArray(pubFallback)
+          ? pubFallback
+          : pubFallback?.doctors || pubFallback?.data || [];
+      }
 
       if (Array.isArray(docList) && docList.length > 0) {
         setLocalDoctors(docList);
@@ -109,6 +121,8 @@ export default function DoctorsPage({
   useEffect(() => {
     loadDoctorsFromBackend();
   }, [loadDoctorsFromBackend]);
+
+  usePageRefresh(loadDoctorsFromBackend);
 
   // Modal States
   const [editorOpen, setEditorOpen] = useState(false);
@@ -328,75 +342,20 @@ export default function DoctorsPage({
   const totalSchedulesCount = localSchedules.length > 0 ? localSchedules.length : 12;
 
   return (
-    <div className="doctors-page space-y-6">
-      {/* Header & Stats Cards */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#4A3F35] flex items-center gap-2.5">
-            <Stethoscope className="w-6 h-6 text-[#C9A24A]" />
-            Manajemen Tim Dokter Spesialis
-          </h2>
-          <p className="text-xs sm:text-sm text-[#8A7B6B] mt-0.5">
-            Kelola profil profesional, kredensial STR/SIP, akun login, dan keaktifan praktik dokter klinik.
-          </p>
-        </div>
-
-        <div className="doctors-page-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={loadDoctorsFromBackend}
-            disabled={loading}
-            className="rounded-xl border-[#E8DFC8] h-10 px-3.5 text-xs text-[#5C5546] hover:bg-[#FAF8F5] cursor-pointer shadow-2xs justify-center"
-            title="Refresh Data Dokter"
-          >
-            <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? "animate-spin text-[#C9A24A]" : ""}`} />
-            Muat Ulang
-          </Button>
-
+    <div className="doctors-page space-y-5">
+      <PageHeader
+        title="Manajemen Tim Dokter Spesialis"
+        actions={
           <Button
             type="button"
             onClick={handleCreateNew}
-            className="bg-[#B8943F] hover:bg-[#A38032] text-white font-bold rounded-xl text-xs h-10 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer transition justify-center"
+            className="bg-[#B8943F] hover:bg-[#A38032] text-white font-bold rounded-xl text-xs h-9 px-4 shadow-md shadow-[#C9A24A]/20 cursor-pointer transition justify-center"
           >
             <Plus className="w-4 h-4 mr-1.5" />
-            Tambah Dokter Spesialis
+            Tambah Dokter
           </Button>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="doctor-summary-card bg-white p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
-            <Users className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] sm:text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider truncate">Total Dokter</p>
-            <p className="text-base sm:text-xl font-bold text-[#4A3F35] mt-0.5">{totalDoctors} <span className="text-xs sm:text-sm font-normal text-[#8A7B6B]">Spesialis</span></p>
-          </div>
-        </div>
-
-        <div className="doctor-summary-card bg-white p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-200">
-            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] sm:text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider truncate">Dokter Aktif</p>
-            <p className="text-base sm:text-xl font-bold text-emerald-700 mt-0.5">{activeDoctors} <span className="text-xs sm:text-sm font-normal text-emerald-600">Praktik</span></p>
-          </div>
-        </div>
-
-        <div className="doctor-summary-card col-span-2 sm:col-span-1 bg-white p-4 sm:p-5 rounded-2xl border border-[#F0E6D3] shadow-2xs flex items-center gap-3 sm:gap-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#C9A24A] shrink-0 border border-[#EADBBD]">
-            <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] sm:text-[11px] font-semibold text-[#8A7B6B] uppercase tracking-wider truncate">Total Sesi Jadwal</p>
-            <p className="text-base sm:text-xl font-bold text-[#4A3F35] mt-0.5">{totalSchedulesCount} <span className="text-xs sm:text-sm font-normal text-[#8A7B6B]">Sesi</span></p>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Doctor Table with Real Data */}
       <DoctorTable

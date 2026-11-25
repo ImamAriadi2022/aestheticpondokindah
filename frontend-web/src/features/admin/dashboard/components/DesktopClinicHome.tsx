@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router";
 import {
   Users,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import Sparkline from "@/shared/ui/Sparkline";
 import TrafficUtmAnalyticsSection from "@/features/admin/dashboard/components/TrafficUtmAnalyticsSection";
+import { DUMMY_WEEKLY_RESERVATIONS } from "@/features/admin/reservation/services/dummyReservations";
 
 export default function DesktopClinicHome({
   session,
@@ -45,14 +47,28 @@ export default function DesktopClinicHome({
   const safeStats = Array.isArray(stats) ? stats : [];
   const safeReservations = Array.isArray(reservations) ? reservations : [];
 
-  // Hitungan metrik reservasi hari ini
-  const totalReservationsCount = safeReservations.length > 0 ? safeReservations.length : (safeStats[2]?.value ?? 10);
-  const pendingReservationsCount = safeReservations.filter(
-    (r) => r && (r.status === "Menunggu" || r.status === "pending" || r.status === "submitted" || r.status === "Menunggu Konfirmasi")
-  ).length || 7;
-  const confirmedReservationsCount = safeReservations.filter(
-    (r) => r && (r.status === "Dikonfirmasi" || r.status === "confirmed" || r.status === "approved" || r.status === "Selesai")
-  ).length || 2;
+  // Gabungkan reservasi dari server dengan dummy seperti di modul booking/reservasi
+  const allReservationsList = useMemo(() => {
+    const list = [...safeReservations];
+    const existingCodes = new Set(list.map((r) => r.code));
+    DUMMY_WEEKLY_RESERVATIONS.forEach((dummy) => {
+      if (!existingCodes.has(dummy.code)) {
+        list.push(dummy);
+      }
+    });
+    return list;
+  }, [safeReservations]);
+
+  // Hitung jumlah Perlu Konfirmasi (status Baru / pending / Menunggu)
+  const pendingReservationsCount = allReservationsList.filter(
+    (r) =>
+      r &&
+      (r.status === "Baru" ||
+        r.status === "pending" ||
+        r.status === "Menunggu" ||
+        r.status === "submitted" ||
+        r.status === "Menunggu Konfirmasi")
+  ).length;
 
   const pendingConsultations = safeConsultations.filter(
     (c) => c && (c.status === "Menunggu" || c.status === "Dijadwalkan" || c.status === "pending" || c.status === "scheduled")
@@ -165,106 +181,16 @@ export default function DesktopClinicHome({
               </span>
             </h2>
 
-            {/* 3 Titik Laporan Hari Ini (Lebih kecil, rapat, warna seragam & hairline divider) */}
-            <div className="mt-4 max-w-[210px] divide-y divide-[#EADBBD]/70">
-              {/* Item 1: Total Reservasi */}
-              <div className="flex items-center gap-2.5 pb-2">
-                <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-                  <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="none"
-                      stroke="#EADBBF"
-                      strokeWidth="3.5"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="none"
-                      stroke="#B8943F"
-                      strokeWidth="3.5"
-                      strokeDasharray="88"
-                      strokeDashoffset="26"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute text-[10px] font-bold text-[#3D332A]">
-                    {String(totalReservationsCount).padStart(2, "0")}
-                  </span>
-                </div>
-                <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
-                  Total Reservasi
+            {/* Ringkasan Reservasi Perlu Konfirmasi */}
+            <div className="mt-4 inline-flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full border-2 border-[#E5A024] flex items-center justify-center shrink-0 bg-[#FFF9E6]/60">
+                <span className="text-xs font-bold text-[#3D332A]">
+                  {pendingReservationsCount}
                 </span>
               </div>
-
-              {/* Item 2: Perlu Konfirmasi */}
-              <div className="flex items-center gap-2.5 py-2">
-                <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-                  <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="none"
-                      stroke="#EADBBF"
-                      strokeWidth="3.5"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="none"
-                      stroke="#B8943F"
-                      strokeWidth="3.5"
-                      strokeDasharray="88"
-                      strokeDashoffset="44"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute text-[10px] font-bold text-[#3D332A]">
-                    {String(pendingReservationsCount).padStart(2, "0")}
-                  </span>
-                </div>
-                <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
-                  Perlu Konfirmasi
-                </span>
-              </div>
-
-              {/* Item 3: Dikonfirmasi */}
-              <div className="flex items-center gap-2.5 pt-2">
-                <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
-                  <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="none"
-                      stroke="#EADBBF"
-                      strokeWidth="3.5"
-                    />
-                    <circle
-                      cx="18"
-                      cy="18"
-                      r="14"
-                      fill="none"
-                      stroke="#B8943F"
-                      strokeWidth="3.5"
-                      strokeDasharray="88"
-                      strokeDashoffset="18"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute text-[10px] font-bold text-[#3D332A]">
-                    {String(confirmedReservationsCount).padStart(2, "0")}
-                  </span>
-                </div>
-                <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
-                  Dikonfirmasi
-                </span>
-              </div>
+              <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
+                Perlu Konfirmasi
+              </span>
             </div>
           </div>
 

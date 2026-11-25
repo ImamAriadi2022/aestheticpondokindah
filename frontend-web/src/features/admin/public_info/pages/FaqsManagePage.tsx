@@ -1,9 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
 import {
   Plus,
-  Search,
   Edit2,
   Trash2,
   HelpCircle,
@@ -12,6 +10,7 @@ import {
   X,
   Layers,
   Sparkles,
+  Filter,
 } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
 import {
@@ -22,6 +21,9 @@ import {
   type FaqItem,
 } from "../services/publicInfoAdminApi";
 import FaqEditModal from "../components/FaqEditModal";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 export default function FaqsManagePage() {
   const [faqs, setFaqs] = useState<FaqItem[]>([]);
@@ -126,76 +128,40 @@ export default function FaqsManagePage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-3">
-        <div>
-          <h1 className="text-2xl font-bold text-[#4A3F35]">Pusat Bantuan & FAQ</h1>
-          <p className="text-xs sm:text-sm text-[#8A7B6B]">
-            Kelola tanya jawab seputar layanan gigi, jadwal reservasi, dan ketentuan klinik yang tersambung langsung ke database publik.
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setEditingFaq(null);
-            setIsModalOpen(true);
-          }}
-          className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-bold rounded-xl h-11 px-5 shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
-        >
-          <Plus className="w-4 h-4 mr-2" /> Tambah Pertanyaan FAQ
-        </Button>
-      </div>
-
-      {/* Stats / Counts bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
-          <p className="text-[11px] font-bold text-[#8A7B6B] uppercase tracking-wider">Total FAQ</p>
-          <p className="text-xl font-black text-[#4A3F35] mt-1">{faqs.length}</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
-          <p className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">FAQ Aktif</p>
-          <p className="text-xl font-black text-emerald-600 mt-1">
-            {faqs.filter((f) => f.is_active).length}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs col-span-2 sm:col-span-1">
-          <p className="text-[11px] font-bold text-[#8C6B1C] uppercase tracking-wider">Kategori</p>
-          <p className="text-xl font-black text-[#8C6B1C] mt-1">{categories.length - 1}</p>
-        </div>
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7B6B]" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari pertanyaan atau jawaban FAQ..."
-            className="pl-10 h-11 rounded-xl bg-white border-[#F0E6D3] focus:border-[#C9A24A] text-sm"
-          />
-        </div>
-
-        {/* Categories Filter Tabs */}
-        {categories.length > 2 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer transition-all border ${
-                  selectedCategory === cat
-                    ? "bg-[#C9A24A] text-white border-[#C9A24A] shadow-xs"
-                    : "bg-white text-[#5C5546] border-[#F0E6D3] hover:bg-[#FAF8F5]"
-                }`}
-              >
-                {cat === "all" ? "Semua Kategori" : cat}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        title="Pusat Bantuan & FAQ"
+        actions={
+          <>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Cari pertanyaan atau jawaban FAQ..."
+            />
+            {categories.length > 2 && (
+              <FilterDropdown
+                value={selectedCategory}
+                onChange={setSelectedCategory}
+                icon={Filter}
+                labelPrefix="Kategori"
+                options={categories.map((c) => ({
+                  value: c,
+                  label: c === "all" ? "Semua Kategori" : c,
+                }))}
+              />
+            )}
+            <Button
+              onClick={() => {
+                setEditingFaq(null);
+                setIsModalOpen(true);
+              }}
+              className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-bold rounded-xl h-9 px-4 text-xs shadow-xs cursor-pointer justify-center"
+            >
+              <Plus className="w-4 h-4 mr-1.5" /> Tambah Pertanyaan
+            </Button>
+          </>
+        }
+      />
 
       {/* FAQs Card List */}
       {loading ? (
@@ -220,7 +186,7 @@ export default function FaqsManagePage() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF8F5] text-[#4A3F35] border border-[#F0E6D3]">
+                        <span className="text-xs font-semibold text-[#8C6B1C]">
                           {faq.category || "Umum"}
                         </span>
                         <button
@@ -228,17 +194,17 @@ export default function FaqsManagePage() {
                           onClick={() => handleToggleStatus(faq)}
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all border ${
                             faq.is_active
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
-                              : "bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
+                              : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"
                           }`}
                           title="Klik untuk mengubah status aktif di website"
                         >
-                          {faq.is_active ? (
-                            <Check className="w-3 h-3 text-emerald-600" />
-                          ) : (
-                            <X className="w-3 h-3 text-stone-500" />
-                          )}
-                          {faq.is_active ? "🟢 Aktif" : "⚪ Nonaktif"}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              faq.is_active ? "bg-emerald-500" : "bg-stone-400"
+                            }`}
+                          />
+                          {faq.is_active ? "Aktif" : "Non-aktif"}
                         </button>
                         {faq.sort_order !== undefined && faq.sort_order > 0 && (
                           <span className="text-[10px] text-[#8A7B6B] font-mono">

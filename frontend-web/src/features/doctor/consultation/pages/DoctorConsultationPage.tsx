@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Loader2, MessageSquare, RefreshCw, Video } from "lucide-react";
+import { Loader2, MessageSquare, Video } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
-import { ConsultationSummaryCards } from "../components/ConsultationSummaryCards";
 import { StatusBadge } from "../components/StatusBadge";
 import { TYPE_META } from "../services/consultation.constants";
 import { useScheduledConsultations } from "../services/useScheduledConsultations";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 export default function DoctorConsultationPage() {
   const navigate = useNavigate();
@@ -25,37 +26,20 @@ export default function DoctorConsultationPage() {
     }
   };
 
+  usePageRefresh(handleRefresh);
+
   const typeMeta = TYPE_META.scheduled;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-[#4A3F35]">Konsultasi Online Dokter</h2>
-          <p className="text-xs text-[#8A7B6B] mt-1">
-            Daftar konsultasi pasien Anda — kelola meeting dan masuki ruang chat.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="space-y-5">
+      <PageHeader
+        title="Konsultasi Online Dokter"
+        actions={
           <span className="px-3 py-1 bg-[#F5E6C8] text-[#8A6B2B] text-xs font-bold rounded-full border border-[#E8D4A2]">
             Total: {consultations.length} Konsultasi
           </span>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="border-[#F0E6D3] text-[#4A3F35] hover:bg-[#FDF8F0] rounded-xl text-xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <ConsultationSummaryCards consultations={consultations} loading={loading} />
+        }
+      />
 
       {/* Main List */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-sm overflow-hidden">
