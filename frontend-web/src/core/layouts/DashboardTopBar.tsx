@@ -57,7 +57,9 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   const [notifications, setNotifications] = useState<PushNotificationPayload[]>(() => {
     try {
       const cached = localStorage.getItem("apig_recent_push_notifications");
-      return cached ? JSON.parse(cached) : [];
+      if (!cached) return [];
+      const parsed: PushNotificationPayload[] = JSON.parse(cached);
+      return parsed;
     } catch {
       return [];
     }
@@ -72,7 +74,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [filterTab, setFilterTab] = useState<"all" | "unread">("all");
+  const [filterTab, setFilterTab] = useState<"unread" | "all">("unread");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -271,9 +273,9 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         setNotifications((prev: PushNotificationPayload[]) => {
           const combined = [...mapped, ...prev.filter((p: PushNotificationPayload) => !mapped.some((m: PushNotificationPayload) => m.id === p.id))];
           try {
-            localStorage.setItem("apig_recent_push_notifications", JSON.stringify(combined.slice(0, 30)));
+            localStorage.setItem("apig_recent_push_notifications", JSON.stringify(combined.slice(0, 50)));
           } catch {}
-          return combined.slice(0, 30);
+          return combined.slice(0, 50);
         });
 
         const unreadItems = list.filter((item: any) => !item.read_at && !item.is_read);
@@ -478,7 +480,27 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       : notifications;
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-end gap-3 shadow-xs">
+    <>
+      {/* Banner Persetujuan Notifikasi Khusus Perangkat Dokter */}
+      {role === "doctor" && notificationPermission !== "granted" && (
+        <div className="bg-[#FAF5EA] border-b border-[#EADBBD] px-4 py-2 flex items-center justify-between text-xs text-[#6B5E4F] animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            <span>
+              <strong className="text-[#2C2416]">Pemberitahuan Praktik:</strong> Aktifkan izin notifikasi di perangkat ini agar jadwal & reservasi pasien Anda selalu masuk secara realtime.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={requestPushPermission}
+            className="px-3 py-1 rounded-lg bg-[#8C6B1C] hover:bg-[#725615] text-white text-[11px] font-bold shadow-xs transition-colors shrink-0 cursor-pointer"
+          >
+            Setujui Notifikasi
+          </button>
+        </div>
+      )}
+
+      <header className="sticky top-0 z-40 bg-white border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-end gap-3 shadow-xs">
       {/* Right: Ikon Notifikasi & Profil Dropdown (Termasuk Pengaturan Klinik) */}
       <div className="flex items-center gap-2.5">
         {/* Tombol Refresh Halaman / Data (Bulat Sempurna) */}
@@ -546,19 +568,8 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                 </div>
               </div>
 
-              {/* Filter Tabs: Semua vs Belum Dibaca */}
+              {/* Filter Tabs: Belum Dibaca (Kiri & Default) vs Semua (Kanan) */}
               <div className="flex items-center border-b border-gray-100 bg-white px-3 py-1.5 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setFilterTab("all")}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                    filterTab === "all"
-                      ? "bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  Semua ({notifications.length})
-                </button>
                 <button
                   type="button"
                   onClick={() => setFilterTab("unread")}
@@ -569,6 +580,17 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                   }`}
                 >
                   Belum Dibaca ({unreadCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab("all")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    filterTab === "all"
+                      ? "bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  Semua ({notifications.length})
                 </button>
               </div>
 
@@ -590,6 +612,8 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                   displayedNotifications.map((item: PushNotificationPayload, idx: number) => {
                     const isRead = checkIsRead(item);
                     const formattedTime = formatNotificationTime(item.receivedAt || item.createdAt);
+                    const cleanTitle = (item.title || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "").trim();
+                    const cleanMessage = (item.message || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "").trim();
 
                     return (
                       <div
@@ -613,7 +637,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                                 !isRead ? "font-bold text-[#2C2416]" : "font-medium text-gray-700"
                               }`}
                             >
-                              {item.title}
+                              {cleanTitle}
                             </p>
                           </div>
 
@@ -636,7 +660,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                             !isRead ? "text-[#5C5546]" : "text-gray-500"
                           }`}
                         >
-                          {item.message}
+                          {cleanMessage}
                         </p>
 
                         <div className="flex items-center justify-between pl-3.5 pt-0.5">
@@ -780,5 +804,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         </div>
       </div>
     </header>
+    </>
   );
 }

@@ -218,9 +218,25 @@ class ReservationSyncEngine {
 
     if (
       (data.type === "doctor_assigned" || data.type === "reservation_confirmed") &&
-      currentRole === "doctor" &&
-      (!data.doctorId || String(data.doctorId) === currentUserId)
+      currentRole === "doctor"
     ) {
+      // Validasi ketat kepemilikan notifikasi dokter
+      const sessionUser = getSession();
+      const currentDoctorId = String(sessionUser?.id || (sessionUser as any)?.user?.id || currentUserId || "");
+      const currentDoctorName = (sessionUser?.name || "").toLowerCase().trim();
+
+      const targetDocId = data.doctorId ? String(data.doctorId) : "";
+      const targetDocName = (data.doctorName || "").toLowerCase().trim();
+
+      const isMatchingDoctor =
+        (targetDocId && targetDocId === currentDoctorId) ||
+        (targetDocName && currentDoctorName && (targetDocName.includes(currentDoctorName) || currentDoctorName.includes(targetDocName)));
+
+      // Jangan kirim notifikasi jika bukan untuk dokter ini
+      if (!isMatchingDoctor && targetDocId) {
+        return;
+      }
+
       triggerPushNotification({
         title: "🩺 Pasien Baru Dikonfirmasi!",
         message: `Pasien: ${data.patientName} telah disetujui Admin untuk jadwal ${data.dateStr} (${data.timeStr || "Sesuai Jadwal"})`,
@@ -251,7 +267,23 @@ class ReservationSyncEngine {
 
   private dispatchUpdatedNotifications(items: CachedReservation[]) {
     if (this.currentRole === "doctor") {
-      const confirmed = items.filter((i) => (i.status || "").toLowerCase() === "dikonfirmasi");
+      const sessionUser = getSession();
+      const currentDoctorId = String(sessionUser?.id || (sessionUser as any)?.user?.id || this.currentUserId || "");
+      const currentDoctorName = (sessionUser?.name || "").toLowerCase().trim();
+
+      const confirmed = items.filter((i) => {
+        const isConfirmed = (i.status || "").toLowerCase() === "dikonfirmasi";
+        if (!isConfirmed) return false;
+
+        const docId = String(i.doctor_id || i.doctorId || "");
+        const docName = (i.doctor || i.doctor_name || i.doctorName || "").toLowerCase().trim();
+
+        if (docId && currentDoctorId && docId === currentDoctorId) return true;
+        if (docName && currentDoctorName && (docName.includes(currentDoctorName) || currentDoctorName.includes(docName))) return true;
+
+        return !docId && !docName; // fallback hanya jika tidak ada data dokter sama sekali
+      });
+
       confirmed.forEach((item) => {
         triggerPushNotification({
           title: "🩺 Pasien Baru Dikonfirmasi!",

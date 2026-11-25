@@ -67,7 +67,7 @@ export default function DashboardLayout({
   const getItemBadgeCount = (item: MenuItem): number => {
     const l = item.label.toLowerCase();
     if (l.includes("sistem booking") || l.includes("booking")) {
-      return submenuBadges.booking + submenuBadges.konsultasi + submenuBadges.pengaduan;
+      return submenuBadges.booking;
     }
     if (l.includes("konsultasi")) return submenuBadges.konsultasi;
     if (l.includes("pengaduan")) return submenuBadges.pengaduan;

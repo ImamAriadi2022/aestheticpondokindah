@@ -882,6 +882,31 @@ export default function NewBookingFlow({
   // Helper to get schedules for a specific date and selected doctor from backend
   const getDoctorSchedulesForDate = (dateIso: string) => {
     if (!selectedDoctor) return [];
+
+    // 1. Cek langsung dari weekly_schedules (Jadwal Praktek profil dokter)
+    const dayNames = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
+    const d = new Date(dateIso + "T00:00:00");
+    const dayKey = dayNames[d.getDay()];
+
+    const weeklySchedules = selectedDoctor.weekly_schedules || selectedDoctor.weeklySchedules;
+    if (weeklySchedules && typeof weeklySchedules === "object") {
+      const daySchedule = weeklySchedules[dayKey];
+      if (daySchedule && daySchedule.active && daySchedule.start && daySchedule.end) {
+        return [{
+          id: `weekly-${dayKey}`,
+          doctorId: selectedDoctor.id,
+          date: dateIso,
+          timeRange: `${daySchedule.start} - ${daySchedule.end}`,
+          location: selectedDoctor.primary_branch || selectedDoctor.primaryBranch || "Aesthetic Pondok Indah",
+          totalSlots: 10,
+        }];
+      }
+      if (daySchedule && !daySchedule.active) {
+        return [];
+      }
+    }
+
+    // 2. Fallback jika ada data doctorSchedules individual
     return doctorSchedules.filter((s) => {
       const matchDoc =
         String(s.doctorId) === String(selectedDoctor.id) ||

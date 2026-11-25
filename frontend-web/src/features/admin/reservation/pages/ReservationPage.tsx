@@ -92,30 +92,25 @@ export default function ReservationPage({
     }
   };
 
-  // Merge realtime backend reservations with sample dummy weekly reservations
+  // 100% Realtime backend reservations from database (no dummy)
   const activeReservationsList = useMemo(() => {
-    const list = Array.isArray(reservations) ? [...reservations] : [];
-    // If backend is empty or doesn't have current week's dummy, merge them
-    const existingCodes = new Set(list.map((r) => r.code));
-    DUMMY_WEEKLY_RESERVATIONS.forEach((dummy) => {
-      if (!existingCodes.has(dummy.code)) {
-        list.push(dummy);
-      }
-    });
-    return list;
+    return Array.isArray(reservations) ? [...reservations] : [];
   }, [reservations]);
 
   // Quick stats calculation
   const totalCount = activeReservationsList.length;
-  const newCount = activeReservationsList.filter(
-    (r) => r.status === "Baru" || r.status === "pending"
-  ).length;
-  const confirmedCount = activeReservationsList.filter(
-    (r) => r.status === "Dikonfirmasi" || r.status === "confirmed"
-  ).length;
-  const completedCount = activeReservationsList.filter(
-    (r) => r.status === "Selesai" || r.status === "completed"
-  ).length;
+  const newCount = activeReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "baru" || st === "pending" || st === "menunggu" || st === "menunggu konfirmasi" || st === "submitted";
+  }).length;
+  const confirmedCount = activeReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "dikonfirmasi" || st === "confirmed" || st === "approved" || st === "disetujui";
+  }).length;
+  const completedCount = activeReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "selesai" || st === "completed" || st === "selesai dirawat";
+  }).length;
 
   // Filtered reservations
   const filteredReservations = useMemo(() => {

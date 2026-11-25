@@ -15,19 +15,38 @@ class NotificationController extends Controller
     {
         $user = $request->user();
         
-        $notifications = Notification::where('user_id', $user->id)
-            ->orWhereNull('user_id')
+        $baseQuery = Notification::query();
+
+        // Jika user adalah dokter, hanya berikan notifikasi yang berkaitan dengan dokter ini
+        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+            $baseQuery->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('data->doctor_id', $user->id)
+                  ->orWhere('data->doctor_id', (string)$user->id);
+            });
+        } elseif ($user->role === 'clinic' || $user->role === 'admin' || $user->hasRole('admin')) {
+            // Admin menerima notifikasi umum atau notifikasi yang ditujukan ke admin/user_id null
+            $baseQuery->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhereNull('user_id');
+            });
+        } else {
+            // Pasien biasa
+            $baseQuery->where('user_id', $user->id);
+        }
+
+        $notifications = (clone $baseQuery)
             ->orderBy('created_at', 'desc')
-            ->paginate($request->input('per_page', 20));
+            ->paginate($request->input('per_page', 30));
+
+        $unreadCount = (clone $baseQuery)->unread()->count();
 
         return response()->json([
             'notifications' => $notifications->items(),
             'current_page' => $notifications->currentPage(),
             'last_page' => $notifications->lastPage(),
             'total' => $notifications->total(),
-            'unread_count' => Notification::where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)->orWhereNull('user_id');
-            })->unread()->count(),
+            'unread_count' => $unreadCount,
         ]);
     }
 
@@ -35,9 +54,24 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $count = Notification::where(function ($q) use ($user) {
-            $q->where('user_id', $user->id)->orWhereNull('user_id');
-        })->unread()->count();
+        $query = Notification::query();
+
+        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+            $query->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('data->doctor_id', $user->id)
+                  ->orWhere('data->doctor_id', (string)$user->id);
+            });
+        } elseif ($user->role === 'clinic' || $user->role === 'admin' || $user->hasRole('admin')) {
+            $query->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhereNull('user_id');
+            });
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $count = $query->unread()->count();
 
         return response()->json(['unread_count' => $count]);
     }

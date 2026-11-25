@@ -706,7 +706,7 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
               </div>
 
               {/* 6 Days Grid (Senin - Sabtu) */}
-              <div className="grid grid-cols-6 gap-1 sm:gap-2.5">
+              <div className="grid grid-cols-6 gap-1.5 sm:gap-2.5">
                 {weekDays.map((d) => {
                   const list = reservationsByDate.get(d.isoDate) || [];
                   const count = list.length;
@@ -719,7 +719,7 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
                       onClick={() =>
                         setSelectedDateStr((prev) => (prev === d.isoDate ? null : d.isoDate))
                       }
-                      className={`rounded-xl sm:rounded-2xl p-1.5 sm:p-3 border transition-all cursor-pointer text-center sm:text-left flex flex-col justify-center sm:justify-between min-h-[58px] sm:min-h-[105px] ${
+                      className={`rounded-2xl p-2 sm:p-3 border transition-all cursor-pointer text-center flex flex-col items-center justify-center min-h-[68px] sm:min-h-[90px] select-none ${
                         isSelected
                           ? "bg-[#FAF4E8] border-[#C9A24A] shadow-xs ring-2 ring-[#C9A24A]/20"
                           : isToday
@@ -727,35 +727,15 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
                           : "bg-white border-[#F0E6D3] hover:border-[#D9CDB8] hover:bg-[#FCFAF7]"
                       }`}
                     >
-                      <div>
-                        <div className="flex items-center justify-center sm:justify-between">
-                          <span
-                            className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${
-                              isSelected || isToday ? "text-[#8C6B1C]" : "text-[#8A7B6B]"
-                            }`}
-                          >
-                            {d.dayName}
-                          </span>
-                          {isToday && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#B8943F] hidden sm:inline-block" title="Hari ini" />
-                          )}
-                        </div>
-                        <div className="text-sm sm:text-xl font-bold text-[#3D332A] mt-0.5">
-                          {d.dayNumber}
-                        </div>
-                      </div>
-
-                      <div className="hidden sm:flex mt-2 pt-2 border-t border-[#F5ECE0] items-center justify-between text-[11px]">
-                        <span className="text-[#8A7B6B] font-medium">Janji:</span>
-                        <span
-                          className={`font-bold px-1.5 py-0.5 rounded-md ${
-                            count > 0
-                              ? "bg-[#FAF4E8] text-[#8C6B1C] border border-[#E8DFC8]"
-                              : "text-[#B8A99A]"
-                          }`}
-                        >
-                          {count}
-                        </span>
+                      <span
+                        className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block ${
+                          isSelected || isToday ? "text-[#8C6B1C]" : "text-[#8A7B6B]"
+                        }`}
+                      >
+                        {d.dayName}
+                      </span>
+                      <div className="text-base sm:text-lg font-bold text-[#3D332A] mt-0.5">
+                        {d.dayNumber}
                       </div>
                     </div>
                   );
@@ -765,27 +745,31 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
               {/* Selected Day / Active Appointments Summary Header & Table */}
               <div className="pt-2 space-y-3">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <ListFilter className="w-4 h-4 text-[#8C6B1C]" />
-                    <h4 className="text-xs font-bold text-[#3D332A] uppercase tracking-wider">
-                      {selectedDateStr
-                        ? `BOOKING TERJADWAL: ${selectedDateStr}`
-                        : "BOOKING TERJADWAL MINGGU INI"}
-                    </h4>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FAF4E8] text-[#8C6B1C] border border-[#E8DFC8]">
-                      {activeReservations.length} Pasien
-                    </span>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <ListFilter className="w-4 h-4 text-[#8C6B1C] shrink-0" />
+                      <h4 className="text-xs font-bold text-[#3D332A] uppercase tracking-wider">
+                        {selectedDateStr
+                          ? `BOOKING TERJADWAL: ${selectedDateStr}`
+                          : "BOOKING TERJADWAL MINGGU INI"}
+                      </h4>
+                    </div>
 
-                    {/* Tombol Tampilkan Semua Hari */}
-                    {selectedDateStr && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedDateStr(null)}
-                        className="text-xs font-semibold text-[#8C6B1C] hover:underline cursor-pointer ml-1"
-                      >
-                        Tampilkan Semua Hari
-                      </button>
-                    )}
+                    {/* Baris Badge Jumlah Pasien & Tombol Tampilkan Semua Hari persis seperti screenshot */}
+                    <div className="flex items-center gap-2.5 pt-0.5">
+                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#FAF4E8] text-[#8C6B1C] border border-[#E8DFC8]">
+                        {activeReservations.length} Pasien
+                      </span>
+                      {selectedDateStr && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDateStr(null)}
+                          className="text-xs font-semibold text-[#8C6B1C] underline underline-offset-2 hover:text-[#735716] cursor-pointer"
+                        >
+                          Tampilkan Semua Hari
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* Tombol Export */}
@@ -935,38 +919,38 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
               </div>
             </div>
 
-            {/* Ringkasan Status 4 Kolom di Bawah (Persis seperti Gambar 2) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Ringkasan Status 4 Kolom di Bawah (Fix Konsisten di Android, iOS, Desktop) */}
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
               {/* Total Reservasi */}
-              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-10 h-10 rounded-full border-2 border-[#8C6B1C] flex items-center justify-center mb-2">
-                  <span className="text-sm font-bold text-[#3D332A]">{totalCount}</span>
+              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#8C6B1C] flex items-center justify-center mb-1.5">
+                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{totalCount}</span>
                 </div>
-                <span className="text-xs font-semibold text-[#4A3F35]">Total Reservasi</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Total Reservasi</span>
               </div>
 
               {/* Perlu Konfirmasi */}
-              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-10 h-10 rounded-full border-2 border-[#E5A024] flex items-center justify-center mb-2">
-                  <span className="text-sm font-bold text-[#3D332A]">{newCount}</span>
+              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#E5A024] flex items-center justify-center mb-1.5">
+                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{newCount}</span>
                 </div>
-                <span className="text-xs font-semibold text-[#4A3F35]">Perlu Konfirmasi</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Perlu Konfirmasi</span>
               </div>
 
               {/* Dikonfirmasi */}
-              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-10 h-10 rounded-full border-2 border-[#10B981] flex items-center justify-center mb-2">
-                  <span className="text-sm font-bold text-[#3D332A]">{confirmedCount}</span>
+              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#10B981] flex items-center justify-center mb-1.5">
+                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{confirmedCount}</span>
                 </div>
-                <span className="text-xs font-semibold text-[#4A3F35]">Dikonfirmasi</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Dikonfirmasi</span>
               </div>
 
               {/* Selesai Dirawat */}
-              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-10 h-10 rounded-full border-2 border-[#8B5CF6] flex items-center justify-center mb-2">
-                  <span className="text-sm font-bold text-[#3D332A]">{completedCount}</span>
+              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#8B5CF6] flex items-center justify-center mb-1.5">
+                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{completedCount}</span>
                 </div>
-                <span className="text-xs font-semibold text-[#4A3F35]">Selesai Dirawat</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Selesai Dirawat</span>
               </div>
             </div>
           </div>

@@ -140,37 +140,37 @@ export default function DesktopDoctorHome({
             <span>Real-time Database</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
           {/* Total Pasien / Reservasi */}
-          <div className="bg-white rounded-2xl py-3.5 px-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#8C6B1C]/30 transition-all">
-            <div className="w-12 h-12 rounded-full border-[3px] border-[#8C6B1C] flex items-center justify-center">
-              <span className="text-base font-bold text-[#3D332A]">{reservations.length}</span>
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#8C6B1C]/30 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#8C6B1C] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{reservations.length}</span>
             </div>
-            <span className="text-xs font-bold text-[#3D332A] mt-2">Total Reservasi</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Total Reservasi</span>
           </div>
 
           {/* Pasien Menunggu / Perlu Konfirmasi */}
-          <div className="bg-white rounded-2xl py-3.5 px-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#E5A024]/40 transition-all">
-            <div className="w-12 h-12 rounded-full border-[3px] border-[#E5A024] flex items-center justify-center">
-              <span className="text-base font-bold text-[#3D332A]">{pendingCount}</span>
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#E5A024]/40 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#E5A024] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{pendingCount}</span>
             </div>
-            <span className="text-xs font-bold text-[#3D332A] mt-2">Perlu Konfirmasi</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Perlu Konfirmasi</span>
           </div>
 
           {/* Sesi Praktik / Dikonfirmasi */}
-          <div className="bg-white rounded-2xl py-3.5 px-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#10B981]/40 transition-all">
-            <div className="w-12 h-12 rounded-full border-[3px] border-[#10B981] flex items-center justify-center">
-              <span className="text-base font-bold text-[#3D332A]">{schedules.length}</span>
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#10B981]/40 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#10B981] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{schedules.length}</span>
             </div>
-            <span className="text-xs font-bold text-[#3D332A] mt-2">Dikonfirmasi</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Dikonfirmasi</span>
           </div>
 
           {/* Selesai Dirawat */}
-          <div className="bg-white rounded-2xl py-3.5 px-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#8B5CF6]/40 transition-all">
-            <div className="w-12 h-12 rounded-full border-[3px] border-[#8B5CF6] flex items-center justify-center">
-              <span className="text-base font-bold text-[#3D332A]">{completedCount}</span>
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#8B5CF6]/40 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#8B5CF6] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{completedCount}</span>
             </div>
-            <span className="text-xs font-bold text-[#3D332A] mt-2">Selesai Dirawat</span>
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Selesai Dirawat</span>
           </div>
         </div>
       </div>

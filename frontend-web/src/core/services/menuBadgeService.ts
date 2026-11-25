@@ -41,12 +41,13 @@ export function useSubmenuBadges(role?: "user" | "clinic" | "doctor"): SubmenuBa
       let konsultasiCount = 0;
       let pengaduanCount = 0;
 
-      // 1. Calculate Booking Badges from realtime reservations
+      // 1. Calculate Booking Badges from realtime reservations (Status yang Perlu Konfirmasi)
       if (Array.isArray(reservations)) {
         if (activeRole === "clinic") {
-          bookingCount = reservations.filter(
-            (r: any) => r.status === "Baru" || r.status === "pending"
-          ).length;
+          bookingCount = reservations.filter((r: any) => {
+            const st = (r.status || "").toLowerCase();
+            return st === "baru" || st === "pending" || st === "menunggu" || st === "menunggu konfirmasi" || st === "submitted";
+          }).length;
         } else if (activeRole === "doctor") {
           bookingCount = reservations.filter(
             (r: any) =>

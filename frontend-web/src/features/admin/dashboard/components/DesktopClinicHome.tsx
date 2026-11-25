@@ -17,6 +17,8 @@ import {
   HelpCircle,
   Eye,
   Award,
+  Sparkle,
+  ArrowRight,
 } from "lucide-react";
 import Sparkline from "@/shared/ui/Sparkline";
 import TrafficUtmAnalyticsSection from "@/features/admin/dashboard/components/TrafficUtmAnalyticsSection";
@@ -47,16 +49,9 @@ export default function DesktopClinicHome({
   const safeStats = Array.isArray(stats) ? stats : [];
   const safeReservations = Array.isArray(reservations) ? reservations : [];
 
-  // Gabungkan reservasi dari server dengan dummy seperti di modul booking/reservasi
+  // 100% Realtime reservasi dari database (tanpa dummy)
   const allReservationsList = useMemo(() => {
-    const list = [...safeReservations];
-    const existingCodes = new Set(list.map((r) => r.code));
-    DUMMY_WEEKLY_RESERVATIONS.forEach((dummy) => {
-      if (!existingCodes.has(dummy.code)) {
-        list.push(dummy);
-      }
-    });
-    return list;
+    return [...safeReservations];
   }, [safeReservations]);
 
   // Hitung jumlah Perlu Konfirmasi (status Baru / pending / Menunggu)
@@ -69,6 +64,8 @@ export default function DesktopClinicHome({
         r.status === "submitted" ||
         r.status === "Menunggu Konfirmasi")
   ).length;
+
+  const totalReservationsCount = allReservationsList.length;
 
   const pendingConsultations = safeConsultations.filter(
     (c) => c && (c.status === "Menunggu" || c.status === "Dijadwalkan" || c.status === "pending" || c.status === "scheduled")
@@ -133,19 +130,14 @@ export default function DesktopClinicHome({
 
   const quickButtons = [
     {
-      label: "Kelola Dokter",
-      to: "/dashboard/clinic?tab=doctors",
-      icon: Stethoscope,
-    },
-    {
       label: "Lihat Reservasi",
       to: "/dashboard/clinic?tab=reservasi",
       icon: Calendar,
     },
     {
-      label: "Admin & Staff",
-      to: "/dashboard/clinic?tab=users",
-      icon: ShieldCheck,
+      label: "Jadwal Dokter",
+      to: "/dashboard/clinic?tab=doctors",
+      icon: Stethoscope,
     },
     {
       label: "Konsultasi Pasien",
@@ -153,9 +145,14 @@ export default function DesktopClinicHome({
       icon: MessageSquare,
     },
     {
-      label: "Kelola Artikel",
-      to: "/dashboard/clinic?tab=blog",
-      icon: FileText,
+      label: "Layanan Treatment",
+      to: "/dashboard/clinic?tab=treatments",
+      icon: Sparkles,
+    },
+    {
+      label: "Pesan & Pengaduan",
+      to: "/dashboard/clinic?tab=pengaduan",
+      icon: ShieldCheck,
     },
     {
       label: "Statistik Trafik",
@@ -171,7 +168,7 @@ export default function DesktopClinicHome({
       {/* Top Section: 2 Columns (Left: Welcome Banner, Right: Quick Action Grid) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Kolom Kiri: Welcome Banner */}
-        <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FBF7F0] via-[#F7EFE1] to-[#EFE3CF] p-7 sm:p-8 shadow-sm border border-[#EADBBD]">
+        <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#FDF9F3] via-[#F9F2E6] to-[#EFE3CF] p-7 sm:p-8 shadow-sm border border-[#EADBBD]">
           <div className="relative z-10 max-w-md">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#3D332A] tracking-tight leading-tight">
               Selamat datang,
@@ -181,16 +178,29 @@ export default function DesktopClinicHome({
               </span>
             </h2>
 
-            {/* Ringkasan Reservasi Perlu Konfirmasi */}
-            <div className="mt-4 inline-flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full border-2 border-[#E5A024] flex items-center justify-center shrink-0 bg-[#FFF9E6]/60">
-                <span className="text-xs font-bold text-[#3D332A]">
+            <p className="mt-2 text-xs sm:text-sm text-[#736353] leading-relaxed">
+              Pantau jadwal praktik harian dan tindak lanjuti permintaan pasien klinik secara real-time.
+            </p>
+
+            {/* Ringkasan Reservasi & Total Booking */}
+            <div className="mt-5 flex flex-wrap items-center gap-2.5">
+              <Link
+                to="/dashboard/clinic?tab=reservasi"
+                className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white border border-[#E5D7BE] hover:border-[#C9A24A] transition-all shadow-xs"
+              >
+                <span className="flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full bg-[#B8943F] text-white text-[11px] font-bold">
                   {pendingReservationsCount}
                 </span>
+                <span className="text-xs font-semibold text-[#4A3F35] group-hover:text-[#8A6B2B] transition-colors">
+                  Booking Perlu Konfirmasi
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#B8943F] group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/[0.03] border border-[#EADBBD]/70 text-[#6B5A4B]">
+                <span className="text-xs font-medium">Total Booking:</span>
+                <span className="text-xs font-bold text-[#3D332A]">{totalReservationsCount}</span>
               </div>
-              <span className="text-xs font-semibold text-[#4A3F35] tracking-tight">
-                Perlu Konfirmasi
-              </span>
             </div>
           </div>
 
@@ -212,14 +222,19 @@ export default function DesktopClinicHome({
 
         {/* Kolom Kanan: Quick Buttons Card (Pure Clean Icon Style) */}
         <div className="lg:col-span-6 xl:col-span-5 bg-white rounded-2xl border border-[#F0E6D3] p-5 sm:p-6 shadow-sm flex flex-col justify-between">
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 h-full">
+          <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#F5EFE4]">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#8A7B6B]">Aksi Cepat</h4>
+            <span className="text-[11px] text-[#A69584]">Pintasan Operasional</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-3 h-full">
             {quickButtons.map((btn) => (
               <Link
                 key={btn.label}
                 to={btn.to}
-                className="group flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl hover:bg-[#FAF6EE] border border-transparent hover:border-[#EADBBD] transition-all duration-200 text-center active:scale-[0.98]"
+                className="group flex flex-col items-center justify-center p-3 sm:p-3.5 rounded-xl hover:bg-[#FAF6EE] border border-transparent hover:border-[#EADBBD] transition-all duration-200 text-center active:scale-[0.98]"
               >
-                <btn.icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#B8943F] group-hover:text-[#977324] transition-transform duration-200 group-hover:scale-110 mb-2.5" />
+                <btn.icon className="w-6 h-6 sm:w-6.5 sm:h-6.5 text-[#B8943F] group-hover:text-[#977324] transition-transform duration-200 group-hover:scale-110 mb-2" />
                 <span className="text-xs font-semibold text-[#4A3F35] group-hover:text-[#8A6B2B] leading-tight">
                   {btn.label}
                 </span>

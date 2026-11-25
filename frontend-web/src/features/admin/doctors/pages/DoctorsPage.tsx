@@ -143,25 +143,9 @@ export default function DoctorsPage({
     setEditorOpen(true);
   };
 
-  // Open Manage Schedule Modal
+  // Open Edit Doctor (Jadwal diatur langsung melalui profil & jadwal praktek dokter)
   const handleManageSchedule = (doc: any) => {
-    const dbSchedulesForDoc = localSchedules
-      .filter((s: any) => String(s.doctorId || s.user_id) === String(doc.id))
-      .map((s: any) => ({
-        id: s.id,
-        day: s.displayDate || s.date || "Senin",
-        time: s.timeRange || s.time_range || "09:00 - 13:00",
-        quota: s.totalSlots || s.total_slots || 10,
-        location: s.location || "Cabang Utama",
-      }));
-
-    const docWithSchedules = {
-      ...doc,
-      schedules: dbSchedulesForDoc.length > 0 ? dbSchedulesForDoc : doc.schedules || [],
-    };
-
-    setScheduleDoctor(docWithSchedules);
-    setScheduleOpen(true);
+    handleEditDoctor(doc);
   };
 
   // Save / Update Doctor with Immediate Optimistic State Update
@@ -388,14 +372,6 @@ export default function DoctorsPage({
         onOpenChange={setEditorOpen}
         doctor={selectedDoctor}
         onSave={handleSaveDoctor}
-      />
-
-      {/* Schedule Modal */}
-      <DoctorScheduleModal
-        open={scheduleOpen}
-        onOpenChange={setScheduleOpen}
-        doctor={scheduleDoctor}
-        onSaveSchedules={handleSaveSchedules}
       />
     </div>
   );
