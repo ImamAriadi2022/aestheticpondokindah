@@ -9,12 +9,18 @@ import {
   Clock,
   FileCheck,
   ChevronRight,
+  ChevronLeft,
+  SlidersHorizontal,
 } from "lucide-react";
 import ReservationTable from "../components/ReservationTable";
 import ReservationDetailModal from "../components/ReservationDetailModal";
 import CreateReservationModal from "../components/CreateReservationModal";
 import WeeklyAppointmentCalendar from "../components/WeeklyAppointmentCalendar";
-import { deleteAdminReservation, type ReservationItem } from "../services/reservationService";
+import {
+  deleteAdminReservation,
+  bulkDeleteAdminReservations,
+  type ReservationItem,
+} from "../services/reservationService";
 import { DUMMY_WEEKLY_RESERVATIONS } from "../services/dummyReservations";
 import { toast } from "@/shared/ui/toast";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
@@ -23,6 +29,7 @@ import { PageHeader } from "@/shared/ui/PageHeader";
 import { SearchInput } from "@/shared/ui/SearchInput";
 import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 import { usePageRefresh } from "@/core/events/refreshEvents";
+import { Button } from "@/shared/ui/button";
 
 type Props = {
   reservations: ReservationItem[];
@@ -46,6 +53,14 @@ export default function ReservationPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [sourceFilter, setSourceFilter] = useState("Semua");
+  const [rowsPerPage, setRowsPerPage] = useState<string>("Semua");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, sourceFilter, rowsPerPage]);
 
   // Otomatis buka detail reservasi jika ada parameter query `code` atau `reservation_id` (misal dari notifikasi)
   useEffect(() => {
@@ -102,17 +117,13 @@ export default function ReservationPage({
   const handleDeleteReservation = async (item: ReservationItem) => {
     if (!token) return;
     const rCode = item.code || `RSV-${String(item.id).padStart(6, "0")}`;
-    const pName = item.name || "Pasien";
-    const confirmed = window.confirm(
-      `Apakah Anda yakin ingin menghapus data reservasi ${rCode} (${pName})? Tindakan ini akan menghapus data secara permanen.`
-    );
-    if (!confirmed) return;
 
     try {
       await deleteAdminReservation(token, item.id);
+      setSelectedIds((prev) => prev.filter((id) => id !== item.id));
       toast({
         title: "Reservasi Dihapus",
-        message: `Data reservasi ${rCode} berhasil dihapus.`,
+        message: `Data reservasi ${rCode} berhasil dihapus tanpa gangguan.`,
         variant: "success",
       });
       if (onRefresh) onRefresh();
@@ -120,6 +131,28 @@ export default function ReservationPage({
       toast({
         title: "Gagal Menghapus",
         message: err.message || "Gagal menghapus data reservasi.",
+        variant: "error",
+      });
+    }
+  };
+
+  const handleBulkDelete = async (items: ReservationItem[]) => {
+    if (!token || items.length === 0) return;
+    const ids = items.map((i) => i.id);
+
+    try {
+      const res = await bulkDeleteAdminReservations(token, ids);
+      setSelectedIds([]);
+      toast({
+        title: "Berhasil Dihapus",
+        message: res.message || `${ids.length} data reservasi berhasil dihapus seketika.`,
+        variant: "success",
+      });
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      toast({
+        title: "Gagal Menghapus",
+        message: err.message || "Gagal menghapus data yang dipilih.",
         variant: "error",
       });
     }
@@ -182,6 +215,36 @@ export default function ReservationPage({
       return Number(b.id || 0) - Number(a.id || 0);
     });
   }, [activeReservationsList, searchQuery, statusFilter, sourceFilter]);
+
+  // Paginated reservations based on rowsPerPage
+  const totalFilteredCount = filteredReservations.length;
+  const pageSize = rowsPerPage === "Semua" ? totalFilteredCount : parseInt(rowsPerPage, 10);
+  const totalPages = pageSize > 0 ? Math.ceil(totalFilteredCount / pageSize) : 1;
+
+  const paginatedReservations = useMemo(() => {
+    if (rowsPerPage === "Semua") return filteredReservations;
+    const start = (currentPage - 1) * pageSize;
+    return filteredReservations.slice(start, start + pageSize);
+  }, [filteredReservations, currentPage, pageSize, rowsPerPage]);
+
+  const handleToggleSelect = (id: string | number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAllCurrentPage = () => {
+    const currentPageIds = paginatedReservations.map((r) => r.id);
+    const allSelectedOnPage = currentPageIds.length > 0 && currentPageIds.every((id) => selectedIds.includes(id));
+
+    if (allSelectedOnPage) {
+      // Unselect all on current page
+      setSelectedIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
+    } else {
+      // Select all on current page
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...currentPageIds])));
+    }
+  };
 
   return (
     <div className="space-y-5 text-left">
@@ -291,17 +354,106 @@ export default function ReservationPage({
                       { value: "member", label: "Member" },
                     ]}
                   />
+
+                  {/* Filter Baris Data / Page Size */}
+                  <FilterDropdown
+                    value={rowsPerPage}
+                    onChange={setRowsPerPage}
+                    icon={SlidersHorizontal}
+                    labelPrefix="Tampilkan"
+                    options={[
+                      { value: "10", label: "10 Baris" },
+                      { value: "20", label: "20 Baris" },
+                      { value: "50", label: "50 Baris" },
+                      { value: "Semua", label: "Semua Baris" },
+                    ]}
+                  />
                 </div>
               </div>
 
               {/* Main Reservation Table */}
               <ReservationTable
-                reservations={filteredReservations}
+                reservations={paginatedReservations}
                 onSelect={handleSelect}
                 onDelete={handleDeleteReservation}
+                onBulkDelete={handleBulkDelete}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
+                onToggleSelectAll={handleToggleSelectAllCurrentPage}
                 token={token}
                 onRefresh={onRefresh}
               />
+
+              {/* Pagination Controls when limited rows */}
+              {rowsPerPage !== "Semua" && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-3.5 rounded-2xl border border-[#F0E6D3] shadow-xs gap-3">
+                  <p className="text-xs text-[#8A7B6B]">
+                    Menampilkan{" "}
+                    <span className="font-bold text-[#4A3F35]">
+                      {totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+                    </span>{" "}
+                    -{" "}
+                    <span className="font-bold text-[#4A3F35]">
+                      {Math.min(currentPage * pageSize, totalFilteredCount)}
+                    </span>{" "}
+                    dari <span className="font-bold text-[#4A3F35]">{totalFilteredCount}</span> reservasi
+                  </p>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="h-8 px-3 rounded-xl border-[#E2E8F0] text-xs font-bold hover:bg-[#FAF8F5] cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Sebelumnya
+                    </Button>
+
+                    <div className="flex items-center gap-1 px-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          return (
+                            page === 1 ||
+                            page === totalPages ||
+                            Math.abs(page - currentPage) <= 1
+                          );
+                        })
+                        .map((page, idx, arr) => {
+                          const prevPage = arr[idx - 1];
+                          const hasGap = prevPage && page - prevPage > 1;
+
+                          return (
+                            <div key={page} className="flex items-center">
+                              {hasGap && <span className="text-xs text-gray-400 px-1">...</span>}
+                              <button
+                                type="button"
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                  currentPage === page
+                                    ? "bg-[#C9A24A] text-white shadow-2xs"
+                                    : "text-[#64748B] hover:bg-gray-100"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="h-8 px-3 rounded-xl border-[#E2E8F0] text-xs font-bold hover:bg-[#FAF8F5] cursor-pointer"
+                    >
+                      Berikutnya <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </PageTransition>
