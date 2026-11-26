@@ -17,13 +17,17 @@ class NotificationController extends Controller
         
         $baseQuery = Notification::query();
 
-        // Jika user adalah dokter, hanya berikan notifikasi yang berkaitan dengan dokter ini
+        // Jika user adalah dokter, HANYA berikan notifikasi terkait appointment pasien yang memilih dokter ini
         if ($user->role === 'doctor' || $user->hasRole('doctor')) {
-            $baseQuery->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                  ->orWhere('data->doctor_id', $user->id)
-                  ->orWhere('data->doctor_id', (string)$user->id);
-            });
+            $baseQuery->where('type', 'appointment')
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhere('data->doctor_id', $user->id)
+                      ->orWhere('data->doctor_id', (string)$user->id)
+                      ->orWhereHas('user', function ($uq) use ($user) {
+                          $uq->where('id', $user->id);
+                      });
+                });
         } elseif ($user->role === 'clinic' || $user->role === 'admin' || $user->hasRole('admin')) {
             // Admin menerima notifikasi umum atau notifikasi yang ditujukan ke admin/user_id null
             $baseQuery->where(function ($q) use ($user) {
@@ -57,11 +61,15 @@ class NotificationController extends Controller
         $query = Notification::query();
 
         if ($user->role === 'doctor' || $user->hasRole('doctor')) {
-            $query->where(function ($q) use ($user) {
-                $q->where('user_id', $user->id)
-                  ->orWhere('data->doctor_id', $user->id)
-                  ->orWhere('data->doctor_id', (string)$user->id);
-            });
+            $query->where('type', 'appointment')
+                ->where(function ($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhere('data->doctor_id', $user->id)
+                      ->orWhere('data->doctor_id', (string)$user->id)
+                      ->orWhereHas('user', function ($uq) use ($user) {
+                          $uq->where('id', $user->id);
+                      });
+                });
         } elseif ($user->role === 'clinic' || $user->role === 'admin' || $user->hasRole('admin')) {
             $query->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
@@ -112,9 +120,19 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $notification = Notification::where('id', $id)
-            ->where('user_id', $user->id)
-            ->first();
+        $query = Notification::where('id', $id);
+
+        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+            $query->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('data->doctor_id', $user->id)
+                  ->orWhere('data->doctor_id', (string)$user->id);
+            });
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        $notification = $query->first();
 
         if (!$notification) {
             return response()->json(['message' => 'Notifikasi tidak ditemukan'], 404);
@@ -129,7 +147,15 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        Notification::where('user_id', $user->id)->delete();
+        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+            Notification::where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('data->doctor_id', $user->id)
+                  ->orWhere('data->doctor_id', (string)$user->id);
+            })->delete();
+        } else {
+            Notification::where('user_id', $user->id)->delete();
+        }
 
         return response()->json(['message' => 'Riwayat notifikasi berhasil dibersihkan']);
     }

@@ -277,7 +277,17 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         });
 
         setNotifications((prev: PushNotificationPayload[]) => {
-          const combined = [...mapped, ...prev.filter((p: PushNotificationPayload) => !mapped.some((m: PushNotificationPayload) => m.id === p.id))];
+          // Dokter hanya menerima notifikasi terkait appointment pasien miliknya
+          const validList = role === "doctor"
+            ? mapped.filter((m) => m.type === "appointment")
+            : mapped;
+
+          // Jika role dokter, jangan biarkan sampah notifikasi lama/non-appointment di localStorage mencemari list
+          const basePrev = role === "doctor"
+            ? prev.filter((p: PushNotificationPayload) => p.type === "appointment")
+            : prev;
+
+          const combined = [...validList, ...basePrev.filter((p: PushNotificationPayload) => !validList.some((m: PushNotificationPayload) => m.id === p.id))];
           try {
             localStorage.setItem("apig_recent_push_notifications", JSON.stringify(combined.slice(0, 50)));
           } catch {}
@@ -339,6 +349,10 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
             return prev;
           }
         } else if (role === "doctor") {
+          // Dokter hanya menerima notifikasi tipe appointment yang relevan
+          if (payload.type && payload.type !== "appointment") {
+            return prev;
+          }
           if (payload.role && payload.role !== "doctor" && payload.role !== "all") {
             return prev;
           }
@@ -355,8 +369,9 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         if (role === "user" && payload.role && payload.role !== "patient" && payload.role !== "all") {
           return prev;
         }
-        if (role === "doctor" && payload.role && payload.role !== "doctor" && payload.role !== "all") {
-          return prev;
+        if (role === "doctor") {
+          if (payload.type && payload.type !== "appointment") return prev;
+          if (payload.role && payload.role !== "doctor" && payload.role !== "all") return prev;
         }
         const next = prev + 1;
         try {

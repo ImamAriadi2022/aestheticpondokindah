@@ -1223,21 +1223,21 @@ export default function WeeklyAppointmentCalendar({
 
       {/* Modal Kotak Dialog: Kirim Penjadwalan ke Dokter */}
       {isSendDoctorModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/45 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 pb-20 sm:pb-6 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
           <div
-            className="w-full max-w-4xl bg-white rounded-2xl border border-[#E8DFC8] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-[#3D332A] animate-in zoom-in-95 duration-200"
+            className="w-full max-w-4xl bg-white rounded-2xl border border-[#E8DFC8] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh] text-[#3D332A] animate-in zoom-in-95 duration-200"
             role="dialog"
             aria-modal="true"
           >
             {/* Modal Header: Clean Typography & Pure Icon tanpa background shape/container */}
-            <div className="px-6 py-4 border-b border-[#F0EAE1] flex items-center justify-between bg-white sticky top-0 z-10">
-              <div className="flex items-center gap-3">
-                <Send className="w-5 h-5 text-[#8C6B1C] rotate-[-20deg] shrink-0" />
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#F0EAE1] flex items-center justify-between bg-white shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <Send className="w-4 h-4 sm:w-5 sm:h-5 text-[#8C6B1C] rotate-[-20deg] shrink-0" />
                 <div>
-                  <h3 className="text-base font-bold text-[#2C2416]">
+                  <h3 className="text-sm sm:text-base font-bold text-[#2C2416] leading-snug">
                     Kirim Penjadwalan ke Dokter
                   </h3>
-                  <p className="text-xs text-[#7A6E5F]">
+                  <p className="text-[11px] sm:text-xs text-[#7A6E5F] leading-tight">
                     Kirim rincian appointment berupa PDF & teks WhatsApp resmi
                   </p>
                 </div>
@@ -1245,7 +1245,7 @@ export default function WeeklyAppointmentCalendar({
               <button
                 type="button"
                 onClick={() => setIsSendDoctorModalOpen(false)}
-                className="text-[#998A78] hover:text-[#2C2416] p-1.5 transition-colors cursor-pointer rounded-lg hover:bg-black/5"
+                className="text-[#998A78] hover:text-[#2C2416] p-1.5 transition-colors cursor-pointer rounded-lg hover:bg-black/5 shrink-0"
                 title="Tutup Modal"
               >
                 <X className="w-4 h-4" />
@@ -1253,29 +1253,33 @@ export default function WeeklyAppointmentCalendar({
             </div>
 
             {/* Modal Body: Two-Column Layout (Kiri: Form Input | Kanan: Live Preview & Ringkasan Pasien) */}
-            <div className="p-6 overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-                {/* Kolom Kiri: Inputan Pengiriman (col-span-5 / 6) */}
-                <div className="md:col-span-6 space-y-4">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-start">
+                {/* Kolom Kiri: Inputan Pengiriman */}
+                <div className="md:col-span-6 space-y-3.5 sm:space-y-4">
                   {/* Status Periode Terpilih */}
-                  <div className="border-b border-[#F0EAE1] pb-3 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[#8A7B6B] block text-[11px] uppercase tracking-wider font-semibold">Periode Jadwal Praktik</span>
-                      <span className="font-bold text-[#2C2416] text-sm">
+                  <div className="border-b border-[#F0EAE1] pb-3 flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-[#8A7B6B] block text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold">
+                        Periode Jadwal Praktik
+                      </span>
+                      <span className="font-bold text-[#2C2416] text-xs sm:text-sm truncate block">
                         Minggu {weekHeaderLabel}
                       </span>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[#8A7B6B] block text-[11px] uppercase tracking-wider font-semibold">Total Antrean Minggu Ini</span>
-                      <span className="font-bold text-[#8C6B1C] text-sm">
+                    <div className="text-right shrink-0">
+                      <span className="text-[#8A7B6B] block text-[10px] sm:text-[11px] uppercase tracking-wider font-semibold">
+                        Total Antrean
+                      </span>
+                      <span className="font-bold text-[#8C6B1C] text-xs sm:text-sm">
                         {doctorTargetReservations.length} Pasien
                       </span>
                     </div>
                   </div>
 
                   {/* Dropdown Pilihan Dokter */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#4A3F33] block">
+                  <div className="space-y-1">
+                    <label className="text-[11px] sm:text-xs font-semibold text-[#4A3F33] block">
                       Pilih Dokter Penerima <span className="text-rose-500">*</span>
                     </label>
                     <select
@@ -1292,7 +1296,7 @@ export default function WeeklyAppointmentCalendar({
                           setTargetDoctorPhoneInput("");
                         }
                       }}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9CEBA] bg-white text-sm text-[#2C2416] focus:outline-hidden focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] transition-all cursor-pointer font-medium"
+                      className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl border border-[#D9CEBA] bg-white text-xs sm:text-sm text-[#2C2416] focus:outline-hidden focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] transition-all cursor-pointer font-medium"
                     >
                       {allAvailableDoctors.map((doc) => (
                         <option key={doc.name} value={doc.name}>
@@ -1303,30 +1307,30 @@ export default function WeeklyAppointmentCalendar({
                   </div>
 
                   {/* Nomor WhatsApp Dokter */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-semibold text-[#4A3F33]">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[11px] sm:text-xs font-semibold text-[#4A3F33]">
                       <span>Nomor WhatsApp Dokter</span>
-                      <span className="text-[11px] text-[#8A7B6B] font-normal">Format: 08xx / 628xx</span>
+                      <span className="text-[10px] sm:text-[11px] text-[#8A7B6B] font-normal">Format: 08xx / 628xx</span>
                     </div>
                     <input
                       type="text"
                       value={targetDoctorPhoneInput}
                       onChange={(e) => setTargetDoctorPhoneInput(e.target.value)}
-                      placeholder="Contoh: 081234567890 (atau otomatis dari data dokter)"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9CEBA] bg-white text-sm text-[#2C2416] placeholder-[#A89D8F] focus:outline-hidden focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] transition-all"
+                      placeholder="Contoh: 081234567890"
+                      className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl border border-[#D9CEBA] bg-white text-xs sm:text-sm text-[#2C2416] placeholder-[#A89D8F] focus:outline-hidden focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] transition-all"
                     />
                   </div>
 
                   {/* Opsi Metode Pengiriman */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-[#4A3F33] block">
+                  <div className="space-y-1">
+                    <label className="text-[11px] sm:text-xs font-semibold text-[#4A3F33] block">
                       Metode Pengiriman
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                       <button
                         type="button"
                         onClick={() => setSendMethod("both")}
-                        className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                        className={`py-2 px-1.5 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-semibold text-center transition-all cursor-pointer ${
                           sendMethod === "both"
                             ? "border-[#8C6B1C] text-[#8C6B1C] bg-[#FAF6EE] font-bold"
                             : "border-[#E2D8C7] text-[#5C4D3C] bg-white hover:border-[#8C6B1C]"
@@ -1337,7 +1341,7 @@ export default function WeeklyAppointmentCalendar({
                       <button
                         type="button"
                         onClick={() => setSendMethod("wa")}
-                        className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                        className={`py-2 px-1.5 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-semibold text-center transition-all cursor-pointer ${
                           sendMethod === "wa"
                             ? "border-[#8C6B1C] text-[#8C6B1C] bg-[#FAF6EE] font-bold"
                             : "border-[#E2D8C7] text-[#5C4D3C] bg-white hover:border-[#8C6B1C]"
@@ -1348,41 +1352,41 @@ export default function WeeklyAppointmentCalendar({
                       <button
                         type="button"
                         onClick={() => setSendMethod("pdf")}
-                        className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                        className={`py-2 px-1.5 sm:px-2.5 rounded-xl border text-[11px] sm:text-xs font-semibold text-center transition-all cursor-pointer ${
                           sendMethod === "pdf"
                             ? "border-[#8C6B1C] text-[#8C6B1C] bg-[#FAF6EE] font-bold"
                             : "border-[#E2D8C7] text-[#5C4D3C] bg-white hover:border-[#8C6B1C]"
                         }`}
                       >
-                        Cetak PDF Saja
+                        Cetak PDF
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Kolom Kanan: Pratinjau Rincian Pasien & Format Dokumen (col-span-6 / 6) */}
-                <div className="md:col-span-6 space-y-3 border-t md:border-t-0 md:border-l border-[#F0EAE1] pt-4 md:pt-0 md:pl-6">
-                  <div className="flex items-center justify-between pb-1">
-                    <span className="text-xs font-bold text-[#2C2416] tracking-tight">
+                {/* Kolom Kanan: Pratinjau Rincian Pasien & Format Dokumen */}
+                <div className="md:col-span-6 space-y-2.5 border-t md:border-t-0 md:border-l border-[#F0EAE1] pt-3.5 md:pt-0 md:pl-6">
+                  <div className="flex items-center justify-between pb-0.5">
+                    <span className="text-[11px] sm:text-xs font-bold text-[#2C2416] tracking-tight">
                       Pratinjau Pasien Terjadwal ({doctorTargetReservations.length})
                     </span>
-                    <span className="text-[11px] text-[#7A6E5F]">
+                    <span className="text-[10px] sm:text-[11px] text-[#7A6E5F] truncate max-w-[130px] sm:max-w-none text-right">
                       {selectedDoctorToSend}
                     </span>
                   </div>
 
                   {doctorTargetReservations.length === 0 ? (
-                    <div className="p-8 text-center border border-dashed border-[#E0D7C6] rounded-xl">
-                      <p className="text-xs text-[#8A7B6B]">
+                    <div className="p-6 text-center border border-dashed border-[#E0D7C6] rounded-xl">
+                      <p className="text-[11px] sm:text-xs text-[#8A7B6B]">
                         Belum ada antrean janji temu yang ditugaskan ke dokter ini pada periode terpilih.
                       </p>
                     </div>
                   ) : (
-                    <div className="max-h-[300px] overflow-y-auto divide-y divide-[#F0EAE1] border border-[#E8DFC8] rounded-xl bg-white">
+                    <div className="max-h-[200px] sm:max-h-[280px] overflow-y-auto divide-y divide-[#F0EAE1] border border-[#E8DFC8] rounded-xl bg-white">
                       {doctorTargetReservations.map((r, i) => (
-                        <div key={r.id} className="p-3 flex items-start justify-between gap-3 text-xs hover:bg-[#FAF8F5] transition-colors">
+                        <div key={r.id} className="p-2.5 sm:p-3 flex items-start justify-between gap-2.5 text-xs hover:bg-[#FAF8F5] transition-colors">
                           <div className="min-w-0">
-                            <span className="font-bold text-[#2C2416] block truncate">
+                            <span className="font-bold text-[#2C2416] block truncate text-xs">
                               {i + 1}. {r.name || "Pasien"}
                             </span>
                             <span className="text-[11px] text-[#6B5E4F] block truncate mt-0.5">
@@ -1409,11 +1413,11 @@ export default function WeeklyAppointmentCalendar({
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-[#F0EAE1] bg-white flex items-center justify-end gap-3">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-[#F0EAE1] bg-white flex items-center justify-end gap-2 sm:gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsSendDoctorModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#5C4D3C] hover:bg-[#FAF8F5] border border-[#E2D8C7] transition-all cursor-pointer"
+                className="px-3.5 sm:px-4 py-2 rounded-xl text-xs font-semibold text-[#5C4D3C] hover:bg-[#FAF8F5] border border-[#E2D8C7] transition-all cursor-pointer"
               >
                 Batal
               </button>
@@ -1424,19 +1428,19 @@ export default function WeeklyAppointmentCalendar({
                     handlePrintDoctorSchedulePdf();
                     setIsSendDoctorModalOpen(false);
                   }}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
                 >
-                  <FileText className="w-4 h-4" />
-                  <span>Cetak Dokumen PDF</span>
+                  <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Cetak PDF</span>
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={handleSendToDoctorWhatsApp}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Kirim ke WhatsApp Dokter</span>
+                  <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Kirim WhatsApp</span>
                 </button>
               )}
             </div>
