@@ -61,8 +61,8 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">
               <TableHead>Nama Dokter</TableHead>
-              <TableHead>Spesialisasi</TableHead>
-              <TableHead>Status Praktik</TableHead>
+              <TableHead className="hidden md:table-cell">Spesialisasi</TableHead>
+              <TableHead className="hidden md:table-cell">Status Praktik</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -77,18 +77,21 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
               filteredDoctors.map((doc) => (
                 <TableRow key={doc.id} className="hover:bg-[#FAF8F5]/50 transition-colors">
                   <TableCell>
-                    <p className="text-sm font-bold text-[#4A3F35]">
+                    <p className="text-xs md:text-sm font-bold text-[#4A3F35]">
                       {doc.name}
+                    </p>
+                    <p className="text-[10px] text-[#8C6B1C] font-medium md:hidden mt-0.5">
+                      {doc.specialization || doc.speciality || "Dokter Gigi"}
                     </p>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <span className="text-xs font-semibold text-[#8C6B1C] bg-[#FAF8F5] px-2.5 py-1 rounded-lg border border-[#F0E6D3] inline-block">
                       {doc.specialization || doc.speciality || "Dokter Gigi"}
                     </span>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <button
                       type="button"
                       onClick={() => onToggleStatus(doc.id, doc.is_active !== false)}

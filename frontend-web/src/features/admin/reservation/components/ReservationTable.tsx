@@ -62,13 +62,13 @@ export default function ReservationTable({ reservations, onSelect, onDelete }: P
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5] border-b border-[#F0E6D3]">
-              <TableHead className="font-bold text-[#3D332A] py-3.5 pl-6 text-xs">Nama</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Layanan</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Dokter</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Jadwal</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Waktu</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Status</TableHead>
-              <TableHead className="font-bold text-[#3D332A] py-3.5 pr-6 text-right text-xs">Aksi</TableHead>
+              <TableHead className="font-bold text-[#3D332A] py-3.5 pl-4 md:pl-6 text-xs">Nama</TableHead>
+              <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Layanan</TableHead>
+              <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Dokter</TableHead>
+              <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Jadwal</TableHead>
+              <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Waktu</TableHead>
+              <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Status</TableHead>
+              <TableHead className="font-bold text-[#3D332A] py-3.5 pr-4 md:pr-6 text-right text-xs">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -107,15 +107,20 @@ export default function ReservationTable({ reservations, onSelect, onDelete }: P
                     className="hover:bg-[#FDFBF7] transition-colors border-b border-[#F5ECE0]"
                   >
                     {/* Nama */}
-                    <TableCell className="py-3.5 pl-6">
+                    <TableCell className="py-3.5 pl-4 md:pl-6">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-[#3D332A]">
                         <User className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                         <span>{patientName}</span>
                       </div>
+                      <div className="md:hidden mt-0.5 text-[10px] text-[#8A7B6B] flex items-center gap-1.5">
+                        <span className="truncate max-w-[120px] font-medium">{serviceName}</span>
+                        <span>•</span>
+                        <span>{dateFormatted}</span>
+                      </div>
                     </TableCell>
 
                     {/* Layanan */}
-                    <TableCell className="py-3.5">
+                    <TableCell className="hidden md:table-cell py-3.5">
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-[#3D332A] max-w-[200px] truncate">
                         <Sparkles className="w-3.5 h-3.5 text-[#C9A24A] shrink-0" />
                         <span className="truncate">{serviceName}</span>
@@ -123,7 +128,7 @@ export default function ReservationTable({ reservations, onSelect, onDelete }: P
                     </TableCell>
 
                     {/* Dokter */}
-                    <TableCell className="py-3.5">
+                    <TableCell className="hidden md:table-cell py-3.5">
                       <div className="flex items-center gap-1.5 text-xs text-[#5C4D3C] max-w-[190px] truncate">
                         <Stethoscope className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                         <span className="truncate font-medium">{doctorName}</span>
@@ -131,7 +136,7 @@ export default function ReservationTable({ reservations, onSelect, onDelete }: P
                     </TableCell>
 
                     {/* Jadwal */}
-                    <TableCell className="py-3.5">
+                    <TableCell className="hidden md:table-cell py-3.5">
                       <div className="flex items-center gap-1.5 text-xs font-semibold text-[#3D332A]">
                         <CalendarIcon className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                         <span>{dayFormatted}, {dateFormatted}</span>
@@ -139,7 +144,7 @@ export default function ReservationTable({ reservations, onSelect, onDelete }: P
                     </TableCell>
 
                     {/* Waktu */}
-                    <TableCell className="py-3.5">
+                    <TableCell className="hidden md:table-cell py-3.5">
                       <div className="flex items-center gap-1.5 text-xs font-medium text-[#5C4D3C]">
                         <Clock className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
                         <span>{rawTime}</span>
@@ -147,7 +152,7 @@ export default function ReservationTable({ reservations, onSelect, onDelete }: P
                     </TableCell>
 
                     {/* Status */}
-                    <TableCell className="py-3.5">
+                    <TableCell className="hidden md:table-cell py-3.5">
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusBadge.bg}`}
                       >
@@ -157,7 +162,7 @@ export default function ReservationTable({ reservations, onSelect, onDelete }: P
                     </TableCell>
 
                     {/* Aksi */}
-                    <TableCell className="py-3.5 pr-6 text-right">
+                    <TableCell className="py-3.5 pr-4 md:pr-6 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
                           size="sm"

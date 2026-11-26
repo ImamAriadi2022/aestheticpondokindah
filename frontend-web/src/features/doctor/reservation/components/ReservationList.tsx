@@ -201,13 +201,15 @@ export default function DoctorReservationList() {
               <Button
                 type="button"
                 variant="outline"
+                size="icon"
                 onClick={() => {
                   setSelectedPatient(null);
                   scrollPageToTop();
                 }}
-                className="rounded-xl text-xs font-bold px-4 py-2 h-9 border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
+                title="Kembali ke Daftar"
+                className="rounded-xl h-9 w-9 border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
               >
-                ← Kembali ke Daftar
+                <ArrowLeft className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -331,13 +333,15 @@ export default function DoctorReservationList() {
             <Button
               type="button"
               variant="outline"
+              size="icon"
               onClick={() => {
                 setSelectedPatient(null);
                 scrollPageToTop();
               }}
-              className="rounded-xl border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] text-xs font-bold px-5 py-2.5 h-auto cursor-pointer"
+              title="Kembali ke Daftar Pasien"
+              className="rounded-xl border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] h-9 w-9 cursor-pointer"
             >
-              ← Kembali ke Daftar Pasien
+              <ArrowLeft className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -392,11 +396,11 @@ export default function DoctorReservationList() {
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="border-b border-[#F0E6D3] bg-[#FAF8F5] text-[#8C6B1C] uppercase font-bold text-[10px] tracking-wider">
-                    <th className="py-3 px-4">No. Antrean & Pasien</th>
-                    <th className="py-3 px-4">Jadwal Periksa</th>
-                    <th className="py-3 px-4">Layanan & Keluhan</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Aksi</th>
+                    <th className="py-2.5 md:py-3 px-3 md:px-4">No. Antrean & Pasien</th>
+                    <th className="hidden md:table-cell py-3 px-4">Jadwal Periksa</th>
+                    <th className="hidden md:table-cell py-3 px-4">Layanan & Keluhan</th>
+                    <th className="hidden md:table-cell py-3 px-4">Status</th>
+                    <th className="py-2.5 md:py-3 px-3 md:px-4 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F5ECE0]">
@@ -407,16 +411,19 @@ export default function DoctorReservationList() {
 
                     return (
                       <tr key={r.id || idx} className="hover:bg-[#FAF8F5]/80 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center font-bold text-[#8C6B1C] text-xs shrink-0">
+                        <td className="py-2.5 md:py-3.5 px-3 md:px-4">
+                          <div className="flex items-center gap-2 md:gap-3">
+                            <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center font-bold text-[#8C6B1C] text-xs shrink-0">
                               {idx + 1}
                             </div>
                             <div>
-                              <div className="font-bold text-[#4A3F35] text-sm">
+                              <div className="font-bold text-[#4A3F35] text-xs md:text-sm">
                                 {r.patient_name || r.name || "Pasien Tanpa Nama"}
                               </div>
-                              <div className="flex items-center gap-2 text-[11px] text-[#8A7B6B] mt-0.5">
+                              <div className="text-[10px] text-[#8A7B6B] md:hidden truncate max-w-[150px]">
+                                {r.treatment_interest || "Pemeriksaan Gigi"} • {r.date || "-"}
+                              </div>
+                              <div className="hidden md:flex items-center gap-2 text-[11px] text-[#8A7B6B] mt-0.5">
                                 {r.phone && (
                                   <span className="flex items-center gap-1">
                                     <Phone className="w-3 h-3 text-[#C9A24A]" />
@@ -428,7 +435,7 @@ export default function DoctorReservationList() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 font-bold text-[#4A3F35]">
                             <Calendar className="w-3.5 h-3.5 text-[#C9A24A]" />
                             <span>{r.date || "-"}</span>
@@ -438,7 +445,7 @@ export default function DoctorReservationList() {
                             <span>{r.preferred_time || "Sesuai Jadwal"} WIB</span>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 max-w-xs">
+                        <td className="hidden md:table-cell py-3.5 px-4 max-w-xs">
                           <span className="font-bold text-gray-800">
                             {r.treatment_interest || "Pemeriksaan Umum"}
                           </span>
@@ -448,7 +455,7 @@ export default function DoctorReservationList() {
                             </div>
                           )}
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="hidden md:table-cell py-3.5 px-4">
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${
                               isCompleted
@@ -461,7 +468,7 @@ export default function DoctorReservationList() {
                             {r.status || "Menunggu"}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-2.5 md:py-3.5 px-3 md:px-4 text-right">
                           <Button
                             type="button"
                             variant="outline"
@@ -470,10 +477,10 @@ export default function DoctorReservationList() {
                               setSelectedPatient(r);
                               scrollPageToTop();
                             }}
-                            className="rounded-xl border-[#C9A24A] text-[#8C6B1C] hover:bg-[#FAF5EA] hover:text-[#735515] font-bold text-xs h-8 px-3.5 shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                            className="rounded-xl border-[#C9A24A] text-[#8C6B1C] hover:bg-[#FAF5EA] hover:text-[#735515] font-bold text-xs h-8 px-2.5 md:px-3.5 shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                           >
                             <Eye className="w-3.5 h-3.5 text-[#C9A24A]" />
-                            Preview Pasien
+                            <span className="hidden md:inline">Preview Pasien</span>
                           </Button>
                         </td>
                       </tr>

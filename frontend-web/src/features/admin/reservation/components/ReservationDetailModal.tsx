@@ -610,11 +610,12 @@ export default function ReservationDetailModal({
             <Button
               type="button"
               variant="outline"
+              size="icon"
               onClick={onClose}
-              className="rounded-xl text-xs font-bold px-3 py-1.5 border-[#E8DFC8] text-[#4A3F35] bg-white hover:bg-[#FAF8F5] cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-2xs shrink-0"
+              title="Kembali"
+              className="rounded-xl h-9 w-9 border-[#E8DFC8] text-[#4A3F35] bg-white hover:bg-[#FAF8F5] cursor-pointer active:scale-95 shadow-2xs shrink-0"
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Kembali</span>
+              <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="border-l border-[#E8DFC8] pl-3">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#8A7B6B] block">

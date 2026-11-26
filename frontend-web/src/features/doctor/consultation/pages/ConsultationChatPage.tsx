@@ -55,10 +55,11 @@ export default function ConsultationChatPage() {
         </p>
         <Button
           onClick={() => navigate("/dashboard/doctor?tab=konsultasi")}
+          size="icon"
+          title="Kembali ke Daftar"
           className="mt-5 bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white rounded-xl"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Kembali ke Daftar
+          <ArrowLeft className="w-5 h-5" />
         </Button>
       </div>
     );

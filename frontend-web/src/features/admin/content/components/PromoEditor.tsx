@@ -121,7 +121,9 @@ export default function PromoEditor({ current, editorId, token, fetchApiPromos, 
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="rounded-sm border-gray-200 h-9 text-xs"
+            size="icon"
+            className="rounded-xl border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] h-9 w-9 cursor-pointer"
+            title="Kembali"
             onClick={() =>
               setSearchParams((prev: any) => {
                 const next = new URLSearchParams(prev);
@@ -132,8 +134,7 @@ export default function PromoEditor({ current, editorId, token, fetchApiPromos, 
               })
             }
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Kembali
+            <ArrowLeft className="w-4 h-4" />
           </Button>
           <h2 className="text-lg font-bold text-gray-900">
             {isNew ? "Tambah Promo" : "Edit Promo"}

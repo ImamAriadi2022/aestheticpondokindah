@@ -50,9 +50,6 @@ class ReservationChangesController extends Controller
                          });
                   });
             });
-
-            // Doctor focuses on Dikonfirmasi & Selesai
-            $query->whereIn('status', ['Dikonfirmasi', 'Selesai', 'confirmed', 'completed', 'in_progress']);
         } elseif ($role === 'user' || $role === 'patient') {
             $query->where('user_id', $user->id);
         } else {

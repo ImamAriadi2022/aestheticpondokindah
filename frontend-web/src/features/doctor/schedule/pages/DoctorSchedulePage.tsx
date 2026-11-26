@@ -21,8 +21,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/shared/ui/button";
 import { getSession } from "@/core/auth/services/session";
 import { getDoctorQueue } from "@/features/doctor/dashboard/services/doctorDashboardService";
-import { DUMMY_WEEKLY_RESERVATIONS } from "@/features/admin/reservation/services/dummyReservations";
 import { type ReservationItem } from "@/features/admin/reservation/services/reservationService";
+import { getReservationsFromDb, type CachedReservation } from "@/core/services/reservationStorage";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
 import { usePageRefresh } from "@/core/events/refreshEvents";
@@ -93,17 +93,42 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const isFetchingRef = useRef(false);
 
-  // Fetch queue from backend
+  const isDoctorMatch = useCallback((itemDoctor?: string | null, targetDoctor?: string | null) => {
+    if (!itemDoctor || !targetDoctor) return false;
+    const cleanItem = itemDoctor.toLowerCase().replace(/drg\.?|dr\.?|sp\.[a-z]+|\(.*?\)|,/gi, "").trim();
+    const cleanTarget = targetDoctor.toLowerCase().replace(/drg\.?|dr\.?|sp\.[a-z]+|\(.*?\)|,/gi, "").trim();
+    return (
+      itemDoctor.trim().toLowerCase() === targetDoctor.trim().toLowerCase() ||
+      (cleanItem.length > 2 && cleanTarget.length > 2 && (cleanItem.includes(cleanTarget) || cleanTarget.includes(cleanItem)))
+    );
+  }, []);
+
+  // Fetch queue from backend + load from unified realtime reservations cache
   const fetchReservations = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
+      // 1. First attempt to pull directly from doctor queue endpoint
       const queue = await getDoctorQueue();
-      if (Array.isArray(queue)) {
+      if (Array.isArray(queue) && queue.length > 0) {
         setReservations(queue);
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
         } catch {}
+      } else {
+        // 2. Fallback to check unified IndexedDB cache if queue endpoint returned empty or is filtered
+        const dbCached = await getReservationsFromDb();
+        if (Array.isArray(dbCached) && dbCached.length > 0) {
+          const matched = dbCached.filter((item: CachedReservation) =>
+            isDoctorMatch(item.doctor || item.doctor_name || item.doctorName, currentDoctorName)
+          );
+          if (matched.length > 0) {
+            setReservations(matched);
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(matched));
+            } catch {}
+          }
+        }
       }
       if (onRefresh) onRefresh();
     } catch {
@@ -111,11 +136,24 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
     } finally {
       isFetchingRef.current = false;
     }
-  }, [onRefresh]);
+  }, [onRefresh, currentDoctorName, isDoctorMatch]);
 
   useEffect(() => {
+    // Immediate check on mount: try loading from IndexedDB if localStorage was empty
+    if (reservations.length === 0) {
+      getReservationsFromDb().then((dbCached) => {
+        if (Array.isArray(dbCached) && dbCached.length > 0) {
+          const matched = dbCached.filter((item: CachedReservation) =>
+            isDoctorMatch(item.doctor || item.doctor_name || item.doctorName, currentDoctorName)
+          );
+          if (matched.length > 0) {
+            setReservations(matched);
+          }
+        }
+      }).catch(() => {});
+    }
     fetchReservations();
-  }, [fetchReservations]);
+  }, [fetchReservations, currentDoctorName, isDoctorMatch, reservations.length]);
 
   usePageRefresh(() => fetchReservations());
 
@@ -162,68 +200,41 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
     return days;
   }, [currentWeekStart]);
 
-  // Combine backend reservations and sample dummy reservations filtered specifically for THIS doctor
+  // Combine backend reservations and sample reservations filtered specifically for THIS doctor
   const myReservationsList = useMemo(() => {
     const list: ReservationItem[] = [];
     const seenCodes = new Set<string>();
 
-    // 1. From backend (already scoped to current logged in doctor via backend DoctorQueueController)
+    // 1. From backend/sync engine (already scoped or matched to current logged in doctor)
     if (Array.isArray(reservations)) {
       reservations.forEach((r: any) => {
-        const item: ReservationItem = {
-          id: r.id,
-          code: r.code || `RSV-${String(r.id).padStart(6, "0")}`,
-          name: r.patient_name || r.name || "Pasien",
-          phone: r.patient_phone || r.phone || "",
-          treatment_interest: r.treatment_interest || "Pemeriksaan Gigi",
-          doctor: r.doctor || currentDoctorName,
-          date: r.date,
-          preferred_time: r.preferred_time || "10:00 WIB",
-          branch_name: r.branch_name || "Aesthetic Pondok Indah Main Branch",
-          status: r.status || "Dikonfirmasi",
-          complaint: r.complaint || "",
-          createdAt: r.created_at || r.createdAt,
-        };
-        if (!seenCodes.has(item.code)) {
-          seenCodes.add(item.code);
-          list.push(item);
-        }
-      });
-    }
-
-    // 2. Dummy reservations matching current doctor name
-    DUMMY_WEEKLY_RESERVATIONS.forEach((dummy) => {
-      const dummyDocClean = cleanDocName(dummy.doctor);
-      const isMatch =
-        !cleanCurrentDoctor ||
-        dummyDocClean.includes(cleanCurrentDoctor) ||
-        cleanCurrentDoctor.includes(dummyDocClean);
-
-      // If doctor is matches or if list is empty (fallback to populate doctor's schedule demo)
-      if (isMatch && !seenCodes.has(dummy.code)) {
-        seenCodes.add(dummy.code);
-        list.push({
-          ...dummy,
-          doctor: currentDoctorName || dummy.doctor,
-        });
-      }
-    });
-
-    // If still empty (e.g. fresh doctor account), adapt existing dummy items with this doctor's name
-    if (list.length === 0) {
-      DUMMY_WEEKLY_RESERVATIONS.slice(0, 3).forEach((dummy) => {
-        if (!seenCodes.has(dummy.code)) {
-          seenCodes.add(dummy.code);
-          list.push({
-            ...dummy,
-            doctor: currentDoctorName || dummy.doctor,
-          });
+        const docName = r.doctor || r.doctor_name || r.doctorName || currentDoctorName;
+        // Check if matches current doctor
+        if (isDoctorMatch(docName, currentDoctorName) || !cleanCurrentDoctor) {
+          const item: ReservationItem = {
+            id: r.id,
+            code: r.code || `RSV-${String(r.id).padStart(6, "0")}`,
+            name: r.patient_name || r.name || "Pasien",
+            phone: r.patient_phone || r.phone || "",
+            treatment_interest: r.treatment_interest || "Pemeriksaan Gigi",
+            doctor: docName,
+            date: r.date,
+            preferred_time: r.preferred_time || "10:00 WIB",
+            branch_name: r.branch_name || "Aesthetic Pondok Indah Main Branch",
+            status: r.status || "Dikonfirmasi",
+            complaint: r.complaint || "",
+            createdAt: r.created_at || r.createdAt,
+          };
+          if (!seenCodes.has(item.code)) {
+            seenCodes.add(item.code);
+            list.push(item);
+          }
         }
       });
     }
 
     return list;
-  }, [reservations, cleanCurrentDoctor, currentDoctorName]);
+  }, [reservations, cleanCurrentDoctor, currentDoctorName, isDoctorMatch]);
 
   // Group reservations by date (YYYY-MM-DD)
   const reservationsByDate = useMemo(() => {
@@ -574,10 +585,12 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
                 <Button
                   type="button"
                   variant="outline"
+                  size="icon"
                   onClick={handleCloseDetail}
-                  className="rounded-xl text-xs font-bold px-4 py-2 h-9 border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
+                  title="Kembali ke Jadwal"
+                  className="rounded-xl h-9 w-9 border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
                 >
-                  ← Kembali ke Jadwal
+                  <ArrowLeft className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -706,7 +719,7 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
               </div>
 
               {/* 6 Days Grid (Senin - Sabtu) */}
-              <div className="grid grid-cols-6 gap-1.5 sm:gap-2.5">
+              <div className="grid grid-cols-6 gap-1 sm:gap-2.5">
                 {weekDays.map((d) => {
                   const list = reservationsByDate.get(d.isoDate) || [];
                   const count = list.length;
@@ -719,7 +732,7 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
                       onClick={() =>
                         setSelectedDateStr((prev) => (prev === d.isoDate ? null : d.isoDate))
                       }
-                      className={`rounded-2xl p-2 sm:p-3 border transition-all cursor-pointer text-center flex flex-col items-center justify-center min-h-[68px] sm:min-h-[90px] select-none ${
+                      className={`rounded-xl sm:rounded-2xl p-1.5 sm:p-3 border transition-all cursor-pointer text-center sm:text-left flex flex-col justify-center sm:justify-between min-h-[58px] sm:min-h-[105px] ${
                         isSelected
                           ? "bg-[#FAF4E8] border-[#C9A24A] shadow-xs ring-2 ring-[#C9A24A]/20"
                           : isToday
@@ -727,15 +740,35 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
                           : "bg-white border-[#F0E6D3] hover:border-[#D9CDB8] hover:bg-[#FCFAF7]"
                       }`}
                     >
-                      <span
-                        className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider block ${
-                          isSelected || isToday ? "text-[#8C6B1C]" : "text-[#8A7B6B]"
-                        }`}
-                      >
-                        {d.dayName}
-                      </span>
-                      <div className="text-base sm:text-lg font-bold text-[#3D332A] mt-0.5">
-                        {d.dayNumber}
+                      <div>
+                        <div className="flex items-center justify-center sm:justify-between">
+                          <span
+                            className={`text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${
+                              isSelected || isToday ? "text-[#8C6B1C]" : "text-[#8A7B6B]"
+                            }`}
+                          >
+                            {d.dayName}
+                          </span>
+                          {isToday && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#B8943F] hidden sm:inline-block" title="Hari ini" />
+                          )}
+                        </div>
+                        <div className="text-sm sm:text-xl font-bold text-[#3D332A] mt-0.5">
+                          {d.dayNumber}
+                        </div>
+                      </div>
+
+                      <div className="hidden sm:flex mt-2 pt-2 border-t border-[#F5ECE0] items-center justify-between text-[11px]">
+                        <span className="text-[#8A7B6B] font-medium">Janji:</span>
+                        {count > 0 ? (
+                          <span className="w-5 h-5 flex items-center justify-center rounded-full bg-[#EF4444] text-white text-[10px] font-bold shadow-xs">
+                            {count}
+                          </span>
+                        ) : (
+                          <span className="text-[#B8A99A] font-medium px-1">
+                            0
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
@@ -817,7 +850,7 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
                             <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Dokter</TableHead>
                             <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Jadwal</TableHead>
                             <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Waktu</TableHead>
-                            <TableHead className="font-bold text-[#3D332A] py-3.5 text-xs">Status</TableHead>
+                            <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Status</TableHead>
                             <TableHead className="font-bold text-[#3D332A] py-3.5 pr-3 sm:pr-5 text-right text-xs">Aksi</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -888,7 +921,7 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
                                 </TableCell>
 
                                 {/* Status */}
-                                <TableCell className="py-3.5">
+                                <TableCell className="hidden md:table-cell py-3.5">
                                   <span
                                     className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${status.bg}`}
                                   >

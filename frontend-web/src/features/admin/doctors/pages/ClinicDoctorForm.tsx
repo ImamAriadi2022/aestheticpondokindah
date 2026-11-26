@@ -203,11 +203,12 @@ export default function ClinicDoctorFormPage() {
       <div className="doctor-form-page">
         <Button
           variant="ghost"
+          size="icon"
           onClick={() => navigate("/dashboard/clinic?tab=doctors")}
-          className="mb-4 -ml-2 text-gray-600 hover:text-gray-900"
+          className="mb-4 -ml-2 text-gray-600 hover:text-gray-900 rounded-xl"
+          title="Kembali"
         >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Kembali
+          <ArrowLeft className="w-5 h-5" />
         </Button>
 
         <Card className="rounded-sm border-0 shadow-sm">

@@ -16,9 +16,9 @@ export default function UserTable({ users, onSelect, onDelete, isSearching }: Pr
         <TableHeader>
           <TableRow className="bg-[#FAF8F5]">
             <TableHead>Nama Pengguna</TableHead>
-            <TableHead>Email / No. HP</TableHead>
-            <TableHead>Role / Peran</TableHead>
-            <TableHead>Tier Membership</TableHead>
+            <TableHead className="hidden md:table-cell">Email / No. HP</TableHead>
+            <TableHead className="hidden md:table-cell">Role / Peran</TableHead>
+            <TableHead className="hidden md:table-cell">Tier Membership</TableHead>
             <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -35,19 +35,19 @@ export default function UserTable({ users, onSelect, onDelete, isSearching }: Pr
               return (
                 <TableRow key={user.id}>
                   <TableCell>
-                    <p className="text-xs font-bold text-[#4A3F35]">{user.name}</p>
-                    <p className="text-[10px] text-[#8A7B6B]">ID: {user.id}</p>
+                    <p className="text-[11px] md:text-xs font-bold text-[#4A3F35]">{user.name}</p>
+                    <p className="text-[9px] md:text-[10px] text-[#8A7B6B]">ID: {user.id}</p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <p className="text-xs text-[#4A3F35]">{user.email || "-"}</p>
                     <p className="text-[10px] text-[#8A7B6B]">{user.whatsapp || user.phone || "-"}</p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <span className="text-xs font-medium text-[#4A3F35]">
                       {user.role || "user"}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <span className="text-xs font-semibold text-[#8C6B1C]">
                       {user.membership_tier || user.membership_level || "Bronze"}
                     </span>

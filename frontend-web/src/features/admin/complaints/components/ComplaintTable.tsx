@@ -90,12 +90,12 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">
-              <TableHead className="w-32">Tiket & Tanggal</TableHead>
+              <TableHead className="hidden md:table-cell w-32">Tiket & Tanggal</TableHead>
               <TableHead className="w-48">Nama Pasien</TableHead>
-              <TableHead className="w-56">Kategori & Judul</TableHead>
-              <TableHead>Uraian Pengaduan</TableHead>
-              <TableHead className="w-44">Status & Tanggapan</TableHead>
-              <TableHead className="text-right w-28">Aksi</TableHead>
+              <TableHead className="hidden md:table-cell w-56">Kategori & Judul</TableHead>
+              <TableHead className="hidden md:table-cell">Uraian Pengaduan</TableHead>
+              <TableHead className="hidden md:table-cell w-44">Status & Tanggapan</TableHead>
+              <TableHead className="text-right w-24 md:w-28">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -126,7 +126,7 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
                 return (
                   <TableRow key={item.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                     {/* Tiket & Tanggal */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="inline-block text-xs font-mono font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2 py-0.5 rounded-md border border-[#EADBBD]">
                         #{item.id}
                       </span>
@@ -138,19 +138,20 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
 
                     {/* Nama Pasien */}
                     <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center font-bold text-xs shrink-0 border border-[#EADBBD]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center font-bold text-xs shrink-0 border border-[#EADBBD]">
                           {patientName.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-[#4A3F35] truncate">{patientName}</p>
-                          <p className="text-[10px] text-[#8A7B6B] truncate">{patientContact}</p>
+                          <p className="text-[10px] text-[#8A7B6B] truncate md:hidden">{item.category || item.title || patientContact}</p>
+                          <p className="text-[10px] text-[#8A7B6B] truncate hidden md:block">{patientContact}</p>
                         </div>
                       </div>
                     </TableCell>
 
                     {/* Kategori & Judul */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="inline-block text-[10px] font-bold bg-[#FAF8F5] text-[#8C6B1C] border border-[#E8DFC8] px-2 py-0.5 rounded-full mb-1">
                         {item.category || "Pelayanan Klinik"}
                       </span>
@@ -160,14 +161,14 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
                     </TableCell>
 
                     {/* Uraian Pengaduan */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <p className="text-xs text-[#5C5546] line-clamp-2 leading-relaxed italic bg-[#FAF8F5]/80 p-2 rounded-xl border border-[#F0E6D3]/60">
                         "{item.description || item.complaint || "-"}"
                       </p>
                     </TableCell>
 
                     {/* Status & Tanggapan */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="space-y-1.5">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${s.bg} ${s.text} ${s.border}`}>
                           <StatusIcon className="w-3 h-3" />

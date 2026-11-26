@@ -862,30 +862,45 @@ export default function WeeklyAppointmentCalendar({
     const periodLabel = `Minggu ${weekHeaderLabel}`;
     const listCount = doctorTargetReservations.length;
 
+    // Helper format tanggal: "Kamis, 26 Nov 2026"
+    const formatScheduleDate = (dateVal?: string | null) => {
+      if (!dateVal) return "-";
+      try {
+        const d = new Date(dateVal);
+        if (isNaN(d.getTime())) return dateVal;
+        return d.toLocaleDateString("id-ID", {
+          weekday: "long",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+      } catch {
+        return dateVal;
+      }
+    };
+
     let itemsSummary = "";
     if (listCount > 0) {
       itemsSummary = doctorTargetReservations
-        .slice(0, 10)
-        .map(
-          (r, idx) =>
-            `${idx + 1}. *${r.name || "Pasien"}* (${r.treatment_interest || "Perawatan"})\n   ⏰ ${r.preferred_time || "10:00 WIB"} | 📅 ${r.date || "-"} | Status: ${r.status || "Menunggu"}`
-        )
+        .map((r, idx) => {
+          const dateFormatted = formatScheduleDate(r.date);
+          const time = r.preferred_time || "10:00";
+          const treatment = r.treatment_interest || "Pemeriksaan";
+          return `${idx + 1}. ${r.name || "Pasien"}\n📅 ${dateFormatted} \n⏰ ${time} | (${treatment})`;
+        })
         .join("\n\n");
-      if (listCount > 10) {
-        itemsSummary += `\n\n_...dan ${listCount - 10} pasien lainnya (terlampir pada dokumen PDF resmi)._`;
-      }
     } else {
-      itemsSummary = "_Tidak ada antrean pasien untuk jadwal ini._";
+      itemsSummary = "Tidak ada antrean pasien untuk jadwal ini.";
     }
 
     const waMessage = encodeURIComponent(
-      `Halo Dokter *${selectedDoctorToSend}*,\n\n` +
-      `Berikut adalah rincian jadwal penjadwalan janji temu (appointment) pasien Anda di *Aesthetic Pondok Indah Dental Clinic* untuk *${periodLabel}*:\n\n` +
-      `📊 *Total Pasien Terjadwal*: ${listCount} Pasien\n\n` +
-      `📋 *Daftar Antrean Pasien*:\n` +
+      `Halo Dokter ${selectedDoctorToSend},\n\n` +
+      `Berikut adalah rincian jadwal penjadwalan janji temu (appointment) pasien Anda\n` +
+      `di Aesthetic Pondok Indah Dental Clinic untuk ${periodLabel}:\n\n` +
+      `Total Pasien Terjadwal: ${listCount} Pasien\n\n` +
+      `Daftar Antrean Pasien:\n` +
       `${itemsSummary}\n\n` +
-      `📎 *Catatan*: Dokumen PDF resmi jadwal praktik ini juga telah diunduh/dicetak dari sistem untuk arsip administrasi ruang praktik.\n\n` +
-      `Mohon informasikan ke resepsionis/front desk jika ada penyesuaian slot praktik dokter. Terima kasih banyak, Dok! 🙏`
+      `Mohon informasikan ke admin jika ada penyesuaian slot praktik dokter. Terima kasih banyak 🙏`
     );
 
     // Buka WhatsApp

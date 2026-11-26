@@ -237,7 +237,9 @@ export default function DownloadAppEditor({
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            className="rounded-xl border-[#E8DFC8] bg-[#FAF8F5] hover:bg-[#F3EDE2] text-[#4A3F35] h-10 px-3.5 text-xs font-semibold cursor-pointer"
+            size="icon"
+            className="rounded-xl border-[#E8DFC8] bg-[#FAF8F5] hover:bg-[#F3EDE2] text-[#4A3F35] h-9 w-9 cursor-pointer"
+            title="Kembali"
             onClick={() =>
               setSearchParams((prev: any) => {
                 const next = new URLSearchParams(prev);
@@ -248,8 +250,7 @@ export default function DownloadAppEditor({
               })
             }
           >
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Kembali
+            <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
             <h2 className="text-lg font-bold text-[#2C2416] flex items-center gap-2">
