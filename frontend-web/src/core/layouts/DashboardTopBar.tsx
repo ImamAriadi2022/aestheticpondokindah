@@ -255,6 +255,12 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         const mapped: PushNotificationPayload[] = list.map((item: any) => {
           const isRead = !!(item.read_at || item.is_read);
           const timeStamp = item.created_at || item.createdAt || item.timestamp || item.receivedAt || new Date().toISOString();
+          const notifData = item.data || {};
+          const parsedCode = notifData.code || notifData.bookingCode || notifData.booking_code;
+          // Ekstrak kode reservasi dari pesan/body atau title jika tidak ada di field data (misal #RSV-000051 atau RSV-000051)
+          const fallbackCodeMatch = (item.body || item.message || item.title || "").match(/#?(RSV-\d{4,8})/i);
+          const finalBookingCode = parsedCode || (fallbackCodeMatch ? fallbackCodeMatch[1].toUpperCase() : undefined);
+
           return {
             id: String(item.id),
             title: item.title || "🔔 Notifikasi Klinik",
@@ -262,7 +268,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
             sender: item.type === "appointment" ? "Sistem Reservasi" : item.type === "complaint" ? "Pengaduan Pasien" : item.type === "consultation" ? "Konsultasi Pasien" : "Aesthetic Pondok Indah",
             role: role === "clinic" ? "admin" : role === "doctor" ? "doctor" : "patient",
             type: item.type || "general",
-            bookingCode: item.data?.code || item.data?.bookingCode,
+            bookingCode: finalBookingCode,
             url: item.data?.url || item.deep_link || (item.type === "complaint" ? (role === "clinic" ? "/dashboard/clinic?tab=pengaduan" : "/dashboard/user?tab=pengaduan") : item.type === "consultation" ? (role === "clinic" ? "/dashboard/clinic?tab=konsultasi" : "/dashboard/user?tab=konsultasi") : (role === "clinic" ? "/dashboard/clinic?tab=reservasi" : "/dashboard/user?tab=reservasi")),
             receivedAt: timeStamp,
             createdAt: timeStamp,
@@ -323,6 +329,21 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       };
 
       setNotifications((prev: PushNotificationPayload[]) => {
+        // Filter notifikasi agar user biasa tidak menerima notifikasi milik admin atau dokter lain
+        if (role === "user") {
+          const currentUserId = String(session?.id || (session as any)?.user?.id || "");
+          if (payload.role && payload.role !== "patient" && payload.role !== "all") {
+            return prev;
+          }
+          if ((payload as any).userId && currentUserId && String((payload as any).userId) !== currentUserId) {
+            return prev;
+          }
+        } else if (role === "doctor") {
+          if (payload.role && payload.role !== "doctor" && payload.role !== "all") {
+            return prev;
+          }
+        }
+
         const updated = [enrichedPayload, ...prev.filter((p: PushNotificationPayload) => p.id !== payload.id)];
         try {
           localStorage.setItem("apig_recent_push_notifications", JSON.stringify(updated.slice(0, 30)));
@@ -331,6 +352,12 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       });
 
       setUnreadCount((prev: number) => {
+        if (role === "user" && payload.role && payload.role !== "patient" && payload.role !== "all") {
+          return prev;
+        }
+        if (role === "doctor" && payload.role && payload.role !== "doctor" && payload.role !== "all") {
+          return prev;
+        }
         const next = prev + 1;
         try {
           localStorage.setItem("apig_push_unread_count", String(next));
@@ -422,9 +449,31 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
     if (item.onClick) {
       item.onClick();
+    } else if (
+      item.type === "reservation_new" ||
+      item.type === "reservation_confirmed" ||
+      item.type === "reservation_cancelled" ||
+      item.type === "booking" ||
+      item.type === "reservation" ||
+      item.type === "appointment"
+    ) {
+      const codeQuery = item.bookingCode ? `&code=${encodeURIComponent(item.bookingCode)}` : "";
+      if (role === "clinic") {
+        navigate(`/dashboard/clinic?tab=reservasi${codeQuery}`);
+      } else if (role === "doctor") {
+        navigate(`/dashboard/doctor?tab=reservasi${codeQuery}`);
+      } else {
+        navigate(`/dashboard/user?tab=riwayat${codeQuery}`);
+      }
     } else if (item.url) {
       const cleanUrl = item.url.replace(/^#/, "");
-      navigate(cleanUrl);
+      // Jika url reservasi belum menyertakan kode dan item memiliki bookingCode
+      if (cleanUrl.includes("tab=reservasi") && item.bookingCode && !cleanUrl.includes("code=")) {
+        const separator = cleanUrl.includes("?") ? "&" : "?";
+        navigate(`${cleanUrl}${separator}code=${encodeURIComponent(item.bookingCode)}`);
+      } else {
+        navigate(cleanUrl);
+      }
     } else if (
       item.type === "complaint" ||
       item.type === "pengaduan" ||
@@ -444,21 +493,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
           ? "/dashboard/doctor?tab=konsultasi"
           : "/dashboard/user?tab=konsultasi&view=list"
       );
-    } else if (
-      item.type === "reservation_new" ||
-      item.type === "reservation_confirmed" ||
-      item.type === "reservation_cancelled" ||
-      item.type === "booking" ||
-      item.type === "reservation" ||
-      item.type === "appointment"
-    ) {
-      if (role === "clinic") {
-        navigate("/dashboard/clinic?tab=reservasi");
-      } else if (role === "doctor") {
-        navigate("/dashboard/doctor?tab=reservasi");
-      } else {
-        navigate("/dashboard/user?tab=riwayat");
-      }
     } else if (item.type === "membership") {
       navigate(role === "clinic" ? "/dashboard/clinic/membership" : "/dashboard/user?tab=membership");
     } else if (item.type === "promo") {
@@ -724,17 +758,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
               <div className="py-1">
                 {role === "clinic" ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        navigate("/dashboard/clinic?tab=settings");
-                      }}
-                      className="w-full px-4 py-2 text-xs font-semibold text-[#4A3F35] hover:text-[#8C6B1C] hover:bg-[#FAF8F5] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
-                    >
-                      <Settings className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                      Pengaturan Klinik (Kop & S&K)
-                    </button>
                     <button
                       type="button"
                       onClick={() => {

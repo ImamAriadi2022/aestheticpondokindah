@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router";
 import {
   Loader2,
   Stethoscope,
@@ -37,11 +38,33 @@ export default function DoctorReservationList() {
     }
   });
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(reservations.length === 0);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const isFetchingRef = useRef(false);
+
+  // Otomatis buka detail reservasi jika ada parameter query code / id (dari notifikasi)
+  useEffect(() => {
+    const codeParam = searchParams.get("code") || searchParams.get("bookingCode");
+    const idParam = searchParams.get("reservation_id") || searchParams.get("id");
+
+    if ((codeParam || idParam) && reservations && reservations.length > 0) {
+      const target = reservations.find((r) => {
+        const rCode = (r.code || `RSV-${String(r.id).padStart(6, "0")}`).toLowerCase().replace(/#/g, "").trim();
+        const cleanQueryCode = (codeParam || "").toLowerCase().replace(/#/g, "").trim();
+        const codeMatches = cleanQueryCode && rCode === cleanQueryCode;
+        const idMatches = idParam && String(r.id) === String(idParam);
+        return codeMatches || idMatches;
+      });
+
+      if (target) {
+        setSelectedPatient(target);
+        scrollPageToTop();
+      }
+    }
+  }, [searchParams, reservations]);
 
   const fetchPatients = useCallback(async (silent = false) => {
     if (isFetchingRef.current) return;

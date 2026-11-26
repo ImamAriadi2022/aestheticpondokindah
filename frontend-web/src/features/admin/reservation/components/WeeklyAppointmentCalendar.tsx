@@ -14,13 +14,18 @@ import {
   FileSpreadsheet,
   FileText,
   Filter,
+  Send,
+  X,
+  MessageCircle,
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Button } from "@/shared/ui/button";
 import type { ReservationItem } from "../services/reservationService";
+import { toast } from "@/shared/ui/toast";
 
 type Props = {
   reservations: ReservationItem[];
+  doctors?: any[];
   onSelectReservation?: (item: ReservationItem) => void;
 };
 
@@ -62,6 +67,7 @@ function getStatusBadge(status: string) {
 
 export default function WeeklyAppointmentCalendar({
   reservations,
+  doctors = [],
   onSelectReservation,
 }: Props) {
   // Base date for navigation (start of currently viewed week)
@@ -83,6 +89,12 @@ export default function WeeklyAppointmentCalendar({
     const d = String(now.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   };
+
+  // State Modal Kirim Jadwal ke Dokter
+  const [isSendDoctorModalOpen, setIsSendDoctorModalOpen] = useState(false);
+  const [selectedDoctorToSend, setSelectedDoctorToSend] = useState<string>("");
+  const [targetDoctorPhoneInput, setTargetDoctorPhoneInput] = useState<string>("");
+  const [sendMethod, setSendMethod] = useState<"both" | "wa" | "pdf">("both");
 
   // Default langsung aktifkan/select tanggal hari ini (misal 26 Nov 2026)
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(() => getLocalTodayIso());
@@ -326,7 +338,7 @@ export default function WeeklyAppointmentCalendar({
   // Cetak & Unduh PDF Langsung via Native Print Engine (Tata letak presisi, font standar, anti-wrap sempit)
   const handleExportPDF = () => {
     if (activeReservations.length === 0) return;
-    const periodLabel = selectedDateStr ? `Tanggal ${selectedDateStr}` : `Periode ${weekHeaderLabel}`;
+    const periodLabel = `Minggu ${weekHeaderLabel}`;
     const cleanPeriodFile = (selectedDateStr || weekHeaderLabel).replace(/[\s–-]+/g, "_");
 
     const printFrame = document.createElement("iframe");
@@ -559,6 +571,342 @@ export default function WeeklyAppointmentCalendar({
     }, 300);
   };
 
+  // Helper formatting nomor WhatsApp
+  const formatWaPhone = (rawPhone: string) => {
+    let clean = (rawPhone || "").replace(/\D/g, "");
+    if (clean.startsWith("0")) {
+      clean = "62" + clean.slice(1);
+    } else if (!clean.startsWith("62") && clean.length > 5) {
+      clean = "62" + clean;
+    }
+    return clean;
+  };
+
+  // Daftar seluruh dokter untuk modal (kombinasi props doctors + dokter yang ada di jadwal)
+  const allAvailableDoctors = useMemo(() => {
+    const list: { name: string; phone: string; role?: string }[] = [];
+    const seen = new Set<string>();
+
+    doctors.forEach((doc) => {
+      const name = (doc.name || "").trim();
+      if (name && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        list.push({
+          name,
+          phone: doc.phone || doc.whatsapp || "",
+          role: doc.specialist || doc.role || "Dokter Gigi",
+        });
+      }
+    });
+
+    doctorsInWeek.forEach((docName) => {
+      if (docName && !seen.has(docName.toLowerCase())) {
+        seen.add(docName.toLowerCase());
+        list.push({
+          name: docName,
+          phone: "",
+          role: "Dokter Spesialis",
+        });
+      }
+    });
+
+    return list;
+  }, [doctors, doctorsInWeek]);
+
+  // Helper normalisasi pencocokan nama dokter
+  const isDoctorMatch = (itemDoctor?: string | null, targetDoctor?: string | null) => {
+    if (!itemDoctor || !targetDoctor) return false;
+    const cleanItem = itemDoctor.toLowerCase().replace(/drg\.?|sp\.[a-z]+|\(.*?\)|,/gi, "").trim();
+    const cleanTarget = targetDoctor.toLowerCase().replace(/drg\.?|sp\.[a-z]+|\(.*?\)|,/gi, "").trim();
+    return (
+      itemDoctor.trim().toLowerCase() === targetDoctor.trim().toLowerCase() ||
+      (cleanItem.length > 2 && cleanTarget.length > 2 && (cleanItem.includes(cleanTarget) || cleanTarget.includes(cleanItem)))
+    );
+  };
+
+  // Reservasi spesifik untuk dokter yang dipilih di modal kirim
+  // Selalu mengambil seluruh data antrean real pada minggu aktif yang sedang dilihat
+  const doctorTargetReservations = useMemo(() => {
+    if (!selectedDoctorToSend) return [];
+    const list: ReservationItem[] = [];
+    weekDays.forEach((w) => {
+      const dayList = reservationsByDate.get(w.isoDate) || [];
+      list.push(...dayList);
+    });
+    return list.filter((r) => isDoctorMatch(r.doctor, selectedDoctorToSend));
+  }, [selectedDoctorToSend, weekDays, reservationsByDate]);
+
+  // Handler cetak PDF khusus dokter terpilih
+  const handlePrintDoctorSchedulePdf = () => {
+    if (doctorTargetReservations.length === 0) {
+      toast({
+        title: "Tidak Ada Data",
+        message: "Tidak ada jadwal pasien untuk dokter ini pada periode terpilih.",
+        variant: "warning",
+      });
+      return;
+    }
+
+    const periodLabel = `Minggu ${weekHeaderLabel}`;
+    const printFrame = document.createElement("iframe");
+    printFrame.style.position = "fixed";
+    printFrame.style.right = "0";
+    printFrame.style.bottom = "0";
+    printFrame.style.width = "0";
+    printFrame.style.height = "0";
+    printFrame.style.border = "0";
+    document.body.appendChild(printFrame);
+
+    const frameDoc = printFrame.contentWindow?.document;
+    if (!frameDoc) {
+      window.print();
+      return;
+    }
+
+    const rowsHtml = doctorTargetReservations
+      .map((r, i) => {
+        const st = (r.status || "").toLowerCase();
+        let badgeBg = "#fef3c7";
+        let badgeColor = "#92400e";
+        if (st.includes("selesai")) {
+          badgeBg = "#f3e8ff";
+          badgeColor = "#6b21a8";
+        } else if (st.includes("konfirmasi")) {
+          badgeBg = "#d1fae5";
+          badgeColor = "#065f46";
+        } else if (st.includes("batal")) {
+          badgeBg = "#fee2e2";
+          badgeColor = "#991b1b";
+        }
+
+        return `
+          <tr style="border-bottom: 1px solid #e5e7eb; ${i % 2 === 1 ? "background: #fafaf9;" : ""}">
+            <td style="padding: 8px 6px; text-align: center; color: #57534e; font-size: 10px; font-weight: normal;">${i + 1}</td>
+            <td style="padding: 8px 6px; font-weight: normal; color: #44403c; white-space: nowrap; font-size: 10.5px;">${r.code || `RSV-${r.id}`}</td>
+            <td style="padding: 8px 6px; font-weight: bold; color: #1c1917; font-size: 10.5px;">${r.name || "-"}</td>
+            <td style="padding: 8px 6px; color: #292524; font-size: 10.5px; font-weight: normal;">${r.treatment_interest || "-"}</td>
+            <td style="padding: 8px 6px; color: #44403c; white-space: nowrap; font-size: 10px; font-weight: normal;">${r.date || "-"}</td>
+            <td style="padding: 8px 6px; color: #44403c; white-space: nowrap; font-size: 10px; font-weight: normal;">${r.preferred_time || "-"}</td>
+            <td style="padding: 8px 6px; text-align: center; white-space: nowrap; font-weight: normal;">
+              <span style="display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 9.5px; font-weight: normal; background: ${badgeBg}; color: ${badgeColor};">
+                ${r.status || "Menunggu"}
+              </span>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+    frameDoc.open();
+    frameDoc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Jadwal_${selectedDoctorToSend.replace(/[\s.]+/g, "_")}</title>
+          <style>
+            @page { 
+              size: A4 portrait; 
+              margin: 12mm 15mm; 
+            }
+            * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; }
+            body { 
+              color: #1c1917; 
+              background: #fff; 
+              line-height: 1.4; 
+              font-size: 11px; 
+            }
+            .header-box { 
+              display: flex; 
+              justify-content: space-between; 
+              align-items: flex-end; 
+              padding-bottom: 10px; 
+              border-bottom: 2px solid #8c6b1c; 
+              margin-bottom: 12px; 
+            }
+            .clinic-name { 
+              font-size: 14px; 
+              font-weight: bold; 
+              color: #8c6b1c; 
+              letter-spacing: -0.1px; 
+            }
+            .clinic-desc { 
+              font-size: 10px; 
+              color: #57534e; 
+              margin-top: 2px; 
+            }
+            .doc-heading { 
+              text-align: right; 
+            }
+            .doc-heading h2 { 
+              font-size: 13px; 
+              font-weight: bold; 
+              color: #1c1917; 
+              text-transform: uppercase; 
+            }
+            .doc-heading p { 
+              font-size: 10px; 
+              color: #57534e; 
+              margin-top: 2px; 
+            }
+            .meta-strip { 
+              background: #f7f4ec; 
+              border: 1px solid #e7decb; 
+              padding: 8px 12px; 
+              border-radius: 6px; 
+              margin-bottom: 12px; 
+              font-size: 10.5px; 
+              color: #44403c; 
+              display: flex;
+              justify-content: space-between;
+            }
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              table-layout: auto; 
+            }
+            th { 
+              background: #f7f4ec; 
+              color: #292524; 
+              font-weight: bold; 
+              text-align: left; 
+              padding: 7px 6px; 
+              border-top: 1px solid #e7decb; 
+              border-bottom: 1.5px solid #e7decb; 
+              font-size: 10px; 
+              text-transform: uppercase; 
+            }
+            .footer-strip { 
+              margin-top: 20px; 
+              padding-top: 8px; 
+              border-top: 1px solid #e5e7eb; 
+              display: flex; 
+              justify-content: space-between; 
+              font-size: 9px; 
+              color: #78716c; 
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-box">
+            <div>
+              <div class="clinic-name">AESTHETIC PONDOK INDAH DENTAL CLINIC</div>
+              <div class="clinic-desc">Agenda Praktik & Penjadwalan Janji Temu Pasien</div>
+            </div>
+            <div class="doc-heading">
+              <h2>Jadwal Appointment Dokter</h2>
+              <p>${periodLabel}</p>
+            </div>
+          </div>
+
+          <div class="meta-strip">
+            <span><strong>Dokter:</strong> ${selectedDoctorToSend}</span>
+            <span><strong>Total Pasien:</strong> ${doctorTargetReservations.length} Orang</span>
+            <span><strong>Waktu Cetak:</strong> ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })} WIB</span>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 28px; text-align: center;">No</th>
+                <th style="width: 100px;">Kode Booking</th>
+                <th style="width: 130px;">Nama Pasien</th>
+                <th>Layanan / Tindakan</th>
+                <th style="width: 80px;">Jadwal</th>
+                <th style="width: 75px;">Waktu</th>
+                <th style="width: 85px; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+
+          <div class="footer-strip">
+            <span>Dokumen Resmi Front Desk AESPI - Jadwal Praktik Dokter</span>
+            <span>Konfirmasi kehadiran pasien divalidasi oleh sistem</span>
+          </div>
+        </body>
+      </html>
+    `);
+    frameDoc.close();
+
+    setTimeout(() => {
+      printFrame.contentWindow?.focus();
+      printFrame.contentWindow?.print();
+      setTimeout(() => {
+        if (document.body.contains(printFrame)) {
+          document.body.removeChild(printFrame);
+        }
+      }, 1500);
+    }, 300);
+  };
+
+  // Handler kirim ke WhatsApp dokter
+  const handleSendToDoctorWhatsApp = () => {
+    if (!selectedDoctorToSend) {
+      toast({
+        title: "Pilih Dokter",
+        message: "Silakan pilih dokter penerima terlebih dahulu.",
+        variant: "warning",
+      });
+      return;
+    }
+
+    // Ambil nomor telp dari input manual atau profil dokter
+    const docObj = allAvailableDoctors.find(
+      (d) => d.name.trim().toLowerCase() === selectedDoctorToSend.trim().toLowerCase()
+    );
+    const rawTargetPhone = targetDoctorPhoneInput.trim() || docObj?.phone || "081990114949";
+    const cleanPhone = formatWaPhone(rawTargetPhone);
+
+    const periodLabel = `Minggu ${weekHeaderLabel}`;
+    const listCount = doctorTargetReservations.length;
+
+    let itemsSummary = "";
+    if (listCount > 0) {
+      itemsSummary = doctorTargetReservations
+        .slice(0, 10)
+        .map(
+          (r, idx) =>
+            `${idx + 1}. *${r.name || "Pasien"}* (${r.treatment_interest || "Perawatan"})\n   ⏰ ${r.preferred_time || "10:00 WIB"} | 📅 ${r.date || "-"} | Status: ${r.status || "Menunggu"}`
+        )
+        .join("\n\n");
+      if (listCount > 10) {
+        itemsSummary += `\n\n_...dan ${listCount - 10} pasien lainnya (terlampir pada dokumen PDF resmi)._`;
+      }
+    } else {
+      itemsSummary = "_Tidak ada antrean pasien untuk jadwal ini._";
+    }
+
+    const waMessage = encodeURIComponent(
+      `Halo Dokter *${selectedDoctorToSend}*,\n\n` +
+      `Berikut adalah rincian jadwal penjadwalan janji temu (appointment) pasien Anda di *Aesthetic Pondok Indah Dental Clinic* untuk *${periodLabel}*:\n\n` +
+      `📊 *Total Pasien Terjadwal*: ${listCount} Pasien\n\n` +
+      `📋 *Daftar Antrean Pasien*:\n` +
+      `${itemsSummary}\n\n` +
+      `📎 *Catatan*: Dokumen PDF resmi jadwal praktik ini juga telah diunduh/dicetak dari sistem untuk arsip administrasi ruang praktik.\n\n` +
+      `Mohon informasikan ke resepsionis/front desk jika ada penyesuaian slot praktik dokter. Terima kasih banyak, Dok! 🙏`
+    );
+
+    // Buka WhatsApp
+    window.open(`https://wa.me/${cleanPhone}?text=${waMessage}`, "_blank");
+
+    // Jika opsi mencakup PDF, langsung picu cetak/simpan PDF juga
+    if (sendMethod === "both" || sendMethod === "pdf") {
+      setTimeout(() => {
+        handlePrintDoctorSchedulePdf();
+      }, 500);
+    }
+
+    toast({
+      title: "Jadwal Terkirim",
+      message: `Pesan rincian appointment berhasil diteruskan ke WhatsApp ${selectedDoctorToSend}`,
+      variant: "success",
+    });
+
+    setIsSendDoctorModalOpen(false);
+  };
+
   return (
     <div className="bg-white rounded-3xl border border-[#F0E6D3] p-5 sm:p-6 shadow-xs space-y-5">
       {/* Calendar Header with Controls */}
@@ -572,24 +920,51 @@ export default function WeeklyAppointmentCalendar({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handlePrevWeek}
-            className="w-8 h-8 flex items-center justify-center rounded-xl border border-[#E8DFC8] hover:bg-[#FAF4E8] text-[#5C4D3C] transition-all cursor-pointer"
-            title="Minggu Sebelumnya"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleNextWeek}
-            className="w-8 h-8 flex items-center justify-center rounded-xl border border-[#E8DFC8] hover:bg-[#FAF4E8] text-[#5C4D3C] transition-all cursor-pointer"
-            title="Minggu Berikutnya"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+          <div className="flex items-center gap-2">
+            {/* Tombol Kirim Jadwal ke Dokter */}
+            <button
+              type="button"
+              onClick={() => {
+                // Pilih default dokter pertama atau dokter yang sedang difilter
+                const initDoc =
+                  selectedDoctorFilter !== "Semua"
+                    ? selectedDoctorFilter
+                    : doctorsInWeek[0] || (doctors[0]?.name ?? "");
+                setSelectedDoctorToSend(initDoc);
+                const found = allAvailableDoctors.find(
+                  (d) => isDoctorMatch(d.name, initDoc)
+                );
+                if (found?.phone) {
+                  setTargetDoctorPhoneInput(found.phone);
+                } else {
+                  setTargetDoctorPhoneInput("");
+                }
+                setIsSendDoctorModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#D9CDB8] bg-[#FAF4E8] hover:bg-[#F3E7D0] text-xs font-bold text-[#8C6B1C] shadow-2xs transition-all active:scale-95 cursor-pointer"
+              title="Kirim Jadwal Appointment ke WhatsApp Dokter"
+            >
+              <Send className="w-3.5 h-3.5 rotate-[-25deg]" />
+              <span className="hidden sm:inline">Kirim ke Dokter</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePrevWeek}
+              className="w-8 h-8 flex items-center justify-center rounded-xl border border-[#E8DFC8] hover:bg-[#FAF4E8] text-[#5C4D3C] transition-all cursor-pointer"
+              title="Minggu Sebelumnya"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleNextWeek}
+              className="w-8 h-8 flex items-center justify-center rounded-xl border border-[#E8DFC8] hover:bg-[#FAF4E8] text-[#5C4D3C] transition-all cursor-pointer"
+              title="Minggu Berikutnya"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
       </div>
 
       {/* 6 Days Grid (Senin - Sabtu) */}
@@ -634,15 +1009,15 @@ export default function WeeklyAppointmentCalendar({
 
               <div className="hidden sm:flex mt-2 pt-2 border-t border-[#F5ECE0] items-center justify-between text-[11px]">
                 <span className="text-[#8A7B6B] font-medium">Janji:</span>
-                <span
-                  className={`font-bold px-1.5 py-0.5 rounded-md ${
-                    count > 0
-                      ? "bg-[#FAF4E8] text-[#8C6B1C] border border-[#E8DFC8]"
-                      : "text-[#B8A99A]"
-                  }`}
-                >
-                  {count}
-                </span>
+                {count > 0 ? (
+                  <span className="w-5 h-5 flex items-center justify-center rounded-full bg-[#EF4444] text-white text-[10px] font-bold shadow-xs">
+                    {count}
+                  </span>
+                ) : (
+                  <span className="text-[#B8A99A] font-medium px-1">
+                    0
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -845,6 +1220,229 @@ export default function WeeklyAppointmentCalendar({
           </div>
         )}
       </div>
+
+      {/* Modal Kotak Dialog: Kirim Penjadwalan ke Dokter */}
+      {isSendDoctorModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/45 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-4xl bg-white rounded-2xl border border-[#E8DFC8] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-[#3D332A] animate-in zoom-in-95 duration-200"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Modal Header: Clean Typography & Pure Icon tanpa background shape/container */}
+            <div className="px-6 py-4 border-b border-[#F0EAE1] flex items-center justify-between bg-white sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <Send className="w-5 h-5 text-[#8C6B1C] rotate-[-20deg] shrink-0" />
+                <div>
+                  <h3 className="text-base font-bold text-[#2C2416]">
+                    Kirim Penjadwalan ke Dokter
+                  </h3>
+                  <p className="text-xs text-[#7A6E5F]">
+                    Kirim rincian appointment berupa PDF & teks WhatsApp resmi
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSendDoctorModalOpen(false)}
+                className="text-[#998A78] hover:text-[#2C2416] p-1.5 transition-colors cursor-pointer rounded-lg hover:bg-black/5"
+                title="Tutup Modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body: Two-Column Layout (Kiri: Form Input | Kanan: Live Preview & Ringkasan Pasien) */}
+            <div className="p-6 overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                {/* Kolom Kiri: Inputan Pengiriman (col-span-5 / 6) */}
+                <div className="md:col-span-6 space-y-4">
+                  {/* Status Periode Terpilih */}
+                  <div className="border-b border-[#F0EAE1] pb-3 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[#8A7B6B] block text-[11px] uppercase tracking-wider font-semibold">Periode Jadwal Praktik</span>
+                      <span className="font-bold text-[#2C2416] text-sm">
+                        Minggu {weekHeaderLabel}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[#8A7B6B] block text-[11px] uppercase tracking-wider font-semibold">Total Antrean Minggu Ini</span>
+                      <span className="font-bold text-[#8C6B1C] text-sm">
+                        {doctorTargetReservations.length} Pasien
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Dropdown Pilihan Dokter */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#4A3F33] block">
+                      Pilih Dokter Penerima <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={selectedDoctorToSend}
+                      onChange={(e) => {
+                        const newDoc = e.target.value;
+                        setSelectedDoctorToSend(newDoc);
+                        const found = allAvailableDoctors.find(
+                          (d) => isDoctorMatch(d.name, newDoc)
+                        );
+                        if (found?.phone) {
+                          setTargetDoctorPhoneInput(found.phone);
+                        } else {
+                          setTargetDoctorPhoneInput("");
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9CEBA] bg-white text-sm text-[#2C2416] focus:outline-hidden focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] transition-all cursor-pointer font-medium"
+                    >
+                      {allAvailableDoctors.map((doc) => (
+                        <option key={doc.name} value={doc.name}>
+                          {doc.name} {doc.role ? `— ${doc.role}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Nomor WhatsApp Dokter */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-semibold text-[#4A3F33]">
+                      <span>Nomor WhatsApp Dokter</span>
+                      <span className="text-[11px] text-[#8A7B6B] font-normal">Format: 08xx / 628xx</span>
+                    </div>
+                    <input
+                      type="text"
+                      value={targetDoctorPhoneInput}
+                      onChange={(e) => setTargetDoctorPhoneInput(e.target.value)}
+                      placeholder="Contoh: 081234567890 (atau otomatis dari data dokter)"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9CEBA] bg-white text-sm text-[#2C2416] placeholder-[#A89D8F] focus:outline-hidden focus:border-[#8C6B1C] focus:ring-1 focus:ring-[#8C6B1C] transition-all"
+                    />
+                  </div>
+
+                  {/* Opsi Metode Pengiriman */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-[#4A3F33] block">
+                      Metode Pengiriman
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSendMethod("both")}
+                        className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                          sendMethod === "both"
+                            ? "border-[#8C6B1C] text-[#8C6B1C] bg-[#FAF6EE] font-bold"
+                            : "border-[#E2D8C7] text-[#5C4D3C] bg-white hover:border-[#8C6B1C]"
+                        }`}
+                      >
+                        WhatsApp + PDF
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSendMethod("wa")}
+                        className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                          sendMethod === "wa"
+                            ? "border-[#8C6B1C] text-[#8C6B1C] bg-[#FAF6EE] font-bold"
+                            : "border-[#E2D8C7] text-[#5C4D3C] bg-white hover:border-[#8C6B1C]"
+                        }`}
+                      >
+                        Teks WhatsApp
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSendMethod("pdf")}
+                        className={`py-2 px-2.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                          sendMethod === "pdf"
+                            ? "border-[#8C6B1C] text-[#8C6B1C] bg-[#FAF6EE] font-bold"
+                            : "border-[#E2D8C7] text-[#5C4D3C] bg-white hover:border-[#8C6B1C]"
+                        }`}
+                      >
+                        Cetak PDF Saja
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Kolom Kanan: Pratinjau Rincian Pasien & Format Dokumen (col-span-6 / 6) */}
+                <div className="md:col-span-6 space-y-3 border-t md:border-t-0 md:border-l border-[#F0EAE1] pt-4 md:pt-0 md:pl-6">
+                  <div className="flex items-center justify-between pb-1">
+                    <span className="text-xs font-bold text-[#2C2416] tracking-tight">
+                      Pratinjau Pasien Terjadwal ({doctorTargetReservations.length})
+                    </span>
+                    <span className="text-[11px] text-[#7A6E5F]">
+                      {selectedDoctorToSend}
+                    </span>
+                  </div>
+
+                  {doctorTargetReservations.length === 0 ? (
+                    <div className="p-8 text-center border border-dashed border-[#E0D7C6] rounded-xl">
+                      <p className="text-xs text-[#8A7B6B]">
+                        Belum ada antrean janji temu yang ditugaskan ke dokter ini pada periode terpilih.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="max-h-[300px] overflow-y-auto divide-y divide-[#F0EAE1] border border-[#E8DFC8] rounded-xl bg-white">
+                      {doctorTargetReservations.map((r, i) => (
+                        <div key={r.id} className="p-3 flex items-start justify-between gap-3 text-xs hover:bg-[#FAF8F5] transition-colors">
+                          <div className="min-w-0">
+                            <span className="font-bold text-[#2C2416] block truncate">
+                              {i + 1}. {r.name || "Pasien"}
+                            </span>
+                            <span className="text-[11px] text-[#6B5E4F] block truncate mt-0.5">
+                              {r.treatment_interest || "Pemeriksaan Gigi"}
+                            </span>
+                            <span className="text-[10px] text-[#8C8272] font-mono mt-0.5 block">
+                              {r.code || `RSV-${r.id}`}
+                            </span>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="text-xs font-bold text-[#8C6B1C] block">
+                              {r.preferred_time || "10:00"}
+                            </span>
+                            <span className="text-[10px] text-[#8A7B6B] block">
+                              {r.date ? new Date(r.date).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : ""}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-[#F0EAE1] bg-white flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsSendDoctorModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#5C4D3C] hover:bg-[#FAF8F5] border border-[#E2D8C7] transition-all cursor-pointer"
+              >
+                Batal
+              </button>
+              {sendMethod === "pdf" ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handlePrintDoctorSchedulePdf();
+                    setIsSendDoctorModalOpen(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Cetak Dokumen PDF</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSendToDoctorWhatsApp}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Kirim ke WhatsApp Dokter</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

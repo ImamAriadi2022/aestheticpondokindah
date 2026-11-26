@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import {
   Calendar,
   Search,
@@ -38,12 +39,35 @@ export default function ReservationPage({
   onRefresh,
   onSelectReservation,
 }: Props) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState<ReservationItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [sourceFilter, setSourceFilter] = useState("Semua");
+
+  // Otomatis buka detail reservasi jika ada parameter query `code` atau `reservation_id` (misal dari notifikasi)
+  useEffect(() => {
+    const codeParam = searchParams.get("code") || searchParams.get("bookingCode");
+    const idParam = searchParams.get("reservation_id") || searchParams.get("id");
+
+    if ((codeParam || idParam) && reservations && reservations.length > 0) {
+      const target = reservations.find((r) => {
+        const rCode = (r.code || `RSV-${String(r.id).padStart(6, "0")}`).toLowerCase().replace(/#/g, "").trim();
+        const cleanQueryCode = (codeParam || "").toLowerCase().replace(/#/g, "").trim();
+        const codeMatches = cleanQueryCode && rCode === cleanQueryCode;
+        const idMatches = idParam && String(r.id) === String(idParam);
+        return codeMatches || idMatches;
+      });
+
+      if (target) {
+        setSelected(target);
+        setIsModalOpen(true);
+        scrollPageToTop();
+      }
+    }
+  }, [searchParams, reservations]);
 
   usePageRefresh(() => {
     if (onRefresh) onRefresh();
@@ -59,6 +83,15 @@ export default function ReservationPage({
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelected(null);
+    // Hapus parameter code / reservation_id dari URL jika ada
+    if (searchParams.has("code") || searchParams.has("bookingCode") || searchParams.has("reservation_id") || searchParams.has("id")) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("code");
+      nextParams.delete("bookingCode");
+      nextParams.delete("reservation_id");
+      nextParams.delete("id");
+      setSearchParams(nextParams, { replace: true });
+    }
     scrollPageToTop();
   };
 
@@ -185,6 +218,7 @@ export default function ReservationPage({
               {/* Weekly Appointment Calendar Overview */}
               <WeeklyAppointmentCalendar
                 reservations={activeReservationsList}
+                doctors={doctors}
                 onSelectReservation={handleSelect}
               />
 

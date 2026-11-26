@@ -213,7 +213,7 @@ export default function App() {
         <ErrorBoundary>
           <RouteTransition>
             <Routes>
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<PublicRouteRedirect><HomePage /></PublicRouteRedirect>} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/doctors" element={<DoctorsPage />} />
               <Route path="/cerita" element={<CeritaPage />} />

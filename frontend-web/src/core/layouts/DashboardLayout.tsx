@@ -8,7 +8,7 @@ import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
 import DashboardTopBar from "@/core/layouts/DashboardTopBar";
 import DoctorSidebar from "@/features/doctor/DoctorSidebar";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
-import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut, FileText } from "lucide-react";
+import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut, FileText, Globe } from "lucide-react";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
 import { useSubmenuBadges } from "@/core/services/menuBadgeService";
@@ -646,21 +646,8 @@ export default function DashboardLayout({
 
                     {/* Dropdown Menu Items */}
                     <div className="pt-2 space-y-1">
-                      {role === "clinic" && (
-      <Link
-        to="/dashboard/clinic?tab=settings"
-        onClick={() => {
-          setUserPopupOpen(false);
-          handleMenuClick();
-        }}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-[#E8C547] bg-[#C9A24A]/20 hover:bg-[#C9A24A]/30 transition-all mb-1 border border-[#C9A24A]/30"
-      >
-        <FileText className="w-4 h-4 text-[#C9A24A]" />
-        Pengaturan Klinik
-      </Link>
-    )}
-    <Link
-      to="/profile"
+                      <Link
+                        to="/profile"
                         onClick={() => {
                           setUserPopupOpen(false);
                           handleMenuClick();
@@ -699,16 +686,17 @@ export default function DashboardLayout({
                         {role === "clinic" ? "Upload Aplikasi" : "Download Aplikasi"}
                       </Link>
 
-                      <button
+                      <Link
+                        to="/"
                         onClick={() => {
                           setUserPopupOpen(false);
-                          handleLogout();
+                          handleMenuClick();
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all text-left mt-1 border-t border-[#C9A24A]/10 pt-2"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all text-left mt-1 border-t border-[#C9A24A]/10 pt-2"
                       >
-                        <LogOut className="w-4 h-4 text-rose-400" />
-                        Keluar Sesi
-                      </button>
+                        <Globe className="w-4 h-4 text-[#C9A24A]" />
+                        Web Publik
+                      </Link>
                     </div>
                   </div>
                 )}

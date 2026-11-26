@@ -83,7 +83,7 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
       loadData();
     }
     const session = getSession();
-    const targetUrl = handleDeepLink(n.type, n.deep_link, (session?.role as string) || "user");
+    const targetUrl = handleDeepLink(n.type, n.deep_link, (session?.role as string) || "user", n.data);
     onClose();
     window.location.href = targetUrl;
   };

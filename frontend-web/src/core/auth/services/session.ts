@@ -38,6 +38,14 @@ export function setSession(session: AuthSession) {
 
 export function clearSession() {
   localStorage.removeItem(USER_KEY);
+  // Bersihkan data cache notifikasi agar tidak bocor ke akun berikutnya saat berganti login
+  try {
+    localStorage.removeItem("apid_seen_notification_keys");
+    localStorage.removeItem("apid_read_notification_keys");
+    localStorage.removeItem("apig_recent_push_notifications");
+    localStorage.removeItem("apig_push_unread_count");
+    localStorage.removeItem("apig_notifications_cache_v1");
+  } catch {}
 }
 
 export function updateSessionProfile(updates: Partial<Omit<AuthSession, "id" | "role">>) {

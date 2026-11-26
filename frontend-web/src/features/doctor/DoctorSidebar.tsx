@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router";
 import { getSession } from "@/core/auth/services/session";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
-import { ChevronRight, ChevronDown, LogOut, User, Settings, Download } from "lucide-react";
+import { ChevronRight, ChevronDown, LogOut, User, Settings, Download, Globe } from "lucide-react";
 import { useSubmenuBadges } from "@/core/services/menuBadgeService";
 
 interface DoctorSidebarProps {
@@ -478,16 +478,17 @@ export default function DoctorSidebar({ onLogout }: DoctorSidebarProps) {
                     Download Aplikasi
                   </Link>
 
-                  <button
+                  <Link
+                    to="/"
                     onClick={() => {
                       setUserPopupOpen(false);
-                      onLogout();
+                      handleMenuClick();
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all text-left mt-1 border-t border-[#C9A24A]/10 pt-2"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all text-left mt-1 border-t border-[#C9A24A]/10 pt-2"
                   >
-                    <LogOut className="w-4 h-4 text-rose-400" />
-                    Keluar Sesi
-                  </button>
+                    <Globe className="w-4 h-4 text-[#C9A24A]" />
+                    Web Publik
+                  </Link>
                 </div>
               </div>
             )}

@@ -247,6 +247,30 @@ class ReservationSyncEngine {
         url: "/#/dashboard/doctor?tab=reservasi",
       });
     }
+
+    if (
+      data.type === "reservation_confirmed" &&
+      (currentRole === "patient" || currentRole === "user")
+    ) {
+      const sessionUser = getSession();
+      const currentPatientId = String(sessionUser?.id || (sessionUser as any)?.user?.id || currentUserId || "");
+      const targetUserId = data.userId ? String(data.userId) : "";
+
+      // Hanya izinkan jika event ditujukan spesifik untuk user ini
+      if (targetUserId && currentPatientId && targetUserId !== currentPatientId) {
+        return;
+      }
+
+      triggerPushNotification({
+        title: "🎉 Janji Temu Dikonfirmasi!",
+        message: `Reservasi ${data.bookingCode} bersama ${data.doctorName || "Dokter"} telah disetujui Admin.`,
+        sender: "Aesthetic Pondok Indah",
+        role: "patient",
+        type: "reservation_confirmed",
+        bookingCode: data.bookingCode || "#RSV-000001",
+        url: "/#/dashboard/user?tab=reservasi",
+      });
+    }
   }
 
   private dispatchCreatedNotifications(items: CachedReservation[]) {
@@ -298,7 +322,21 @@ class ReservationSyncEngine {
     }
 
     if (this.currentRole === "patient" || this.currentRole === "user") {
-      const confirmed = items.filter((i) => (i.status || "").toLowerCase() === "dikonfirmasi");
+      const sessionUser = getSession();
+      const currentUserId = String(sessionUser?.id || (sessionUser as any)?.user?.id || this.currentUserId || "");
+
+      const confirmed = items.filter((i) => {
+        const isConfirmed = (i.status || "").toLowerCase() === "dikonfirmasi";
+        if (!isConfirmed) return false;
+
+        // Pastikan hanya notifikasi untuk user/pasien yang sedang login
+        const itemUserId = String(i.user_id || i.userId || i.patient_id || "");
+        if (itemUserId && currentUserId) {
+          return itemUserId === currentUserId;
+        }
+        return true;
+      });
+
       confirmed.forEach((item) => {
         triggerPushNotification({
           title: "🎉 Janji Temu Dikonfirmasi!",

@@ -554,6 +554,29 @@ export default function NewBookingFlow({
   const hasCachedBookings = bookingsHistory.length > 0;
   const [historyLoading, setHistoryLoading] = useState<boolean>(!hasCachedBookings);
 
+  // Otomatis buka riwayat & e-tiket / detail janji temu jika query code ada
+  useEffect(() => {
+    const codeParam = searchParams.get("code") || searchParams.get("bookingCode");
+    const idParam = searchParams.get("reservation_id") || searchParams.get("id");
+
+    if ((codeParam || idParam) && bookingsHistory && bookingsHistory.length > 0) {
+      const target = bookingsHistory.find((r) => {
+        const rCode = (r.code || `#RSV-${String(r.id).padStart(6, "0")}`).toLowerCase().replace(/#/g, "").trim();
+        const cleanQueryCode = (codeParam || "").toLowerCase().replace(/#/g, "").trim();
+        const codeMatches = cleanQueryCode && rCode === cleanQueryCode;
+        const idMatches = idParam && String(r.id) === String(idParam);
+        return codeMatches || idMatches;
+      });
+
+      if (target) {
+        setViewMode("history");
+        setActiveTicket(target);
+        setShowETicketModal(true);
+        scrollPageToTop();
+      }
+    }
+  }, [searchParams, bookingsHistory]);
+
   // Automatically scroll to the very top whenever stepper step or viewMode changes
   useEffect(() => {
     scrollPageToTop();
