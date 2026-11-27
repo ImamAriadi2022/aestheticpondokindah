@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -588,24 +590,28 @@ export default function WeeklyAppointmentCalendar({
     const seen = new Set<string>();
 
     doctors.forEach((doc) => {
-      const name = (doc.name || "").trim();
-      if (name && !seen.has(name.toLowerCase())) {
-        seen.add(name.toLowerCase());
+      let rawName = (doc.name || "").trim();
+      // Bersihkan suffix role seperti " - doctor", " - Dokter", dsb jika ada di string nama
+      rawName = rawName.replace(/\s*[-–—]\s*(doctor|dokter|admin|staff)\s*$/i, "").trim();
+      if (rawName && !seen.has(rawName.toLowerCase())) {
+        seen.add(rawName.toLowerCase());
         list.push({
-          name,
+          name: rawName,
           phone: doc.phone || doc.whatsapp || "",
-          role: doc.specialist || doc.role || "Dokter Gigi",
+          role: "",
         });
       }
     });
 
     doctorsInWeek.forEach((docName) => {
-      if (docName && !seen.has(docName.toLowerCase())) {
-        seen.add(docName.toLowerCase());
+      let cleanDoc = (docName || "").trim();
+      cleanDoc = cleanDoc.replace(/\s*[-–—]\s*(doctor|dokter|admin|staff)\s*$/i, "").trim();
+      if (cleanDoc && !seen.has(cleanDoc.toLowerCase())) {
+        seen.add(cleanDoc.toLowerCase());
         list.push({
-          name: docName,
+          name: cleanDoc,
           phone: "",
-          role: "Dokter Spesialis",
+          role: "",
         });
       }
     });
@@ -636,7 +642,182 @@ export default function WeeklyAppointmentCalendar({
     return list.filter((r) => isDoctorMatch(r.doctor, selectedDoctorToSend));
   }, [selectedDoctorToSend, weekDays, reservationsByDate]);
 
-  // Handler cetak PDF khusus dokter terpilih
+  // Handler generate dan unduh file PDF real yang rapi menggunakan jsPDF & AutoTable
+  const handleDownloadDoctorSchedulePdf = () => {
+    if (doctorTargetReservations.length === 0) {
+      toast({
+        title: "Tidak Ada Data",
+        message: "Tidak ada jadwal pasien untuk dokter ini pada periode terpilih.",
+        variant: "warning",
+      });
+      return;
+    }
+
+    try {
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+
+      const periodLabel = `Minggu ${weekHeaderLabel}`;
+      const cleanDoctorName = selectedDoctorToSend.replace(/\s*[-–—]\s*(doctor|dokter|admin|staff)\s*$/i, "").trim();
+      const printDateStr = new Date().toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      // Header Banner / Aesthetic Header
+      doc.setFillColor(250, 246, 238); // warm cream subtle #FAF6EE
+      doc.roundedRect(30, 25, 535, 62, 6, 6, "F");
+
+      // Clinic Brand Title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(140, 107, 28); // Golden bronze #8C6B1C
+      doc.text("AESTHETIC PONDOK INDAH DENTAL CLINIC", 45, 48);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 90, 80);
+      doc.text("Agenda Praktik Dokter & Rekapitulasi Janji Temu Pasien", 45, 64);
+
+      // Period & Info di kanan header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(44, 36, 22);
+      doc.text("Jadwal Dokter", 550, 48, { align: "right" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(120, 110, 100);
+      doc.text(periodLabel, 550, 64, { align: "right" });
+
+      // Info metadata bar
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(231, 222, 203);
+      doc.roundedRect(30, 95, 535, 34, 4, 4, "S");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(44, 36, 22);
+      doc.text("Dokter:", 42, 116);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(140, 107, 28);
+      doc.text(cleanDoctorName, 85, 116);
+
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(44, 36, 22);
+      doc.text("Total Pasien:", 280, 116);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${doctorTargetReservations.length} Orang`, 345, 116);
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Waktu:", 430, 116);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 90, 80);
+      doc.text(`${printDateStr} WIB`, 470, 116);
+
+      // Siapkan rows tabel
+      const tableRows = doctorTargetReservations.map((r, i) => {
+        let scheduleDate = r.date || "-";
+        try {
+          if (r.date) {
+            const d = new Date(r.date);
+            if (!isNaN(d.getTime())) {
+              scheduleDate = d.toLocaleDateString("id-ID", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+              });
+            }
+          }
+        } catch {
+          // fallback
+        }
+
+        return [
+          (i + 1).toString(),
+          r.code || `RSV-${r.id}`,
+          r.name || "-",
+          r.treatment_interest || "Pemeriksaan Gigi",
+          scheduleDate,
+          r.preferred_time || "10:00",
+          r.status || "Menunggu",
+        ];
+      });
+
+      // Generate Table rapi dengan autoTable
+      autoTable(doc, {
+        startY: 140,
+        margin: { left: 30, right: 30 },
+        head: [["No", "Kode Booking", "Nama Pasien", "Layanan / Tindakan", "Jadwal", "Waktu", "Status"]],
+        body: tableRows,
+        theme: "plain",
+        headStyles: {
+          fillColor: [247, 244, 236],
+          textColor: [44, 36, 22],
+          font: "helvetica",
+          fontStyle: "bold",
+          fontSize: 8.5,
+          halign: "left",
+          lineColor: [231, 222, 203],
+          lineWidth: { top: 0.5, bottom: 1 },
+        },
+        bodyStyles: {
+          font: "helvetica",
+          fontSize: 8.5,
+          textColor: [50, 45, 40],
+          cellPadding: { top: 7, bottom: 7, left: 6, right: 6 },
+          lineColor: [240, 234, 225],
+          lineWidth: { bottom: 0.5 },
+        },
+        columnStyles: {
+          0: { cellWidth: 26, halign: "center", textColor: [120, 110, 100] },
+          1: { cellWidth: 80, fontStyle: "bold", textColor: [60, 50, 40] },
+          2: { cellWidth: 105, fontStyle: "bold", textColor: [20, 20, 20] },
+          3: { cellWidth: 150 },
+          4: { cellWidth: 70 },
+          5: { cellWidth: 50 },
+          6: { cellWidth: 54, halign: "center" },
+        },
+        alternateRowStyles: {
+          fillColor: [253, 251, 247],
+        },
+        didDrawPage: (data) => {
+          // Footer strip
+          const pageHeight = doc.internal.pageSize.getHeight();
+          doc.setDrawColor(240, 234, 225);
+          doc.line(30, pageHeight - 30, 565, pageHeight - 30);
+
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(7.5);
+          doc.setTextColor(140, 130, 120);
+          doc.text("Dokumen Resmi Front Desk AESPI - Jadwal Praktik Dokter Gigi", 30, pageHeight - 18);
+          doc.text(`Halaman ${data.pageNumber}`, 565, pageHeight - 18, { align: "right" });
+        },
+      });
+
+      // Download file PDF langsung ke komputer
+      const safeDocFileName = `Jadwal_${cleanDoctorName.replace(/[\s.]+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      doc.save(safeDocFileName);
+
+      toast({
+        title: "PDF Terunduh",
+        message: `File PDF "${safeDocFileName}" berhasil diunduh dan siap dilampirkan ke chat.`,
+        variant: "success",
+      });
+    } catch (err) {
+      console.error("Gagal membuat file PDF:", err);
+      // Fallback cetak print frame jika ada kendala
+      handlePrintDoctorSchedulePdf();
+    }
+  };
+
+  // Handler cetak browser PDF khusus dokter terpilih (opsi Cetak)
   const handlePrintDoctorSchedulePdf = () => {
     if (doctorTargetReservations.length === 0) {
       toast({
@@ -906,11 +1087,15 @@ export default function WeeklyAppointmentCalendar({
     // Buka WhatsApp
     window.open(`https://wa.me/${cleanPhone}?text=${waMessage}`, "_blank");
 
-    // Jika opsi mencakup PDF, langsung picu cetak/simpan PDF juga
-    if (sendMethod === "both" || sendMethod === "pdf") {
+    // Jika opsi mencakup PDF, otomatis buat & unduh file PDF real untuk siap dilampirkan
+    if (sendMethod === "both") {
+      setTimeout(() => {
+        handleDownloadDoctorSchedulePdf();
+      }, 400);
+    } else if (sendMethod === "pdf") {
       setTimeout(() => {
         handlePrintDoctorSchedulePdf();
-      }, 500);
+      }, 400);
     }
 
     toast({
@@ -1315,7 +1500,7 @@ export default function WeeklyAppointmentCalendar({
                     >
                       {allAvailableDoctors.map((doc) => (
                         <option key={doc.name} value={doc.name}>
-                          {doc.name} {doc.role ? `— ${doc.role}` : ""}
+                          {doc.name}
                         </option>
                       ))}
                     </select>
