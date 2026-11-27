@@ -163,6 +163,44 @@ const EXCLUDED_TRACKING_PREFIXES = [
   "/docs-api",
 ];
 
+// Capture initial entry path & query before HashRouter/redirects modify the route
+const INITIAL_ENTRY_PATH =
+  typeof window !== "undefined" ? window.location.pathname || "/" : "/";
+
+/**
+ * Sync clean non-hash URLs (e.g. https://aestheticpondokindah.com/services?utm_source=instagram)
+ * into HashRouter before mount so social media / UTM links land on the intended page
+ * while preserving query parameters cleanly.
+ */
+function normalizeNonHashEntryUrl(): void {
+  if (typeof window === "undefined") return;
+  const { pathname, search, hash } = window.location;
+  if (
+    !pathname ||
+    pathname === "/" ||
+    pathname === "/index.html" ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/storage")
+  ) {
+    return;
+  }
+
+  const normalizedPath = pathname === "/layanan" ? "/services" : pathname;
+
+  if (!hash) {
+    window.history.replaceState(
+      null,
+      "",
+      `/${search || ""}#${normalizedPath}${search || ""}`
+    );
+  } else {
+    // Clean duplicate pathname prefix like /dashboard/clinic#/dashboard/clinic
+    window.history.replaceState(null, "", `/${search || ""}${hash}`);
+  }
+}
+
+normalizeNonHashEntryUrl();
+
 function VisitTracker() {
   const location = useLocation();
 
@@ -171,17 +209,33 @@ function VisitTracker() {
     const isInternalRoute = EXCLUDED_TRACKING_PREFIXES.some(
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
     );
-    if (isInternalRoute) {
+
+    // Read UTM params from BOTH HashRouter search (#/page?utm_...) and browser search (?utm_...#/page)
+    const hashParams = new URLSearchParams(location.search || "");
+    const windowParams =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search || "")
+        : new URLSearchParams();
+
+    const utmSource = hashParams.get("utm_source") || windowParams.get("utm_source");
+    const utmMedium = hashParams.get("utm_medium") || windowParams.get("utm_medium");
+    const utmCampaign = hashParams.get("utm_campaign") || windowParams.get("utm_campaign");
+    const hasExplicitUtm = Boolean(utmSource || utmMedium || utmCampaign);
+
+    // Skip internal routes UNLESS the visitor explicitly arrived with UTM campaign parameters
+    // (e.g. an admin testing a generated social link that redirects / -> /dashboard/clinic).
+    if (isInternalRoute && !hasExplicitUtm) {
       return;
     }
 
-    const params = new URLSearchParams(location.search);
-    const utmSource = params.get("utm_source");
-    const utmMedium = params.get("utm_medium");
-    const utmCampaign = params.get("utm_campaign");
+    const landingPage = isInternalRoute
+      ? INITIAL_ENTRY_PATH && !EXCLUDED_TRACKING_PREFIXES.some((p) => INITIAL_ENTRY_PATH.toLowerCase().startsWith(p))
+        ? INITIAL_ENTRY_PATH
+        : "/"
+      : location.pathname || "/";
 
     trackVisit({
-      landingPage: location.pathname || "/",
+      landingPage,
       referrer: document.referrer,
       utmSource,
       utmMedium,
@@ -218,6 +272,7 @@ export default function App() {
               <Route path="/doctors" element={<DoctorsPage />} />
               <Route path="/cerita" element={<CeritaPage />} />
               <Route path="/services" element={<ServicesPage />} />
+              <Route path="/layanan" element={<Navigate to="/services" replace />} />
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogDetailPage />} />
               <Route path="/promo" element={<PromoPage />} />

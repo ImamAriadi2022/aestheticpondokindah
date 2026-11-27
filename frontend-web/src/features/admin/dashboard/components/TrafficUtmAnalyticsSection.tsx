@@ -130,10 +130,10 @@ function formatFullDateId(isoDate: string): string {
 
 const TARGET_PAGES = [
   { label: "Beranda (/)", value: "/" },
-  { label: "Layanan (/layanan)", value: "/layanan" },
+  { label: "Layanan (/services)", value: "/services" },
   { label: "Promo (/promo)", value: "/promo" },
   { label: "Dokter (/doctors)", value: "/doctors" },
-  { label: "Booking (/booking)", value: "/booking" },
+  { label: "Booking (/booking/new)", value: "/booking/new" },
   { label: "Cerita / Blog (/cerita)", value: "/cerita" },
   { label: "Tentang Kami (/about)", value: "/about" },
 ];

@@ -16,7 +16,7 @@ export default defineConfig({
     allowedHosts: true,
   },
   optimizeDeps: {
-    exclude: ["canvg", "jspdf", "html2canvas"],
+    exclude: ["canvg", "html2canvas"],
   },
   build: {
     // Plesk's document root is Laravel's standard public/ directory.
@@ -33,6 +33,7 @@ export default defineConfig({
           if (id.includes("radix-ui") || id.includes("@radix-ui")) return "vendor-radix";
           if (id.includes("react-router")) return "vendor-router";
           if (id.includes("dompurify")) return "vendor-security";
+          if (id.includes("jspdf")) return "vendor-pdf";
           return undefined;
         },
       },
@@ -40,7 +41,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "jspdf": path.resolve(__dirname, "./node_modules/jspdf/dist/jspdf.umd.min.js"),
       "@core": path.resolve(__dirname, "./src/core"),
       "@shared": path.resolve(__dirname, "./src/shared"),
       "@": path.resolve(__dirname, "./src"),

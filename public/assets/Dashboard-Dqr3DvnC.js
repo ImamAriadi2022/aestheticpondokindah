@@ -1,1 +1,0 @@
-import{j as t}from"./vendor-radix-RarXUxdb.js";import{N as r}from"./vendor-router-DSikPIbC.js";import{d as o,e as a}from"./index-C6UPkx_M.js";function u(){const e=o();return e?t.jsx(r,{to:a(e.role),replace:!0}):t.jsx(r,{to:"/login",replace:!0})}export{u as default};
