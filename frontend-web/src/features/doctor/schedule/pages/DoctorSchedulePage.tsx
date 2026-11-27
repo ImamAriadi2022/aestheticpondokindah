@@ -16,9 +16,12 @@ import {
   Phone,
   Building2,
   ArrowLeft,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { Button } from "@/shared/ui/button";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 import { getSession } from "@/core/auth/services/session";
 import { getDoctorQueue } from "@/features/doctor/dashboard/services/doctorDashboardService";
 import { type ReservationItem } from "@/features/admin/reservation/services/reservationService";
@@ -92,6 +95,13 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
 
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const isFetchingRef = useRef(false);
+
+  // Filter & Search states for doctor reservation list
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("Semua");
+  const [sourceFilter, setSourceFilter] = useState("Semua");
+  const [rowsPerPage, setRowsPerPage] = useState<string>("Semua");
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const isDoctorMatch = useCallback((itemDoctor?: string | null, targetDoctor?: string | null) => {
     if (!itemDoctor || !targetDoctor) return false;
@@ -290,15 +300,64 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
 
   // Quick stats calculation for Doctor's summary
   const totalCount = myReservationsList.length;
-  const newCount = myReservationsList.filter(
-    (r) => r.status === "Baru" || r.status === "pending"
-  ).length;
-  const confirmedCount = myReservationsList.filter(
-    (r) => r.status === "Dikonfirmasi" || r.status === "confirmed" || r.status === "Dalam Konsultasi"
-  ).length;
-  const completedCount = myReservationsList.filter(
-    (r) => r.status === "Selesai" || r.status === "completed"
-  ).length;
+  const newCount = myReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "baru" || st === "pending" || st === "menunggu" || st === "menunggu konfirmasi" || st === "submitted";
+  }).length;
+  const confirmedCount = myReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "dikonfirmasi" || st === "confirmed" || st === "approved" || st === "dalam konsultasi";
+  }).length;
+  const completedCount = myReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "selesai" || st === "completed" || st === "selesai dirawat";
+  }).length;
+
+  // Filtered reservations based on search & dropdown filters (persis seperti dashboard admin)
+  const filteredReservations = useMemo(() => {
+    return myReservationsList.filter((r) => {
+      const searchLower = searchQuery.toLowerCase();
+      const codeMatch = (r.code || `RSV-${r.id}`).toLowerCase().includes(searchLower);
+      const nameMatch = (r.name || "").toLowerCase().includes(searchLower);
+      const phoneMatch = (r.phone || "").toLowerCase().includes(searchLower);
+      const serviceMatch = (r.treatment_interest || "").toLowerCase().includes(searchLower);
+      const doctorMatch = (r.doctor || "").toLowerCase().includes(searchLower);
+
+      const matchesSearch = !searchQuery || codeMatch || nameMatch || phoneMatch || serviceMatch || doctorMatch;
+
+      const matchesStatus =
+        statusFilter === "Semua" ||
+        r.status === statusFilter ||
+        (statusFilter === "Baru" && (r.status === "Baru" || r.status === "pending" || r.status === "Menunggu")) ||
+        (statusFilter === "Dikonfirmasi" && (r.status === "Dikonfirmasi" || r.status === "confirmed")) ||
+        (statusFilter === "Selesai" && (r.status === "Selesai" || r.status === "completed")) ||
+        (statusFilter === "Dibatalkan" && (r.status === "Dibatalkan" || r.status === "cancelled"));
+
+      const isGuest = !r.user_id || (r.source && r.source.includes("guest"));
+      const matchesSource =
+        sourceFilter === "Semua" ||
+        (sourceFilter === "guest" && isGuest) ||
+        (sourceFilter === "member" && !isGuest);
+
+      return matchesSearch && matchesStatus && matchesSource;
+    }).sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.date ? new Date(a.date).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.date ? new Date(b.date).getTime() : 0);
+      if (timeB !== timeA) return timeB - timeA;
+      return Number(b.id || 0) - Number(a.id || 0);
+    });
+  }, [myReservationsList, searchQuery, statusFilter, sourceFilter]);
+
+  // Paginated reservations based on rowsPerPage
+  const totalFilteredCount = filteredReservations.length;
+  const pageSize = rowsPerPage === "Semua" ? totalFilteredCount : parseInt(rowsPerPage, 10);
+  const totalPages = pageSize > 0 ? Math.ceil(totalFilteredCount / pageSize) : 1;
+
+  const paginatedReservations = useMemo(() => {
+    if (rowsPerPage === "Semua") return filteredReservations;
+    const start = (currentPage - 1) * pageSize;
+    return filteredReservations.slice(start, start + pageSize);
+  }, [filteredReservations, currentPage, pageSize, rowsPerPage]);
 
   const handleSelectReservation = (item: any) => {
     setSelectedPatient(item);
@@ -952,39 +1011,288 @@ export default function DoctorSchedulePage({ onRefresh }: DoctorSchedulePageProp
               </div>
             </div>
 
-            {/* Ringkasan Status 4 Kolom di Bawah (Fix Konsisten di Android, iOS, Desktop) */}
-            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+            {/* Ringkasan Status 4 Kolom di Tengah (Persis seperti Dashboard Admin Gambar 2) */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {/* Total Reservasi */}
-              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#8C6B1C] flex items-center justify-center mb-1.5">
-                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{totalCount}</span>
+              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-10 h-10 rounded-full border-2 border-[#8C6B1C] flex items-center justify-center mb-2">
+                  <span className="text-sm font-bold text-[#3D332A]">{totalCount}</span>
                 </div>
-                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Total Reservasi</span>
+                <span className="text-xs font-semibold text-[#4A3F35]">Total Reservasi</span>
               </div>
 
               {/* Perlu Konfirmasi */}
-              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#E5A024] flex items-center justify-center mb-1.5">
-                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{newCount}</span>
+              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-10 h-10 rounded-full border-2 border-[#E5A024] flex items-center justify-center mb-2">
+                  <span className="text-sm font-bold text-[#3D332A]">{newCount}</span>
                 </div>
-                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Perlu Konfirmasi</span>
+                <span className="text-xs font-semibold text-[#4A3F35]">Perlu Konfirmasi</span>
               </div>
 
               {/* Dikonfirmasi */}
-              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#10B981] flex items-center justify-center mb-1.5">
-                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{confirmedCount}</span>
+              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-10 h-10 rounded-full border-2 border-[#10B981] flex items-center justify-center mb-2">
+                  <span className="text-sm font-bold text-[#3D332A]">{confirmedCount}</span>
                 </div>
-                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Dikonfirmasi</span>
+                <span className="text-xs font-semibold text-[#4A3F35]">Dikonfirmasi</span>
               </div>
 
               {/* Selesai Dirawat */}
-              <div className="bg-white rounded-2xl py-3 px-1.5 sm:py-3.5 sm:px-2 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-[#8B5CF6] flex items-center justify-center mb-1.5">
-                  <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{completedCount}</span>
+              <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                <div className="w-10 h-10 rounded-full border-2 border-[#8B5CF6] flex items-center justify-center mb-2">
+                  <span className="text-sm font-bold text-[#3D332A]">{completedCount}</span>
                 </div>
-                <span className="text-[10px] sm:text-xs font-semibold text-[#4A3F35] leading-tight text-center">Selesai Dirawat</span>
+                <span className="text-xs font-semibold text-[#4A3F35]">Selesai Dirawat</span>
               </div>
+            </div>
+
+            {/* Riwayat Seluruh Reservasi Pasien (Persis Seperti Dashboard Admin Gambar 2) */}
+            <div className="space-y-3.5 pt-1">
+              {/* Filter & Search Bar */}
+              <div className="bg-white rounded-2xl p-3.5 border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Cari kode, nama pasien, layanan..."
+                />
+
+                {/* Dropdown Filters */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <FilterDropdown
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    icon={Filter}
+                    labelPrefix="Status"
+                    options={[
+                      { value: "Semua", label: "Semua Status" },
+                      { value: "Baru", label: "Baru" },
+                      { value: "Dikonfirmasi", label: "Dikonfirmasi" },
+                      { value: "Selesai", label: "Selesai" },
+                      { value: "Dibatalkan", label: "Dibatalkan" },
+                    ]}
+                  />
+
+                  <FilterDropdown
+                    value={sourceFilter}
+                    onChange={setSourceFilter}
+                    labelPrefix="Asal"
+                    options={[
+                      { value: "Semua", label: "Semua Asal" },
+                      { value: "guest", label: "Guest" },
+                      { value: "member", label: "Member" },
+                    ]}
+                  />
+
+                  {/* Filter Baris Data / Page Size */}
+                  <FilterDropdown
+                    value={rowsPerPage}
+                    onChange={setRowsPerPage}
+                    icon={SlidersHorizontal}
+                    labelPrefix="Tampilkan"
+                    options={[
+                      { value: "10", label: "10 Baris" },
+                      { value: "20", label: "20 Baris" },
+                      { value: "50", label: "50 Baris" },
+                      { value: "Semua", label: "Semua Baris" },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {/* Tabel Riwayat Reservasi Pasien */}
+              <div className="bg-white rounded-3xl border border-[#F0E6D3] overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-[#FAF8F5] border-b border-[#F0E6D3]">
+                        <TableHead className="font-bold text-[#3D332A] py-3.5 pl-4 md:pl-6 text-xs">Nama</TableHead>
+                        <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Layanan</TableHead>
+                        <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Dokter</TableHead>
+                        <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Jadwal</TableHead>
+                        <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Waktu</TableHead>
+                        <TableHead className="hidden md:table-cell font-bold text-[#3D332A] py-3.5 text-xs">Status</TableHead>
+                        <TableHead className="font-bold text-[#3D332A] py-3.5 pr-4 md:pr-6 text-right text-xs">Aksi</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedReservations.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-12 text-[#8A7B6B]">
+                            <CalendarIcon className="w-10 h-10 mx-auto mb-2 opacity-30 text-[#B8943F]" />
+                            <p className="text-sm font-medium">Belum ada riwayat reservasi janji temu yang sesuai filter.</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        paginatedReservations.map((item) => {
+                          const statusBadge = getStatusBadge(item.status);
+                          const patientName = item.name || (item as any).patient_name || "Pasien";
+                          const serviceName = item.treatment_interest || (item as any).service_name || "Pemeriksaan Gigi";
+                          const doctorName = item.doctor || currentDoctorName;
+                          const rawDate = item.date ? String(item.date).split("T")[0] : "-";
+                          const rawTime = item.preferred_time || "10:00 WIB";
+
+                          let dayFormatted = "-";
+                          let dateFormatted = rawDate;
+                          if (rawDate !== "-") {
+                            const dt = new Date(rawDate);
+                            const dayIdx = dt.getDay();
+                            dayFormatted = DAYS_NAME[dayIdx] || "";
+                            const dayNum = dt.getDate();
+                            const monthShort = MONTH_NAMES[dt.getMonth()]?.slice(0, 3) || "";
+                            const yearNum = dt.getFullYear();
+                            dateFormatted = `${dayNum} ${monthShort} ${yearNum}`;
+                          }
+
+                          return (
+                            <TableRow
+                              key={item.id}
+                              className="hover:bg-[#FDFBF7] transition-colors border-b border-[#F5ECE0]"
+                            >
+                              {/* Nama */}
+                              <TableCell className="py-3.5 pl-4 md:pl-6">
+                                <div className="flex items-center gap-1.5 text-xs font-bold text-[#3D332A]">
+                                  <User className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
+                                  <span>{patientName}</span>
+                                </div>
+                                <div className="md:hidden mt-0.5 text-[10px] text-[#8A7B6B] flex items-center gap-1.5">
+                                  <span className="truncate max-w-[120px] font-medium">{serviceName}</span>
+                                  <span>•</span>
+                                  <span>{dateFormatted}</span>
+                                </div>
+                              </TableCell>
+
+                              {/* Layanan */}
+                              <TableCell className="hidden md:table-cell py-3.5">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#3D332A] max-w-[200px] truncate">
+                                  <Sparkles className="w-3.5 h-3.5 text-[#C9A24A] shrink-0" />
+                                  <span className="truncate">{serviceName}</span>
+                                </div>
+                              </TableCell>
+
+                              {/* Dokter */}
+                              <TableCell className="hidden md:table-cell py-3.5">
+                                <div className="flex items-center gap-1.5 text-xs text-[#5C4D3C] max-w-[190px] truncate">
+                                  <Stethoscope className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
+                                  <span className="truncate font-medium">{doctorName}</span>
+                                </div>
+                              </TableCell>
+
+                              {/* Jadwal */}
+                              <TableCell className="hidden md:table-cell py-3.5">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#3D332A]">
+                                  <CalendarIcon className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
+                                  <span>{dayFormatted}, {dateFormatted}</span>
+                                </div>
+                              </TableCell>
+
+                              {/* Waktu */}
+                              <TableCell className="hidden md:table-cell py-3.5">
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-[#5C4D3C]">
+                                  <Clock className="w-3.5 h-3.5 text-[#B8943F] shrink-0" />
+                                  <span>{rawTime}</span>
+                                </div>
+                              </TableCell>
+
+                              {/* Status */}
+                              <TableCell className="hidden md:table-cell py-3.5">
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusBadge.bg}`}
+                                >
+                                  <span className={`w-1.5 h-1.5 rounded-full ${statusBadge.dot}`} />
+                                  {statusBadge.label}
+                                </span>
+                              </TableCell>
+
+                              {/* Aksi */}
+                              <TableCell className="py-3.5 pr-4 md:pr-6 text-right">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSelectReservation(item)}
+                                  className="h-7 w-7 p-0 bg-[#FAF4E8] hover:bg-[#F5E6C8] text-[#8A6B2B] rounded-xl border border-[#E8D4A2]/60 transition-all shadow-2xs inline-flex items-center justify-center cursor-pointer"
+                                  title="Lihat Detail Pasien"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* Pagination Controls */}
+              {rowsPerPage !== "Semua" && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-3.5 rounded-2xl border border-[#F0E6D3] shadow-xs gap-3">
+                  <p className="text-xs text-[#8A7B6B]">
+                    Menampilkan{" "}
+                    <span className="font-bold text-[#4A3F35]">
+                      {totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+                    </span>{" "}
+                    -{" "}
+                    <span className="font-bold text-[#4A3F35]">
+                      {Math.min(currentPage * pageSize, totalFilteredCount)}
+                    </span>{" "}
+                    dari <span className="font-bold text-[#4A3F35]">{totalFilteredCount}</span> reservasi
+                  </p>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="h-8 px-3 rounded-xl border-[#E2E8F0] text-xs font-bold hover:bg-[#FAF8F5] cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Sebelumnya
+                    </Button>
+
+                    <div className="flex items-center gap-1 px-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          return (
+                            page === 1 ||
+                            page === totalPages ||
+                            Math.abs(page - currentPage) <= 1
+                          );
+                        })
+                        .map((page, idx, arr) => {
+                          const prevPage = arr[idx - 1];
+                          const hasGap = prevPage && page - prevPage > 1;
+
+                          return (
+                            <div key={page} className="flex items-center">
+                              {hasGap && <span className="text-xs text-gray-400 px-1">...</span>}
+                              <button
+                                type="button"
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                  currentPage === page
+                                    ? "bg-[#C9A24A] text-white shadow-2xs"
+                                    : "text-[#64748B] hover:bg-gray-100"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="h-8 px-3 rounded-xl border-[#E2E8F0] text-xs font-bold hover:bg-[#FAF8F5] cursor-pointer"
+                    >
+                      Berikutnya <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -227,10 +227,21 @@ export default function DoctorsPage({
         avatar_url: doctorData.avatar_url || doctorData.avatar,
       };
 
+      let res: any;
       if (method === "put") {
-        await apiClient.put(endpoint, payload);
+        res = await apiClient.put(endpoint, payload);
       } else {
-        await apiClient.post(endpoint, payload);
+        res = await apiClient.post(endpoint, payload);
+      }
+
+      // If created doctor returned from server, update ID from temp ID
+      if (!isEdit && res?.user?.id) {
+        const savedDoctor = { ...optimisticDoctor, id: res.user.id };
+        setLocalDoctors((prev) => {
+          const next = prev.map((d) => (d.id === targetId ? savedDoctor : d));
+          setCachedData(CACHE_KEY_DOCTORS, next);
+          return next;
+        });
       }
 
       await loadDoctorsFromBackend();

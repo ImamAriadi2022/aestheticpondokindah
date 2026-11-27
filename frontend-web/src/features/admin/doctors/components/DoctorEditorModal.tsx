@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/shared/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
 import {
@@ -223,10 +223,12 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
   }, [doctor, open]);
 
   const handleApplyAllSchedule = () => {
-    const monday = weeklySchedules.Senin || { active: true, start: "10:00", end: "18:00" };
-    const updated: typeof weeklySchedules = {};
+    const mon = weeklySchedules.Senin || weeklySchedules.senin || { active: true, start: "10:00", end: "18:00" };
+    const monday = { active: Boolean(mon.active), start: mon.start || "10:00", end: mon.end || "18:00" };
+    const updated: Record<string, { active: boolean; start: string; end: string }> = {};
     DAYS_OF_WEEK.forEach((d) => {
       updated[d.key] = { active: true, start: monday.start, end: monday.end };
+      updated[d.key.toLowerCase()] = { active: true, start: monday.start, end: monday.end };
     });
     setWeeklySchedules(updated);
     toast.success("Jadwal hari Senin berhasil disalin ke seluruh hari");
@@ -254,6 +256,14 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
     const fullName = `${titlePrefix ? titlePrefix + " " : ""}${nameWithoutTitle.trim()}${
       titleSuffix ? ", " + titleSuffix.trim() : ""
     }`;
+
+    // Format weekly schedules with both capitalized and lowercase day keys for complete compatibility
+    const normalizedWeeklySchedules: Record<string, { active: boolean; start: string; end: string }> = {};
+    DAYS_OF_WEEK.forEach((d) => {
+      const cur = weeklySchedules[d.key] || weeklySchedules[d.key.toLowerCase()] || { active: false, start: "10:00", end: "18:00" };
+      normalizedWeeklySchedules[d.key] = cur;
+      normalizedWeeklySchedules[d.key.toLowerCase()] = cur;
+    });
 
     setSaving(true);
     try {
@@ -296,7 +306,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
         consultation_duration: Number(consultationDuration),
         consultation_fee: Number(consultationFee),
         consultationFee: Number(consultationFee),
-        weekly_schedules: weeklySchedules,
+        weekly_schedules: normalizedWeeklySchedules,
         is_active: isActive,
         status: isActive ? "active" : "inactive",
       });
@@ -317,9 +327,12 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
         {/* Header bergaya Warm Gold & Brand Charcoal AESPI */}
         <div className="px-7 py-4.5 bg-white/90 border-b border-[#E8DFC8]/70 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-lg font-bold text-[#2D2A26] tracking-tight">
+            <DialogTitle className="text-lg font-bold text-[#2D2A26] tracking-tight">
               {isEdit ? "Edit Tenaga Medis" : "Tambah Tenaga Medis Baru"}
-            </h2>
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Formulir profil lengkap dan jadwal praktik dokter spesialis
+            </DialogDescription>
           </div>
           <button
             type="button"
@@ -431,32 +444,33 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-xs font-semibold text-[#4A453E] block mb-1">
-                        Nomor HP / WhatsApp <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="082283391121"
-                        className="w-full h-9 px-3 rounded-lg border border-[#DDD4C0] bg-white text-xs text-[#2D2A26] outline-none focus:border-[#C9A24A]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-[#4A453E] block mb-1">
-                        Alamat Email <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        required={!isEdit}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="ryanjusuf813@gmail.com"
-                        className="w-full h-9 px-3 rounded-lg border border-[#DDD4C0] bg-white text-xs text-[#2D2A26] outline-none focus:border-[#C9A24A]"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-semibold text-[#4A453E] block mb-1">
+                          Nomor WhatsApp <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="082283391121"
+                          className="w-full h-9 px-3 rounded-lg border border-[#DDD4C0] bg-white text-xs text-[#2D2A26] outline-none focus:border-[#C9A24A]"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-[#4A453E] block mb-1">
+                          Alamat Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          required={!isEdit}
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="ryanjusuf813@gmail.com"
+                          className="w-full h-9 px-3 rounded-lg border border-[#DDD4C0] bg-white text-xs text-[#2D2A26] outline-none focus:border-[#C9A24A]"
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
@@ -668,56 +682,6 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                     </div>
                   </div>
 
-                  {/* Kredensial Password Dokter */}
-                  <div className="pt-2 border-t border-[#E8DFC8]/40 space-y-3">
-                    <label className="text-xs font-bold text-[#8C6B1C] uppercase tracking-wider block">
-                      Kredensial Akun Login Dokter
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-semibold text-[#4A453E] block mb-1">
-                          {isEdit ? "Password Baru (Opsional)" : "Password Login Dokter *"}
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder={isEdit ? "Kosongkan jika tak diubah" : "Minimal 8 karakter"}
-                            className="w-full h-9 pl-3 pr-8 rounded-lg border border-[#DDD4C0] bg-white text-xs font-medium text-[#2D2A26] outline-none focus:border-[#C9A24A]"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
-                          >
-                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-[#4A453E] block mb-1">
-                          Konfirmasi Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Ulangi password"
-                            className="w-full h-9 pl-3 pr-8 rounded-lg border border-[#DDD4C0] bg-white text-xs font-medium text-[#2D2A26] outline-none focus:border-[#C9A24A]"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
-                          >
-                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -731,7 +695,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-xs font-semibold text-[#4A453E] block mb-1">
-                        Estimasi Lama Waktu Konsultasi
+                        Estimasi Waktu Konsultasi
                       </label>
                       <div className="flex items-center gap-2">
                         <input
@@ -777,7 +741,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
 
                   <div className="space-y-2 bg-white p-3.5 rounded-xl border border-[#DDD4C0]/70 shadow-xs">
                     {DAYS_OF_WEEK.map((day) => {
-                      const item = weeklySchedules[day.key] || { active: false, start: "10:00", end: "18:00" };
+                      const item = weeklySchedules[day.key] || weeklySchedules[day.key.toLowerCase()] || { active: false, start: "10:00", end: "18:00" };
                       return (
                         <div
                           key={day.key}
@@ -793,6 +757,7 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                               setWeeklySchedules((prev) => ({
                                 ...prev,
                                 [day.key]: { ...item, active: !item.active },
+                                [day.key.toLowerCase()]: { ...item, active: !item.active },
                               }));
                             }}
                             className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition shrink-0 ${
@@ -809,12 +774,13 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                             <div className="flex items-center gap-2 flex-1 justify-end">
                               <input
                                 type="time"
-                                value={item.start}
+                                value={item.start || "10:00"}
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   setWeeklySchedules((prev) => ({
                                     ...prev,
                                     [day.key]: { ...item, start: val },
+                                    [day.key.toLowerCase()]: { ...item, start: val },
                                   }));
                                 }}
                                 className="h-8 px-2 rounded-md border border-[#DDD4C0] bg-white text-xs text-[#2D2A26] outline-none focus:border-[#C9A24A]"
@@ -822,12 +788,13 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                               <span className="text-xs text-stone-400">-</span>
                               <input
                                 type="time"
-                                value={item.end}
+                                value={item.end || "18:00"}
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   setWeeklySchedules((prev) => ({
                                     ...prev,
                                     [day.key]: { ...item, end: val },
+                                    [day.key.toLowerCase()]: { ...item, end: val },
                                   }));
                                 }}
                                 className="h-8 px-2 rounded-md border border-[#DDD4C0] bg-white text-xs text-[#2D2A26] outline-none focus:border-[#C9A24A]"
@@ -839,6 +806,57 @@ export default function DoctorEditorModal({ open, onOpenChange, doctor, onSave }
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* Kredensial Password Dokter */}
+                <div className="p-4 rounded-xl border border-[#DDD4C0]/70 bg-white space-y-3">
+                  <label className="text-xs font-bold text-[#8C6B1C] uppercase tracking-wider block">
+                    Kredensial Akun Login Dokter
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-[#4A453E] block mb-1">
+                        {isEdit ? "Password Baru (Opsional)" : "Password Login Dokter *"}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder={isEdit ? "Kosongkan jika tak diubah" : "Minimal 8 karakter"}
+                          className="w-full h-9 pl-3 pr-8 rounded-lg border border-[#DDD4C0] bg-white text-xs font-medium text-[#2D2A26] outline-none focus:border-[#C9A24A]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+                        >
+                          {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-[#4A453E] block mb-1">
+                        Konfirmasi Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Ulangi password"
+                          className="w-full h-9 pl-3 pr-8 rounded-lg border border-[#DDD4C0] bg-white text-xs font-medium text-[#2D2A26] outline-none focus:border-[#C9A24A]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

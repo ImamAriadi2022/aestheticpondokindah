@@ -18,7 +18,10 @@ class NotificationController extends Controller
         $baseQuery = Notification::query();
 
         // Jika user adalah dokter, HANYA berikan notifikasi terkait appointment pasien yang memilih dokter ini
-        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+        $isDoctor = ($user->role === 'doctor') || (method_exists($user, 'hasRole') && $user->hasRole('doctor'));
+        $isAdmin = in_array($user->role, ['clinic', 'admin', 'clinic_admin', 'developer']) || (method_exists($user, 'hasRole') && $user->hasRole('admin'));
+
+        if ($isDoctor) {
             $baseQuery->where('type', 'appointment')
                 ->where(function ($q) use ($user) {
                     $q->where('user_id', $user->id)
@@ -28,7 +31,7 @@ class NotificationController extends Controller
                           $uq->where('id', $user->id);
                       });
                 });
-        } elseif ($user->role === 'clinic' || $user->role === 'admin' || $user->hasRole('admin')) {
+        } elseif ($isAdmin) {
             // Admin menerima notifikasi umum atau notifikasi yang ditujukan ke admin/user_id null
             $baseQuery->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
@@ -60,7 +63,10 @@ class NotificationController extends Controller
 
         $query = Notification::query();
 
-        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+        $isDoctor = ($user->role === 'doctor') || (method_exists($user, 'hasRole') && $user->hasRole('doctor'));
+        $isAdmin = in_array($user->role, ['clinic', 'admin', 'clinic_admin', 'developer']) || (method_exists($user, 'hasRole') && $user->hasRole('admin'));
+
+        if ($isDoctor) {
             $query->where('type', 'appointment')
                 ->where(function ($q) use ($user) {
                     $q->where('user_id', $user->id)
@@ -70,7 +76,7 @@ class NotificationController extends Controller
                           $uq->where('id', $user->id);
                       });
                 });
-        } elseif ($user->role === 'clinic' || $user->role === 'admin' || $user->hasRole('admin')) {
+        } elseif ($isAdmin) {
             $query->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
                   ->orWhereNull('user_id');
@@ -122,7 +128,9 @@ class NotificationController extends Controller
 
         $query = Notification::where('id', $id);
 
-        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+        $isDoctor = ($user->role === 'doctor') || (method_exists($user, 'hasRole') && $user->hasRole('doctor'));
+
+        if ($isDoctor) {
             $query->where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
                   ->orWhere('data->doctor_id', $user->id)
@@ -147,7 +155,9 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        if ($user->role === 'doctor' || $user->hasRole('doctor')) {
+        $isDoctor = ($user->role === 'doctor') || (method_exists($user, 'hasRole') && $user->hasRole('doctor'));
+
+        if ($isDoctor) {
             Notification::where(function ($q) use ($user) {
                 $q->where('user_id', $user->id)
                   ->orWhere('data->doctor_id', $user->id)

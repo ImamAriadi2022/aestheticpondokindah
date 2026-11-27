@@ -57,6 +57,9 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // 0. Bypass non-HTTP/HTTPS schemes (e.g. chrome-extension://)
+  if (!url.protocol.startsWith('http')) return;
+
   // 1. Bypass non-GET requests
   if (request.method !== 'GET') return;
   if (EXCLUDED_PATTERNS.some((pattern) => pattern.test(url.pathname))) return;

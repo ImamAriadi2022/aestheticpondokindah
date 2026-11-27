@@ -9,7 +9,7 @@ import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 type Props = {
   doctors: any[];
   onEdit: (doc: any) => void;
-  onManageSchedule: (doc: any) => void;
+  onManageSchedule?: (doc: any) => void;
   onToggleStatus: (docId: string, currentActive: boolean) => void;
   onDeleteDoctor: (docId: string, docName: string) => void;
 };
@@ -120,19 +120,9 @@ export default function DoctorTable({ doctors, onEdit, onManageSchedule, onToggl
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => onManageSchedule(doc)}
-                      className="h-8 px-2.5 text-xs font-semibold text-[#C9A24A] bg-[#FAF8F5] hover:bg-[#F5E6C8]/40 border border-[#F0E6D3] rounded-lg"
-                      title="Kelola Jadwal Praktik Dokter"
-                    >
-                      <Calendar className="w-3.5 h-3.5 mr-1" />
-                      Jadwal
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
                       onClick={() => onEdit(doc)}
                       className="h-8 w-8 p-0 text-[#B8943F] hover:bg-amber-50 rounded-lg"
-                      title="Edit Data & Kredensial Dokter"
+                      title="Edit Data & Jadwal Praktik Dokter"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
