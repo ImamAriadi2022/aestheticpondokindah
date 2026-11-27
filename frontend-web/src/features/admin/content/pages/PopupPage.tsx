@@ -12,12 +12,15 @@ import {
   Image as ImageIcon,
   Sparkles,
   Layers,
-  Search,
   ExternalLink,
   Loader2,
   Eye,
+  Filter,
 } from "lucide-react";
 import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 type Props = {
   token: string;
@@ -214,87 +217,39 @@ export default function PopupPage({ token, apiPopups = [], fetchApiPopups }: Pro
   }, [apiPopups, statusFilter, searchQuery]);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#2C2416]">Manajemen Pop Up Promo</h2>
-          <p className="text-xs text-[#8C8272] mt-0.5">
-            Kelola beberapa pop-up banner promo sekaligus. Pop up yang aktif akan tampil bergantian di halaman utama.
-          </p>
-        </div>
-        <Button
-          onClick={openCreateModal}
-          className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] hover:from-[#B8943F] hover:to-[#735514] text-white font-bold rounded-xl shadow-2xs h-10 sm:h-9 px-4 text-xs cursor-pointer justify-center"
-        >
-          <Plus className="w-4 h-4 mr-1.5" />
-          Tambah Pop Up Baru
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-3.5">
-        <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-[#8C8272]">Total Pop Up</span>
-            <p className="text-xl sm:text-2xl font-black text-[#2C2416] mt-0.5">{counts.total}</p>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center text-[#8C6B1C] shrink-0">
-            <Layers className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-emerald-700">Pop Up Aktif</span>
-            <p className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5">{counts.active}</p>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
-            <Sparkles className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="col-span-2 sm:col-span-1 p-4 bg-white rounded-2xl border border-[#E8DFC8] shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-rose-700">Pop Up Non-Aktif</span>
-            <p className="text-xl sm:text-2xl font-black text-rose-600 mt-0.5">{counts.inactive}</p>
-          </div>
-          <div className="w-10 h-10 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
-            <X className="w-5 h-5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-[#E8DFC8]">
-        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-          {(["Semua", "Aktif", "Non-Aktif"] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setStatusFilter(tab)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                statusFilter === tab
-                  ? "bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] text-white shadow-2xs"
-                  : "text-[#6B5E4F] hover:bg-[#FAF5EA] hover:text-[#8C6B1C]"
-              }`}
+    <div className="space-y-5 animate-in fade-in duration-150">
+      <PageHeader
+        title="Manajemen Pop Up Promo"
+        actions={
+          <>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Cari pop up promo..."
+            />
+            <FilterDropdown
+              value={statusFilter}
+              onChange={(v) => setStatusFilter(v as any)}
+              icon={Filter}
+              labelPrefix="Status"
+              options={[
+                { value: "Semua", label: `Semua Pop Up (${counts.total})` },
+                { value: "Aktif", label: `Aktif (${counts.active})` },
+                { value: "Non-Aktif", label: `Non-Aktif (${counts.inactive})` },
+              ]}
+            />
+            <Button
+              onClick={openCreateModal}
+              className="bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] hover:from-[#B8943F] hover:to-[#735514] text-white font-bold rounded-xl shadow-2xs h-9 px-4 text-xs cursor-pointer justify-center"
             >
-              {tab}
-            </button>
-          ))}
-        </div>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Tambah Pop Up
+            </Button>
+          </>
+        }
+      />
 
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-[#A89F91] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari pop up promo..."
-            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
-          />
-        </div>
-      </div>
+      {/* Pop Up Cards Grid View */}
 
       {/* Pop Up Grid */}
       {filteredPopups.length > 0 ? (

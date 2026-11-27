@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import {
   Calendar,
   Search,
@@ -7,18 +8,29 @@ import {
   CheckCircle2,
   Clock,
   FileCheck,
-  RefreshCw,
-  Sparkles,
-  Layers,
   ChevronRight,
+  ChevronLeft,
+  SlidersHorizontal,
 } from "lucide-react";
 import ReservationTable from "../components/ReservationTable";
 import ReservationDetailModal from "../components/ReservationDetailModal";
-import AdminTreatmentManagement from "@/features/admin/treatments/pages/AdminTreatmentManagement";
-import { deleteAdminReservation, type ReservationItem } from "../services/reservationService";
+import CreateReservationModal from "../components/CreateReservationModal";
+import WeeklyAppointmentCalendar from "../components/WeeklyAppointmentCalendar";
+import {
+  deleteAdminReservation,
+  bulkDeleteAdminReservations,
+  type ReservationItem,
+} from "../services/reservationService";
+import { DUMMY_WEEKLY_RESERVATIONS } from "../services/dummyReservations";
 import { toast } from "@/shared/ui/toast";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
+import { syncEngine } from "@/core/services/reservationSyncEngine";
+import { Button } from "@/shared/ui/button";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 type Props = {
   reservations: ReservationItem[];
@@ -35,12 +47,47 @@ export default function ReservationPage({
   onRefresh,
   onSelectReservation,
 }: Props) {
-  const [activeSubTab, setActiveSubTab] = useState<"reservations" | "treatments">("reservations");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selected, setSelected] = useState<ReservationItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [sourceFilter, setSourceFilter] = useState("Semua");
+  const [rowsPerPage, setRowsPerPage] = useState<string>("Semua");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, sourceFilter, rowsPerPage]);
+
+  // Otomatis buka detail reservasi jika ada parameter query `code` atau `reservation_id` (misal dari notifikasi)
+  useEffect(() => {
+    const codeParam = searchParams.get("code") || searchParams.get("bookingCode");
+    const idParam = searchParams.get("reservation_id") || searchParams.get("id");
+
+    if ((codeParam || idParam) && reservations && reservations.length > 0) {
+      const target = reservations.find((r) => {
+        const rCode = (r.code || `RSV-${String(r.id).padStart(6, "0")}`).toLowerCase().replace(/#/g, "").trim();
+        const cleanQueryCode = (codeParam || "").toLowerCase().replace(/#/g, "").trim();
+        const codeMatches = cleanQueryCode && rCode === cleanQueryCode;
+        const idMatches = idParam && String(r.id) === String(idParam);
+        return codeMatches || idMatches;
+      });
+
+      if (target) {
+        setSelected(target);
+        setIsModalOpen(true);
+        scrollPageToTop();
+      }
+    }
+  }, [searchParams, reservations]);
+
+  usePageRefresh(() => {
+    if (onRefresh) onRefresh();
+  });
 
   const handleSelect = (item: ReservationItem) => {
     setSelected(item);
@@ -52,6 +99,15 @@ export default function ReservationPage({
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelected(null);
+    // Hapus parameter code / reservation_id dari URL jika ada
+    if (searchParams.has("code") || searchParams.has("bookingCode") || searchParams.has("reservation_id") || searchParams.has("id")) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("code");
+      nextParams.delete("bookingCode");
+      nextParams.delete("reservation_id");
+      nextParams.delete("id");
+      setSearchParams(nextParams, { replace: true });
+    }
     scrollPageToTop();
   };
 
@@ -62,17 +118,14 @@ export default function ReservationPage({
   const handleDeleteReservation = async (item: ReservationItem) => {
     if (!token) return;
     const rCode = item.code || `RSV-${String(item.id).padStart(6, "0")}`;
-    const pName = item.name || "Pasien";
-    const confirmed = window.confirm(
-      `Apakah Anda yakin ingin menghapus data reservasi ${rCode} (${pName})? Tindakan ini akan menghapus data secara permanen.`
-    );
-    if (!confirmed) return;
 
     try {
       await deleteAdminReservation(token, item.id);
+      setSelectedIds((prev) => prev.filter((id) => id !== item.id));
+      syncEngine.broadcastEvent({ type: "reservation_deleted", id: item.id });
       toast({
         title: "Reservasi Dihapus",
-        message: `Data reservasi ${rCode} berhasil dihapus.`,
+        message: `Data reservasi ${rCode} berhasil dihapus tanpa gangguan.`,
         variant: "success",
       });
       if (onRefresh) onRefresh();
@@ -85,21 +138,52 @@ export default function ReservationPage({
     }
   };
 
+  const handleBulkDelete = async (items: ReservationItem[]) => {
+    if (!token || items.length === 0) return;
+    const ids = items.map((i) => i.id);
+
+    try {
+      const res = await bulkDeleteAdminReservations(token, ids);
+      setSelectedIds([]);
+      syncEngine.broadcastEvent({ type: "reservation_bulk_deleted", ids });
+      toast({
+        title: "Berhasil Dihapus",
+        message: res.message || `${ids.length} data reservasi berhasil dihapus seketika.`,
+        variant: "success",
+      });
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      toast({
+        title: "Gagal Menghapus",
+        message: err.message || "Gagal menghapus data yang dipilih.",
+        variant: "error",
+      });
+    }
+  };
+
+  // 100% Realtime backend reservations from database (no dummy)
+  const activeReservationsList = useMemo(() => {
+    return Array.isArray(reservations) ? [...reservations] : [];
+  }, [reservations]);
+
   // Quick stats calculation
-  const totalCount = reservations.length;
-  const newCount = reservations.filter(
-    (r) => r.status === "Baru" || r.status === "pending"
-  ).length;
-  const confirmedCount = reservations.filter(
-    (r) => r.status === "Dikonfirmasi" || r.status === "confirmed"
-  ).length;
-  const completedCount = reservations.filter(
-    (r) => r.status === "Selesai" || r.status === "completed"
-  ).length;
+  const totalCount = activeReservationsList.length;
+  const newCount = activeReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "baru" || st === "pending" || st === "menunggu" || st === "menunggu konfirmasi" || st === "submitted";
+  }).length;
+  const confirmedCount = activeReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "dikonfirmasi" || st === "confirmed" || st === "approved" || st === "disetujui";
+  }).length;
+  const completedCount = activeReservationsList.filter((r) => {
+    const st = (r.status || "").toLowerCase();
+    return st === "selesai" || st === "completed" || st === "selesai dirawat";
+  }).length;
 
   // Filtered reservations
   const filteredReservations = useMemo(() => {
-    return reservations.filter((r) => {
+    return activeReservationsList.filter((r) => {
       // Search
       const searchLower = searchQuery.toLowerCase();
       const codeMatch = (r.code || `RSV-${r.id}`).toLowerCase().includes(searchLower);
@@ -133,243 +217,260 @@ export default function ReservationPage({
       if (timeB !== timeA) return timeB - timeA;
       return Number(b.id || 0) - Number(a.id || 0);
     });
-  }, [reservations, searchQuery, statusFilter, sourceFilter]);
+  }, [activeReservationsList, searchQuery, statusFilter, sourceFilter]);
+
+  // Paginated reservations based on rowsPerPage
+  const totalFilteredCount = filteredReservations.length;
+  const pageSize = rowsPerPage === "Semua" ? totalFilteredCount : parseInt(rowsPerPage, 10);
+  const totalPages = pageSize > 0 ? Math.ceil(totalFilteredCount / pageSize) : 1;
+
+  const paginatedReservations = useMemo(() => {
+    if (rowsPerPage === "Semua") return filteredReservations;
+    const start = (currentPage - 1) * pageSize;
+    return filteredReservations.slice(start, start + pageSize);
+  }, [filteredReservations, currentPage, pageSize, rowsPerPage]);
+
+  const handleToggleSelect = (id: string | number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAllCurrentPage = () => {
+    const currentPageIds = paginatedReservations.map((r) => r.id);
+    const allSelectedOnPage = currentPageIds.length > 0 && currentPageIds.every((id) => selectedIds.includes(id));
+
+    if (allSelectedOnPage) {
+      // Unselect all on current page
+      setSelectedIds((prev) => prev.filter((id) => !currentPageIds.includes(id)));
+    } else {
+      // Select all on current page
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...currentPageIds])));
+    }
+  };
 
   return (
-    <div className="space-y-6 text-left">
-      {/* Top Header & Sub-Tabs Switcher (Hidden during Detail View) */}
+    <div className="space-y-5 text-left">
+      {/* Top Header (Hidden during Detail View) */}
       {!selected && (
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#F0E6D3] shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-[#3D332A] tracking-tight flex items-center gap-2">
-                <Calendar className="w-6 h-6 text-[#C9A24A]" />
-                Manajemen Reservasi & Layanan Klinik
-              </h2>
-              <p className="text-sm text-[#7A6E60] mt-1">
-                Pusat kendali operasional janji temu pasien (Guest & Member) serta pengelolaan katalog layanan tindakan medis.
-              </p>
-            </div>
-
-            {activeSubTab === "reservations" && onRefresh && (
-              <button
-                onClick={onRefresh}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-[#FAF6EE] text-[#8A6B2B] rounded-xl border border-[#E8DFC8] text-xs font-semibold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Muat Ulang Reservasi
-              </button>
-            )}
-          </div>
-
-          {/* Sub-Tabs Selector */}
-          <div className="flex items-center gap-2 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
+        <PageHeader
+          title="Manajemen Reservasi Pasien"
+          actions={
             <button
-              onClick={() => setActiveSubTab("reservations")}
-              className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeSubTab === "reservations"
-                  ? "bg-[#8C6B1C] text-white shadow-md"
-                  : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
-              }`}
+              onClick={() => setIsCreateOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 h-9 bg-[#8C6B1C] hover:bg-[#785A17] active:scale-[0.98] text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
             >
-              <Calendar className="w-4 h-4" />
-              <span>Janji Temu & Alur Reservasi</span>
-              <span
-                className={`text-[11px] px-2 py-0.5 rounded-full font-bold ${
-                  activeSubTab === "reservations"
-                    ? "bg-white/20 text-white"
-                    : "bg-[#EADBBD] text-[#4A3F35]"
-                }`}
-              >
-                {totalCount}
-              </span>
+              <Calendar className="w-3.5 h-3.5" />
+              Tambah Reservasi
             </button>
-
-            <button
-              onClick={() => setActiveSubTab("treatments")}
-              className={`shrink-0 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                activeSubTab === "treatments"
-                  ? "bg-[#8C6B1C] text-white shadow-md"
-                  : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]"
-              }`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span className="whitespace-nowrap">Layanan Klinik (Treatments)</span>
-              <span
-                className={`shrink-0 whitespace-nowrap text-[11px] px-2 py-0.5 rounded-full font-bold ${
-                  activeSubTab === "treatments"
-                    ? "bg-white/20 text-white"
-                    : "bg-emerald-100 text-emerald-800"
-                }`}
-              >
-                Tersedia
-              </span>
-            </button>
-          </div>
-        </div>
+          }
+        />
       )}
 
-      {/* TAB 1: RESERVASI JANJI TEMU PASIEN */}
-      {activeSubTab === "reservations" && (
-        <PageTransition transitionKey={selected ? `detail_${selected.id}` : "list"}>
-          {selected ? (
-            /* In-Page Booking Detail View (No Modal Dialog) */
-            <ReservationDetailModal
-              isOpen={true}
-              onClose={handleCloseModal}
-              reservation={selected}
-              doctors={doctors}
-              token={token}
-              onUpdated={handleModalUpdated}
-            />
-          ) : (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              {/* 4 Summary Stat Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[#8A7B6B]">Total Reservasi</span>
-                    <div className="w-8 h-8 rounded-xl bg-[#F5E6C8] flex items-center justify-center text-[#B8943F]">
-                      <Users className="w-4 h-4" />
-                    </div>
+      {/* RESERVASI JANJI TEMU PASIEN */}
+      <PageTransition transitionKey={selected ? `detail_${selected.id}` : "list"}>
+        {selected ? (
+          /* In-Page Booking Detail View (No Modal Dialog) */
+          <ReservationDetailModal
+            isOpen={true}
+            onClose={handleCloseModal}
+            reservation={selected}
+            doctors={doctors}
+            token={token}
+            onUpdated={handleModalUpdated}
+          />
+        ) : (
+            <div className="space-y-5 animate-in fade-in duration-200">
+              {/* Weekly Appointment Calendar Overview */}
+              <WeeklyAppointmentCalendar
+                reservations={activeReservationsList}
+                doctors={doctors}
+                onSelectReservation={handleSelect}
+              />
+
+              {/* Ringkasan Status Kecil (Tepat di atas bar pencarian) */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Total Reservasi */}
+                <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                  <div className="w-10 h-10 rounded-full border-2 border-[#8C6B1C] flex items-center justify-center mb-2">
+                    <span className="text-sm font-bold text-[#3D332A]">{totalCount}</span>
                   </div>
-                  <p className="text-2xl font-bold text-[#3D332A] mt-2">{totalCount}</p>
-                  <p className="text-[10px] text-[#A89F91] mt-0.5">Semua entri database</p>
+                  <span className="text-xs font-semibold text-[#4A3F35]">Total Reservasi</span>
                 </div>
 
-                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-amber-700">Perlu Konfirmasi</span>
-                    <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
-                      <Clock className="w-4 h-4" />
-                    </div>
+                {/* Perlu Konfirmasi */}
+                <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                  <div className="w-10 h-10 rounded-full border-2 border-[#E5A024] flex items-center justify-center mb-2">
+                    <span className="text-sm font-bold text-[#3D332A]">{newCount}</span>
                   </div>
-                  <p className="text-2xl font-bold text-amber-700 mt-2">{newCount}</p>
-                  <p className="text-[10px] text-amber-600 mt-0.5">Menunggu respon admin</p>
+                  <span className="text-xs font-semibold text-[#4A3F35]">Perlu Konfirmasi</span>
                 </div>
 
-                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-emerald-700">Dikonfirmasi</span>
-                    <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
+                {/* Dikonfirmasi */}
+                <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                  <div className="w-10 h-10 rounded-full border-2 border-[#10B981] flex items-center justify-center mb-2">
+                    <span className="text-sm font-bold text-[#3D332A]">{confirmedCount}</span>
                   </div>
-                  <p className="text-2xl font-bold text-emerald-700 mt-2">{confirmedCount}</p>
-                  <p className="text-[10px] text-emerald-600 mt-0.5">Jadwal telah terkunci</p>
+                  <span className="text-xs font-semibold text-[#4A3F35]">Dikonfirmasi</span>
                 </div>
 
-                <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-purple-700">Selesai Dirawat</span>
-                    <div className="w-8 h-8 rounded-xl bg-purple-100 flex items-center justify-center text-purple-700">
-                      <FileCheck className="w-4 h-4" />
-                    </div>
+                {/* Selesai Dirawat */}
+                <div className="bg-white rounded-2xl p-4 border border-[#EADBBD] shadow-2xs flex flex-col items-center justify-center text-center">
+                  <div className="w-10 h-10 rounded-full border-2 border-[#8B5CF6] flex items-center justify-center mb-2">
+                    <span className="text-sm font-bold text-[#3D332A]">{completedCount}</span>
                   </div>
-                  <p className="text-2xl font-bold text-purple-700 mt-2">{completedCount}</p>
-                  <p className="text-[10px] text-purple-600 mt-0.5">Kunjungan tuntas</p>
+                  <span className="text-xs font-semibold text-[#4A3F35]">Selesai Dirawat</span>
                 </div>
               </div>
 
               {/* Filter & Search Bar */}
-              <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs space-y-3">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-                  {/* Search Input */}
-                  <div className="relative w-full md:w-80">
-                    <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Cari kode, nama pasien, layanan..."
-                      className="w-full h-10 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-8 text-xs font-medium text-[#3D332A] placeholder:text-[#A89F91] focus:outline-hidden focus:border-[#C9A24A] focus:ring-2 focus:ring-[#C9A24A]/20 transition-all shadow-xs"
-                    />
-                    {searchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setSearchQuery("")}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A89F91] hover:text-[#3D332A] p-0.5 rounded-full"
-                      >
-                        <span className="text-xs font-bold leading-none">✕</span>
-                      </button>
-                    )}
-                  </div>
+              <div className="bg-white rounded-2xl p-3.5 border border-[#E2E8F0] shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Cari kode, nama pasien, layanan..."
+                />
 
-                  {/* Asal Booking Tabs (Guest vs Member) */}
-                  <div className="flex items-center gap-1 bg-[#FAF8F5] p-1 rounded-xl border border-[#E8DFC8] w-full md:w-auto">
-                    <button
-                      onClick={() => setSourceFilter("Semua")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        sourceFilter === "Semua"
-                          ? "bg-white text-[#8A6B2B] shadow-xs"
-                          : "text-[#8A7B6B] hover:text-[#3D332A]"
-                      }`}
-                    >
-                      Semua Asal
-                    </button>
-                    <button
-                      onClick={() => setSourceFilter("guest")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        sourceFilter === "guest"
-                          ? "bg-blue-600 text-white shadow-xs"
-                          : "text-[#8A7B6B] hover:text-blue-700"
-                      }`}
-                    >
-                      Guest
-                    </button>
-                    <button
-                      onClick={() => setSourceFilter("member")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                        sourceFilter === "member"
-                          ? "bg-emerald-600 text-white shadow-xs"
-                          : "text-[#8A7B6B] hover:text-emerald-700"
-                      }`}
-                    >
-                      Member
-                    </button>
-                  </div>
-                </div>
+                {/* Dropdown Filters */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <FilterDropdown
+                    value={statusFilter}
+                    onChange={setStatusFilter}
+                    icon={Filter}
+                    labelPrefix="Status"
+                    options={[
+                      { value: "Semua", label: "Semua Status" },
+                      { value: "Baru", label: "Baru" },
+                      { value: "Dikonfirmasi", label: "Dikonfirmasi" },
+                      { value: "Selesai", label: "Selesai" },
+                      { value: "Dibatalkan", label: "Dibatalkan" },
+                    ]}
+                  />
 
-                {/* Status Tabs */}
-                <div className="flex flex-nowrap items-center gap-1.5 pt-2 pb-1 border-t border-[#F5ECE0] overflow-x-auto scrollbar-hide">
-                  <span className="shrink-0 text-xs font-semibold text-[#8A7B6B] flex items-center gap-1 mr-1">
-                    <Filter className="w-3 h-3 text-[#B8943F]" /> Status:
-                  </span>
-                  {["Semua", "Baru", "Dikonfirmasi", "Selesai", "Dibatalkan"].map((st) => (
-                    <button
-                      key={st}
-                      onClick={() => setStatusFilter(st)}
-                      className={`shrink-0 whitespace-nowrap px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                        statusFilter === st
-                          ? "bg-[#C9A24A] text-white shadow-xs"
-                          : "bg-[#FAF8F5] hover:bg-[#F5ECE0] text-[#7A6E60] border border-[#E8DFC8]"
-                      }`}
-                    >
-                      {st}
-                    </button>
-                  ))}
+                  <FilterDropdown
+                    value={sourceFilter}
+                    onChange={setSourceFilter}
+                    labelPrefix="Asal"
+                    options={[
+                      { value: "Semua", label: "Semua Asal" },
+                      { value: "guest", label: "Guest" },
+                      { value: "member", label: "Member" },
+                    ]}
+                  />
+
+                  {/* Filter Baris Data / Page Size */}
+                  <FilterDropdown
+                    value={rowsPerPage}
+                    onChange={setRowsPerPage}
+                    icon={SlidersHorizontal}
+                    labelPrefix="Tampilkan"
+                    options={[
+                      { value: "10", label: "10 Baris" },
+                      { value: "20", label: "20 Baris" },
+                      { value: "50", label: "50 Baris" },
+                      { value: "Semua", label: "Semua Baris" },
+                    ]}
+                  />
                 </div>
               </div>
 
               {/* Main Reservation Table */}
               <ReservationTable
-                reservations={filteredReservations}
+                reservations={paginatedReservations}
                 onSelect={handleSelect}
                 onDelete={handleDeleteReservation}
+                onBulkDelete={handleBulkDelete}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
+                onToggleSelectAll={handleToggleSelectAllCurrentPage}
                 token={token}
                 onRefresh={onRefresh}
               />
+
+              {/* Pagination Controls when limited rows */}
+              {rowsPerPage !== "Semua" && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-3.5 rounded-2xl border border-[#F0E6D3] shadow-xs gap-3">
+                  <p className="text-xs text-[#8A7B6B]">
+                    Menampilkan{" "}
+                    <span className="font-bold text-[#4A3F35]">
+                      {totalFilteredCount === 0 ? 0 : (currentPage - 1) * pageSize + 1}
+                    </span>{" "}
+                    -{" "}
+                    <span className="font-bold text-[#4A3F35]">
+                      {Math.min(currentPage * pageSize, totalFilteredCount)}
+                    </span>{" "}
+                    dari <span className="font-bold text-[#4A3F35]">{totalFilteredCount}</span> reservasi
+                  </p>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage <= 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="h-8 px-3 rounded-xl border-[#E2E8F0] text-xs font-bold hover:bg-[#FAF8F5] cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Sebelumnya
+                    </Button>
+
+                    <div className="flex items-center gap-1 px-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          return (
+                            page === 1 ||
+                            page === totalPages ||
+                            Math.abs(page - currentPage) <= 1
+                          );
+                        })
+                        .map((page, idx, arr) => {
+                          const prevPage = arr[idx - 1];
+                          const hasGap = prevPage && page - prevPage > 1;
+
+                          return (
+                            <div key={page} className="flex items-center">
+                              {hasGap && <span className="text-xs text-gray-400 px-1">...</span>}
+                              <button
+                                type="button"
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                  currentPage === page
+                                    ? "bg-[#C9A24A] text-white shadow-2xs"
+                                    : "text-[#64748B] hover:bg-gray-100"
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage >= totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="h-8 px-3 rounded-xl border-[#E2E8F0] text-xs font-bold hover:bg-[#FAF8F5] cursor-pointer"
+                    >
+                      Berikutnya <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </PageTransition>
-      )}
 
-      {/* TAB 2: LAYANAN KLINIK (TREATMENTS) */}
-      {activeSubTab === "treatments" && (
-        <div className="animate-in fade-in duration-200">
-          <AdminTreatmentManagement />
-        </div>
-      )}
+      {/* Create Reservation Modal */}
+      <CreateReservationModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        token={token}
+        doctors={doctors}
+        onSuccess={() => {
+          if (onRefresh) onRefresh();
+        }}
+      />
     </div>
   );
 }

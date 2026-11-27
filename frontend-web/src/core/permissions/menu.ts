@@ -33,7 +33,6 @@ export const SETTINGS_SUBMENU: MenuItem["submenu"] = [
 ];
 
 export const CONTENT_SUBMENU: MenuItem["submenu"] = [
-  { label: "Katalog Layanan", href: "/dashboard/clinic?tab=public-services" },
   { label: "Blog", href: "/dashboard/clinic?tab=content-blog" },
   { label: "Promo", href: "/dashboard/clinic?tab=content-promo" },
   { label: "Pop Up", href: "/dashboard/clinic?tab=content-popup" },
@@ -46,6 +45,7 @@ export const BOOKING_SUBMENU: MenuItem["submenu"] = [
   { label: "Booking", href: "/dashboard/clinic?tab=reservasi" },
   { label: "Konsultasi", href: "/dashboard/clinic?tab=konsultasi" },
   { label: "Pengaduan", href: "/dashboard/clinic?tab=pengaduan" },
+  { label: "Layanan", href: "/dashboard/clinic?tab=treatments" },
 ];
 
 export const USER_MANAGEMENT_SUBMENU: MenuItem["submenu"] = [
@@ -96,9 +96,6 @@ export const MENU: AppMenu = {
     ],
     [ROLES.DOCTOR]: [
       { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard/doctor" },
-      { label: "Jadwal Praktik", icon: Calendar, href: "/dashboard/doctor?tab=jadwal" },
-      { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi" },
-      { label: "Panduan Dokter", icon: BookOpen, href: "/dashboard/doctor?tab=panduan" },
     ],
     [ROLES.DEVELOPER]: [
       { label: "REST API Docs", icon: FileText, href: "/docs-api" },

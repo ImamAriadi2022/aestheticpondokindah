@@ -36,7 +36,6 @@ export default function DesktopDoctorHome({
       value: schedules.length,
       unit: "Sesi",
       icon: Calendar,
-      iconBg: "bg-[#F5E6C8]",
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
       trendValue: `${schedules.length} Sesi Aktif`,
@@ -48,7 +47,6 @@ export default function DesktopDoctorHome({
       value: reservations.length,
       unit: "Pasien",
       icon: Users,
-      iconBg: "bg-[#F5E6C8]",
       iconColor: "text-[#B8943F]",
       trend: "up" as const,
       trendValue: `${reservations.length} Terdaftar`,
@@ -60,8 +58,7 @@ export default function DesktopDoctorHome({
       value: completedCount,
       unit: "Tindakan",
       icon: CheckCircle2,
-      iconBg: "bg-emerald-50",
-      iconColor: "text-emerald-700",
+      iconColor: "text-emerald-600",
       trend: "up" as const,
       trendValue: "Selesai",
       trendLabel: "Riwayat Medis",
@@ -72,8 +69,7 @@ export default function DesktopDoctorHome({
       value: pendingCount,
       unit: "Antrean",
       icon: Clock,
-      iconBg: "bg-amber-50",
-      iconColor: "text-amber-700",
+      iconColor: "text-amber-600",
       trend: "neutral" as const,
       trendValue: `${pendingCount} Menunggu`,
       trendLabel: "Perlu Tindakan",
@@ -144,42 +140,38 @@ export default function DesktopDoctorHome({
             <span>Real-time Database</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className={`w-10 h-10 rounded-xl ${s.iconBg} flex items-center justify-center`}>
-                  <s.icon className={`w-5 h-5 ${s.iconColor}`} />
-                </div>
-                {s.sparklineData.some((v) => v > 0) ? (
-                  <Sparkline
-                    data={s.sparklineData}
-                    width={70}
-                    height={28}
-                    stroke="#C9A24A"
-                  />
-                ) : (
-                  <div className="w-[70px] h-[28px]" />
-                )}
-              </div>
-              <p className="text-2xl font-bold text-[#4A3F35]">
-                {s.value} <span className="text-xs font-normal text-[#8A7B6B]">{s.unit}</span>
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs font-medium text-[#8A7B6B]">{s.label}</p>
-                {s.trendValue !== "-" ? (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[#FAF5EA] text-[#8C6B1C]">
-                    <TrendingUp className="w-3 h-3" />
-                    {s.trendValue}
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-[10px] text-[#B8A99A] mt-0.5">{s.trendLabel}</p>
+        <div className="grid grid-cols-4 gap-2 sm:gap-3">
+          {/* Total Pasien / Reservasi */}
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#8C6B1C]/30 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#8C6B1C] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{reservations.length}</span>
             </div>
-          ))}
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Total Reservasi</span>
+          </div>
+
+          {/* Pasien Menunggu / Perlu Konfirmasi */}
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#E5A024]/40 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#E5A024] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{pendingCount}</span>
+            </div>
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Perlu Konfirmasi</span>
+          </div>
+
+          {/* Sesi Praktik / Dikonfirmasi */}
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#10B981]/40 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#10B981] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{schedules.length}</span>
+            </div>
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Dikonfirmasi</span>
+          </div>
+
+          {/* Selesai Dirawat */}
+          <div className="bg-white rounded-xl py-2.5 px-2 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center text-center hover:border-[#8B5CF6]/40 transition-all">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-[1.5px] border-[#8B5CF6] flex items-center justify-center mb-1">
+              <span className="text-xs sm:text-sm font-bold text-[#3D332A]">{completedCount}</span>
+            </div>
+            <span className="text-[10px] sm:text-xs font-semibold text-[#3D332A] leading-tight">Selesai Dirawat</span>
+          </div>
         </div>
       </div>
 

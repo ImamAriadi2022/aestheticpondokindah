@@ -125,3 +125,25 @@ export async function deleteAdminReservation(
 
   return res.json();
 }
+
+export async function bulkDeleteAdminReservations(
+  token: string,
+  ids: (string | number)[]
+): Promise<{ success: boolean; message: string; deleted_count?: number }> {
+  const res = await fetch(`${API_BASE}/admin/reservations/bulk-delete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ ids }),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData.message || `Gagal menghapus beberapa reservasi (${res.status})`);
+  }
+
+  return res.json();
+}

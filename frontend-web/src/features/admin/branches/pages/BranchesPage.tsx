@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BranchTable from "../components/BranchTable";
+import { PageHeader } from "@/shared/ui/PageHeader";
 
 type Props = {
   branches: any[];
@@ -15,11 +16,8 @@ export default function BranchesPage({ branches, onEditBranch }: Props) {
   };
 
   return (
-    <div className="mobile-branches-page space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Cabang Klinik</h2>
-        <p className="text-sm text-[#8A7B6B] mt-1">Kelola data lokasi cabang, alamat, kontak WhatsApp, dan jam operasional klinik.</p>
-      </div>
+    <div className="mobile-branches-page space-y-5">
+      <PageHeader title="Daftar Cabang Klinik" />
 
       <BranchTable branches={branches} onEdit={handleEdit} />
     </div>

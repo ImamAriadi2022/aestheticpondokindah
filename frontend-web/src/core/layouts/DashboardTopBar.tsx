@@ -19,6 +19,7 @@ import {
   ChevronDown,
   FileText,
   Check,
+  RefreshCw,
 } from "lucide-react";
 import {
   subscribeToPushNotifications,
@@ -35,6 +36,7 @@ import { getSession, clearSession } from "@/core/auth/services/session";
 import { clearSessionStorage } from "@/core/auth/services/sessionTtl";
 import { subscribeToWebPush } from "@/core/services/webPushManager";
 import { apiClient } from "@/core/api/apiClient";
+import { triggerPageRefresh } from "@/core/events/refreshEvents";
 
 interface DashboardTopBarProps {
   role: "user" | "clinic" | "doctor";
@@ -55,7 +57,9 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   const [notifications, setNotifications] = useState<PushNotificationPayload[]>(() => {
     try {
       const cached = localStorage.getItem("apig_recent_push_notifications");
-      return cached ? JSON.parse(cached) : [];
+      if (!cached) return [];
+      const parsed: PushNotificationPayload[] = JSON.parse(cached);
+      return parsed;
     } catch {
       return [];
     }
@@ -70,11 +74,20 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [filterTab, setFilterTab] = useState<"all" | "unread">("all");
+  const [filterTab, setFilterTab] = useState<"unread" | "all">("unread");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshClick = () => {
+    setIsRefreshing(true);
+    triggerPageRefresh({ tab: activeTab, pathname });
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 800);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -242,6 +255,12 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         const mapped: PushNotificationPayload[] = list.map((item: any) => {
           const isRead = !!(item.read_at || item.is_read);
           const timeStamp = item.created_at || item.createdAt || item.timestamp || item.receivedAt || new Date().toISOString();
+          const notifData = item.data || {};
+          const parsedCode = notifData.code || notifData.bookingCode || notifData.booking_code;
+          // Ekstrak kode reservasi dari pesan/body atau title jika tidak ada di field data (misal #RSV-000051 atau RSV-000051)
+          const fallbackCodeMatch = (item.body || item.message || item.title || "").match(/#?(RSV-\d{4,8})/i);
+          const finalBookingCode = parsedCode || (fallbackCodeMatch ? fallbackCodeMatch[1].toUpperCase() : undefined);
+
           return {
             id: String(item.id),
             title: item.title || "🔔 Notifikasi Klinik",
@@ -249,7 +268,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
             sender: item.type === "appointment" ? "Sistem Reservasi" : item.type === "complaint" ? "Pengaduan Pasien" : item.type === "consultation" ? "Konsultasi Pasien" : "Aesthetic Pondok Indah",
             role: role === "clinic" ? "admin" : role === "doctor" ? "doctor" : "patient",
             type: item.type || "general",
-            bookingCode: item.data?.code || item.data?.bookingCode,
+            bookingCode: finalBookingCode,
             url: item.data?.url || item.deep_link || (item.type === "complaint" ? (role === "clinic" ? "/dashboard/clinic?tab=pengaduan" : "/dashboard/user?tab=pengaduan") : item.type === "consultation" ? (role === "clinic" ? "/dashboard/clinic?tab=konsultasi" : "/dashboard/user?tab=konsultasi") : (role === "clinic" ? "/dashboard/clinic?tab=reservasi" : "/dashboard/user?tab=reservasi")),
             receivedAt: timeStamp,
             createdAt: timeStamp,
@@ -258,11 +277,21 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         });
 
         setNotifications((prev: PushNotificationPayload[]) => {
-          const combined = [...mapped, ...prev.filter((p: PushNotificationPayload) => !mapped.some((m: PushNotificationPayload) => m.id === p.id))];
+          // Dokter hanya menerima notifikasi terkait appointment pasien miliknya
+          const validList = role === "doctor"
+            ? mapped.filter((m) => m.type === "appointment")
+            : mapped;
+
+          // Jika role dokter, jangan biarkan sampah notifikasi lama/non-appointment di localStorage mencemari list
+          const basePrev = role === "doctor"
+            ? prev.filter((p: PushNotificationPayload) => p.type === "appointment")
+            : prev;
+
+          const combined = [...validList, ...basePrev.filter((p: PushNotificationPayload) => !validList.some((m: PushNotificationPayload) => m.id === p.id))];
           try {
-            localStorage.setItem("apig_recent_push_notifications", JSON.stringify(combined.slice(0, 30)));
+            localStorage.setItem("apig_recent_push_notifications", JSON.stringify(combined.slice(0, 50)));
           } catch {}
-          return combined.slice(0, 30);
+          return combined.slice(0, 50);
         });
 
         const unreadItems = list.filter((item: any) => !item.read_at && !item.is_read);
@@ -285,20 +314,21 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   useEffect(() => {
     fetchDatabaseNotifications();
 
-    // 20s interval only when tab is visible
+    // Polling santai 60s hanya saat tab aktif (tidak membombardir server)
     const interval = setInterval(() => {
       if (typeof document === "undefined" || !document.hidden) {
         fetchDatabaseNotifications();
       }
-    }, 20000);
+    }, 60000);
 
-    // Re-fetch immediately when user returns to tab
-    const handleVisibilityChange = () => {
+    // Re-fetch saat pengguna kembali membuka browser/tab
+    const handleRevalidation = () => {
       if (!document.hidden) {
         fetchDatabaseNotifications();
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleRevalidation);
+    window.addEventListener("focus", handleRevalidation);
 
     const unsubscribe = subscribeToPushNotifications((payload: PushNotificationPayload) => {
       const timeStamp = payload.receivedAt || payload.createdAt || new Date().toISOString();
@@ -310,6 +340,25 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       };
 
       setNotifications((prev: PushNotificationPayload[]) => {
+        // Filter notifikasi agar user biasa tidak menerima notifikasi milik admin atau dokter lain
+        if (role === "user") {
+          const currentUserId = String(session?.id || (session as any)?.user?.id || "");
+          if (payload.role && payload.role !== "patient" && payload.role !== "all") {
+            return prev;
+          }
+          if ((payload as any).userId && currentUserId && String((payload as any).userId) !== currentUserId) {
+            return prev;
+          }
+        } else if (role === "doctor") {
+          // Dokter hanya menerima notifikasi tipe appointment yang relevan
+          if (payload.type && payload.type !== "appointment") {
+            return prev;
+          }
+          if (payload.role && payload.role !== "doctor" && payload.role !== "all") {
+            return prev;
+          }
+        }
+
         const updated = [enrichedPayload, ...prev.filter((p: PushNotificationPayload) => p.id !== payload.id)];
         try {
           localStorage.setItem("apig_recent_push_notifications", JSON.stringify(updated.slice(0, 30)));
@@ -318,6 +367,13 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       });
 
       setUnreadCount((prev: number) => {
+        if (role === "user" && payload.role && payload.role !== "patient" && payload.role !== "all") {
+          return prev;
+        }
+        if (role === "doctor") {
+          if (payload.type && payload.type !== "appointment") return prev;
+          if (payload.role && payload.role !== "doctor" && payload.role !== "all") return prev;
+        }
         const next = prev + 1;
         try {
           localStorage.setItem("apig_push_unread_count", String(next));
@@ -328,7 +384,8 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleRevalidation);
+      window.removeEventListener("focus", handleRevalidation);
       unsubscribe();
     };
   }, [role]);
@@ -409,9 +466,31 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
     if (item.onClick) {
       item.onClick();
+    } else if (
+      item.type === "reservation_new" ||
+      item.type === "reservation_confirmed" ||
+      item.type === "reservation_cancelled" ||
+      item.type === "booking" ||
+      item.type === "reservation" ||
+      item.type === "appointment"
+    ) {
+      const codeQuery = item.bookingCode ? `&code=${encodeURIComponent(item.bookingCode)}` : "";
+      if (role === "clinic") {
+        navigate(`/dashboard/clinic?tab=reservasi${codeQuery}`);
+      } else if (role === "doctor") {
+        navigate(`/dashboard/doctor?tab=reservasi${codeQuery}`);
+      } else {
+        navigate(`/dashboard/user?tab=riwayat${codeQuery}`);
+      }
     } else if (item.url) {
       const cleanUrl = item.url.replace(/^#/, "");
-      navigate(cleanUrl);
+      // Jika url reservasi belum menyertakan kode dan item memiliki bookingCode
+      if (cleanUrl.includes("tab=reservasi") && item.bookingCode && !cleanUrl.includes("code=")) {
+        const separator = cleanUrl.includes("?") ? "&" : "?";
+        navigate(`${cleanUrl}${separator}code=${encodeURIComponent(item.bookingCode)}`);
+      } else {
+        navigate(cleanUrl);
+      }
     } else if (
       item.type === "complaint" ||
       item.type === "pengaduan" ||
@@ -431,21 +510,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
           ? "/dashboard/doctor?tab=konsultasi"
           : "/dashboard/user?tab=konsultasi&view=list"
       );
-    } else if (
-      item.type === "reservation_new" ||
-      item.type === "reservation_confirmed" ||
-      item.type === "reservation_cancelled" ||
-      item.type === "booking" ||
-      item.type === "reservation" ||
-      item.type === "appointment"
-    ) {
-      if (role === "clinic") {
-        navigate("/dashboard/clinic?tab=reservasi");
-      } else if (role === "doctor") {
-        navigate("/dashboard/doctor?tab=reservasi");
-      } else {
-        navigate("/dashboard/user?tab=riwayat");
-      }
     } else if (item.type === "membership") {
       navigate(role === "clinic" ? "/dashboard/clinic/membership" : "/dashboard/user?tab=membership");
     } else if (item.type === "promo") {
@@ -467,26 +531,40 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
       : notifications;
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
-      {/* Left: Penjelasan Halaman & Status Login */}
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xs sm:text-sm font-bold text-[#2C2416] tracking-tight truncate">
-            {pageTitle}
-          </h1>
-          <span className="text-[10px] font-semibold text-[#8C6B1C] bg-[#FAF5EA] border border-[#EADBBD] px-2 py-0.5 rounded-full flex items-center gap-1">
-            <span className="text-[#8C8272] font-normal">Login sebagai:</span>
-            <span className="font-bold">{getLoginAsText()}</span>
-          </span>
+    <>
+      {/* Banner Persetujuan Notifikasi Khusus Perangkat Dokter */}
+      {role === "doctor" && notificationPermission !== "granted" && (
+        <div className="bg-[#FAF5EA] border-b border-[#EADBBD] px-4 py-2 flex items-center justify-between text-xs text-[#6B5E4F] animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+            <span>
+              <strong className="text-[#2C2416]">Pemberitahuan Praktik:</strong> Aktifkan izin notifikasi di perangkat ini agar jadwal & reservasi pasien Anda selalu masuk secara realtime.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={requestPushPermission}
+            className="px-3 py-1 rounded-lg bg-[#8C6B1C] hover:bg-[#725615] text-white text-[11px] font-bold shadow-xs transition-colors shrink-0 cursor-pointer"
+          >
+            Setujui Notifikasi
+          </button>
         </div>
-        <p className="text-[10px] text-[#8C8272] hidden sm:block truncate">
-          {pageSubtitle}
-        </p>
-      </div>
+      )}
 
+      <header className="sticky top-0 z-40 bg-white border-b border-[#E8DFC8] px-4 sm:px-6 py-2.5 flex items-center justify-end gap-3 shadow-xs">
       {/* Right: Ikon Notifikasi & Profil Dropdown (Termasuk Pengaturan Klinik) */}
       <div className="flex items-center gap-2.5">
-        {/* Notification Bell */}
+        {/* Tombol Refresh Halaman / Data (Bulat Sempurna) */}
+        <button
+          type="button"
+          onClick={handleRefreshClick}
+          className="w-9 h-9 rounded-full flex items-center justify-center text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs active:scale-95"
+          title="Muat Ulang Data Halaman"
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-[#8C6B1C]" : ""}`} />
+        </button>
+
+        {/* Notification Bell (Bulat Sempurna) */}
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
@@ -494,7 +572,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
               setIsDropdownOpen((prev) => !prev);
               setIsProfileOpen(false);
             }}
-            className="relative p-2 rounded-xl text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs"
+            className="relative w-9 h-9 rounded-full flex items-center justify-center text-[#6B5E4F] hover:text-[#8C6B1C] hover:bg-[#FAF5EA] border border-[#E8DFC8] transition-all cursor-pointer shadow-2xs"
             title="Lihat Notifikasi"
           >
             <Bell className="w-4 h-4" />
@@ -541,19 +619,8 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                 </div>
               </div>
 
-              {/* Filter Tabs: Semua vs Belum Dibaca */}
+              {/* Filter Tabs: Belum Dibaca (Kiri & Default) vs Semua (Kanan) */}
               <div className="flex items-center border-b border-gray-100 bg-white px-3 py-1.5 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setFilterTab("all")}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                    filterTab === "all"
-                      ? "bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]"
-                      : "text-gray-500 hover:bg-gray-50"
-                  }`}
-                >
-                  Semua ({notifications.length})
-                </button>
                 <button
                   type="button"
                   onClick={() => setFilterTab("unread")}
@@ -564,6 +631,17 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                   }`}
                 >
                   Belum Dibaca ({unreadCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab("all")}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                    filterTab === "all"
+                      ? "bg-[#FAF5EA] text-[#8C6B1C] border border-[#EADBBD]"
+                      : "text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  Semua ({notifications.length})
                 </button>
               </div>
 
@@ -585,6 +663,8 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                   displayedNotifications.map((item: PushNotificationPayload, idx: number) => {
                     const isRead = checkIsRead(item);
                     const formattedTime = formatNotificationTime(item.receivedAt || item.createdAt);
+                    const cleanTitle = (item.title || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "").trim();
+                    const cleanMessage = (item.message || "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "").trim();
 
                     return (
                       <div
@@ -608,7 +688,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                                 !isRead ? "font-bold text-[#2C2416]" : "font-medium text-gray-700"
                               }`}
                             >
-                              {item.title}
+                              {cleanTitle}
                             </p>
                           </div>
 
@@ -631,7 +711,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
                             !isRead ? "text-[#5C5546]" : "text-gray-500"
                           }`}
                         >
-                          {item.message}
+                          {cleanMessage}
                         </p>
 
                         <div className="flex items-center justify-between pl-3.5 pt-0.5">
@@ -660,7 +740,7 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
           )}
         </div>
 
-        {/* Profile Avatar Button & Dropdown (Area Profil / Pengaturan Klinik) */}
+        {/* Profile Avatar Button & Dropdown (Area Profil Bulat Sempurna Tanpa Border Luar) */}
         <div className="relative" ref={profileDropdownRef}>
           <button
             type="button"
@@ -668,28 +748,20 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
               setIsProfileOpen((prev) => !prev);
               setIsDropdownOpen(false);
             }}
-            className="flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-xl border border-[#E8DFC8] hover:border-[#C9A24A] bg-white hover:bg-[#FAF8F5] transition-all cursor-pointer shadow-2xs group"
+            className="flex items-center justify-center w-9 h-9 rounded-full transition-all cursor-pointer shadow-2xs group hover:opacity-90 active:scale-95"
+            title="Profil Pengguna"
           >
             {(session as any)?.avatar ? (
               <img
                 src={(session as any).avatar.includes("storage/data:image") ? (session as any).avatar.substring((session as any).avatar.indexOf("data:image")) : (session as any).avatar}
                 alt={session?.name || "User"}
-                className="w-7 h-7 rounded-lg object-cover ring-1 ring-[#C9A24A]/40 shrink-0"
+                className="w-9 h-9 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#C9A24A] to-[#A8843A] flex items-center justify-center text-white font-bold text-xs shadow-2xs shrink-0">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#C9A24A] to-[#A8843A] flex items-center justify-center text-white font-bold text-sm shadow-2xs shrink-0">
                 {(session?.name || "A").charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="hidden sm:flex flex-col text-left">
-              <span className="text-[11px] font-bold text-[#4A3F35] leading-tight group-hover:text-[#8C6B1C] transition-colors truncate max-w-[110px]">
-                {session?.name || (role === "clinic" ? "Admin Klinik" : "Pengguna")}
-              </span>
-              <span className="text-[9px] text-[#8A7B6B] leading-tight capitalize">
-                {role === "clinic" ? "Administrator" : role === "doctor" ? "Dokter" : "Pasien"}
-              </span>
-            </div>
-            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 group-hover:text-[#8C6B1C] transition-transform duration-200 ${isProfileOpen ? "rotate-180" : ""}`} />
           </button>
 
           {/* Profile Dropdown Menu */}
@@ -703,17 +775,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
               <div className="py-1">
                 {role === "clinic" ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        navigate("/dashboard/clinic?tab=settings");
-                      }}
-                      className="w-full px-4 py-2 text-xs font-semibold text-[#4A3F35] hover:text-[#8C6B1C] hover:bg-[#FAF8F5] flex items-center gap-2.5 transition-colors cursor-pointer text-left"
-                    >
-                      <Settings className="w-3.5 h-3.5 text-[#8C6B1C]" />
-                      Pengaturan Klinik (Kop & S&K)
-                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -783,5 +844,6 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
         </div>
       </div>
     </header>
+    </>
   );
 }

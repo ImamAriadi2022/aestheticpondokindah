@@ -11,6 +11,7 @@ import {
   updateAdminAbout,
   type ClinicAboutProfile,
 } from "../services/publicInfoAdminApi";
+import { PageHeader } from "@/shared/ui/PageHeader";
 
 export default function AboutManagePage() {
   const [loading, setLoading] = useState(true);
@@ -70,23 +71,20 @@ export default function AboutManagePage() {
   }
 
   return (
-    <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-brand-charcoal">Profil & Nilai Klinik (About Us)</h1>
-          <p className="text-sm text-brand-warm-gray">
-            Kelola judul hero, cerita sejarah klinik, angka statistik pencapaian, dan nilai-nilai keunggulan pelayanan.
-          </p>
-        </div>
-        <Button
-          type="submit"
-          disabled={saving}
-          className="w-full sm:w-auto bg-[#C9A24A] hover:bg-[#B8943F] text-white font-bold rounded-xl h-10 px-5 shadow-xs cursor-pointer justify-center"
-        >
-          {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          Simpan Perubahan
-        </Button>
-      </div>
+    <form onSubmit={handleSave} className="space-y-5 max-w-4xl">
+      <PageHeader
+        title="Profil & Nilai Klinik (About Us)"
+        actions={
+          <Button
+            type="submit"
+            disabled={saving}
+            className="bg-[#C9A24A] hover:bg-[#B8943F] text-white font-bold rounded-xl h-9 px-4 text-xs shadow-xs cursor-pointer justify-center"
+          >
+            {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
+            Simpan Perubahan
+          </Button>
+        }
+      />
 
       {/* Hero Section */}
       <Card className="rounded-2xl border-border">

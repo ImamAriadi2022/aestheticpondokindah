@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/shared/ui/button";
 import { 
   MessageSquare, 
-  Search, 
   Clock, 
   CheckCircle2, 
   AlertCircle, 
@@ -12,8 +11,11 @@ import {
   MessageCircle,
   Tag,
   Check,
-  X
+  X,
+  Filter
 } from "lucide-react";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 type Props = {
   complaints: any[];
@@ -60,64 +62,25 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
   return (
     <div className="space-y-4">
       {/* Search & Filter Controls Bar */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setStatusFilter("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "all"
-                ? "bg-[#C9A24A] text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Semua ({complaints.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("pending")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "pending"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Menunggu ({pendingCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("processing")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "processing"
-                ? "bg-sky-600 text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Diproses ({processingCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setStatusFilter("resolved")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              statusFilter === "resolved"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-            }`}
-          >
-            Selesai ({resolvedCount})
-          </button>
-        </div>
+      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Cari nama pasien, tiket, kategori..."
+        />
 
-        {/* Searchbar */}
-        <div className="relative w-full md:w-80 shrink-0">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari nama pasien, tiket, kategori..."
-            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <FilterDropdown
+            value={statusFilter}
+            onChange={setStatusFilter}
+            icon={Filter}
+            labelPrefix="Status"
+            options={[
+              { value: "all", label: `Semua Status (${complaints.length})` },
+              { value: "pending", label: `Menunggu (${pendingCount})` },
+              { value: "processing", label: `Diproses (${processingCount})` },
+              { value: "resolved", label: `Selesai (${resolvedCount})` },
+            ]}
           />
         </div>
       </div>
@@ -127,12 +90,12 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
         <Table>
           <TableHeader>
             <TableRow className="bg-[#FAF8F5]">
-              <TableHead className="w-32">Tiket & Tanggal</TableHead>
+              <TableHead className="hidden md:table-cell w-32">Tiket & Tanggal</TableHead>
               <TableHead className="w-48">Nama Pasien</TableHead>
-              <TableHead className="w-56">Kategori & Judul</TableHead>
-              <TableHead>Uraian Pengaduan</TableHead>
-              <TableHead className="w-44">Status & Tanggapan</TableHead>
-              <TableHead className="text-right w-28">Aksi</TableHead>
+              <TableHead className="hidden md:table-cell w-56">Kategori & Judul</TableHead>
+              <TableHead className="hidden md:table-cell">Uraian Pengaduan</TableHead>
+              <TableHead className="hidden md:table-cell w-44">Status & Tanggapan</TableHead>
+              <TableHead className="text-right w-24 md:w-28">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -163,7 +126,7 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
                 return (
                   <TableRow key={item.id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                     {/* Tiket & Tanggal */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="inline-block text-xs font-mono font-bold text-[#8C6B1C] bg-[#FAF5EA] px-2 py-0.5 rounded-md border border-[#EADBBD]">
                         #{item.id}
                       </span>
@@ -175,19 +138,20 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
 
                     {/* Nama Pasien */}
                     <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center font-bold text-xs shrink-0 border border-[#EADBBD]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#FAF5EA] text-[#8C6B1C] flex items-center justify-center font-bold text-xs shrink-0 border border-[#EADBBD]">
                           {patientName.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-[#4A3F35] truncate">{patientName}</p>
-                          <p className="text-[10px] text-[#8A7B6B] truncate">{patientContact}</p>
+                          <p className="text-[10px] text-[#8A7B6B] truncate md:hidden">{item.category || item.title || patientContact}</p>
+                          <p className="text-[10px] text-[#8A7B6B] truncate hidden md:block">{patientContact}</p>
                         </div>
                       </div>
                     </TableCell>
 
                     {/* Kategori & Judul */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <span className="inline-block text-[10px] font-bold bg-[#FAF8F5] text-[#8C6B1C] border border-[#E8DFC8] px-2 py-0.5 rounded-full mb-1">
                         {item.category || "Pelayanan Klinik"}
                       </span>
@@ -197,14 +161,14 @@ export default function ComplaintTable({ complaints, onSelect }: Props) {
                     </TableCell>
 
                     {/* Uraian Pengaduan */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <p className="text-xs text-[#5C5546] line-clamp-2 leading-relaxed italic bg-[#FAF8F5]/80 p-2 rounded-xl border border-[#F0E6D3]/60">
                         "{item.description || item.complaint || "-"}"
                       </p>
                     </TableCell>
 
                     {/* Status & Tanggapan */}
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="space-y-1.5">
                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${s.bg} ${s.text} ${s.border}`}>
                           <StatusIcon className="w-3 h-3" />

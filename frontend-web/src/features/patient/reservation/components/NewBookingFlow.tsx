@@ -297,6 +297,10 @@ export interface DoctorItem {
   university: string;
   experienceYears: number;
   photo: string;
+  weekly_schedules?: Record<string, any>;
+  weeklySchedules?: Record<string, any>;
+  primary_branch?: string;
+  primaryBranch?: string;
 }
 
 // Helper to parse backend time_range string (e.g. "09:00 - 12:00" or "10.00-14.00") into 10-minute slots
@@ -549,6 +553,29 @@ export default function NewBookingFlow({
   });
   const hasCachedBookings = bookingsHistory.length > 0;
   const [historyLoading, setHistoryLoading] = useState<boolean>(!hasCachedBookings);
+
+  // Otomatis buka riwayat & e-tiket / detail janji temu jika query code ada
+  useEffect(() => {
+    const codeParam = searchParams.get("code") || searchParams.get("bookingCode");
+    const idParam = searchParams.get("reservation_id") || searchParams.get("id");
+
+    if ((codeParam || idParam) && bookingsHistory && bookingsHistory.length > 0) {
+      const target = bookingsHistory.find((r) => {
+        const rCode = (r.code || `#RSV-${String(r.id).padStart(6, "0")}`).toLowerCase().replace(/#/g, "").trim();
+        const cleanQueryCode = (codeParam || "").toLowerCase().replace(/#/g, "").trim();
+        const codeMatches = cleanQueryCode && rCode === cleanQueryCode;
+        const idMatches = idParam && String(r.id) === String(idParam);
+        return codeMatches || idMatches;
+      });
+
+      if (target) {
+        setViewMode("history");
+        setActiveTicket(target);
+        setShowETicketModal(true);
+        scrollPageToTop();
+      }
+    }
+  }, [searchParams, bookingsHistory]);
 
   // Automatically scroll to the very top whenever stepper step or viewMode changes
   useEffect(() => {
@@ -882,6 +909,31 @@ export default function NewBookingFlow({
   // Helper to get schedules for a specific date and selected doctor from backend
   const getDoctorSchedulesForDate = (dateIso: string) => {
     if (!selectedDoctor) return [];
+
+    // 1. Cek langsung dari weekly_schedules (Jadwal Praktek profil dokter)
+    const dayNames = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
+    const d = new Date(dateIso + "T00:00:00");
+    const dayKey = dayNames[d.getDay()];
+
+    const weeklySchedules = selectedDoctor.weekly_schedules || selectedDoctor.weeklySchedules;
+    if (weeklySchedules && typeof weeklySchedules === "object") {
+      const daySchedule = weeklySchedules[dayKey];
+      if (daySchedule && daySchedule.active && daySchedule.start && daySchedule.end) {
+        return [{
+          id: `weekly-${dayKey}`,
+          doctorId: selectedDoctor.id,
+          date: dateIso,
+          timeRange: `${daySchedule.start} - ${daySchedule.end}`,
+          location: selectedDoctor.primary_branch || selectedDoctor.primaryBranch || "Aesthetic Pondok Indah",
+          totalSlots: 10,
+        }];
+      }
+      if (daySchedule && !daySchedule.active) {
+        return [];
+      }
+    }
+
+    // 2. Fallback jika ada data doctorSchedules individual
     return doctorSchedules.filter((s) => {
       const matchDoc =
         String(s.doctorId) === String(selectedDoctor.id) ||

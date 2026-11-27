@@ -5,6 +5,7 @@ import { Input } from "@/shared/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { apiClient } from "@/core/api/apiClient";
 import { toast } from "@/shared/ui/toast";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 import {
   CheckCircle2,
   Check,
@@ -322,6 +323,8 @@ export default function AdminMembershipPage() {
 
     return () => clearInterval(interval);
   }, [loadData, hasCachedData]);
+
+  usePageRefresh(() => loadData(false));
 
   const loadRules = async () => {
     setLoadingRules(true);
@@ -685,15 +688,6 @@ export default function AdminMembershipPage() {
               Sistem perolehan poin otomatis berbasis aturan, verifikasi permohonan upgrade manual via WhatsApp, dan ledger audit mutasi poin.
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void loadData(false)}
-            disabled={loading}
-            className="rounded-xl border-[#E8DFC8] text-[#8C6B1C] hover:bg-[#FAF8F5] font-semibold h-9 px-4 text-xs cursor-pointer shrink-0"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Muat Ulang
-          </Button>
         </div>
 
         {/* 3 Main Navigation Tabs */}

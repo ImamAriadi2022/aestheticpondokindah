@@ -22,13 +22,39 @@ class ReservationSyncEngine {
   private currentUserId: string = "";
   private channel: BroadcastChannel | null = null;
   private pollIntervalId: any = null;
+  private isWindowListenersAttached = false;
   public isHydrated = false;
 
   constructor() {
-    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-      this.channel = new BroadcastChannel("apig_realtime_reservations_channel");
-      this.channel.onmessage = (event) => this.handleBroadcastMessage(event.data);
+    if (typeof window !== "undefined") {
+      if ("BroadcastChannel" in window) {
+        this.channel = new BroadcastChannel("apig_realtime_reservations_channel");
+        this.channel.onmessage = (event) => this.handleBroadcastMessage(event.data);
+      }
+      this.attachWindowListeners();
     }
+  }
+
+  private attachWindowListeners() {
+    if (this.isWindowListenersAttached || typeof window === "undefined") return;
+    this.isWindowListenersAttached = true;
+
+    // 1. Auto-sync saat pengguna kembali membuka browser/tab ini (Window Focus)
+    window.addEventListener("focus", () => {
+      this.pollChanges();
+    });
+
+    // 2. Auto-sync saat tab menjadi terlihat (Visibility Change)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        this.pollChanges();
+      }
+    });
+
+    // 3. Auto-sync saat koneksi internet kembali online
+    window.addEventListener("online", () => {
+      this.pollChanges();
+    });
   }
 
   /**
@@ -67,8 +93,24 @@ class ReservationSyncEngine {
     this.isHydrated = true;
     this.notifyListeners();
 
-    // 3. Event-Driven Sync (Zero Infinite Polling Loops)
-    if (this.pollIntervalId) { clearInterval(this.pollIntervalId); this.pollIntervalId = null; }
+    // 3. Smart Background Polling (Interval 15s jika tab aktif)
+    this.startBackgroundPolling();
+  }
+
+  public startBackgroundPolling() {
+    if (this.pollIntervalId) return;
+    this.pollIntervalId = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        this.pollChanges();
+      }
+    }, 15000);
+  }
+
+  public stopBackgroundPolling() {
+    if (this.pollIntervalId) {
+      clearInterval(this.pollIntervalId);
+      this.pollIntervalId = null;
+    }
   }
 
   /**
@@ -218,9 +260,25 @@ class ReservationSyncEngine {
 
     if (
       (data.type === "doctor_assigned" || data.type === "reservation_confirmed") &&
-      currentRole === "doctor" &&
-      (!data.doctorId || String(data.doctorId) === currentUserId)
+      currentRole === "doctor"
     ) {
+      // Validasi ketat kepemilikan notifikasi dokter
+      const sessionUser = getSession();
+      const currentDoctorId = String(sessionUser?.id || (sessionUser as any)?.user?.id || currentUserId || "");
+      const currentDoctorName = (sessionUser?.name || "").toLowerCase().trim();
+
+      const targetDocId = data.doctorId ? String(data.doctorId) : "";
+      const targetDocName = (data.doctorName || "").toLowerCase().trim();
+
+      const isMatchingDoctor =
+        (targetDocId && targetDocId === currentDoctorId) ||
+        (targetDocName && currentDoctorName && (targetDocName.includes(currentDoctorName) || currentDoctorName.includes(targetDocName)));
+
+      // Jangan kirim notifikasi jika bukan untuk dokter ini
+      if (!isMatchingDoctor && targetDocId) {
+        return;
+      }
+
       triggerPushNotification({
         title: "🩺 Pasien Baru Dikonfirmasi!",
         message: `Pasien: ${data.patientName} telah disetujui Admin untuk jadwal ${data.dateStr} (${data.timeStr || "Sesuai Jadwal"})`,
@@ -229,6 +287,30 @@ class ReservationSyncEngine {
         type: "doctor_assigned",
         bookingCode: data.bookingCode || "#RSV-000001",
         url: "/#/dashboard/doctor?tab=reservasi",
+      });
+    }
+
+    if (
+      data.type === "reservation_confirmed" &&
+      (currentRole === "patient" || currentRole === "user")
+    ) {
+      const sessionUser = getSession();
+      const currentPatientId = String(sessionUser?.id || (sessionUser as any)?.user?.id || currentUserId || "");
+      const targetUserId = data.userId ? String(data.userId) : "";
+
+      // Hanya izinkan jika event ditujukan spesifik untuk user ini
+      if (targetUserId && currentPatientId && targetUserId !== currentPatientId) {
+        return;
+      }
+
+      triggerPushNotification({
+        title: "🎉 Janji Temu Dikonfirmasi!",
+        message: `Reservasi ${data.bookingCode} bersama ${data.doctorName || "Dokter"} telah disetujui Admin.`,
+        sender: "Aesthetic Pondok Indah",
+        role: "patient",
+        type: "reservation_confirmed",
+        bookingCode: data.bookingCode || "#RSV-000001",
+        url: "/#/dashboard/user?tab=reservasi",
       });
     }
   }
@@ -251,7 +333,23 @@ class ReservationSyncEngine {
 
   private dispatchUpdatedNotifications(items: CachedReservation[]) {
     if (this.currentRole === "doctor") {
-      const confirmed = items.filter((i) => (i.status || "").toLowerCase() === "dikonfirmasi");
+      const sessionUser = getSession();
+      const currentDoctorId = String(sessionUser?.id || (sessionUser as any)?.user?.id || this.currentUserId || "");
+      const currentDoctorName = (sessionUser?.name || "").toLowerCase().trim();
+
+      const confirmed = items.filter((i) => {
+        const isConfirmed = (i.status || "").toLowerCase() === "dikonfirmasi";
+        if (!isConfirmed) return false;
+
+        const docId = String(i.doctor_id || i.doctorId || "");
+        const docName = (i.doctor || i.doctor_name || i.doctorName || "").toLowerCase().trim();
+
+        if (docId && currentDoctorId && docId === currentDoctorId) return true;
+        if (docName && currentDoctorName && (docName.includes(currentDoctorName) || currentDoctorName.includes(docName))) return true;
+
+        return !docId && !docName; // fallback hanya jika tidak ada data dokter sama sekali
+      });
+
       confirmed.forEach((item) => {
         triggerPushNotification({
           title: "🩺 Pasien Baru Dikonfirmasi!",
@@ -266,7 +364,21 @@ class ReservationSyncEngine {
     }
 
     if (this.currentRole === "patient" || this.currentRole === "user") {
-      const confirmed = items.filter((i) => (i.status || "").toLowerCase() === "dikonfirmasi");
+      const sessionUser = getSession();
+      const currentUserId = String(sessionUser?.id || (sessionUser as any)?.user?.id || this.currentUserId || "");
+
+      const confirmed = items.filter((i) => {
+        const isConfirmed = (i.status || "").toLowerCase() === "dikonfirmasi";
+        if (!isConfirmed) return false;
+
+        // Pastikan hanya notifikasi untuk user/pasien yang sedang login
+        const itemUserId = String(i.user_id || i.userId || i.patient_id || "");
+        if (itemUserId && currentUserId) {
+          return itemUserId === currentUserId;
+        }
+        return true;
+      });
+
       confirmed.forEach((item) => {
         triggerPushNotification({
           title: "🎉 Janji Temu Dikonfirmasi!",
@@ -308,6 +420,9 @@ export function useRealtimeReservations() {
   const [isHydrated, setIsHydrated] = useState<boolean>(syncEngine.isHydrated);
 
   useEffect(() => {
+    // Inisialisasi engine jika belum jalan
+    syncEngine.init();
+
     const unsubscribe = syncEngine.subscribe((updatedItems) => {
       setItems(updatedItems);
       setIsHydrated(syncEngine.isHydrated);

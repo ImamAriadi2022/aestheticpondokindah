@@ -1,5 +1,6 @@
 import { useState } from "react";
 import MessageTable from "../components/MessageTable";
+import { PageHeader } from "@/shared/ui/PageHeader";
 
 type Props = {
   messages: any[];
@@ -15,11 +16,8 @@ export default function MessagesPage({ messages, onSelectMessage }: Props) {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-[#4A3F35]">Pesan Masuk (Contact Form)</h2>
-        <p className="text-sm text-[#8A7B6B] mt-1">Daftar pertanyaan dan pesan kontak dari pengunjung web klinik.</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title="Pesan Masuk (Contact Form)" />
 
       <MessageTable messages={messages} onSelect={handleSelect} />
     </div>

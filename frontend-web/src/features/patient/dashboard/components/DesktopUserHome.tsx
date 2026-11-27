@@ -180,12 +180,10 @@ export default function DesktopUserHome({
         <button
           type="button"
           onClick={() => navigate("/dashboard/user?tab=riwayat")}
-          className="bg-white rounded-2xl p-3.5 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
+          className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
         >
-          <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] group-hover:bg-[#F3EAD5] transition-colors mb-2">
-            <Clock className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-[#2C2416] text-center leading-tight">
+          <Clock className="w-6 h-6 text-[#C9A24A] group-hover:scale-110 transition-transform duration-200 mb-2" />
+          <span className="text-xs font-semibold text-[#2C2416] text-center leading-tight">
             Riwayat<br />Reservasi
           </span>
         </button>
@@ -194,12 +192,10 @@ export default function DesktopUserHome({
         <button
           type="button"
           onClick={() => navigate("/dashboard/user?tab=promo")}
-          className="bg-white rounded-2xl p-3.5 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
+          className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
         >
-          <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] group-hover:bg-[#F3EAD5] transition-colors mb-2">
-            <Tag className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-[#2C2416] text-center leading-tight">
+          <Tag className="w-6 h-6 text-[#C9A24A] group-hover:scale-110 transition-transform duration-200 mb-2" />
+          <span className="text-xs font-semibold text-[#2C2416] text-center leading-tight">
             Penawaran<br />Spesial
           </span>
         </button>
@@ -208,12 +204,10 @@ export default function DesktopUserHome({
         <button
           type="button"
           onClick={() => navigate("/dashboard/user?tab=konsultasi")}
-          className="bg-white rounded-2xl p-3.5 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
+          className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center justify-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer group"
         >
-          <div className="w-11 h-11 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] group-hover:bg-[#F3EAD5] transition-colors mb-2">
-            <MessageSquare className="w-5 h-5" />
-          </div>
-          <span className="text-xs font-bold text-[#2C2416] text-center leading-tight">
+          <MessageSquare className="w-6 h-6 text-[#C9A24A] group-hover:scale-110 transition-transform duration-200 mb-2" />
+          <span className="text-xs font-semibold text-[#2C2416] text-center leading-tight">
             Konsultasi<br />Cepat
           </span>
         </button>
@@ -238,16 +232,14 @@ export default function DesktopUserHome({
           <button
             type="button"
             onClick={() => navigate("/dashboard/user?tab=booking")}
-            className="bg-white rounded-2xl p-3 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
+            className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] mb-2 group-hover:bg-[#F3EAD5] transition-colors">
-              <svg className="w-7 h-7 text-[#C9A24A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2C8 2 6 5 6 9c0 4 2 8 3 11 1 2 2 2 3 0 1 2 2 2 3 0 1-3 3-7 3-11 0-4-2-7-6-7z" fill="#FDF8F0" />
-                <path d="M4 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="#C9A24A" stroke="none" />
-                <path d="M19 12l.7 1.4 1.4.7-1.4.7-.7 1.4-.7-1.4-1.4-.7 1.4-.7.7-1.4z" fill="#C9A24A" stroke="none" />
-              </svg>
-            </div>
-            <span className="text-[11px] font-bold text-[#2C2416] text-center line-clamp-2 leading-tight">
+            <svg className="w-7 h-7 text-[#C9A24A] group-hover:scale-110 transition-transform duration-200 mb-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2C8 2 6 5 6 9c0 4 2 8 3 11 1 2 2 2 3 0 1 2 2 2 3 0 1-3 3-7 3-11 0-4-2-7-6-7z" />
+              <path d="M4 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="#C9A24A" stroke="none" />
+              <path d="M19 12l.7 1.4 1.4.7-1.4.7-.7 1.4-.7-1.4-1.4-.7 1.4-.7.7-1.4z" fill="#C9A24A" stroke="none" />
+            </svg>
+            <span className="text-xs font-semibold text-[#2C2416] text-center line-clamp-2 leading-tight">
               Dental Whitening
             </span>
           </button>
@@ -256,18 +248,16 @@ export default function DesktopUserHome({
           <button
             type="button"
             onClick={() => navigate("/dashboard/user?tab=booking")}
-            className="bg-white rounded-2xl p-3 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
+            className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] mb-2 group-hover:bg-[#F3EAD5] transition-colors">
-              <svg className="w-7 h-7 text-[#C9A24A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M7 6c0-2.2 2.2-4 5-4s5 1.8 5 4c0 3-1.5 5-3 6H10C8.5 11 7 9 7 6z" fill="#FDF8F0" />
-                <line x1="9.5" y1="13" x2="14.5" y2="13" />
-                <line x1="10" y1="16" x2="14" y2="16" />
-                <line x1="10.5" y1="19" x2="13.5" y2="19" />
-                <line x1="12" y1="12" x2="12" y2="22" />
-              </svg>
-            </div>
-            <span className="text-[11px] font-bold text-[#2C2416] text-center line-clamp-2 leading-tight">
+            <svg className="w-7 h-7 text-[#C9A24A] group-hover:scale-110 transition-transform duration-200 mb-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 6c0-2.2 2.2-4 5-4s5 1.8 5 4c0 3-1.5 5-3 6H10C8.5 11 7 9 7 6z" />
+              <line x1="9.5" y1="13" x2="14.5" y2="13" />
+              <line x1="10" y1="16" x2="14" y2="16" />
+              <line x1="10.5" y1="19" x2="13.5" y2="19" />
+              <line x1="12" y1="12" x2="12" y2="22" />
+            </svg>
+            <span className="text-xs font-semibold text-[#2C2416] text-center line-clamp-2 leading-tight">
               Dental Implants
             </span>
           </button>
@@ -276,16 +266,14 @@ export default function DesktopUserHome({
           <button
             type="button"
             onClick={() => navigate("/dashboard/user?tab=booking")}
-            className="bg-white rounded-2xl p-3 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
+            className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs flex flex-col items-center hover:border-[#C9A24A]/40 hover:shadow-md transition-all active:scale-[0.97] cursor-pointer text-center w-full group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#FAF5EA] border border-[#F0E6D3] flex items-center justify-center text-[#C9A24A] mb-2 group-hover:bg-[#F3EAD5] transition-colors">
-              <svg className="w-7 h-7 text-[#C9A24A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3C8 3 6 6 6 10c0 4 2 7 3 10 1 1.5 2 1.5 3 0 1 1.5 2 1.5 3 0 1-3 3-6 3-10 0-4-2-7-6-7z" fill="#FDF8F0" />
-                <rect x="9.5" y="8.5" width="5" height="5" rx="1.5" fill="#FAF5EA" stroke="#C9A24A" strokeWidth="1.5" />
-                <line x1="4" y1="11" x2="20" y2="11" stroke="#C9A24A" strokeWidth="1.5" />
-              </svg>
-            </div>
-            <span className="text-[11px] font-bold text-[#2C2416] text-center line-clamp-2 leading-tight">
+            <svg className="w-7 h-7 text-[#C9A24A] group-hover:scale-110 transition-transform duration-200 mb-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3C8 3 6 6 6 10c0 4 2 7 3 10 1 1.5 2 1.5 3 0 1 1.5 2 1.5 3 0 1-3 3-6 3-10 0-4-2-7-6-7z" />
+              <rect x="9.5" y="8.5" width="5" height="5" rx="1.5" stroke="#C9A24A" strokeWidth="1.5" />
+              <line x1="4" y1="11" x2="20" y2="11" stroke="#C9A24A" strokeWidth="1.5" />
+            </svg>
+            <span className="text-xs font-semibold text-[#2C2416] text-center line-clamp-2 leading-tight">
               Orthodontic Braces
             </span>
           </button>

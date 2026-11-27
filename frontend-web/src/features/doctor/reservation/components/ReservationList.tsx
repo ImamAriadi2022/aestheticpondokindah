@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router";
 import {
   Loader2,
   Stethoscope,
-  Search,
-  RefreshCw,
   Phone,
   Calendar,
   Clock,
@@ -13,6 +12,7 @@ import {
   X,
   ArrowLeft,
   FileText,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
@@ -20,6 +20,10 @@ import { apiClient } from "@/core/api/apiClient";
 import { getDoctorQueue } from "@/features/doctor/dashboard/services/doctorDashboardService";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 const STORAGE_KEY = "apig_doctor_cached_patients";
 
@@ -34,11 +38,33 @@ export default function DoctorReservationList() {
     }
   });
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(reservations.length === 0);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const isFetchingRef = useRef(false);
+
+  // Otomatis buka detail reservasi jika ada parameter query code / id (dari notifikasi)
+  useEffect(() => {
+    const codeParam = searchParams.get("code") || searchParams.get("bookingCode");
+    const idParam = searchParams.get("reservation_id") || searchParams.get("id");
+
+    if ((codeParam || idParam) && reservations && reservations.length > 0) {
+      const target = reservations.find((r) => {
+        const rCode = (r.code || `RSV-${String(r.id).padStart(6, "0")}`).toLowerCase().replace(/#/g, "").trim();
+        const cleanQueryCode = (codeParam || "").toLowerCase().replace(/#/g, "").trim();
+        const codeMatches = cleanQueryCode && rCode === cleanQueryCode;
+        const idMatches = idParam && String(r.id) === String(idParam);
+        return codeMatches || idMatches;
+      });
+
+      if (target) {
+        setSelectedPatient(target);
+        scrollPageToTop();
+      }
+    }
+  }, [searchParams, reservations]);
 
   const fetchPatients = useCallback(async (silent = false) => {
     if (isFetchingRef.current) return;
@@ -73,6 +99,8 @@ export default function DoctorReservationList() {
 
     return () => clearInterval(timer);
   }, [fetchPatients, reservations.length]);
+
+  usePageRefresh(() => fetchPatients(false));
 
   useEffect(() => {
     if (selectedPatient) {
@@ -155,50 +183,33 @@ export default function DoctorReservationList() {
         <div className="space-y-6 text-left animate-in fade-in duration-150">
           {/* Top Bar Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 bg-white rounded-3xl border border-[#EADBBD] shadow-xs">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedPatient(null);
-                  scrollPageToTop();
-                }}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAF5EA] hover:bg-[#F3EAD5] text-[#8C6B1C] hover:text-[#735614] text-xs font-bold border border-[#EADBBD] shadow-2xs transition-all cursor-pointer shrink-0"
-                title="Kembali ke Daftar Pasien"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Kembali</span>
-              </button>
-
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#C9A24A] to-[#B8943F] flex items-center justify-center text-white shadow-md shadow-[#C9A24A]/20 shrink-0">
-                <User className="w-5 h-5" />
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-[#4A3F35]">
+                  Detail Data Pasien
+                </h2>
+                <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#8C6B1C]/10 text-[#8C6B1C] border border-[#8C6B1C]/20">
+                  #{selectedPatient.code || `RSV-${selectedPatient.id}`}
+                </span>
               </div>
-
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-bold text-[#4A3F35]">
-                    Detail Data Pasien
-                  </h2>
-                  <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#8C6B1C]/10 text-[#8C6B1C] border border-[#8C6B1C]/20">
-                    #{selectedPatient.code || `RSV-${selectedPatient.id}`}
-                  </span>
-                </div>
-                <p className="text-xs text-[#8A7B6B] mt-0.5">
-                  Informasi reservasi klinik Aesthetic Pondok Indah
-                </p>
-              </div>
+              <p className="text-xs text-[#8A7B6B] mt-0.5">
+                Informasi reservasi klinik Aesthetic Pondok Indah
+              </p>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <Button
                 type="button"
                 variant="outline"
+                size="icon"
                 onClick={() => {
                   setSelectedPatient(null);
                   scrollPageToTop();
                 }}
-                className="rounded-xl text-xs font-bold px-4 py-2 h-9 border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
+                title="Kembali ke Daftar"
+                className="rounded-xl h-9 w-9 border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] cursor-pointer"
               >
-                ← Kembali ke Daftar
+                <ArrowLeft className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -274,12 +285,12 @@ export default function DoctorReservationList() {
                     <span className="text-[#8A7B6B] block text-[11px]">Jam Praktik</span>
                     <div className="flex items-center gap-1.5 font-bold text-[#8C6B1C] mt-0.5">
                       <Clock className="w-4 h-4 text-[#C9A24A]" />
-                      <span>{selectedPatient.preferred_time || "Sesuai Jadwal"} WIB</span>
+                      <span>{String(selectedPatient.preferred_time || "Sesuai Jadwal").replace(/\s*WIB\s*$/i, "")} WIB</span>
                     </div>
                   </div>
                   <div>
                     <span className="text-[#8A7B6B] block text-[11px]">Perawatan yang Dipilih</span>
-                    <span className="font-bold text-[#4A3F35] block bg-[#FAF5EA] p-2 rounded-xl border border-[#EADBBD] text-xs mt-0.5">
+                    <span className="font-semibold text-[#4A3F35] block text-xs mt-0.5">
                       {selectedPatient.treatment_interest || "Pemeriksaan Dokter Gigi"}
                     </span>
                   </div>
@@ -322,109 +333,44 @@ export default function DoctorReservationList() {
             <Button
               type="button"
               variant="outline"
+              size="icon"
               onClick={() => {
                 setSelectedPatient(null);
                 scrollPageToTop();
               }}
-              className="rounded-xl border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] text-xs font-bold px-5 py-2.5 h-auto cursor-pointer"
+              title="Kembali ke Daftar Pasien"
+              className="rounded-xl border-[#EADBBD] text-[#4A3F35] hover:bg-[#FAF8F5] h-9 w-9 cursor-pointer"
             >
-              ← Kembali ke Daftar Pasien
+              <ArrowLeft className="w-4 h-4" />
             </Button>
           </div>
         </div>
       ) : (
         /* Patient List Table View */
-        <div className="space-y-6 text-left animate-in fade-in duration-150">
-          {/* Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-5 sm:p-6 rounded-2xl border border-[#F0E6D3] shadow-xs">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#FAF5EA] border border-[#EADBBD] text-[#8C6B1C] text-xs font-semibold mb-1.5">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Aesthetic Pondok Indah</span>
-              </div>
-              <h2 className="text-xl font-bold text-[#4A3F35] flex items-center gap-2">
-                <Stethoscope className="w-5 h-5 text-[#C9A24A]" />
-                Daftar Pasien
-              </h2>
-              <p className="text-xs text-[#8A7B6B] mt-0.5">
-                Daftar seluruh pasien yang memilih jadwal periksa Anda di klinik
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fetchPatients(false)}
-                disabled={loading}
-                className="rounded-xl border-[#EADBBD] text-[#8C6B1C] hover:bg-[#FAF5EA] font-semibold h-10 px-4 text-xs cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-                Refresh Data
-              </Button>
-            </div>
-          </div>
-
-          {/* Filter & Search Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
-            {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              <button
-                type="button"
-                onClick={() => setStatusFilter("all")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  statusFilter === "all"
-                    ? "bg-[#8C6B1C] text-white shadow-xs"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Semua ({counts.all})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter("in_progress")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  statusFilter === "in_progress"
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "bg-blue-50 text-blue-800 hover:bg-blue-100"
-                }`}
-              >
-                Dikonfirmasi Admin ({counts.in_progress})
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatusFilter("completed")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                  statusFilter === "completed"
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
-                }`}
-              >
-                Selesai ({counts.completed})
-              </button>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Cari pasien / tindakan..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50/80 border border-[#EADBBD] rounded-xl text-xs text-[#4A3F35] placeholder:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A]/20 focus:border-[#C9A24A] transition-all"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
+        <div className="space-y-5 text-left animate-in fade-in duration-150">
+          <PageHeader
+            title="Daftar Pasien"
+            actions={
+              <>
+                <SearchInput
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="Cari pasien / tindakan..."
+                />
+                <FilterDropdown
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  icon={Filter}
+                  labelPrefix="Status"
+                  options={[
+                    { value: "all", label: `Semua Status (${counts.all})` },
+                    { value: "in_progress", label: `Dikonfirmasi (${counts.in_progress})` },
+                    { value: "completed", label: `Selesai (${counts.completed})` },
+                  ]}
+                />
+              </>
+            }
+          />
 
           {/* Patient Table List */}
           <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-xs overflow-hidden">
@@ -450,11 +396,11 @@ export default function DoctorReservationList() {
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="border-b border-[#F0E6D3] bg-[#FAF8F5] text-[#8C6B1C] uppercase font-bold text-[10px] tracking-wider">
-                    <th className="py-3 px-4">No. Antrean & Pasien</th>
-                    <th className="py-3 px-4">Jadwal Periksa</th>
-                    <th className="py-3 px-4">Layanan & Keluhan</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Aksi</th>
+                    <th className="py-2.5 md:py-3 px-3 md:px-4">No. Antrean & Pasien</th>
+                    <th className="hidden md:table-cell py-3 px-4">Jadwal Periksa</th>
+                    <th className="hidden md:table-cell py-3 px-4">Layanan & Keluhan</th>
+                    <th className="hidden md:table-cell py-3 px-4">Status</th>
+                    <th className="py-2.5 md:py-3 px-3 md:px-4 text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F5ECE0]">
@@ -465,16 +411,19 @@ export default function DoctorReservationList() {
 
                     return (
                       <tr key={r.id || idx} className="hover:bg-[#FAF8F5]/80 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center font-bold text-[#8C6B1C] text-xs shrink-0">
+                        <td className="py-2.5 md:py-3.5 px-3 md:px-4">
+                          <div className="flex items-center gap-2 md:gap-3">
+                            <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-[#FAF5EA] border border-[#EADBBD] flex items-center justify-center font-bold text-[#8C6B1C] text-xs shrink-0">
                               {idx + 1}
                             </div>
                             <div>
-                              <div className="font-bold text-[#4A3F35] text-sm">
+                              <div className="font-bold text-[#4A3F35] text-xs md:text-sm">
                                 {r.patient_name || r.name || "Pasien Tanpa Nama"}
                               </div>
-                              <div className="flex items-center gap-2 text-[11px] text-[#8A7B6B] mt-0.5">
+                              <div className="text-[10px] text-[#8A7B6B] md:hidden truncate max-w-[150px]">
+                                {r.treatment_interest || "Pemeriksaan Gigi"} • {r.date || "-"}
+                              </div>
+                              <div className="hidden md:flex items-center gap-2 text-[11px] text-[#8A7B6B] mt-0.5">
                                 {r.phone && (
                                   <span className="flex items-center gap-1">
                                     <Phone className="w-3 h-3 text-[#C9A24A]" />
@@ -486,7 +435,7 @@ export default function DoctorReservationList() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell py-3.5 px-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 font-bold text-[#4A3F35]">
                             <Calendar className="w-3.5 h-3.5 text-[#C9A24A]" />
                             <span>{r.date || "-"}</span>
@@ -496,7 +445,7 @@ export default function DoctorReservationList() {
                             <span>{r.preferred_time || "Sesuai Jadwal"} WIB</span>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 max-w-xs">
+                        <td className="hidden md:table-cell py-3.5 px-4 max-w-xs">
                           <span className="font-bold text-gray-800">
                             {r.treatment_interest || "Pemeriksaan Umum"}
                           </span>
@@ -506,7 +455,7 @@ export default function DoctorReservationList() {
                             </div>
                           )}
                         </td>
-                        <td className="py-3.5 px-4">
+                        <td className="hidden md:table-cell py-3.5 px-4">
                           <span
                             className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${
                               isCompleted
@@ -519,7 +468,7 @@ export default function DoctorReservationList() {
                             {r.status || "Menunggu"}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-2.5 md:py-3.5 px-3 md:px-4 text-right">
                           <Button
                             type="button"
                             variant="outline"
@@ -528,10 +477,10 @@ export default function DoctorReservationList() {
                               setSelectedPatient(r);
                               scrollPageToTop();
                             }}
-                            className="rounded-xl border-[#C9A24A] text-[#8C6B1C] hover:bg-[#FAF5EA] hover:text-[#735515] font-bold text-xs h-8 px-3.5 shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+                            className="rounded-xl border-[#C9A24A] text-[#8C6B1C] hover:bg-[#FAF5EA] hover:text-[#735515] font-bold text-xs h-8 px-2.5 md:px-3.5 shadow-xs cursor-pointer inline-flex items-center gap-1.5"
                           >
                             <Eye className="w-3.5 h-3.5 text-[#C9A24A]" />
-                            Preview Pasien
+                            <span className="hidden md:inline">Preview Pasien</span>
                           </Button>
                         </td>
                       </tr>

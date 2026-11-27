@@ -4,10 +4,28 @@ namespace App\Models\Guest\Service;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class ClinicService extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::saved(function ($service) {
+            Cache::forget('public_clinic_services_all');
+            if ($service->slug) {
+                Cache::forget('public_clinic_service_' . md5($service->slug));
+            }
+        });
+
+        static::deleted(function ($service) {
+            Cache::forget('public_clinic_services_all');
+            if ($service->slug) {
+                Cache::forget('public_clinic_service_' . md5($service->slug));
+            }
+        });
+    }
 
     protected $fillable = [
         'title',

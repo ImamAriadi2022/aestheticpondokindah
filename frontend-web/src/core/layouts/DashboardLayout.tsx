@@ -8,7 +8,7 @@ import DashboardRightPanel from "@/core/layouts/DashboardRightPanel";
 import DashboardTopBar from "@/core/layouts/DashboardTopBar";
 import DoctorSidebar from "@/features/doctor/DoctorSidebar";
 import { getMenuItems, type MenuItem } from "@/core/permissions/index";
-import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut, FileText } from "lucide-react";
+import { ChevronDown, ChevronRight, User, Pencil, Settings, Download, Upload, LogOut, FileText, Globe } from "lucide-react";
 import { scrollPageToTop } from "@/core/router/ScrollToTop";
 import { PageTransition } from "@/core/router/RouteTransition";
 import { useSubmenuBadges } from "@/core/services/menuBadgeService";
@@ -67,7 +67,7 @@ export default function DashboardLayout({
   const getItemBadgeCount = (item: MenuItem): number => {
     const l = item.label.toLowerCase();
     if (l.includes("sistem booking") || l.includes("booking")) {
-      return submenuBadges.booking + submenuBadges.konsultasi + submenuBadges.pengaduan;
+      return submenuBadges.booking;
     }
     if (l.includes("konsultasi")) return submenuBadges.konsultasi;
     if (l.includes("pengaduan")) return submenuBadges.pengaduan;
@@ -217,14 +217,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 flex items-start">
-      {/* Left Sidebar */}
+    <div className="min-h-screen bg-white flex">
+      {/* Left Sidebar Container */}
       {role === "user" ? (
         <AccountSidebar userName={session?.name || "User"} onLogout={handleLogout} />
-      ) : role === "doctor" ? (
-        <DoctorSidebar onLogout={handleLogout} />
-      ) : (
-        <div className="sticky top-4 left-0 h-[calc(100vh-32px)] self-start z-[100] pointer-events-auto ml-2 mr-2 flex-shrink-0">
+      ) : role === "doctor" ? null : (
+        <div className="fixed top-4 left-2 h-[calc(100vh-32px)] z-[100] pointer-events-auto flex-shrink-0">
           {/* Floating Glassmorphism Sidebar - Elegant Gold Theme */}
           <aside
             ref={sidebarRef}
@@ -648,21 +646,8 @@ export default function DashboardLayout({
 
                     {/* Dropdown Menu Items */}
                     <div className="pt-2 space-y-1">
-                      {role === "clinic" && (
-      <Link
-        to="/dashboard/clinic?tab=settings"
-        onClick={() => {
-          setUserPopupOpen(false);
-          handleMenuClick();
-        }}
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-[#E8C547] bg-[#C9A24A]/20 hover:bg-[#C9A24A]/30 transition-all mb-1 border border-[#C9A24A]/30"
-      >
-        <FileText className="w-4 h-4 text-[#C9A24A]" />
-        Pengaturan Klinik
-      </Link>
-    )}
-    <Link
-      to="/profile"
+                      <Link
+                        to="/profile"
                         onClick={() => {
                           setUserPopupOpen(false);
                           handleMenuClick();
@@ -701,16 +686,17 @@ export default function DashboardLayout({
                         {role === "clinic" ? "Upload Aplikasi" : "Download Aplikasi"}
                       </Link>
 
-                      <button
+                      <Link
+                        to="/"
                         onClick={() => {
                           setUserPopupOpen(false);
-                          handleLogout();
+                          handleMenuClick();
                         }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all text-left mt-1 border-t border-[#C9A24A]/10 pt-2"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#D4C5B0] hover:text-[#E8C547] hover:bg-[#2a2319] transition-all text-left mt-1 border-t border-[#C9A24A]/10 pt-2"
                       >
-                        <LogOut className="w-4 h-4 text-rose-400" />
-                        Keluar Sesi
-                      </button>
+                        <Globe className="w-4 h-4 text-[#C9A24A]" />
+                        Web Publik
+                      </Link>
                     </div>
                   </div>
                 )}
@@ -721,7 +707,7 @@ export default function DashboardLayout({
       )}
 
       {/* Main Content */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className={`flex-1 min-w-0 flex flex-col transition-all duration-300 ${role === "clinic" ? (sidebarExpanded ? "pl-[276px]" : "pl-[88px]") : ""}`}>
         {/* Top Navbar Header Bar */}
         <DashboardTopBar role={role} navbarLabel={navbarLabel} />
 

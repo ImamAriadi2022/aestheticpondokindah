@@ -63,21 +63,24 @@ export default function DoctorScheduleTable({
             )}
           </div>
         ) : (
-          <table className="w-full">
+          <table className="w-full text-xs md:text-sm">
             <thead>
               <tr className="border-b border-[#F0E6D3] bg-[#FAF8F5]">
-                <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Tanggal</th>
-                <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Jam Praktik</th>
-                <th className="text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Slot Terisi</th>
-                <th className="text-right py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Aksi</th>
+                <th className="text-left py-3 md:py-4 px-3 md:px-5 text-[11px] md:text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Tanggal</th>
+                <th className="hidden md:table-cell text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Jam Praktik</th>
+                <th className="hidden md:table-cell text-left py-4 px-5 text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Slot Terisi</th>
+                <th className="text-right py-3 md:py-4 px-3 md:px-5 text-[11px] md:text-xs font-semibold text-[#8A7B6B] uppercase tracking-wider">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {schedules.map((s) => (
                 <tr key={s.id} className="border-b border-[#F5F0E8] hover:bg-[#FDF8F0]/50 transition-colors">
-                  <td className="py-4 px-5 font-semibold text-[#4A3F35]">{s.displayDate || s.date}</td>
-                  <td className="py-4 px-5 text-[#4A3F35] font-medium">{s.timeRange}</td>
-                  <td className="py-4 px-5">
+                  <td className="py-2.5 md:py-4 px-3 md:px-5">
+                    <p className="font-semibold text-[#4A3F35] text-xs md:text-sm">{s.displayDate || s.date}</p>
+                    <p className="text-[10px] text-[#8A7B6B] md:hidden">{s.timeRange}</p>
+                  </td>
+                  <td className="hidden md:table-cell py-4 px-5 text-[#4A3F35] font-medium">{s.timeRange}</td>
+                  <td className="hidden md:table-cell py-4 px-5">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                         s.isFull
@@ -88,7 +91,7 @@ export default function DoctorScheduleTable({
                       {s.bookedSlots}/{s.totalSlots} Terisi
                     </span>
                   </td>
-                  <td className="py-4 px-5 text-right">
+                  <td className="py-2.5 md:py-4 px-3 md:px-5 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         variant="ghost"

@@ -13,9 +13,9 @@ export default function MessageTable({ messages, onSelect }: Props) {
         <TableHeader>
           <TableRow className="bg-[#FAF8F5]">
             <TableHead>Pengirim</TableHead>
-            <TableHead>Subjek / Kategori</TableHead>
-            <TableHead>Pesan</TableHead>
-            <TableHead>Waktu</TableHead>
+            <TableHead className="hidden md:table-cell">Subjek / Kategori</TableHead>
+            <TableHead className="hidden md:table-cell">Pesan</TableHead>
+            <TableHead className="hidden md:table-cell">Waktu</TableHead>
             <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -30,17 +30,17 @@ export default function MessageTable({ messages, onSelect }: Props) {
             messages.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>
-                  <p className="text-xs font-bold text-[#4A3F35]">{item.sender_name || item.name || "Pengirim"}</p>
-                  <p className="text-[10px] text-[#8A7B6B]">{item.sender_email || item.email || "-"}</p>
+                  <p className="text-[11px] md:text-xs font-bold text-[#4A3F35]">{item.sender_name || item.name || "Pengirim"}</p>
+                  <p className="text-[9px] md:text-[10px] text-[#8A7B6B]">{item.subject || item.sender_email || item.email || "-"}</p>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <p className="text-xs font-semibold text-[#4A3F35]">{item.subject || "Umum"}</p>
                   <p className="text-[10px] text-[#8A7B6B]">{item.category || ""}</p>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <p className="text-xs text-[#4A3F35] line-clamp-1">{item.content || item.message || "-"}</p>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <span className="text-[10px] text-[#8A7B6B]">{item.created_at ? item.created_at.slice(0, 10) : "-"}</span>
                 </TableCell>
                 <TableCell className="text-right">

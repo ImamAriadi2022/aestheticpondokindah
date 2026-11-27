@@ -2,9 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import TestimonialEditor from "../components/TestimonialEditor";
 import { Button } from "@/shared/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { Plus, Edit2, Trash2, Quote, Star, Search, MessageSquareHeart } from "lucide-react";
+import { Plus, Edit2, Trash2, Star, Filter } from "lucide-react";
 import { toast } from "@/shared/ui/toast";
 import { API_BASE, getStorageUrl } from "@/core/api/apiConfig";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
 
 type Props = {
   searchParams: URLSearchParams;
@@ -78,98 +81,46 @@ export default function TestimonialsPage({ searchParams, setSearchParams, apiTes
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#4A3F35]">Testimoni & Ulasan Pasien</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">Kelola ulasan kepuasan pasien, rating bintang, dan cerita pengalaman perawatan.</p>
-        </div>
-        <Button
-          className="w-full sm:w-auto bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-md shadow-[#C9A24A]/20 cursor-pointer justify-center"
-          onClick={() => {
-            setSearchParams((prev: any) => {
-              const next = new URLSearchParams(prev);
-              next.set("tab", "content-testimonials");
-              next.set("view", "editor");
-              next.delete("id");
-              return next;
-            });
-          }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Tambah Testimoni Baru
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
-              <MessageSquareHeart className="w-5 h-5" />
-            </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Total Testimoni</p>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{apiTestimonials.length}</p>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center text-[#B8943F]">
-              <Star className="w-5 h-5 fill-[#B8943F]" />
-            </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Rating Rata-rata</p>
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <p className="text-xl sm:text-2xl font-bold text-[#4A3F35]">{avgRating}</p>
-            <span className="text-xs text-[#8A7B6B]">/ 5.0</span>
-          </div>
-        </div>
-
-        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl border border-[#F0E6D3] p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <Quote className="w-5 h-5" />
-            </div>
-            <p className="text-xs font-semibold text-[#8A7B6B]">Bintang 5</p>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-emerald-600">
-            {apiTestimonials.filter((t) => Number(t.rating) === 5).length}
-          </p>
-        </div>
-      </div>
-
-      {/* Filter and Search */}
-      <div className="bg-white rounded-2xl border border-[#F0E6D3] p-4 flex flex-col md:flex-row items-center justify-between gap-3 shadow-xs">
-        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
-          {(["All", 5, 4, 3] as const).map((r) => (
-            <button
-              key={String(r)}
-              type="button"
-              onClick={() => setFilterRating(r)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                filterRating === r
-                  ? "bg-[#C9A24A] text-white shadow-xs"
-                  : "bg-[#FAF8F5] text-[#7A6E60] hover:bg-[#F5ECE0] border border-[#E8DFC8]/60"
-              }`}
+    <div className="space-y-5 animate-in fade-in duration-150">
+      <PageHeader
+        title="Testimoni & Ulasan Pasien"
+        actions={
+          <>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Cari nama pasien / ulasan..."
+            />
+            <FilterDropdown
+              value={String(filterRating)}
+              onChange={(v) => setFilterRating(v === "All" ? "All" : Number(v))}
+              icon={Filter}
+              labelPrefix="Rating"
+              options={[
+                { value: "All", label: "Semua Rating" },
+                { value: "5", label: "★ 5 Bintang" },
+                { value: "4", label: "★ 4 Bintang" },
+                { value: "3", label: "★ 3 Bintang" },
+              ]}
+            />
+            <Button
+              className="bg-gradient-to-r from-[#C9A24A] to-[#B8943F] hover:from-[#B8943F] hover:to-[#A67F3A] text-white font-semibold rounded-xl shadow-xs h-9 text-xs cursor-pointer justify-center"
+              onClick={() => {
+                setSearchParams((prev: any) => {
+                  const next = new URLSearchParams(prev);
+                  next.set("tab", "content-testimonials");
+                  next.set("view", "editor");
+                  next.delete("id");
+                  return next;
+                });
+              }}
             >
-              {r === "All" ? "Semua Rating" : `★ ${r}`}
-            </button>
-          ))}
-        </div>
-
-        <div className="relative w-full md:w-64 shrink-0">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A89F91] pointer-events-none" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari nama pasien / ulasan..."
-            className="w-full h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl pl-10 pr-3 text-xs text-[#3D332A] focus:outline-hidden focus:ring-2 focus:ring-[#C9A24A] focus:bg-white transition-all font-medium"
-          />
-        </div>
-      </div>
+              <Plus className="w-4 h-4 mr-1.5" />
+              Tambah Testimoni
+            </Button>
+          </>
+        }
+      />
 
       {/* Table with horizontal scroll */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] overflow-x-auto shadow-xs">

@@ -59,9 +59,16 @@ export const showLocalNotification = (title: string, body: string, deepLink?: st
   }
 };
 
-export const handleDeepLink = (type: string, idUrl?: string, role?: string): string => {
+export const handleDeepLink = (type: string, idUrl?: string, role?: string, data?: any): string => {
+  const code = data?.code || data?.bookingCode || data?.booking_code;
+  const codeParam = code ? `&code=${encodeURIComponent(code)}` : "";
+
   if (idUrl && (idUrl.startsWith("/") || idUrl.startsWith("#") || idUrl.startsWith("http"))) {
-    return idUrl.startsWith("#") ? idUrl : `/#${idUrl.startsWith("/") ? "" : "/"}${idUrl}`;
+    let base = idUrl.startsWith("#") ? idUrl : `/#${idUrl.startsWith("/") ? "" : "/"}${idUrl}`;
+    if (codeParam && base.includes("tab=reservasi") && !base.includes("code=")) {
+      base += codeParam;
+    }
+    return base;
   }
 
   const normalizedType = (type || "").toLowerCase();
@@ -75,9 +82,9 @@ export const handleDeepLink = (type: string, idUrl?: string, role?: string): str
     normalizedType === "reservation_cancelled" ||
     normalizedType === "doctor_assigned"
   ) {
-    if (role === "clinic") return "/#/dashboard/clinic?tab=reservasi";
-    if (role === "doctor") return "/#/dashboard/doctor?tab=reservasi";
-    return "/#/dashboard/user?tab=riwayat";
+    if (role === "clinic") return `/#/dashboard/clinic?tab=reservasi${codeParam}`;
+    if (role === "doctor") return `/#/dashboard/doctor?tab=reservasi${codeParam}`;
+    return `/#/dashboard/user?tab=riwayat${codeParam}`;
   }
 
   if (

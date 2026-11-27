@@ -148,9 +148,8 @@ export default function BlogEditorPanel({ editorId, apiPost, sessionName, token,
       {/* Top Action Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-[#F0E6D3] shadow-xs">
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] h-9 px-3 text-xs font-semibold cursor-pointer" onClick={onBack}>
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Kembali
+          <Button variant="outline" size="icon" className="rounded-xl border-[#E8DFC8] text-[#4A3F35] hover:bg-[#FAF8F5] h-9 w-9 cursor-pointer" onClick={onBack} title="Kembali">
+            <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
             <h2 className="text-base sm:text-lg font-bold text-[#2C2416]">

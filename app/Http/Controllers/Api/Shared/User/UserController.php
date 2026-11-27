@@ -135,6 +135,7 @@ class UserController extends Controller
                     'status' => $u->status ?? 'active',
                     'created_at' => optional($u->created_at)->toISOString(),
                     'birthDate' => optional($u->birth_date)->format('Y-m-d'),
+                    'birth_date' => optional($u->birth_date)->format('Y-m-d'),
                     'gender' => $u->gender,
                     'bloodType' => $u->blood_type,
                     'job' => $u->job,
@@ -143,6 +144,19 @@ class UserController extends Controller
                     'city' => $u->city,
                     'district' => $u->district,
                     'postalCode' => $u->postal_code,
+                    'ktp_number' => $u->ktp_number,
+                    'ihs_id' => $u->ihs_id,
+                    'title_prefix' => $u->title_prefix,
+                    'title_suffix' => $u->title_suffix,
+                    'subspecialist' => $u->subspecialist,
+                    'job_category' => $u->job_category,
+                    'str_institution' => $u->str_institution,
+                    'str_expiry' => optional($u->str_expiry)->format('Y-m-d'),
+                    'str_lifetime' => (bool) $u->str_lifetime,
+                    'sip_institution' => $u->sip_institution,
+                    'sip_expiry' => optional($u->sip_expiry)->format('Y-m-d'),
+                    'consultation_duration' => $u->consultation_duration ?? 30,
+                    'weekly_schedules' => $u->weekly_schedules,
                 ];
             })
             ->values();
@@ -280,6 +294,7 @@ class UserController extends Controller
             'blood_type' => 'nullable|string|max:5',
             'job' => 'nullable|string|max:255',
             'birthDate' => 'nullable|date',
+            'birth_date' => 'nullable|date',
             'address' => 'nullable|string|max:255',
             'postalCode' => 'nullable|string|max:20',
             'interests' => 'nullable|array',
@@ -288,6 +303,19 @@ class UserController extends Controller
             'isSmoker' => 'nullable|boolean',
             'sourceInfo' => 'nullable|string|max:255',
             'insuranceProvider' => 'nullable|string|max:255',
+            'ktp_number' => 'nullable|string|max:50',
+            'ihs_id' => 'nullable|string|max:50',
+            'title_prefix' => 'nullable|string|max:50',
+            'title_suffix' => 'nullable|string|max:100',
+            'subspecialist' => 'nullable|string|max:255',
+            'job_category' => 'nullable|string|max:100',
+            'str_institution' => 'nullable|string|max:255',
+            'str_expiry' => 'nullable|date',
+            'str_lifetime' => 'nullable|boolean',
+            'sip_institution' => 'nullable|string|max:255',
+            'sip_expiry' => 'nullable|date',
+            'consultation_duration' => 'nullable|integer',
+            'weekly_schedules' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -314,7 +342,7 @@ class UserController extends Controller
             'district' => $request->district,
             'address_line' => $request->address ?? ($request->district ? ($request->district . ', ' . $request->city . ', ' . $request->province) : null),
             'postal_code' => $request->postalCode,
-            'birth_date' => $request->birthDate,
+            'birth_date' => $request->birth_date ?? $request->birthDate,
             'gender' => $request->gender,
             'blood_type' => $request->blood_type,
             'job' => $request->job,
@@ -323,6 +351,20 @@ class UserController extends Controller
             'is_smoker' => $request->boolean('isSmoker', false),
             'source_info' => $request->sourceInfo,
             'insurance_provider' => $request->insuranceProvider,
+            'ktp_number' => $request->ktp_number,
+            'ihs_id' => $request->ihs_id,
+            'title_prefix' => $request->title_prefix,
+            'title_suffix' => $request->title_suffix,
+            'subspecialist' => $request->subspecialist,
+            'job_category' => $request->job_category,
+            'str_institution' => $request->str_institution,
+            'str_expiry' => $request->str_expiry,
+            'str_lifetime' => $request->boolean('str_lifetime', true),
+            'sip_institution' => $request->sip_institution,
+            'sip_expiry' => $request->sip_expiry,
+            'consultation_duration' => $request->consultation_duration ?? 30,
+            'weekly_schedules' => $request->weekly_schedules,
+            'avatar' => $request->avatar_url ?? $request->avatar,
         ]);
 
         Cache::forget('apig_public_doctors_list');
@@ -389,6 +431,20 @@ class UserController extends Controller
             'primaryBranch' => 'nullable|string|max:255',
             'bio' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'ktp_number' => 'nullable|string|max:50',
+            'ihs_id' => 'nullable|string|max:50',
+            'title_prefix' => 'nullable|string|max:50',
+            'title_suffix' => 'nullable|string|max:100',
+            'subspecialist' => 'nullable|string|max:255',
+            'job_category' => 'nullable|string|max:100',
+            'str_institution' => 'nullable|string|max:255',
+            'str_expiry' => 'nullable|date',
+            'str_lifetime' => 'nullable|boolean',
+            'sip_institution' => 'nullable|string|max:255',
+            'sip_expiry' => 'nullable|date',
+            'consultation_duration' => 'nullable|integer',
+            'weekly_schedules' => 'nullable|array',
+            'birth_date' => 'nullable|date',
             'dentalComplaints' => 'nullable|array',
             'dentalComplaints.*' => 'string|max:100',
             'desiredServices' => 'nullable|array',
@@ -439,7 +495,21 @@ class UserController extends Controller
                 $user->avatar = $this->processAvatarUpload($user, $data['avatar']);
             }
             if (array_key_exists('birthDate', $data)) $user->birth_date = $data['birthDate'];
+            elseif (array_key_exists('birth_date', $data)) $user->birth_date = $data['birth_date'];
             if (array_key_exists('gender', $data)) $user->gender = $data['gender'];
+            if (array_key_exists('ktp_number', $data)) $user->ktp_number = $data['ktp_number'];
+            if (array_key_exists('ihs_id', $data)) $user->ihs_id = $data['ihs_id'];
+            if (array_key_exists('title_prefix', $data)) $user->title_prefix = $data['title_prefix'];
+            if (array_key_exists('title_suffix', $data)) $user->title_suffix = $data['title_suffix'];
+            if (array_key_exists('subspecialist', $data)) $user->subspecialist = $data['subspecialist'];
+            if (array_key_exists('job_category', $data)) $user->job_category = $data['job_category'];
+            if (array_key_exists('str_institution', $data)) $user->str_institution = $data['str_institution'];
+            if (array_key_exists('str_expiry', $data)) $user->str_expiry = $data['str_expiry'];
+            if (array_key_exists('str_lifetime', $data)) $user->str_lifetime = $data['str_lifetime'];
+            if (array_key_exists('sip_institution', $data)) $user->sip_institution = $data['sip_institution'];
+            if (array_key_exists('sip_expiry', $data)) $user->sip_expiry = $data['sip_expiry'];
+            if (array_key_exists('consultation_duration', $data)) $user->consultation_duration = $data['consultation_duration'];
+            if (array_key_exists('weekly_schedules', $data)) $user->weekly_schedules = $data['weekly_schedules'];
             if (array_key_exists('bloodType', $data)) $user->blood_type = $data['bloodType'];
             if (array_key_exists('job', $data)) $user->job = $data['job'];
             if (array_key_exists('address', $data)) $user->address_line = $data['address'];

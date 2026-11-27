@@ -156,6 +156,7 @@ Route::prefix('admin')->group(function () {
         // Reservations (Admin)
         Route::get('/reservations', [ReservationAdminController::class, 'index']);
         Route::put('/reservations/{reservation}', [ReservationAdminController::class, 'update']);
+        Route::post('/reservations/bulk-delete', [ReservationAdminController::class, 'bulkDestroy']);
         Route::delete('/reservations/{id}', [ReservationAdminController::class, 'destroy']);
         Route::post('/reservations/{id}/confirm-payment', [ReservationAdminController::class, 'confirmPayment']);
 

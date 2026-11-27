@@ -14,9 +14,9 @@ export default function BranchTable({ branches, onEdit }: Props) {
         <TableHeader>
           <TableRow className="bg-[#FAF8F5]">
             <TableHead>Nama Cabang</TableHead>
-            <TableHead>Kota / Wilayah</TableHead>
-            <TableHead>Alamat Lengkap</TableHead>
-            <TableHead>No. Telepon / WhatsApp</TableHead>
+            <TableHead className="hidden md:table-cell">Kota / Wilayah</TableHead>
+            <TableHead className="hidden md:table-cell">Alamat Lengkap</TableHead>
+            <TableHead className="hidden md:table-cell">No. Telepon / WhatsApp</TableHead>
             <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -31,23 +31,23 @@ export default function BranchTable({ branches, onEdit }: Props) {
             branches.map((branch) => (
               <TableRow key={branch.id}>
                 <TableCell>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#FDF8F0] flex items-center justify-center text-[#B8943F]">
-                      <Building2 className="w-4 h-4" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-[#FDF8F0] flex items-center justify-center text-[#B8943F] shrink-0">
+                      <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#4A3F35]">{branch.name}</p>
-                      <p className="text-[10px] text-[#8A7B6B]">{branch.code || `ID: ${branch.id}`}</p>
+                      <p className="text-[11px] md:text-xs font-bold text-[#4A3F35]">{branch.name}</p>
+                      <p className="text-[9px] md:text-[10px] text-[#8A7B6B]">{branch.code || `ID: ${branch.id}`}</p>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <span className="text-xs font-semibold text-[#4A3F35]">{branch.city || branch.region || "Jakarta"}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <p className="text-xs text-[#4A3F35] line-clamp-1">{branch.address || "-"}</p>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <p className="text-xs text-[#4A3F35]">{branch.phone || branch.whatsapp || "-"}</p>
                 </TableCell>
                 <TableCell className="text-right">

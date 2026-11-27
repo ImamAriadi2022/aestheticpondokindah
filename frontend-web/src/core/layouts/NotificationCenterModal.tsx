@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import {
   AppNotification,
   fetchNotifications,
+  getCachedNotifications,
   markNotificationRead,
   markAllNotificationsRead,
   deleteNotification,
@@ -10,7 +11,15 @@ import {
 } from "@/core/api/notificationApi";
 import { handleDeepLink } from "@/core/api/firebaseNotification";
 import { getSession } from "@/core/auth/services/session";
-import { Bell, Calendar, Crown, Tag, FileText, Trash2, CheckCheck, X } from "lucide-react";
+import { Trash2, CheckCheck, X } from "lucide-react";
+
+// Helper membersihkan emoji dan simbol gambar dari judul / isi notifikasi
+const cleanEmoji = (text?: string): string => {
+  if (!text) return "";
+  return text
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "")
+    .trim();
+};
 
 interface NotificationCenterProps {
   isOpen: boolean;
@@ -23,8 +32,12 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
   onClose,
   onUnreadCountChange,
 }) => {
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    return getCachedNotifications().notifications;
+  });
+  const [unreadCount, setUnreadCount] = useState<number>(() => {
+    return getCachedNotifications().unreadCount;
+  });
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -39,7 +52,10 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
   }, [isOpen]);
 
   const loadData = async () => {
-    setLoading(true);
+    // Jika belum ada data cache sama sekali, nyalakan status loading singkat
+    if (notifications.length === 0) {
+      setLoading(true);
+    }
     const { notifications: list, unreadCount: count } = await fetchNotifications();
     setNotifications(list);
     setUnreadCount(count);
@@ -49,6 +65,12 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // Langsung sinkronkan data cache terkini agar instan muncul
+      const cached = getCachedNotifications();
+      if (cached.notifications.length > 0) {
+        setNotifications(cached.notifications);
+        setUnreadCount(cached.unreadCount);
+      }
       loadData();
     }
   }, [isOpen]);
@@ -61,7 +83,7 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
       loadData();
     }
     const session = getSession();
-    const targetUrl = handleDeepLink(n.type, n.deep_link, (session?.role as string) || "user");
+    const targetUrl = handleDeepLink(n.type, n.deep_link, (session?.role as string) || "user", n.data);
     onClose();
     window.location.href = targetUrl;
   };
@@ -82,21 +104,6 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
     loadData();
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "appointment":
-        return <Calendar className="w-5 h-5 text-amber-600" />;
-      case "membership":
-        return <Crown className="w-5 h-5 text-amber-500" />;
-      case "promo":
-        return <Tag className="w-5 h-5 text-emerald-600" />;
-      case "article":
-        return <FileText className="w-5 h-5 text-blue-600" />;
-      default:
-        return <Bell className="w-5 h-5 text-yellow-600" />;
-    }
-  };
-
   if (!isOpen) return null;
 
   return createPortal(
@@ -106,9 +113,6 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
         {/* Modal Header */}
         <div className="p-5 bg-white border-b border-[#E6DECB] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center">
-              <Bell className="w-5 h-5 text-amber-600" />
-            </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg">Pusat Notifikasi</h3>
               <p className="text-xs text-gray-500">
@@ -146,40 +150,39 @@ export const NotificationCenterModal: React.FC<NotificationCenterProps> = ({
 
         {/* Content List */}
         <div className="overflow-y-auto flex-1 p-3 space-y-2">
-          {loading ? (
+          {loading && notifications.length === 0 ? (
             <div className="py-12 text-center text-gray-400 text-sm">Memuat notifikasi...</div>
           ) : notifications.length === 0 ? (
             <div className="py-12 text-center text-gray-400 text-sm flex flex-col items-center gap-2">
-              <Bell className="w-8 h-8 text-gray-300 stroke-[1.5]" />
               <p>Belum ada notifikasi</p>
             </div>
           ) : (
             notifications.map((n) => {
               const isUnread = !n.read_at;
+              const displayTitle = cleanEmoji(n.title);
+              const displayBody = cleanEmoji(n.body);
+
               return (
                 <div
                   key={n.id}
                   onClick={() => handleItemClick(n)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer relative group flex items-start gap-3.5 ${
+                  className={`p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative group flex items-start gap-3 ${
                     isUnread
-                      ? "bg-white border-amber-300 shadow-xs hover:border-amber-400"
+                      ? "bg-white border-amber-300/80 shadow-xs hover:border-amber-400"
                       : "bg-[#FAF8F5]/60 border-gray-200/80 hover:bg-white hover:border-gray-300"
                   }`}
                 >
-                  <div className="mt-0.5 p-2 rounded-xl bg-gray-50 border border-gray-100 shrink-0">
-                    {getTypeIcon(n.type)}
-                  </div>
                   <div className="flex-1 min-w-0 pr-6">
                     <div className="flex items-center gap-2">
                       <h4 className={`text-sm leading-tight truncate ${isUnread ? "font-bold text-gray-900" : "font-semibold text-gray-700"}`}>
-                        {n.title}
+                        {displayTitle}
                       </h4>
                       {isUnread && (
                         <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                       )}
                     </div>
                     <p className="text-xs text-gray-600 mt-1 line-clamp-2 leading-relaxed">
-                      {n.body}
+                      {displayBody}
                     </p>
                     <span className="text-[10px] text-gray-400 mt-2 block">
                       {new Date(n.created_at).toLocaleDateString("id-ID", {

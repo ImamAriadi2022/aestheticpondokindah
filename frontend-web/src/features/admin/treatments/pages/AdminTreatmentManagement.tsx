@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
-  Sparkles,
-  Search,
-  Filter,
   Plus,
   Edit2,
   Trash2,
@@ -20,9 +17,10 @@ import {
   ArrowUpDown,
   AlertCircle,
   Building2,
+  Filter,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
 import { toast } from "@/shared/ui/toast";
 import {
   fetchAdminTreatments,
@@ -31,6 +29,10 @@ import {
   type ClinicTreatmentItem,
 } from "../services/treatmentApi";
 import TreatmentEditorModal from "../components/TreatmentEditorModal";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { FilterDropdown } from "@/shared/ui/FilterDropdown";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 export default function AdminTreatmentManagement() {
   const [treatments, setTreatments] = useState<ClinicTreatmentItem[]>([]);
@@ -66,6 +68,8 @@ export default function AdminTreatmentManagement() {
   useEffect(() => {
     loadTreatments();
   }, []);
+
+  usePageRefresh(loadTreatments);
 
   // Quick toggle active status
   const handleToggleActive = async (item: ClinicTreatmentItem) => {
@@ -147,134 +151,51 @@ export default function AdminTreatmentManagement() {
   }, [treatments, searchQuery, categoryFilter, statusFilter]);
 
   return (
-    <div className="space-y-6 text-left">
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-bold text-[#3D332A] flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#C9A24A]" />
-            Layanan Klinik (Treatments)
-          </h3>
-          <p className="text-xs sm:text-sm text-[#7A6E60] mt-0.5">
-            Kelola tindakan perawatan gigi resmi yang tersedia pada form reservasi pasien dan pengunjung klinik.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <Button
-            onClick={loadTreatments}
-            variant="outline"
-            size="sm"
-            className="h-10 sm:h-9 px-3 rounded-xl border-[#E8DFC8] text-[#8A6B2B] hover:bg-[#FAF6EE] text-xs font-semibold justify-center"
-          >
-            <RefreshCw className="w-3.5 h-3.5 mr-1" /> Muat Ulang
-          </Button>
-
-          <Button
-            onClick={() => {
-              setSelectedTreatment(null);
-              setEditorOpen(true);
-            }}
-            className="h-10 sm:h-9 px-4 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Layanan Baru</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* 4 Summary Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#8A7B6B]">Total Layanan</span>
-            <div className="w-8 h-8 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#8C6B1C]">
-              <Layers className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-[#3D332A] mt-2">{totalCount}</p>
-          <p className="text-[10px] text-[#A89F91] mt-0.5">Katalog Perawatan</p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-700">Aktif di Form Reservasi</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-emerald-700 mt-2">{activeCount}</p>
-          <p className="text-[10px] text-emerald-600 mt-0.5">Tersedia untuk booking</p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-700">Non-Aktif / Ditutup</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-700">
-              <EyeOff className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-amber-700 mt-2">{inactiveCount}</p>
-          <p className="text-[10px] text-amber-600 mt-0.5">Disembunyikan sementara</p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#8A6B2B]">Kategori Tindakan</span>
-            <div className="w-8 h-8 rounded-xl bg-[#FAF5EA] flex items-center justify-center text-[#8C6B1C]">
-              <Tag className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-2xl font-bold text-[#8A6B2B] mt-2">{categoriesList.length}</p>
-          <p className="text-[10px] text-[#A89F91] mt-0.5">Spesialisasi Gigi & Mulut</p>
-        </div>
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-[#F0E6D3] shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A89F91]" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari nama layanan klinik, deskripsi..."
-            className="pl-9 h-9 text-xs bg-[#FAF8F5] border-[#E8DFC8] rounded-xl text-[#3D332A]"
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          {/* Category Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-[#8A7B6B] font-semibold whitespace-nowrap">Kategori:</span>
-            <select
+    <div className="space-y-5 text-left">
+      <PageHeader
+        title="Layanan Klinik (Treatments)"
+        actions={
+          <>
+            <SearchInput
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Cari nama layanan klinik..."
+            />
+            <FilterDropdown
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl px-2.5 text-xs font-semibold text-[#3D332A] focus:outline-hidden"
-            >
-              <option value="Semua">Semua Kategori</option>
-              {categoriesList.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-[#8A7B6B] font-semibold whitespace-nowrap">Status:</span>
-            <select
+              onChange={setCategoryFilter}
+              labelPrefix="Kategori"
+              options={["Semua", ...categoriesList].map((c) => ({
+                value: c,
+                label: c === "Semua" ? "Semua Kategori" : c,
+              }))}
+            />
+            <FilterDropdown
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-9 bg-[#FAF8F5] border border-[#E8DFC8] rounded-xl px-2.5 text-xs font-semibold text-[#3D332A] focus:outline-hidden"
+              onChange={setStatusFilter}
+              icon={Filter}
+              labelPrefix="Status"
+              options={[
+                { value: "Semua", label: "Semua Status" },
+                { value: "Aktif", label: "Aktif" },
+                { value: "Nonaktif", label: "Non-Aktif" },
+              ]}
+            />
+            <Button
+              onClick={() => {
+                setSelectedTreatment(null);
+                setEditorOpen(true);
+              }}
+              className="h-9 px-4 rounded-xl bg-[#8C6B1C] hover:bg-[#735614] text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <option value="Semua">Semua Status</option>
-              <option value="Aktif">Aktif (Tersedia di Booking)</option>
-              <option value="Nonaktif">Non-Aktif (Disembunyikan)</option>
-            </select>
-          </div>
-        </div>
-      </div>
+              <Plus className="w-4 h-4" />
+              <span>Tambah Layanan</span>
+            </Button>
+          </>
+        }
+      />
+
+      {/* Main Treatment Table */}
 
       {/* Services Table Card */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] shadow-xs overflow-hidden">

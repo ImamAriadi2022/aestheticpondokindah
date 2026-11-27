@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, X, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import UserTable from "../components/UserTable";
 import UserDetailModal from "../components/UserDetailModal";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
@@ -7,6 +7,9 @@ import { Button } from "@/shared/ui/button";
 import { toast } from "@/shared/ui/toast";
 import { deleteAdminUser } from "../services/userService";
 import { getSession } from "@/core/auth/services/session";
+import { PageHeader } from "@/shared/ui/PageHeader";
+import { SearchInput } from "@/shared/ui/SearchInput";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 type Props = {
   users: any[];
@@ -21,6 +24,10 @@ export default function UsersPage({ users, onSelectUser, onRefresh }: Props) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const session = getSession();
+
+  usePageRefresh(() => {
+    if (onRefresh) onRefresh();
+  });
 
   const handleSelect = (user: any) => {
     setSelected(user);
@@ -70,34 +77,17 @@ export default function UsersPage({ users, onSelectUser, onRefresh }: Props) {
   }, [users, search]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-[#4A3F35]">Daftar Pengguna / Pasien Klinik</h2>
-          <p className="text-sm text-[#8A7B6B] mt-1">Kelola data pasien terdaftar, peran pengguna, dan level membership tier.</p>
-        </div>
-
-        {/* Search by User Name, Email or Phone */}
-        <div className="relative w-full sm:w-72 shrink-0">
-          <Search className="w-4 h-4 text-[#8A7B6B] absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
+    <div className="space-y-5">
+      <PageHeader
+        title="Daftar Pengguna / Pasien Klinik"
+        actions={
+          <SearchInput
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={setSearch}
             placeholder="Cari nama, email, no. HP..."
-            className="w-full pl-9 pr-9 py-2 bg-white border border-[#F0E6D3] rounded-xl text-xs text-[#4A3F35] placeholder:text-[#8A7B6B]/70 focus:outline-none focus:border-[#C9A24A] focus:ring-1 focus:ring-[#C9A24A] shadow-2xs transition"
           />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 p-0.5 cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
+        }
+      />
 
       <UserTable
         users={filteredUsers}

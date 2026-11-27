@@ -41,12 +41,13 @@ export function useSubmenuBadges(role?: "user" | "clinic" | "doctor"): SubmenuBa
       let konsultasiCount = 0;
       let pengaduanCount = 0;
 
-      // 1. Calculate Booking Badges from realtime reservations
+      // 1. Calculate Booking Badges from realtime reservations (Status yang Perlu Konfirmasi)
       if (Array.isArray(reservations)) {
         if (activeRole === "clinic") {
-          bookingCount = reservations.filter(
-            (r: any) => r.status === "Baru" || r.status === "pending"
-          ).length;
+          bookingCount = reservations.filter((r: any) => {
+            const st = (r.status || "").toLowerCase();
+            return st === "baru" || st === "pending" || st === "menunggu" || st === "menunggu konfirmasi" || st === "submitted";
+          }).length;
         } else if (activeRole === "doctor") {
           bookingCount = reservations.filter(
             (r: any) =>
@@ -117,25 +118,29 @@ export function useSubmenuBadges(role?: "user" | "clinic" | "doctor"): SubmenuBa
     } catch {}
   }, [activeRole, reservations]);
 
-  // Initial & periodic refresh (only when tab is visible)
+  // Initial & periodic refresh (hanya saat tab aktif / fokus)
   useEffect(() => {
     refreshBadges();
+
+    // Polling santai 60s
     const interval = setInterval(() => {
       if (typeof document === "undefined" || !document.hidden) {
         refreshBadges();
       }
-    }, 30000);
+    }, 60000);
 
-    const handleVisibilityChange = () => {
+    const handleRevalidation = () => {
       if (!document.hidden) {
         refreshBadges();
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleRevalidation);
+    window.addEventListener("focus", handleRevalidation);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleRevalidation);
+      window.removeEventListener("focus", handleRevalidation);
     };
   }, [refreshBadges]);
 

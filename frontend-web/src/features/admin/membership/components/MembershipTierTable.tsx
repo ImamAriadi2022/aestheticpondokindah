@@ -11,9 +11,9 @@ export default function MembershipTierTable({ tiers }: Props) {
         <TableHeader>
           <TableRow className="bg-[#FAF8F5]">
             <TableHead>Nama Tier</TableHead>
-            <TableHead>Minimum Transaksi</TableHead>
+            <TableHead className="hidden md:table-cell">Minimum Transaksi</TableHead>
             <TableHead>Diskon Perawatan</TableHead>
-            <TableHead>Prioritas Reservasi</TableHead>
+            <TableHead className="hidden md:table-cell">Prioritas Reservasi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -27,15 +27,15 @@ export default function MembershipTierTable({ tiers }: Props) {
             tiers.map((tier) => (
               <TableRow key={tier.id || tier.name}>
                 <TableCell>
-                  <span className="text-xs font-bold text-[#4A3F35]">{tier.name}</span>
+                  <span className="text-[11px] md:text-xs font-bold text-[#4A3F35]">{tier.name}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <span className="text-xs text-[#4A3F35]">{tier.min_spend ? `Rp ${Number(tier.min_spend).toLocaleString('id-ID')}` : "Rp 0"}</span>
                 </TableCell>
                 <TableCell>
-                  <span className="text-xs font-semibold text-emerald-700">{tier.discount_percent ? `${tier.discount_percent}%` : "0%"}</span>
+                  <span className="text-[11px] md:text-xs font-semibold text-emerald-700">{tier.discount_percent ? `${tier.discount_percent}%` : "0%"}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <span className="text-xs text-[#4A3F35]">{tier.priority_booking ? "Ya (VVIP)" : "Standar"}</span>
                 </TableCell>
               </TableRow>

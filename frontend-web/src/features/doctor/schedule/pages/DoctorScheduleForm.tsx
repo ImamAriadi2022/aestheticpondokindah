@@ -158,11 +158,12 @@ export default function DoctorScheduleFormPage() {
         {/* Back Button */}
         <Button
           variant="ghost"
+          size="icon"
           onClick={() => navigate("/dashboard/doctor?tab=jadwal")}
-          className="mb-4 -ml-2 text-gray-600 hover:text-gray-900"
+          className="mb-4 -ml-2 text-gray-600 hover:text-gray-900 rounded-xl"
+          title="Kembali"
         >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Kembali
+          <ArrowLeft className="w-5 h-5" />
         </Button>
 
         <Card className="rounded-xl border border-gray-200 shadow-sm max-w-2xl mx-auto">

@@ -439,4 +439,32 @@ class ReservationAdminController extends Controller
             'message' => "Data reservasi {$code} berhasil dihapus."
         ]);
     }
+
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $ids = $request->input('ids', []);
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pilih data reservasi yang ingin dihapus.'
+            ], 422);
+        }
+
+        $validIds = array_filter(array_map(fn($item) => is_numeric($item) ? (int)$item : null, $ids));
+        if (empty($validIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ID data tidak valid.'
+            ], 422);
+        }
+
+        ReservationAudit::whereIn('reservation_id', $validIds)->delete();
+        $count = Reservation::whereIn('id', $validIds)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} data reservasi berhasil dihapus.",
+            'deleted_count' => $count
+        ]);
+    }
 }

@@ -14,8 +14,8 @@ export default function ConsultationTable({ consultations, onSelect }: Props) {
         <TableHeader>
           <TableRow className="bg-[#FAF8F5] border-b border-[#E8DFC8]">
             <TableHead className="font-bold text-[#2C2416] text-xs">Kode / Pasien</TableHead>
-            <TableHead className="font-bold text-[#2C2416] text-xs">Keluhan Utama & Gejala</TableHead>
-            <TableHead className="font-bold text-[#2C2416] text-xs">Status</TableHead>
+            <TableHead className="hidden md:table-cell font-bold text-[#2C2416] text-xs">Keluhan Utama & Gejala</TableHead>
+            <TableHead className="hidden md:table-cell font-bold text-[#2C2416] text-xs">Status</TableHead>
             <TableHead className="font-bold text-[#2C2416] text-xs text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -36,18 +36,18 @@ export default function ConsultationTable({ consultations, onSelect }: Props) {
 
               return (
                 <TableRow key={item.id} className="hover:bg-[#FAF8F5]/80 transition-colors border-b border-[#F0EAE1]">
-                  <TableCell className="py-3">
+                  <TableCell className="py-2.5 md:py-3">
                     <div className="flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 rounded-md bg-[#FAF5EA] border border-[#EADBBD] text-[10px] font-mono font-bold text-[#8C6B1C]">
+                      <span className="px-1.5 py-0.5 rounded-md bg-[#FAF5EA] border border-[#EADBBD] text-[9px] md:text-[10px] font-mono font-bold text-[#8C6B1C]">
                         #{item.code || item.id}
                       </span>
                       <div>
-                        <p className="text-xs font-bold text-[#2C2416]">{item.participantName || item.patientName || item.user?.name || "Pasien"}</p>
-                        <p className="text-[10px] text-[#8C8272]">{item.date || "-"}</p>
+                        <p className="text-[11px] md:text-xs font-bold text-[#2C2416]">{item.participantName || item.patientName || item.user?.name || "Pasien"}</p>
+                        <p className="text-[9px] md:text-[10px] text-[#8C8272]">{item.topic || item.category || "Konsultasi"}</p>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3">
+                  <TableCell className="hidden md:table-cell py-3">
                     <div>
                       <p className="text-xs font-semibold text-[#4A3F35]">
                         {item.topic || item.category || "Konsultasi Gigi"}
@@ -62,22 +62,22 @@ export default function ConsultationTable({ consultations, onSelect }: Props) {
                       </p>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3">
+                  <TableCell className="hidden md:table-cell py-3">
                     {isWaiting && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                        <Clock className="w-3 h-3 mr-1 text-amber-600" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                         Menunggu
                       </span>
                     )}
                     {isOpened && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         Dibuka
                       </span>
                     )}
                     {isClosed && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
-                        <Check className="w-3 h-3 mr-0.5 text-gray-500" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-stone-50 text-stone-600 border border-stone-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
                         Selesai
                       </span>
                     )}

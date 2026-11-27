@@ -75,6 +75,19 @@ class User extends Authenticatable
         'bio',
         'primary_branch',
         'consultation_fee',
+        'ktp_number',
+        'ihs_id',
+        'title_prefix',
+        'title_suffix',
+        'subspecialist',
+        'job_category',
+        'str_institution',
+        'str_expiry',
+        'str_lifetime',
+        'sip_institution',
+        'sip_expiry',
+        'consultation_duration',
+        'weekly_schedules',
     ];
 
     /**
@@ -107,6 +120,11 @@ class User extends Authenticatable
             'membership_points' => 'integer',
             'consultation_fee' => 'decimal:2',
             'experience_years' => 'integer',
+            'str_expiry' => 'date',
+            'str_lifetime' => 'boolean',
+            'sip_expiry' => 'date',
+            'consultation_duration' => 'integer',
+            'weekly_schedules' => 'array',
             'password' => 'hashed',
         ];
     }

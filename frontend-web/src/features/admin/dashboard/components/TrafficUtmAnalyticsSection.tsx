@@ -292,45 +292,61 @@ export default function TrafficUtmAnalyticsSection() {
       {/* Header & Date Filter Bar */}
       <div className="bg-white rounded-2xl border border-[#F0E6D3] p-5 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5E6C8] to-[#E8D4A2] flex items-center justify-center shrink-0">
-              <BarChart3 className="w-5 h-5 text-[#A37E28]" />
-            </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-[#2C2416]">
-                Traffic &amp; UTM Analytics
-              </h3>
-              <p className="text-xs text-[#7A6E60] mt-0.5">
-                Acquisition Overview &mdash; Pelacakan sumber pengunjung otomatis berdasarkan parameter UTM &amp; referrer
-              </p>
-            </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-[#2C2416]">
+              Traffic &amp; UTM Analytics
+            </h3>
+            <p className="text-xs text-[#7A6E60] mt-0.5">
+              Acquisition Overview &mdash; Pelacakan sumber pengunjung otomatis berdasarkan parameter UTM &amp; referrer
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {(
-              [
-                { key: "7d", label: "7 Hari Terakhir" },
-                { key: "30d", label: "30 Hari Terakhir" },
-                { key: "this_month", label: "Bulan Ini" },
-                { key: "custom", label: "Custom" },
-              ] as { key: PresetKey; label: string }[]
-            ).map((item) => {
-              const active = preset === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => handleSelectPreset(item.key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                    active
-                      ? "bg-gradient-to-r from-[#C59E3F] to-[#A37E28] text-white shadow-sm"
-                      : "bg-[#FAF8F5] text-[#5C5546] border border-[#E6DECB] hover:bg-[#F3EBD9]"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="relative">
+              <select
+                value={preset}
+                onChange={(e) => handleSelectPreset(e.target.value as PresetKey)}
+                className="h-9 pl-3 pr-8 rounded-xl bg-[#FAF8F5] text-xs font-semibold text-[#2C2416] border border-[#D9D0BC] shadow-sm hover:border-[#C59E3F] focus:outline-none focus:ring-2 focus:ring-[#C59E3F]/30 cursor-pointer appearance-none transition-all"
+                aria-label="Pilih rentang waktu"
+              >
+                <option value="7d">7 Hari Terakhir</option>
+                <option value="30d">30 Hari Terakhir</option>
+                <option value="this_month">Bulan Ini</option>
+                <option value="custom">Custom</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-[#7A6E60]">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                  <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                </svg>
+              </div>
+            </div>
+
+            {preset === "custom" && (
+              <div className="flex flex-wrap items-center gap-2 bg-[#FAF8F5] px-2.5 py-1 rounded-xl border border-[#D9D0BC]">
+                <div className="flex items-center gap-1.5 text-xs text-[#5C5546]">
+                  <span className="text-[11px] font-medium text-[#7A6E60]">Dari</span>
+                  <input
+                    type="date"
+                    value={startDate}
+                    max={endDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="h-7 px-2 rounded-lg border border-[#D9D0BC] bg-white text-xs text-[#2C2416] focus:outline-none focus:ring-1 focus:ring-[#C59E3F]"
+                  />
+                </div>
+                <span className="text-xs text-[#9A8B7A]">&ndash;</span>
+                <div className="flex items-center gap-1.5 text-xs text-[#5C5546]">
+                  <span className="text-[11px] font-medium text-[#7A6E60]">Sampai</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate}
+                    max={toIsoDate(new Date())}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="h-7 px-2 rounded-lg border border-[#D9D0BC] bg-white text-xs text-[#2C2416] focus:outline-none focus:ring-1 focus:ring-[#C59E3F]"
+                  />
+                </div>
+              </div>
+            )}
 
             <button
               type="button"
@@ -347,41 +363,15 @@ export default function TrafficUtmAnalyticsSection() {
 
         {/* Custom Date Pickers + Active Period Display */}
         <div className="mt-4 pt-3.5 border-t border-[#F3ECE0] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {preset === "custom" ? (
-            <div className="flex flex-wrap items-center gap-2.5">
-              <label className="flex items-center gap-2 text-xs text-[#5C5546] font-medium">
-                <span>Dari</span>
-                <input
-                  type="date"
-                  value={startDate}
-                  max={endDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="h-9 px-3 rounded-xl border border-[#D9D0BC] bg-[#FAF8F5] text-xs text-[#2C2416] focus:outline-none focus:ring-2 focus:ring-[#C59E3F]"
-                />
-              </label>
-              <label className="flex items-center gap-2 text-xs text-[#5C5546] font-medium">
-                <span>Sampai</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  min={startDate}
-                  max={toIsoDate(new Date())}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="h-9 px-3 rounded-xl border border-[#D9D0BC] bg-[#FAF8F5] text-xs text-[#2C2416] focus:outline-none focus:ring-2 focus:ring-[#C59E3F]"
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-xs text-[#7A6E60]">
-              <Calendar className="w-3.5 h-3.5 text-[#A37E28]" />
-              <span>
-                Periode:{" "}
-                <strong className="text-[#2C2416]">
-                  {formatShortDateId(startDate)} &ndash; {formatShortDateId(endDate)}
-                </strong>
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-xs text-[#7A6E60]">
+            <Calendar className="w-3.5 h-3.5 text-[#A37E28]" />
+            <span>
+              Periode:{" "}
+              <strong className="text-[#2C2416]">
+                {formatShortDateId(startDate)} &ndash; {formatShortDateId(endDate)}
+              </strong>
+            </span>
+          </div>
 
           {data && (
             <div className="text-[11px] text-[#8A7B6B]">

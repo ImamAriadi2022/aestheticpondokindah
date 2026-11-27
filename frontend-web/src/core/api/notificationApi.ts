@@ -36,6 +36,12 @@ const saveOfflineCache = (items: AppNotification[]) => {
   }
 };
 
+export const getCachedNotifications = (): { notifications: AppNotification[]; unreadCount: number } => {
+  const cached = getOfflineCache();
+  const unread = cached.filter((n) => !n.read_at).length;
+  return { notifications: cached, unreadCount: unread };
+};
+
 export const fetchNotifications = async (): Promise<{ notifications: AppNotification[]; unreadCount: number }> => {
   const token = getAuthToken();
 

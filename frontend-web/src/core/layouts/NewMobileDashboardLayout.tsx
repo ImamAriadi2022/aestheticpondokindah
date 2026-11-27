@@ -125,13 +125,7 @@ export default function NewMobileDashboardLayout({
           { label: "Konsultasi", icon: MessageSquare, href: "/dashboard/clinic?tab=konsultasi", badge: submenuBadges.konsultasi || undefined },
         ];
       case "doctor":
-        return [
-          { label: "Beranda", icon: Home, href: "/dashboard/doctor" },
-          { label: "Jadwal", icon: CalendarDays, href: "/dashboard/doctor?tab=jadwal" },
-          { label: "Daftar Pasien", icon: Users, href: "/dashboard/doctor?tab=reservasi", badge: submenuBadges.booking || undefined },
-          { label: "Panduan", icon: BookOpen, href: "/dashboard/doctor?tab=panduan" },
-          { label: "Profil", icon: UserCircle, href: "/settings" },
-        ];
+        return [];
       default:
         return [];
     }
@@ -163,7 +157,6 @@ export default function NewMobileDashboardLayout({
       title: "Informasi Publik & Bantuan",
       items: [
         { label: "Panduan Admin", icon: BookOpen, href: "/dashboard/clinic?tab=panduan" },
-        { label: "Layanan", icon: Layers, href: "/dashboard/clinic?tab=public-services" },
         { label: "FAQ", icon: HelpCircle, href: "/dashboard/clinic?tab=public-faqs" },
         { label: "Pengaduan", icon: AlertCircle, href: "/dashboard/clinic?tab=pengaduan", badge: submenuBadges.pengaduan || undefined },
         { label: "Kebijakan", icon: Shield, href: "/dashboard/clinic?tab=public-legal" },
@@ -358,7 +351,7 @@ export default function NewMobileDashboardLayout({
       </main>
 
       {/* Bottom Navigation (Fixed at bottom for Mobile PWA) */}
-      {!hideBottomNav && (
+      {!hideBottomNav && navItems.length > 0 && (
         <nav className="mobile-dashboard-nav fixed bottom-0 left-0 right-0 z-50 max-w-lg mx-auto bg-white/95 backdrop-blur-md border-t border-[#F0E6D3] shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-2 pt-2 pb-2 select-none" style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}>
           <div className={`flex items-center ${role === 'clinic' ? 'justify-around' : 'justify-around'}`}>
             {navItems.map((item) => {

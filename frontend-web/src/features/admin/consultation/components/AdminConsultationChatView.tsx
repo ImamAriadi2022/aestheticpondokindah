@@ -212,10 +212,11 @@ export default function AdminConsultationChatView({
         </p>
         <Button
           onClick={onBack}
-          className="mt-5 bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] text-white rounded-xl text-xs font-bold cursor-pointer"
+          size="icon"
+          title="Kembali ke Daftar Konsultasi"
+          className="mt-5 bg-gradient-to-r from-[#C9A24A] to-[#8C6B1C] text-white rounded-xl cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          Kembali ke Daftar Konsultasi
+          <ArrowLeft className="w-5 h-5" />
         </Button>
       </div>
     );

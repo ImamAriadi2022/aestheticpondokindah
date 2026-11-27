@@ -3,10 +3,24 @@
 namespace App\Models\Admin\Settings;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class ClinicSetting extends Model
 {
     protected $table = 'clinic_settings';
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            Cache::forget('public_clinic_settings');
+            Cache::forget('public_home_content');
+        });
+
+        static::deleted(function () {
+            Cache::forget('public_clinic_settings');
+            Cache::forget('public_home_content');
+        });
+    }
 
     protected $fillable = [
         'key',

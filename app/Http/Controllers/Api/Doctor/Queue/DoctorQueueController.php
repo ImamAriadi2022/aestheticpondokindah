@@ -37,12 +37,10 @@ class DoctorQueueController extends Controller
             });
         }
 
-        // Dokter hanya menangani status Dikonfirmasi (terjadwal) dan Selesai
+        // Dokter dapat melihat seluruh appointment terkait: Menunggu/Baru, Dikonfirmasi, Selesai, dsb.
         $status = trim((string) $request->query('status', ''));
         if ($status !== '' && $status !== 'all' && $status !== 'Semua') {
             $query->where('status', $status);
-        } else {
-            $query->whereIn('status', ['Dikonfirmasi', 'Selesai', 'confirmed', 'completed', 'in_progress']);
         }
 
         $query->orderByDesc('date')->orderByDesc('created_at');

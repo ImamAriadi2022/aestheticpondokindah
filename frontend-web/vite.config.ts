@@ -15,6 +15,9 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
   },
+  optimizeDeps: {
+    exclude: ["canvg", "jspdf", "html2canvas"],
+  },
   build: {
     // Plesk's document root is Laravel's standard public/ directory.
     // prebuild.mjs cleans ../public/assets safely while keeping index.php, .htaccess, and uploads.
@@ -37,6 +40,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      "jspdf": path.resolve(__dirname, "./node_modules/jspdf/dist/jspdf.umd.min.js"),
       "@core": path.resolve(__dirname, "./src/core"),
       "@shared": path.resolve(__dirname, "./src/shared"),
       "@": path.resolve(__dirname, "./src"),
