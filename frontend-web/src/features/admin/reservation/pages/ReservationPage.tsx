@@ -28,8 +28,9 @@ import { PageTransition } from "@/core/router/RouteTransition";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { SearchInput } from "@/shared/ui/SearchInput";
 import { FilterDropdown } from "@/shared/ui/FilterDropdown";
-import { usePageRefresh } from "@/core/events/refreshEvents";
+import { syncEngine } from "@/core/services/reservationSyncEngine";
 import { Button } from "@/shared/ui/button";
+import { usePageRefresh } from "@/core/events/refreshEvents";
 
 type Props = {
   reservations: ReservationItem[];
@@ -121,6 +122,7 @@ export default function ReservationPage({
     try {
       await deleteAdminReservation(token, item.id);
       setSelectedIds((prev) => prev.filter((id) => id !== item.id));
+      syncEngine.broadcastEvent({ type: "reservation_deleted", id: item.id });
       toast({
         title: "Reservasi Dihapus",
         message: `Data reservasi ${rCode} berhasil dihapus tanpa gangguan.`,
@@ -143,6 +145,7 @@ export default function ReservationPage({
     try {
       const res = await bulkDeleteAdminReservations(token, ids);
       setSelectedIds([]);
+      syncEngine.broadcastEvent({ type: "reservation_bulk_deleted", ids });
       toast({
         title: "Berhasil Dihapus",
         message: res.message || `${ids.length} data reservasi berhasil dihapus seketika.`,

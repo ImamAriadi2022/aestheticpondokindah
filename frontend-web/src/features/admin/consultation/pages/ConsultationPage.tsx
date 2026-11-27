@@ -55,14 +55,19 @@ export default function ConsultationPage({ consultations: initialConsultations =
     }
   }, [initialConsultations, fetchItems]);
 
-  // Smart background poll every 5s only if tab is visible and not in chat view
+  // Revalidation on window focus / tab active (tanpa polling interval agresif)
   useEffect(() => {
-    const timer = setInterval(() => {
+    const handleFocus = () => {
       if (!selectedId && typeof document !== "undefined" && document.visibilityState === "visible") {
         fetchItems(true);
       }
-    }, 5000);
-    return () => clearInterval(timer);
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleFocus);
+    };
   }, [fetchItems, selectedId]);
 
   const handleRefresh = () => {

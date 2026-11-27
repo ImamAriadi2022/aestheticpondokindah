@@ -314,20 +314,21 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
   useEffect(() => {
     fetchDatabaseNotifications();
 
-    // 20s interval only when tab is visible
+    // Polling santai 60s hanya saat tab aktif (tidak membombardir server)
     const interval = setInterval(() => {
       if (typeof document === "undefined" || !document.hidden) {
         fetchDatabaseNotifications();
       }
-    }, 20000);
+    }, 60000);
 
-    // Re-fetch immediately when user returns to tab
-    const handleVisibilityChange = () => {
+    // Re-fetch saat pengguna kembali membuka browser/tab
+    const handleRevalidation = () => {
       if (!document.hidden) {
         fetchDatabaseNotifications();
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleRevalidation);
+    window.addEventListener("focus", handleRevalidation);
 
     const unsubscribe = subscribeToPushNotifications((payload: PushNotificationPayload) => {
       const timeStamp = payload.receivedAt || payload.createdAt || new Date().toISOString();
@@ -383,7 +384,8 @@ export default function DashboardTopBar({ role, navbarLabel }: DashboardTopBarPr
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleRevalidation);
+      window.removeEventListener("focus", handleRevalidation);
       unsubscribe();
     };
   }, [role]);

@@ -22,13 +22,39 @@ class ReservationSyncEngine {
   private currentUserId: string = "";
   private channel: BroadcastChannel | null = null;
   private pollIntervalId: any = null;
+  private isWindowListenersAttached = false;
   public isHydrated = false;
 
   constructor() {
-    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-      this.channel = new BroadcastChannel("apig_realtime_reservations_channel");
-      this.channel.onmessage = (event) => this.handleBroadcastMessage(event.data);
+    if (typeof window !== "undefined") {
+      if ("BroadcastChannel" in window) {
+        this.channel = new BroadcastChannel("apig_realtime_reservations_channel");
+        this.channel.onmessage = (event) => this.handleBroadcastMessage(event.data);
+      }
+      this.attachWindowListeners();
     }
+  }
+
+  private attachWindowListeners() {
+    if (this.isWindowListenersAttached || typeof window === "undefined") return;
+    this.isWindowListenersAttached = true;
+
+    // 1. Auto-sync saat pengguna kembali membuka browser/tab ini (Window Focus)
+    window.addEventListener("focus", () => {
+      this.pollChanges();
+    });
+
+    // 2. Auto-sync saat tab menjadi terlihat (Visibility Change)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        this.pollChanges();
+      }
+    });
+
+    // 3. Auto-sync saat koneksi internet kembali online
+    window.addEventListener("online", () => {
+      this.pollChanges();
+    });
   }
 
   /**
@@ -67,8 +93,24 @@ class ReservationSyncEngine {
     this.isHydrated = true;
     this.notifyListeners();
 
-    // 3. Event-Driven Sync (Zero Infinite Polling Loops)
-    if (this.pollIntervalId) { clearInterval(this.pollIntervalId); this.pollIntervalId = null; }
+    // 3. Smart Background Polling (Interval 15s jika tab aktif)
+    this.startBackgroundPolling();
+  }
+
+  public startBackgroundPolling() {
+    if (this.pollIntervalId) return;
+    this.pollIntervalId = setInterval(() => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        this.pollChanges();
+      }
+    }, 15000);
+  }
+
+  public stopBackgroundPolling() {
+    if (this.pollIntervalId) {
+      clearInterval(this.pollIntervalId);
+      this.pollIntervalId = null;
+    }
   }
 
   /**
@@ -378,6 +420,9 @@ export function useRealtimeReservations() {
   const [isHydrated, setIsHydrated] = useState<boolean>(syncEngine.isHydrated);
 
   useEffect(() => {
+    // Inisialisasi engine jika belum jalan
+    syncEngine.init();
+
     const unsubscribe = syncEngine.subscribe((updatedItems) => {
       setItems(updatedItems);
       setIsHydrated(syncEngine.isHydrated);

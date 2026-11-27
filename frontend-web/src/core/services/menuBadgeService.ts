@@ -118,25 +118,29 @@ export function useSubmenuBadges(role?: "user" | "clinic" | "doctor"): SubmenuBa
     } catch {}
   }, [activeRole, reservations]);
 
-  // Initial & periodic refresh (only when tab is visible)
+  // Initial & periodic refresh (hanya saat tab aktif / fokus)
   useEffect(() => {
     refreshBadges();
+
+    // Polling santai 60s
     const interval = setInterval(() => {
       if (typeof document === "undefined" || !document.hidden) {
         refreshBadges();
       }
-    }, 30000);
+    }, 60000);
 
-    const handleVisibilityChange = () => {
+    const handleRevalidation = () => {
       if (!document.hidden) {
         refreshBadges();
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleRevalidation);
+    window.addEventListener("focus", handleRevalidation);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleRevalidation);
+      window.removeEventListener("focus", handleRevalidation);
     };
   }, [refreshBadges]);
 

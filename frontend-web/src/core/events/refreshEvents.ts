@@ -28,7 +28,14 @@ export function usePageRefresh(onRefresh: () => void | Promise<any>, enabled = t
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
+    let lastExecution = 0;
+    const THROTTLE_MS = 2000; // Mencegah pemanggilan ganda dalam 2 detik
+
     const handleRefresh = () => {
+      const now = Date.now();
+      if (now - lastExecution < THROTTLE_MS) return;
+      lastExecution = now;
+
       try {
         const result = onRefresh();
         if (result && typeof result.then === "function") {
@@ -39,9 +46,22 @@ export function usePageRefresh(onRefresh: () => void | Promise<any>, enabled = t
       }
     };
 
+    // 1. Trigger via event internal app (misal klik refresh atau CRUD selesai)
     window.addEventListener(APP_REFRESH_EVENT, handleRefresh);
+
+    // 2. Trigger otomatis saat pengguna membuka/fokus kembali ke tab ini
+    const handleRevalidation = () => {
+      if (typeof document !== "undefined" && !document.hidden) {
+        handleRefresh();
+      }
+    };
+    window.addEventListener("focus", handleRevalidation);
+    document.addEventListener("visibilitychange", handleRevalidation);
+
     return () => {
       window.removeEventListener(APP_REFRESH_EVENT, handleRefresh);
+      window.removeEventListener("focus", handleRevalidation);
+      document.removeEventListener("visibilitychange", handleRevalidation);
     };
   }, [onRefresh, enabled]);
 }

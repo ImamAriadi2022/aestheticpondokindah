@@ -206,7 +206,6 @@ export default function BlogPage({ searchParams, setSearchParams, apiPosts = [],
                   </TableCell>
                   <TableCell>
                     <p className="text-xs font-bold text-[#4A3F35] leading-snug">{item.title}</p>
-                    <p className="text-[10px] text-[#8A7B6B] mt-0.5">{item.slug}</p>
                   </TableCell>
                   <TableCell>
                     <span className="text-xs font-medium text-[#4A3F35]">
